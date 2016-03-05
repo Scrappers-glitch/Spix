@@ -89,5 +89,43 @@ public class Test {
         rotation.getProperty("z").setValue(3);
         rotation.getProperty("w").setValue(4);
         System.out.println("local rot:" + node.getLocalRotation());
+        
+        // Try it without having to recreate the quaternion
+        rotation = CompositePropertySet.create(localRotation,
+                                        MethodCompositeMutator.create(Quaternion.class, "set",
+                                                              Float.TYPE, Float.TYPE, Float.TYPE, Float.TYPE),
+                                        new DefaultProperty("x", Float.TYPE, quat.getX()),
+                                        new DefaultProperty("y", Float.TYPE, quat.getY()),
+                                        new DefaultProperty("z", Float.TYPE, quat.getZ()),
+                                        new DefaultProperty("w", Float.TYPE, quat.getW()));
+
+        System.out.println("local rot:" + node.getLocalRotation());
+        rotation.getProperty("x").setValue(5);
+        rotation.getProperty("y").setValue(6);
+        rotation.getProperty("z").setValue(7);
+        rotation.getProperty("w").setValue(8);
+        System.out.println("local rot:" + node.getLocalRotation());
+ 
+        quat.set(0, 0, 0, 1);
+        System.out.println("local rot:" + node.getLocalRotation());
+ 
+        System.out.println("Testing setting values as euler angles...");                                          
+        PropertySet euler = CompositePropertySet.create(localRotation,
+                                        MethodCompositeMutator.create(Quaternion.class, "fromAngles",
+                                                              Float.TYPE, Float.TYPE, Float.TYPE),
+                                        new DefaultProperty("x", Float.TYPE, quat.toAngles(null)[0]),
+                                        new DefaultProperty("y", Float.TYPE, quat.toAngles(null)[1]),
+                                        new DefaultProperty("z", Float.TYPE, quat.toAngles(null)[2]));
+        System.out.println("local rot:" + node.getLocalRotation());
+        euler.getProperty("x").setValue(1);
+        System.out.println("local rot:" + node.getLocalRotation());
+        euler.getProperty("y").setValue(2);
+        System.out.println("local rot:" + node.getLocalRotation());
+        euler.getProperty("z").setValue(3);
+        System.out.println("local rot:" + node.getLocalRotation());
+
+        // Well... one problem we still need to solve with the composite sets is
+        // refreshing their values from the original object.
+
     }
 }
