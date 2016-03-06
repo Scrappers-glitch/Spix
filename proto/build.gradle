@@ -1,9 +1,24 @@
-apply plugin: 'java'
+//apply plugin: 'java'
+apply plugin: 'groovy'
 apply plugin: 'application'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
-mainClassName='spix.Test'
+//mainClassName='spix.Test'
+//mainClassName='spix.blackboard.BlackboardTest'
+mainClassName='spix.type.TypeRegistryTest'
+
+// I want to compile groovy and Java together instead of in two passes
+//sourceSets.main.java.srcDirs = []
+//sourceSets.main.groovy.srcDirs += ["src/main/java"]
+
+sourceSets {
+  main {
+    java { srcDirs = [] }    // no source dirs for the java compiler
+    groovy { srcDirs = ["src/main/java"] }  // compile   everything in src/ with groovy
+  }
+}
+
 
 repositories {
     jcenter()
@@ -12,7 +27,9 @@ repositories {
 ext.jmeVersion = "[3.1,)" 
 
 dependencies {
- 
+
+    compile 'org.codehaus.groovy:groovy-all:2.4.4'
+     
     compile 'com.google.guava:guava:19.0'
     compile "org.jmonkeyengine:jme3-core:$jmeVersion"
     
