@@ -6,7 +6,8 @@ apply plugin: 'idea'
 
 //mainClassName='spix.Test'
 //mainClassName='spix.blackboard.BlackboardTest'
-mainClassName='spix.type.TypeRegistryTest'
+//mainClassName='spix.type.TypeRegistryTest'
+mainClassName='spix.core.SpixTest'
 
 // I want to compile groovy and Java together instead of in two passes
 //sourceSets.main.java.srcDirs = []
