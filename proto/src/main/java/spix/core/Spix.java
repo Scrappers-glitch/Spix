@@ -44,7 +44,7 @@ package spix.core;
  */
 public class Spix {
 
-    private final Blackboard blackboard = new Blackboard();
+    private final Blackboard blackboard = new DefaultBlackboard();
     
     public Spix() {
     }

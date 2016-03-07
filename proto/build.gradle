@@ -42,8 +42,19 @@ dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.4.4'
      
     compile 'com.google.guava:guava:19.0'
-    compile "org.jmonkeyengine:jme3-core:$jmeVersion"
     
+    compile "org.jmonkeyengine:jme3-core:$jmeVersion"
+
+    // So we can run a test app
+    compile "org.jmonkeyengine:jme3-core:$jmeVersion"
+    compile "org.jmonkeyengine:jme3-desktop:$jmeVersion"
+    compile "org.jmonkeyengine:jme3-lwjgl:$jmeVersion"
+    
+}
+
+task runTestApp(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = "spix.app.TestApp"
 }
 
 

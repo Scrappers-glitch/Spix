@@ -36,15 +36,38 @@
 
 package spix.core;
 
+import java.beans.*;
+import java.util.*;
+
+import groovy.util.ObservableMap;
+
+import spix.type.*;
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public interface Blackboard {
+public class DefaultBlackboard implements Blackboard {
  
-    public void set( String path, Object value );
-    public Object get( String path );
-    public <T> T get( String path, Class<T> type );
+    private ObservableMap properties = new ObservableMap();
+    
+    public DefaultBlackboard() {
+    }
+        
+    public void set( String path, Object value ) {
+        properties.put(path, value);   
+    }
+    
+    public Object get( String path ) {
+        return properties.get(path);
+    }
+    
+    public <T> T get( String path, Class<T> type ) {
+        Object result = get(path);
+        if( !type.isInstance(result) ) {
+            return null;
+        }
+        return type.cast(result);
+    }
 }
