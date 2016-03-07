@@ -49,25 +49,25 @@ public class SpixTest {
     
         Spix spix = new Spix();
         
-        Action myAction1 = new Action("foo") {
+        Action myAction1 = new AbstractAction("foo") {
                 public void performAction( final Spix spix ) {
                     System.out.println("Do it! " + this);
                 }
             };
 
-        Action myAction2 = new Action("fooBar") {
+        Action myAction2 = new AbstractAction("fooBar") {
                 public void performAction( final Spix spix ) {
                     System.out.println("Do it! " + this);
                 }
             };
 
-        Action myAction3 = new Action("IDTest") {
+        Action myAction3 = new AbstractAction("IDTest") {
                 public void performAction( final Spix spix ) {
                     System.out.println("Do it! " + this);
                 }
             };
  
-        Action myAction4 = new Action("testTLA") {
+        Action myAction4 = new AbstractAction("testTLA") {
                 public void performAction( final Spix spix ) {
                     System.out.println("Do it! " + this);
                 }
@@ -91,14 +91,18 @@ public class SpixTest {
         myAction1.setEnabled(true);
         myAction1.put("custom", 123);
         
-        ActionList rootActions = new ActionList("main");
+        ActionList rootActions = new DefaultActionList("main");
         rootActions.add(myAction1);
         rootActions.add(myAction2);
         
-        ActionList subActions = rootActions.add(new ActionList("Sublist"));
+        ActionList subActions = rootActions.add(new DefaultActionList("Sublist"));
         subActions.add(myAction3);
         subActions.add(myAction4);
         
         ActionUtils.debugDump("", rootActions);
+        
+        spix.getBlackboard().set("mainMenu", rootActions);
+        
+        rootActions.put(Action.NAME, "New Name");
     }
 }

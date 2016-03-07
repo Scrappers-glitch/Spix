@@ -36,7 +36,9 @@
 
 package spix.core;
 
+import java.beans.*;
 import java.util.Iterator;
+import java.util.List;
 
 import groovy.util.ObservableList;
 
@@ -47,45 +49,10 @@ import com.google.common.base.MoreObjects;
  *
  *  @author    Paul Speed
  */
-public class ActionList extends Action implements Iterable<Action> {
+public interface ActionList extends Action, Iterable<Action> {
     
-    private final ObservableList children = new ObservableList(); 
-    
-    public ActionList( String id ) {
-        super(id);
-    }
-    
-    public ActionList( String id, String name ) {
-        super(id, name);
-    }
- 
-    public <T extends Action> T add( T child ) {
-        children.add(child);
-        return child;
-    }
-    
-    public void remove( Action child ) {
-        children.remove(child);
-    }
-    
-    public Iterator<Action> iterator() {
-        return (Iterator<Action>)children.iterator();
-    }
-    
-    public void performAction( Spix spix ) {
-        // Do nothing by default
-    }
-    
-    public ObservableList getChildren() {
-        return children;
-    }
-    
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(getClass().getName())
-                .add("id", getId())
-                .add("properties", entrySet())
-                .add("children", getChildren())
-                .toString();       
-    }
+    public <T extends Action> T add( T child );    
+    public void remove( Action child ); 
+    public Iterator<Action> iterator();
+    public List<Action> getChildren();
 }

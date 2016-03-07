@@ -36,20 +36,70 @@
 
 package spix.core;
 
+import java.beans.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import groovy.util.ObservableList;
+
+import com.google.common.base.MoreObjects;
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public class Spix {
-
-    private final Blackboard blackboard = new Blackboard();
+public class DefaultActionList extends AbstractAction 
+                               implements ActionList {
     
-    public Spix() {
+    private final ObservableList children = new ObservableList(new CopyOnWriteArrayList()); 
+    
+    public DefaultActionList( String id ) {
+        super(id);
     }
     
-    public Blackboard getBlackboard() {
-        return blackboard;
+    public DefaultActionList( String id, String name ) {
+        super(id, name);
+    }
+ 
+    public void addPropertyChangeListener( PropertyChangeListener l ) {
+        super.addPropertyChangeListener(l);
+        children.addPropertyChangeListener(l);
+    }
+
+    public void removePropertyChangeListener( PropertyChangeListener l ) {
+        super.removePropertyChangeListener(l);
+        children.removePropertyChangeListener(l);
+    }
+ 
+    public <T extends Action> T add( T child ) {
+        children.add(child);
+        return child;
+    }
+    
+    public void remove( Action child ) {
+        children.remove(child);
+    }
+    
+    public Iterator<Action> iterator() {
+        return (Iterator<Action>)children.iterator();
+    }
+    
+    public void performAction( Spix spix ) {
+        // Do nothing by default
+    }
+    
+    public List<Action> getChildren() {
+        return (List<Action>)children;
+    }
+    
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(getClass().getName())
+                .add("id", getId())
+                .add("properties", entrySet())
+                .add("children", getChildren())
+                .toString();       
     }
 }

@@ -70,6 +70,14 @@ public class TypeRegistry<V> {
         }
         map.put(key, value);
     }
+
+    /**
+     *  Associates the specified value with the specified class wrapped
+     *  directly in a Type.
+     */    
+    public void register( Class c, V value ) {
+        register(new Type(c), value);
+    }
  
     /**
      *  Returns all of the registered values in the type hierarchy for the specified
@@ -100,6 +108,14 @@ public class TypeRegistry<V> {
     }
     
     /**
+     *  Returns all of the registered values in the type hierarchy for the specified
+     *  base type.
+     */
+    public List<V> getAll( Class key ) {
+        return getAll(new Type(key)); 
+    }
+    
+    /**
      *  Returns an exact value for the key or the first most relevant
      *  value in the type hierarchy, depending on how the 'exact' flag is
      *  set.
@@ -119,6 +135,15 @@ public class TypeRegistry<V> {
         return all.get(0);
     }
      
+    /**
+     *  Returns an exact value for the key or the first most relevant
+     *  value in the type hierarchy, depending on how the 'exact' flag is
+     *  set.
+     */
+    public V get( Class key, boolean exact ) {
+        return get(new Type(key), exact);
+    }
+    
     protected List<Type> buildPath( Type type ) {
     
         // Basic theory is that we can sort based on the earliest

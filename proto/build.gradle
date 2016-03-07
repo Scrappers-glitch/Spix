@@ -20,6 +20,16 @@ sourceSets {
   }
 }
 
+/*
+compileJava {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+compileGroovy {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+Whoah... wait to enable those until we won't be fixing code that will
+just get deleted.
+*/
 
 repositories {
     jcenter()
