@@ -59,6 +59,8 @@ import org.pushingpixels.substance.api.skin.*;
 
 import spix.awt.*;
 import spix.core.Action;
+import spix.core.ActionList;
+import spix.core.DefaultActionList;
 import spix.core.Spix;
 import spix.swing.*;
 
@@ -179,6 +181,10 @@ public class TestApp extends SimpleApplication {
             }
         };
  
+        ActionList testActions = createTestActions();
+        JMenuItem test = ActionUtils.createActionMenuItem(testActions, spix);
+        
+        /*
         JMenu test = new JMenu("Test");
         
         // A test of a Spix action
@@ -206,7 +212,7 @@ public class TestApp extends SimpleApplication {
             }
         };
         test.add(testAction2);
-        testAction2.addPropertyChangeListener(testListener);
+        testAction2.addPropertyChangeListener(testListener);*/
         
         JMenu help = new JMenu("Help");
         help.add(new AbstractAction("About") {
@@ -221,6 +227,41 @@ public class TestApp extends SimpleApplication {
         result.add(help);
         
         return result;
+    }
+    
+    private ActionList createTestActions() {
+        final ActionList testActions = new DefaultActionList("Test");
+        final ActionList testActions2 = new DefaultActionList("Test");
+ 
+        // A self test       
+        final Action testAction = testActions.add(new spix.core.AbstractAction("Test") {
+            private int count = 1;
+            
+            public void performAction( Spix spix ) {
+                System.out.println("A test spix action.");
+                put(Action.NAME, "Test " + (++count));
+            }
+        });
+        
+        // An add test
+        Action addAction = testActions.add(new spix.core.AbstractAction("Add") {            
+            public void performAction( Spix spix ) {
+                testActions.add(testAction);               
+                testActions2.add(testAction);               
+            }
+        }); 
+ 
+        // A remove test
+        Action removeAction = testActions.add(new spix.core.AbstractAction("Remove") {
+            public void performAction( Spix spix ) {
+                testActions.remove(testAction);
+                testActions2.remove(testAction);
+            }
+        }); 
+ 
+        testActions.add(testActions2);
+        
+        return testActions;
     }
 
     @Override

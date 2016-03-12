@@ -67,6 +67,10 @@ public class SwingAction implements javax.swing.Action {
         // way out.
         this.action.addPropertyChangeListener(observer);
     }
+ 
+    public Action getSpixAction() {
+        return action;
+    }
     
     public Object getValue( String key ) {
         key = toSpixProperty(key);
@@ -140,6 +144,7 @@ public static final String 	SMALL_ICON 	"SmallIcon"
     } 
  
     protected void firePropertyChange( PropertyChangeEvent event ) {
+System.out.println("firePropertyChange() on thread:" + Thread.currentThread());        
         String name = toSwingProperty(event.getPropertyName());
         dispatcher.firePropertyChange(name, event.getOldValue(), event.getNewValue());    
     } 
@@ -148,6 +153,7 @@ public static final String 	SMALL_ICON 	"SmallIcon"
         public void propertyChange( final PropertyChangeEvent event ) {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
+System.out.println("propertyChange() on thread:" + Thread.currentThread());        
                     firePropertyChange(event);
                 }
             });
