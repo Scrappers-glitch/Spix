@@ -55,6 +55,9 @@ import javax.swing.*;
 
 import org.pushingpixels.substance.api.skin.*;
 
+import spix.awt.*;
+
+
 /**
  *
  *
@@ -64,6 +67,21 @@ public class TestApp extends SimpleApplication {
 
     private volatile JFrame mainFrame;
     
+    public static void main(String[] args) throws Exception {
+ 
+        JFrame.setDefaultLookAndFeelDecorated(true);
+        UIManager.setLookAndFeel(new SubstanceGraphiteGlassLookAndFeel());
+
+        final TestApp app = new TestApp();
+        app.setShowSettings(false);
+        
+        AppSettings settings = new AppSettings(true);
+        settings.setCustomRenderer(AwtPanelsContext.class);
+        settings.setFrameRate(60);
+        app.setSettings(settings);
+        app.start();
+    }
+ 
     public TestApp() throws Exception {
  
         // Have to create the frame on the AWT EDT.
@@ -161,21 +179,6 @@ public class TestApp extends SimpleApplication {
         return result;
     }
 
-    public static void main(String[] args) throws Exception {
- 
-        JFrame.setDefaultLookAndFeelDecorated(true);
-        UIManager.setLookAndFeel(new SubstanceGraphiteGlassLookAndFeel());
-
-        final TestApp app = new TestApp();
-        app.setShowSettings(false);
-        
-        AppSettings settings = new AppSettings(true);
-        settings.setCustomRenderer(AwtPanelsContext.class);
-        settings.setFrameRate(60);
-        app.setSettings(settings);
-        app.start();
-    }
- 
     @Override
     public void simpleInitApp() {        
         System.out.println("---------simpleInitApp()");
