@@ -50,11 +50,19 @@ dependencies {
     compile "org.jmonkeyengine:jme3-desktop:$jmeVersion"
     compile "org.jmonkeyengine:jme3-lwjgl:$jmeVersion"
     
+    
+    
+    compile "com.github.insubstantial:substance:[7.3,)"
 }
 
 task runTestApp(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "spix.app.TestApp"
+}
+
+task runTestLaf(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = "spix.app.TestLaf"
 }
 
 

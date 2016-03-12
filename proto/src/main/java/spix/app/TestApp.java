@@ -57,6 +57,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CountDownLatch;
 import javax.swing.*;
 
+import org.pushingpixels.substance.api.skin.*;
+
 /**
  *
  *
@@ -69,7 +71,10 @@ public class TestApp extends SimpleApplication {
     public TestApp() {
     }
 
-    public static void main(String[] args) throws InterruptedException{
+    public static void main(String[] args) throws Exception {
+ 
+        JFrame.setDefaultLookAndFeelDecorated(true);
+        UIManager.setLookAndFeel(new SubstanceGraphiteGlassLookAndFeel());
      
         final TestApp app = new TestApp();
         app.setShowSettings(false);
