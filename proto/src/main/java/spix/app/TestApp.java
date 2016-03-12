@@ -36,6 +36,7 @@
 
 package spix.app;
 
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -43,11 +44,18 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
-import com.jme3.system.JmeCanvasContext;
+import com.jme3.system.awt.AwtPanel;
+import com.jme3.system.awt.AwtPanelsContext;
+import com.jme3.system.awt.PaintMode;
+import java.awt.BorderLayout;
 import java.awt.Canvas;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import javax.swing.JFrame;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.CountDownLatch;
+import javax.swing.*;
 
 /**
  *
@@ -56,49 +64,48 @@ import javax.swing.JFrame;
  */
 public class TestApp extends SimpleApplication {
 
+    private AwtPanel panel;
+    
+    public TestApp() {
+    }
+
     public static void main(String[] args) throws InterruptedException{
-        AppSettings settings = new AppSettings(true);
-        settings.setWidth(640);
-        settings.setHeight(480);
-
+     
         final TestApp app = new TestApp();
-        app.setPauseOnLostFocus(false);
-        app.setSettings(settings);
-        app.createCanvas();
-        app.startCanvas(true);
-
-        JmeCanvasContext context = (JmeCanvasContext) app.getContext();
-        Canvas canvas = context.getCanvas();
-        canvas.setSize(settings.getWidth(), settings.getHeight());
-
+        app.setShowSettings(false);
         
-
-        Thread.sleep(3000);
-
-        JFrame frame = new JFrame("Test");
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                app.stop();
+        AppSettings settings = new AppSettings(true);
+        settings.setCustomRenderer(AwtPanelsContext.class);
+        settings.setFrameRate(60);
+        app.setSettings(settings);
+        app.start();
+    }
+ 
+    private static void startWindow( final TestApp app ) {
+ 
+        try {
+        SwingUtilities.invokeAndWait(new Runnable(){
+            public void run(){
+                System.out.println("---------Swing run");            
+                final AwtPanelsContext ctx = (AwtPanelsContext) app.getContext();
+                app.panel = ctx.createPanel(PaintMode.Accelerated);
+                app.panel.setPreferredSize(new Dimension(1280, 720));
+                ctx.setInputSource(app.panel);
+                
+                createWindowForPanel(app, app.panel, 300);
             }
         });
-        frame.getContentPane().add(canvas);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-
-        Thread.sleep(3000);
-
-        frame.getContentPane().remove(canvas);
-
-        Thread.sleep(3000);
-
-        frame.getContentPane().add(canvas);
+        
+        } catch( InvocationTargetException | InterruptedException e ) {
+            throw new RuntimeException("Checked exceptions suck.", e);
+        }
+           
     }
 
     @Override
-    public void simpleInitApp() {
+    public void simpleInitApp() {        
+        System.out.println("---------simpleInitApp()");
+                    
         flyCam.setDragToRotate(true);
 
         Box b = new Box(Vector3f.ZERO, 1, 1, 1);
@@ -108,5 +115,28 @@ public class TestApp extends SimpleApplication {
         mat.setColor("Color", ColorRGBA.Blue);
         geom.setMaterial(mat);
         rootNode.attachChild(geom);
+ 
+        startWindow(this);        
+        
+        System.out.println("---------attaching panel");            
+        panel.attachTo(true, viewPort, guiViewPort);
+    }
+    
+    private static void createWindowForPanel( final Application app, AwtPanel panel, int location ){
+        JFrame frame = new JFrame("Render Display " + location);
+        frame.getContentPane().setLayout(new BorderLayout());
+        frame.getContentPane().add(panel, BorderLayout.CENTER);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                app.stop();
+            }
+        });
+        frame.pack();
+        //frame.setLocation(location, Toolkit.getDefaultToolkit().getScreenSize().height - 400);
+        //frame.setLocation(location, 0);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 }
