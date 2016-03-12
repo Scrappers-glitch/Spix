@@ -47,12 +47,8 @@ import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanel;
 import com.jme3.system.awt.AwtPanelsContext;
 import com.jme3.system.awt.PaintMode;
-import java.awt.BorderLayout;
-import java.awt.Canvas;
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CountDownLatch;
 import javax.swing.*;
@@ -81,6 +77,8 @@ public class TestApp extends SimpleApplication {
                         stop();
                     }
                 });
+ 
+                mainFrame.setJMenuBar(createMainMenu());
                 
                 stateManager.attach(new AwtPanelState(mainFrame.getContentPane(), BorderLayout.CENTER));
             }
@@ -97,6 +95,58 @@ public class TestApp extends SimpleApplication {
                 }
             }
         });                              
+    }
+
+    private JMenuBar createMainMenu() {
+        // Just for testing for now
+        JMenuBar result = new JMenuBar();
+        
+        JMenu file = new JMenu("File");
+        file.add(new AbstractAction("New") {
+            public void actionPerformed( ActionEvent event ) {
+            }
+        });
+        file.add(new AbstractAction("Open") {
+            public void actionPerformed( ActionEvent event ) {
+            }
+        });
+        file.add(new AbstractAction("Save") {
+            public void actionPerformed( ActionEvent event ) {
+            }
+        });
+        file.add(new AbstractAction("Exit") {
+            public void actionPerformed( ActionEvent event ) {
+                mainFrame.dispose();
+            }
+        });
+        
+        
+        JMenu edit = new JMenu("Edit");
+        edit.add(new AbstractAction("Cut") {
+            public void actionPerformed( ActionEvent event ) {
+            }
+        });
+        edit.add(new AbstractAction("Copy") {
+            public void actionPerformed( ActionEvent event ) {
+            }
+        });
+        edit.add(new AbstractAction("Paste") {
+            public void actionPerformed( ActionEvent event ) {
+            }
+        });
+        
+        JMenu help = new JMenu("Help");
+        help.add(new AbstractAction("About") {
+            public void actionPerformed( ActionEvent event ) {
+                JOptionPane.showMessageDialog(mainFrame, "What's it all about?");
+            }
+        });
+        
+        result.add(file);
+        result.add(edit);
+        result.add(help);
+        
+        return result;
     }
 
     public static void main(String[] args) throws Exception {
