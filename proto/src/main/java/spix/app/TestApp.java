@@ -49,6 +49,8 @@ import com.jme3.system.awt.AwtPanelsContext;
 import com.jme3.system.awt.PaintMode;
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CountDownLatch;
 import javax.swing.*;
@@ -56,6 +58,9 @@ import javax.swing.*;
 import org.pushingpixels.substance.api.skin.*;
 
 import spix.awt.*;
+import spix.core.Action;
+import spix.core.Spix;
+import spix.swing.*;
 
 
 /**
@@ -66,6 +71,7 @@ import spix.awt.*;
 public class TestApp extends SimpleApplication {
 
     private volatile JFrame mainFrame;
+    private Spix spix;
     
     public static void main(String[] args) throws Exception {
  
@@ -83,6 +89,8 @@ public class TestApp extends SimpleApplication {
     }
  
     public TestApp() throws Exception {
+ 
+        this.spix = new Spix();
  
         // Have to create the frame on the AWT EDT.
         SwingUtilities.invokeAndWait(new Runnable() {
@@ -164,6 +172,41 @@ public class TestApp extends SimpleApplication {
             public void actionPerformed( ActionEvent event ) {
             }
         });
+ 
+        PropertyChangeListener testListener = new PropertyChangeListener() {
+            public void propertyChange( PropertyChangeEvent event ) {
+                System.out.println("test:" + event);
+            }
+        };
+ 
+        JMenu test = new JMenu("Test");
+        
+        // A test of a Spix action
+        Action testAction = new spix.core.AbstractAction("Test") {
+            
+            private int count = 1;
+            
+            public void performAction( Spix spix ) {
+                System.out.println("A test spix action.");
+                put(Action.NAME, "Test " + (++count));
+            }
+        };
+        SwingAction swingAction = new SwingAction(testAction, spix); 
+        test.add(swingAction);
+        swingAction.addPropertyChangeListener(testListener);
+ 
+        // A test of a regular swing action doing similar just to compare when
+        // there are problems. 
+        javax.swing.Action testAction2 = new AbstractAction("Test2") {
+            private int count = 1;
+                      
+            public void actionPerformed( ActionEvent event ) {
+                System.out.println("Test action 2.");
+                putValue(javax.swing.Action.NAME, "Test2 " + (++count)); 
+            }
+        };
+        test.add(testAction2);
+        testAction2.addPropertyChangeListener(testListener);
         
         JMenu help = new JMenu("Help");
         help.add(new AbstractAction("About") {
@@ -174,6 +217,7 @@ public class TestApp extends SimpleApplication {
         
         result.add(file);
         result.add(edit);
+        result.add(test);
         result.add(help);
         
         return result;
