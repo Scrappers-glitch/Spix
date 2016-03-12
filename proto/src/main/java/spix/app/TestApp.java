@@ -80,7 +80,19 @@ public class TestApp extends SimpleApplication {
  
                 mainFrame.setJMenuBar(createMainMenu());
                 
-                stateManager.attach(new AwtPanelState(mainFrame.getContentPane(), BorderLayout.CENTER));
+                //stateManager.attach(new AwtPanelState(mainFrame.getContentPane(), BorderLayout.CENTER));
+ 
+                JSplitPane split = new JSplitPane();
+                split.setContinuousLayout(false);
+                split.setBackground(Color.black);
+                
+                JPanel left = new JPanel();
+                left.add(new JLabel("Testing"));
+                split.add(left, JSplitPane.LEFT);
+                mainFrame.getContentPane().add(split, BorderLayout.CENTER); 
+ 
+
+                stateManager.attach(new AwtPanelState(split, JSplitPane.RIGHT));
             }
         });
  

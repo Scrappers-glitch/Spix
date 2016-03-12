@@ -102,6 +102,7 @@ public class AwtPanelState extends BaseAppState {
             panel = ctx.createPanel(PaintMode.Accelerated);
             panel.setPreferredSize(new Dimension(1280, 720));
             panel.setMinimumSize(new Dimension(400, 300));
+            panel.setBackground(Color.black);
             ctx.setInputSource(panel);
         }
     }
