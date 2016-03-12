@@ -66,16 +66,44 @@ import org.pushingpixels.substance.api.skin.*;
  */
 public class TestApp extends SimpleApplication {
 
-    private AwtPanel panel;
+    private volatile JFrame mainFrame;
     
-    public TestApp() {
+    public TestApp() throws Exception {
+ 
+        // Have to create the frame on the AWT EDT.
+        SwingUtilities.invokeAndWait(new Runnable() {
+            public void run() {       
+                mainFrame = new JFrame("Test App");
+                mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                mainFrame.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        stop();
+                    }
+                });
+                
+                stateManager.attach(new AwtPanelState(mainFrame.getContentPane(), BorderLayout.CENTER));
+            }
+        });
+ 
+
+        stateManager.getState(AwtPanelState.class).addEnabledCommand(new Runnable() {
+            public void run() {
+                if( !mainFrame.isVisible() ) {
+                    // By now we should have the panel inside
+                    mainFrame.pack();
+                    mainFrame.setLocationRelativeTo(null);
+                    mainFrame.setVisible(true);
+                }
+            }
+        });                              
     }
 
     public static void main(String[] args) throws Exception {
  
         JFrame.setDefaultLookAndFeelDecorated(true);
         UIManager.setLookAndFeel(new SubstanceGraphiteGlassLookAndFeel());
-     
+
         final TestApp app = new TestApp();
         app.setShowSettings(false);
         
@@ -86,27 +114,6 @@ public class TestApp extends SimpleApplication {
         app.start();
     }
  
-    private static void startWindow( final TestApp app ) {
- 
-        try {
-        SwingUtilities.invokeAndWait(new Runnable(){
-            public void run(){
-                System.out.println("---------Swing run");            
-                final AwtPanelsContext ctx = (AwtPanelsContext) app.getContext();
-                app.panel = ctx.createPanel(PaintMode.Accelerated);
-                app.panel.setPreferredSize(new Dimension(1280, 720));
-                ctx.setInputSource(app.panel);
-                
-                createWindowForPanel(app, app.panel, 300);
-            }
-        });
-        
-        } catch( InvocationTargetException | InterruptedException e ) {
-            throw new RuntimeException("Checked exceptions suck.", e);
-        }
-           
-    }
-
     @Override
     public void simpleInitApp() {        
         System.out.println("---------simpleInitApp()");
@@ -120,28 +127,6 @@ public class TestApp extends SimpleApplication {
         mat.setColor("Color", ColorRGBA.Blue);
         geom.setMaterial(mat);
         rootNode.attachChild(geom);
+    }
  
-        startWindow(this);        
-        
-        System.out.println("---------attaching panel");            
-        panel.attachTo(true, viewPort, guiViewPort);
-    }
-    
-    private static void createWindowForPanel( final Application app, AwtPanel panel, int location ){
-        JFrame frame = new JFrame("Render Display " + location);
-        frame.getContentPane().setLayout(new BorderLayout());
-        frame.getContentPane().add(panel, BorderLayout.CENTER);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-                app.stop();
-            }
-        });
-        frame.pack();
-        //frame.setLocation(location, Toolkit.getDefaultToolkit().getScreenSize().height - 400);
-        //frame.setLocation(location, 0);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-    }
 }
