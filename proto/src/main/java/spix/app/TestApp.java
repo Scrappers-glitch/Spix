@@ -108,8 +108,6 @@ public class TestApp extends SimpleApplication {
  
                 mainFrame.setJMenuBar(createMainMenu());
                 
-                //stateManager.attach(new AwtPanelState(mainFrame.getContentPane(), BorderLayout.CENTER));
- 
                 JSplitPane split = new JSplitPane();
                 split.setContinuousLayout(false);
                 split.setBackground(Color.black);
@@ -139,96 +137,6 @@ public class TestApp extends SimpleApplication {
 
     private JMenuBar createMainMenu() {
         return ActionUtils.createActionMenuBar(createMainActions(), spix);
-/*    
-        // Just for testing for now
-        JMenuBar result = new JMenuBar();
-        
-        JMenu file = new JMenu("File");
-        file.add(new AbstractAction("New") {
-            public void actionPerformed( ActionEvent event ) {
-            }
-        });
-        file.add(new AbstractAction("Open") {
-            public void actionPerformed( ActionEvent event ) {
-            }
-        });
-        file.add(new AbstractAction("Save") {
-            public void actionPerformed( ActionEvent event ) {
-            }
-        });
-        file.add(new AbstractAction("Exit") {
-            public void actionPerformed( ActionEvent event ) {
-                mainFrame.dispose();
-            }
-        });
-        
-        
-        JMenu edit = new JMenu("Edit");
-        edit.add(new AbstractAction("Cut") {
-            public void actionPerformed( ActionEvent event ) {
-            }
-        });
-        edit.add(new AbstractAction("Copy") {
-            public void actionPerformed( ActionEvent event ) {
-            }
-        });
-        edit.add(new AbstractAction("Paste") {
-            public void actionPerformed( ActionEvent event ) {
-            }
-        });
- 
-        PropertyChangeListener testListener = new PropertyChangeListener() {
-            public void propertyChange( PropertyChangeEvent event ) {
-                System.out.println("test:" + event);
-            }
-        };
- 
-        ActionList testActions = createTestActions();
-        JMenuItem test = ActionUtils.createActionMenuItem(testActions, spix);
- */       
-        /*
-        JMenu test = new JMenu("Test");
-        
-        // A test of a Spix action
-        Action testAction = new spix.core.AbstractAction("Test") {
-            
-            private int count = 1;
-            
-            public void performAction( Spix spix ) {
-                System.out.println("A test spix action.");
-                put(Action.NAME, "Test " + (++count));
-            }
-        };
-        SwingAction swingAction = new SwingAction(testAction, spix); 
-        test.add(swingAction);
-        swingAction.addPropertyChangeListener(testListener);
- 
-        // A test of a regular swing action doing similar just to compare when
-        // there are problems. 
-        javax.swing.Action testAction2 = new AbstractAction("Test2") {
-            private int count = 1;
-                      
-            public void actionPerformed( ActionEvent event ) {
-                System.out.println("Test action 2.");
-                putValue(javax.swing.Action.NAME, "Test2 " + (++count)); 
-            }
-        };
-        test.add(testAction2);
-        testAction2.addPropertyChangeListener(testListener);*/
- /*       
-        JMenu help = new JMenu("Help");
-        help.add(new AbstractAction("About") {
-            public void actionPerformed( ActionEvent event ) {
-                JOptionPane.showMessageDialog(mainFrame, "What's it all about?");
-            }
-        });
-        
-        result.add(file);
-        result.add(edit);
-        result.add(test);
-        result.add(help);
-        
-        return result;*/
     }
     
     private ActionList createMainActions() {
