@@ -43,6 +43,7 @@ import java.beans.PropertyChangeSupport;
 import javax.swing.SwingUtilities;
 
 import spix.core.Action;
+import spix.core.ToggleAction;
 import spix.core.Spix;
 
 /**
@@ -88,7 +89,7 @@ public class SwingAction implements javax.swing.Action {
     public void putValue( String key, Object value ) {
         key = toSpixProperty(key);
         value = toSpixValue(value); 
-        action.put(Action.NAME, value);
+        action.put(key, value);
     }
     
     public void removePropertyChangeListener( PropertyChangeListener listener ) {
@@ -108,6 +109,8 @@ public class SwingAction implements javax.swing.Action {
         switch( s ) {
             case Action.NAME:
                 return NAME;
+            case ToggleAction.TOGGLED:
+                return SELECTED_KEY;
             default:
                 return s;
         }
@@ -117,6 +120,8 @@ public class SwingAction implements javax.swing.Action {
         switch( s ) {
             case NAME:
                 return Action.NAME;
+            case SELECTED_KEY:
+                return ToggleAction.TOGGLED;
             default:
                 return s;
         }
@@ -144,14 +149,14 @@ public static final String 	SMALL_ICON 	"SmallIcon"
     } 
  
     protected void firePropertyChange( PropertyChangeEvent event ) {
-System.out.println("SwingAction.firePropertyChange() on thread:" + Thread.currentThread());        
+System.out.println("SwingAction.firePropertyChange(" + event + ") on thread:" + Thread.currentThread());        
         String name = toSwingProperty(event.getPropertyName());
         dispatcher.firePropertyChange(name, event.getOldValue(), event.getNewValue());    
     } 
     
     private class DelegateObserver implements PropertyChangeListener {
         public void propertyChange( final PropertyChangeEvent event ) {
-System.out.println("DelegateObserver.propertyChange() on thread:" + Thread.currentThread());        
+System.out.println("DelegateObserver.propertyChange(" + event + ") on thread:" + Thread.currentThread());        
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
                     firePropertyChange(event);

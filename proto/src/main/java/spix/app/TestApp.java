@@ -65,11 +65,16 @@ import javax.swing.*;
 
 import org.pushingpixels.substance.api.skin.*;
 
+import com.google.common.base.*;
+
 import spix.awt.*;
+import spix.core.AbstractToggleAction;
 import spix.core.Action;
 import spix.core.ActionList;
 import spix.core.DefaultActionList;
 import spix.core.Spix;
+import spix.core.ToggleAction;
+import spix.reflect.*;
 import spix.swing.*;
 import spix.ui.*;
 
@@ -225,6 +230,24 @@ System.out.println("Wrote file:" + file);
         edit.add(new NopAction("Cut"));
         edit.add(new NopAction("Copy"));
         edit.add(new NopAction("Paste"));
+ 
+        ActionList camera = main.add(new DefaultActionList("Camera"));
+        ToggleAction fly = camera.add(new AbstractToggleAction("Fly") {
+            public void performAction( Spix spix ) {
+                System.out.println("camera.mode=fly");
+                spix.getBlackboard().set("camera.mode", "fly");
+            }
+        });
+        fly.setToggled(true);
+        Function<Boolean, Void> testSetter = Reflection.setter(fly, "setToggled", Boolean.class);
+        System.out.println("test setter:" + testSetter);
+        
+        ToggleAction orbit = camera.add(new AbstractToggleAction("Orbit") {
+            public void performAction( Spix spix ) {
+                System.out.println("camera.mode=orbit");
+                spix.getBlackboard().set("camera.mode", "orbit");
+            }
+        });
         
         ActionList test = main.add(createTestActions());
         

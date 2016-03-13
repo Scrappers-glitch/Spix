@@ -42,6 +42,7 @@ import java.beans.PropertyChangeListener;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.AbstractButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -113,7 +114,10 @@ public class ActionUtils {
             return createActionMenu((ActionList)a, spix);
         }
 
-        // TODO: handle toggle buttons using the 'selected' property
+        if( a instanceof ToggleAction ) {
+            JCheckBoxMenuItem cb = new JCheckBoxMenuItem(new SwingAction(a, spix));
+            return cb;
+        }
 
         return new JMenuItem(new SwingAction(a, spix));
     }
