@@ -38,10 +38,16 @@ package spix.app;
 
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
+import com.jme3.bounding.BoundingBox;
+import com.jme3.bounding.BoundingVolume;
+import com.jme3.light.AmbientLight;
+import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.asset.plugins.FileLocator;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanel;
@@ -155,6 +161,7 @@ public class TestApp extends SimpleApplication {
                              new RequestCallback<File>() {
                                 public void done( File f ) {
                                     System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
+                                    loadFile(f);
                                 }
                              });
             }
@@ -231,16 +238,59 @@ public class TestApp extends SimpleApplication {
 
         Box b = new Box(Vector3f.ZERO, 1, 1, 1);
         Geometry geom = new Geometry("Box", b);
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         //mat.setTexture("ColorMap", assetManager.loadTexture("Interface/Logo/Monkey.jpg"));
-        mat.setColor("Color", ColorRGBA.Blue);
+        mat.setColor("Diffuse", ColorRGBA.Blue);
+        mat.setColor("Ambient", ColorRGBA.Blue);
+        mat.setBoolean("UseMaterialColors", true);
         geom.setMaterial(mat);
         rootNode.attachChild(geom);
+        
+        DirectionalLight light = new DirectionalLight();
+        light.setDirection(new Vector3f(-0.2f, -1, -0.3f).normalizeLocal());
+        rootNode.addLight(light);
+        
+        AmbientLight ambient = new AmbientLight();
+        ambient.setColor(new ColorRGBA(0.5f, 0.5f, 0.2f, 1));
+        rootNode.addLight(ambient);
     }
 
     @Override
     public void simpleUpdate( float tpf ) {
         spix.runTasks();
+    }
+
+
+    private void loadFile( File f ) {
+        // JME doesn't really make this easy... so we cheat a little and make some
+        // assumptions.
+        File assetRoot = f.getParentFile();
+        String modelPath = f.getName();
+        while( assetRoot.getParentFile() != null && !"assets".equals(assetRoot.getName()) ) {
+            modelPath = assetRoot.getName() + "/" + modelPath;
+            assetRoot = assetRoot.getParentFile();
+        }
+        System.out.println("Asset root:" + assetRoot + "   modelPath:" + modelPath);
+        
+        assetManager.registerLocator(assetRoot.toString(), FileLocator.class);
+        
+        Spatial scene = assetManager.loadModel(modelPath);
+        
+        System.out.println("Scene:" + scene);
+ 
+        // For now, find out where to put the scene so that it is next to whatever
+        // is currently loaded       
+        BoundingBox currentBounds = (BoundingBox)rootNode.getWorldBound();        
+        BoundingBox modelBounds = (BoundingBox)scene.getWorldBound();
+        
+        System.out.println("root bounds:" + currentBounds);
+        System.out.println("model bounds:" + modelBounds);        
+
+        float worldRight = currentBounds.getCenter().x + currentBounds.getXExtent();
+        float modelLeft = -modelBounds.getCenter().x + modelBounds.getXExtent();
+
+        scene.setLocalTranslation(worldRight + modelLeft, 0, 0);
+        rootNode.attachChild(scene);
     }
 
     public static class NopAction extends spix.core.AbstractAction {
