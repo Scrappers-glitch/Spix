@@ -85,7 +85,29 @@ public class ActionUtils {
 
         return result;
     } 
-    
+
+    public static JMenuBar createActionMenuBar( ActionList actions, Spix spix ) {
+        if( actions == null ) {
+            throw new IllegalArgumentException( "Cannot create menu for null action list." );
+        }
+        
+        JMenuBar result = new JMenuBar();
+        for( Iterator i = actions.iterator(); i.hasNext(); ) {
+            Action a = (Action)i.next();
+            if( a == null ) {
+                result.add(new JSeparator(SwingConstants.VERTICAL));
+            } else {
+                result.add(createActionMenuItem(a, spix));
+            }
+        }
+               
+        // Setup an object to keep the menu in synch with the
+        // list.
+        actions.addPropertyChangeListener(new ActionMenuCoordinator(result, spix));
+
+        return result;
+    } 
+         
     public static JMenuItem createActionMenuItem( Action a, Spix spix ) {
         if( a instanceof ActionList ) {
             return createActionMenu((ActionList)a, spix);

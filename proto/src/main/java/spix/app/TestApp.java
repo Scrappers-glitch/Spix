@@ -138,6 +138,8 @@ public class TestApp extends SimpleApplication {
     }
 
     private JMenuBar createMainMenu() {
+        return ActionUtils.createActionMenuBar(createMainActions(), spix);
+/*    
         // Just for testing for now
         JMenuBar result = new JMenuBar();
         
@@ -183,7 +185,7 @@ public class TestApp extends SimpleApplication {
  
         ActionList testActions = createTestActions();
         JMenuItem test = ActionUtils.createActionMenuItem(testActions, spix);
-        
+ */       
         /*
         JMenu test = new JMenu("Test");
         
@@ -213,7 +215,7 @@ public class TestApp extends SimpleApplication {
         };
         test.add(testAction2);
         testAction2.addPropertyChangeListener(testListener);*/
-        
+ /*       
         JMenu help = new JMenu("Help");
         help.add(new AbstractAction("About") {
             public void actionPerformed( ActionEvent event ) {
@@ -226,7 +228,42 @@ public class TestApp extends SimpleApplication {
         result.add(test);
         result.add(help);
         
-        return result;
+        return result;*/
+    }
+    
+    private ActionList createMainActions() {
+        ActionList main = new DefaultActionList("root");
+ 
+        ActionList file = main.add(new DefaultActionList("File"));
+        file.add(new NopAction("New"));
+        file.add(new NopAction("Open"));
+        file.add(new NopAction("Save"));
+        file.add(new NopAction("Exit") {
+            public void performAction( Spix spix ) {
+                // Need to tell the app to shutdown... this is one case where
+                // we need some back chain.  We'll cheat for now.
+                // FIXME
+                mainFrame.dispose();                
+            }
+        });
+        
+        ActionList edit = main.add(new DefaultActionList("Edit"));
+        edit.add(new NopAction("Cut"));
+        edit.add(new NopAction("Copy"));
+        edit.add(new NopAction("Paste"));
+        
+        ActionList test = main.add(createTestActions());
+        
+        ActionList help = main.add(new DefaultActionList("Help"));
+        help.add(new NopAction("About") {
+            public void performAction( Spix spix ) {
+                // Another case where we'll cheat until we have proper
+                // user request objects
+                JOptionPane.showMessageDialog(mainFrame, "What's it all about?");
+            }
+        });
+                
+        return main;        
     }
     
     private ActionList createTestActions() {
@@ -278,5 +315,14 @@ public class TestApp extends SimpleApplication {
         geom.setMaterial(mat);
         rootNode.attachChild(geom);
     }
- 
+
+    public static class NopAction extends spix.core.AbstractAction {
+        
+        public NopAction( String name ) {
+            super(name);
+        }
+        
+        public void performAction( Spix spix ) {
+        }
+    } 
 }
