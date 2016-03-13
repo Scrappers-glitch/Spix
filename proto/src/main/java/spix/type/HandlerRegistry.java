@@ -40,17 +40,19 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
- *
+ *  When provided a specific type, can be used to lookup a specific
+ *  handler if it exists or a more general handler otherwise, on up
+ *  the class and interface hierarchy.
  *
  *  @author    Paul Speed
  */
-public class TypeRegistry<V> {
+public class HandlerRegistry<V> {
  
     private Map<Type, V> map = new ConcurrentHashMap<>();
     private Map<Type, List<V>> allCache = new ConcurrentHashMap<>();
     private Map<Type, List<Type>> paths = new ConcurrentHashMap<>();  
  
-    public TypeRegistry() {
+    public HandlerRegistry() {
     }
  
     /**
@@ -84,17 +86,19 @@ public class TypeRegistry<V> {
      *  type.
      */
     public List<V> getAll( Type key ) {
-    
+System.out.println("getAll(" + key + ")");    
         List<V> results = allCache.get(key);
         if( results != null ) {
             return results;
         }
     
         List<Type> path = getPath(key, true);
-
+System.out.println("path:" + path);
         results = new ArrayList<>();
+System.out.println("map:" + map);        
         for( Type t : path ) {
             V value = map.get(t);
+System.out.println("  " + t + " = " + value);            
             if( value != null ) {
                 // Note: leave duplicate checking up to the caller
                 results.add(value);

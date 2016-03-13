@@ -54,7 +54,7 @@ public class TypeRegistryTest {
         Type grandchild = new Type(Grandchild.class);
         Type cloneable = new Type(Cloneable.class);
         
-        TypeRegistry<String> registry = new TypeRegistry<>();
+        HandlerRegistry<String> registry = new HandlerRegistry<>();
         registry.register(child, "born");
         registry.register(myInterface, "mine");
         registry.register(myOtherInterface, "myOther");
