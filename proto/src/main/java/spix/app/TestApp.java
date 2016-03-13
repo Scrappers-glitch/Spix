@@ -36,8 +36,8 @@
 
 package spix.app;
 
-import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
+import com.jme3.app.*;
+import com.jme3.app.state.*;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.light.AmbientLight;
@@ -58,6 +58,7 @@ import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CountDownLatch;
 import javax.swing.*;
@@ -100,6 +101,24 @@ public class TestApp extends SimpleApplication {
     }
  
     public TestApp() throws Exception {
+        super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
+              new FlyCamAppState()); 
+ 
+        stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
+            /*
+            requires JME head until apha 3 is pushed
+            @Override
+            protected void writeImageFile( final File file ) throws IOException {
+                super.writeImageFile(file);
+System.out.println("Wrote file:" + file);
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        // For now do it the 'incorrect' way 
+                        JOptionPane.showMessageDialog(mainFrame, "Saved screenshot:" + file);
+                    }
+                });
+            }*/
+        });
  
         this.spix = new Spix();
  
@@ -155,6 +174,7 @@ public class TestApp extends SimpleApplication {
  
         ActionList file = main.add(new DefaultActionList("File"));
         file.add(new NopAction("New"));
+        file.add(null); // separator
         file.add(new NopAction("Open") {
             public void performAction( Spix spix ) {
                 spix.request(new GetFile("Open Scene", "JME Object", "j3o", true), 
@@ -167,6 +187,13 @@ public class TestApp extends SimpleApplication {
             }
         });
         file.add(new NopAction("Save"));
+        file.add(null); // separator
+        file.add(new NopAction("Take Screenshot") {
+            public void performAction( Spix spix ) {
+                stateManager.getState(ScreenshotAppState.class).takeScreenshot();
+            }
+        });
+        file.add(null); // separator
         file.add(new NopAction("Exit") {
             public void performAction( Spix spix ) {
                 // Need to tell the app to shutdown... this is one case where
