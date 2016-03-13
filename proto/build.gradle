@@ -32,10 +32,12 @@ just get deleted.
 */
 
 repositories {
+    mavenLocal()
     jcenter()
 }
 
-ext.jmeVersion = "[3.1,)" 
+//ext.jmeVersion = "[3.1,)" 
+ext.jmeVersion = "unknown" 
 
 dependencies {
 

@@ -36,6 +36,8 @@
 
 package spix.core;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import spix.type.*;
@@ -50,9 +52,11 @@ public class Spix {
 
     private final Blackboard blackboard = new DefaultBlackboard();
     
-    private final TypeRegistry<UserRequestHandler> requestHandlers = new TypeRegistry();
+    private final HandlerRegistry<UserRequestHandler> requestHandlers = new HandlerRegistry<>();
  
     private final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
+ 
+    private final Map<Class, Object> services = new ConcurrentHashMap<>();
     
     public Spix() {
     }
@@ -72,6 +76,16 @@ public class Spix {
     public <T, R extends UserRequest<T>> void request( R request, RequestCallback<T> callback ) {
         UserRequestHandler<T, R> handler = getHandler(request.getClass());
         handler.handleRequest(this, request, callback);
+    }
+ 
+    public <T> void registerService( Class<? super T> type, T service ) {
+        services.put(type, service);
+    }
+    
+    public <T> T getService( Class<T> type ) {
+        Object o = services.get(type);
+System.out.println("service type:" + type + "  = " + o);        
+        return type.cast(o);
     }
     
     public <T> void sendResponse( final RequestCallback<T> callback, final T result ) {        

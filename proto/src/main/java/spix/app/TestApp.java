@@ -149,6 +149,9 @@ System.out.println("Wrote file:" + file);
                 
                 // Register some handlers that depend on the main window
                 spix.registerRequestHandler(GetFile.class, new GetFileHandler(mainFrame));
+                
+                // An alternate approach that uses more defined services
+                spix.registerService(FileRequester.class, new SwingFileRequester(spix, mainFrame));
             }
         });
  
@@ -178,6 +181,19 @@ System.out.println("Wrote file:" + file);
         file.add(new NopAction("Open") {
             public void performAction( Spix spix ) {
                 spix.request(new GetFile("Open Scene", "JME Object", "j3o", true), 
+                             new RequestCallback<File>() {
+                                public void done( File f ) {
+                                    System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
+                                    loadFile(f);
+                                }
+                             });
+            }
+        });
+        file.add(new NopAction("Open 2") {
+            public void performAction( Spix spix ) {
+                // Uses the alternate requester service approach
+                spix.getService(FileRequester.class).requestFile("Open Scene", 
+                                                                 "JME Object", "j3o", null, true, 
                              new RequestCallback<File>() {
                                 public void done( File f ) {
                                     System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
