@@ -78,31 +78,3 @@ public class GetFile implements UserRequest<File> {
     }
 }
 
-
-/*
-    public File requestFile( String title, String typeDescription, String extension,
-                             boolean forOpen )
-    {
-        return( getFile( contextWindow, title, typeDescription, extension, null, forOpen,
-                         JFileChooser.FILES_ONLY ) );
-    }
-
-    public File requestFile( String title, String typeDescription, String extension, File initialValue,
-                             boolean forOpen )
-    {
-        return( getFile( contextWindow, title, typeDescription, extension, initialValue, forOpen,
-                         JFileChooser.FILES_ONLY ) );
-    }
-
-    public java.util.List requestFiles( String title, String typeDescription, String extension, File initialValue,
-                                        boolean forOpen )
-    {
-        return( getFiles( contextWindow, title, typeDescription, extension, initialValue, forOpen,
-                          JFileChooser.FILES_ONLY ) );
-    }
-
-    public File requestDirectory( String title )
-    {
-        return( getFile( contextWindow, title, "Directory", "", null, true, JFileChooser.DIRECTORIES_ONLY ) );
-    }
-*/
