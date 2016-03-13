@@ -34,43 +34,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.core;
+package spix.ui;
 
-import spix.type.*;
-import spix.ui.*;
+import spix.core.Spix;
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public class Spix {
-
-    private final Blackboard blackboard = new DefaultBlackboard();
+public interface UserRequestHandler<T, R extends UserRequest<T>> {
     
-    private final TypeRegistry<UserRequestHandler> requestHandlers = new TypeRegistry();
-    
-    public Spix() {
-    }
-    
-    public Blackboard getBlackboard() {
-        return blackboard;
-    }
- 
-    public <T, R extends UserRequest<T>> void registerRequestHandler( Class<R> type, UserRequestHandler<T, R> handler ) {
-        requestHandlers.register(type, handler);     
-    } 
-  
-    protected <T, R extends UserRequest<T>> UserRequestHandler<T, R> getHandler( Class<R> type ) {
-        return (UserRequestHandler<T, R>)requestHandlers.get(type, false);
-    } 
-    
-    public <T, R extends UserRequest<T>> void request( R request, RequestCallback<T> callback ) {
-        UserRequestHandler<T, R> handler = getHandler(request.getClass());
-        handler.handleRequest(this, request, callback);
-    }
-    
-    public <T> void sendResponse( RequestCallback<T> callback, T result ) {
-        callback.done(result);
-    } 
+    public void handleRequest( Spix spix, R request, RequestCallback<T> callback );
 }

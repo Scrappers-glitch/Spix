@@ -34,9 +34,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.core;
+package spix.swing;
 
-import spix.type.*;
+import java.io.File;
+import java.awt.Component;
+import javax.swing.JFileChooser;
+
+import spix.core.Spix;
+import spix.ui.UserRequestHandler;
+import spix.ui.RequestCallback;
+
 import spix.ui.*;
 
 /**
@@ -44,33 +51,21 @@ import spix.ui.*;
  *
  *  @author    Paul Speed
  */
-public class Spix {
+public class GetFileHandler implements UserRequestHandler<File, GetFile> {
 
-    private final Blackboard blackboard = new DefaultBlackboard();
+    private Component mainWindow;
     
-    private final TypeRegistry<UserRequestHandler> requestHandlers = new TypeRegistry();
-    
-    public Spix() {
+    public GetFileHandler( Component mainWindow ) {
+        this.mainWindow = mainWindow;
     }
-    
-    public Blackboard getBlackboard() {
-        return blackboard;
+
+    public void handleRequest( Spix spix, GetFile request, RequestCallback<File> callback ) {
+        File f = FileChooser.getFile(mainWindow, request.title, 
+                                     request.typeDescription, request.extensions,
+                                     request.initialValue, request.forOpen,
+                                     JFileChooser.FILES_ONLY);
+        spix.sendResponse(callback, f);   
     }
- 
-    public <T, R extends UserRequest<T>> void registerRequestHandler( Class<R> type, UserRequestHandler<T, R> handler ) {
-        requestHandlers.register(type, handler);     
-    } 
-  
-    protected <T, R extends UserRequest<T>> UserRequestHandler<T, R> getHandler( Class<R> type ) {
-        return (UserRequestHandler<T, R>)requestHandlers.get(type, false);
-    } 
-    
-    public <T, R extends UserRequest<T>> void request( R request, RequestCallback<T> callback ) {
-        UserRequestHandler<T, R> handler = getHandler(request.getClass());
-        handler.handleRequest(this, request, callback);
-    }
-    
-    public <T> void sendResponse( RequestCallback<T> callback, T result ) {
-        callback.done(result);
-    } 
 }
+
+

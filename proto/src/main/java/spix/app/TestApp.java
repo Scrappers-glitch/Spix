@@ -51,6 +51,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CountDownLatch;
 import javax.swing.*;
@@ -63,6 +64,7 @@ import spix.core.ActionList;
 import spix.core.DefaultActionList;
 import spix.core.Spix;
 import spix.swing.*;
+import spix.ui.*;
 
 
 /**
@@ -118,8 +120,10 @@ public class TestApp extends SimpleApplication {
                 split.add(left, JSplitPane.LEFT);
                 mainFrame.getContentPane().add(split, BorderLayout.CENTER); 
  
-
                 stateManager.attach(new AwtPanelState(split, JSplitPane.RIGHT));
+                
+                // Register some handlers that depend on the main window
+                spix.registerRequestHandler(GetFile.class, new GetFileHandler(mainFrame));
             }
         });
  
@@ -145,7 +149,16 @@ public class TestApp extends SimpleApplication {
  
         ActionList file = main.add(new DefaultActionList("File"));
         file.add(new NopAction("New"));
-        file.add(new NopAction("Open"));
+        file.add(new NopAction("Open") {
+            public void performAction( Spix spix ) {
+                spix.request(new GetFile("Open Scene", "JME Object", "j3o", true), 
+                             new RequestCallback<File>() {
+                                public void done( File f ) {
+                                    System.out.println("Need to load:" + f);
+                                }
+                             });
+            }
+        });
         file.add(new NopAction("Save"));
         file.add(new NopAction("Exit") {
             public void performAction( Spix spix ) {
