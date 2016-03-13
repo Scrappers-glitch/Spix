@@ -36,6 +36,8 @@
 
 package spix.core;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import spix.type.*;
 import spix.ui.*;
 
@@ -49,6 +51,8 @@ public class Spix {
     private final Blackboard blackboard = new DefaultBlackboard();
     
     private final TypeRegistry<UserRequestHandler> requestHandlers = new TypeRegistry();
+ 
+    private final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
     
     public Spix() {
     }
@@ -70,7 +74,26 @@ public class Spix {
         handler.handleRequest(this, request, callback);
     }
     
-    public <T> void sendResponse( RequestCallback<T> callback, T result ) {
-        callback.done(result);
+    public <T> void sendResponse( final RequestCallback<T> callback, final T result ) {        
+        tasks.add(new Runnable() {
+            public void run() {
+                callback.done(result);
+            }
+        });
+    }
+    
+    public void runAction( final Action action ) {
+        tasks.add(new Runnable() {
+            public void run() {
+                action.performAction(Spix.this);
+            }
+        });
+    }
+    
+    public void runTasks() {
+        Runnable r;
+        while( (r = tasks.poll()) != null ) {
+            r.run();
+        }
     } 
 }

@@ -100,8 +100,8 @@ public class SwingAction implements javax.swing.Action {
     }
  
     public void actionPerformed( ActionEvent e ) {
-        // Right now just pass it through but really that's wrong
-        action.performAction(spix);
+        spix.runAction(action);
+        //action.performAction(spix);
     }
  
     public static String toSwingProperty( String s ) {
@@ -144,16 +144,16 @@ public static final String 	SMALL_ICON 	"SmallIcon"
     } 
  
     protected void firePropertyChange( PropertyChangeEvent event ) {
-System.out.println("firePropertyChange() on thread:" + Thread.currentThread());        
+System.out.println("SwingAction.firePropertyChange() on thread:" + Thread.currentThread());        
         String name = toSwingProperty(event.getPropertyName());
         dispatcher.firePropertyChange(name, event.getOldValue(), event.getNewValue());    
     } 
     
     private class DelegateObserver implements PropertyChangeListener {
         public void propertyChange( final PropertyChangeEvent event ) {
+System.out.println("DelegateObserver.propertyChange() on thread:" + Thread.currentThread());        
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-System.out.println("propertyChange() on thread:" + Thread.currentThread());        
                     firePropertyChange(event);
                 }
             });

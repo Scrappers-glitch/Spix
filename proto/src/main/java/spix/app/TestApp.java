@@ -154,7 +154,7 @@ public class TestApp extends SimpleApplication {
                 spix.request(new GetFile("Open Scene", "JME Object", "j3o", true), 
                              new RequestCallback<File>() {
                                 public void done( File f ) {
-                                    System.out.println("Need to load:" + f);
+                                    System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
                                 }
                              });
             }
@@ -197,7 +197,7 @@ public class TestApp extends SimpleApplication {
             private int count = 1;
             
             public void performAction( Spix spix ) {
-                System.out.println("A test spix action.");
+                System.out.println("A test spix action.  Thread:" + Thread.currentThread());
                 put(Action.NAME, "Test " + (++count));
             }
         });
@@ -236,6 +236,11 @@ public class TestApp extends SimpleApplication {
         mat.setColor("Color", ColorRGBA.Blue);
         geom.setMaterial(mat);
         rootNode.attachChild(geom);
+    }
+
+    @Override
+    public void simpleUpdate( float tpf ) {
+        spix.runTasks();
     }
 
     public static class NopAction extends spix.core.AbstractAction {

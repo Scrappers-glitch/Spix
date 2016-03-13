@@ -128,7 +128,7 @@ public class ActionUtils {
         }
 
         public void propertyChange( final PropertyChangeEvent event ) {
-System.out.println("propertyChange() on thread:" + Thread.currentThread());        
+System.out.println("ActionMenuCoordinator.propertyChange() on thread:" + Thread.currentThread());        
             if( event instanceof ElementEvent ) {
                 // run the event on the swing thread
                 SwingUtilities.invokeLater(new Runnable() {
@@ -141,7 +141,7 @@ System.out.println("propertyChange() on thread:" + Thread.currentThread());
         
         protected void processElementEvent( ElementEvent event ) {
         
-System.out.println("Process event on thread:" + Thread.currentThread());        
+System.out.println("ActionMenuCoordinator.Process event on thread:" + Thread.currentThread());        
             switch( event.getChangeType() ) {
                 case ADDED:
                     addMenu(event.getIndex(), (Action)event.getNewValue()); 
