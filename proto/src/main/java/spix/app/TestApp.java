@@ -114,7 +114,8 @@ System.out.println("Wrote file:" + file);
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
                         // For now do it the 'incorrect' way 
-                        JOptionPane.showMessageDialog(mainFrame, "Saved screenshot:" + file);
+                        //JOptionPane.showMessageDialog(mainFrame, "Saved screenshot:" + file);
+                        spix.getService(MessageRequester.class).showMessage("File Saved", "Saved screenshot:" + file, null); 
                     }
                 });
             }*/
@@ -152,6 +153,7 @@ System.out.println("Wrote file:" + file);
                 
                 // An alternate approach that uses more defined services
                 spix.registerService(FileRequester.class, new SwingFileRequester(spix, mainFrame));
+                spix.registerService(MessageRequester.class, new SwingMessageRequester(mainFrame));
             }
         });
  
@@ -231,7 +233,8 @@ System.out.println("Wrote file:" + file);
             public void performAction( Spix spix ) {
                 // Another case where we'll cheat until we have proper
                 // user request objects
-                JOptionPane.showMessageDialog(mainFrame, "What's it all about?");
+                //JOptionPane.showMessageDialog(mainFrame, "What's it all about?");
+                spix.getService(MessageRequester.class).showMessage("About", "What's it all about?", null); 
             }
         });
                 

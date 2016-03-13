@@ -83,9 +83,7 @@ public class Spix {
     }
     
     public <T> T getService( Class<T> type ) {
-        Object o = services.get(type);
-System.out.println("service type:" + type + "  = " + o);        
-        return type.cast(o);
+        return type.cast(services.get(type));
     }
     
     public <T> void sendResponse( final RequestCallback<T> callback, final T result ) {        
