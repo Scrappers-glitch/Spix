@@ -78,6 +78,7 @@ public class TestApp extends SimpleApplication {
     public static void main(String[] args) throws Exception {
  
         JFrame.setDefaultLookAndFeelDecorated(true);
+        JPopupMenu.setDefaultLightWeightPopupEnabled(false);
         UIManager.setLookAndFeel(new SubstanceGraphiteGlassLookAndFeel());
 
         final TestApp app = new TestApp();
