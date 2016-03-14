@@ -51,10 +51,11 @@ dependencies {
     compile "org.jmonkeyengine:jme3-core:$jmeVersion"
     compile "org.jmonkeyengine:jme3-desktop:$jmeVersion"
     compile "org.jmonkeyengine:jme3-lwjgl:$jmeVersion"
-    
-    
-    
+           
     compile "com.github.insubstantial:substance:[7.3,)"
+    
+    compile 'org.slf4j:slf4j-api:1.7.13'
+    
 }
 
 task runTestApp(type: JavaExec) {

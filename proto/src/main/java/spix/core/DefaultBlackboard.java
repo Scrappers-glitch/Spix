@@ -38,9 +38,14 @@ package spix.core;
 
 import java.beans.*;
 import java.util.*;
+import java.util.Objects;
+import java.util.concurrent.*;
 
 import com.google.common.base.*;
 
+import org.slf4j.*;
+
+import groovy.util.ObservableList;
 import groovy.util.ObservableMap;
 
 import spix.*;
@@ -54,13 +59,28 @@ import spix.type.*;
  */
 public class DefaultBlackboard implements Blackboard {
  
+    static Logger log = LoggerFactory.getLogger(DefaultBlackboard.class);
+ 
     private ObservableMap properties = new ObservableMap();
+ 
+    private Map<DispatcherKey, Dispatcher> dispatchers = new ConcurrentHashMap<>(); 
     
     public DefaultBlackboard() {
     }
         
     public void set( String path, Object value ) {
-        properties.put(path, value);   
+        Object original = properties.put(path, value);
+        if( value == original ) {
+            return;
+        }
+ 
+        if( original instanceof ObservableList ) {
+            detachDispatcher(path, (ObservableList)original); 
+        }
+        
+        if( value instanceof ObservableList ) {
+            attachDispatcher(path, (ObservableList)value); 
+        }    
     }
     
     public Object get( String path ) {
@@ -97,6 +117,26 @@ public class DefaultBlackboard implements Blackboard {
     public void removeListener( String property, PropertyChangeListener l ) {
         properties.removePropertyChangeListener(property, l);
     }
+ 
+    protected void detachDispatcher( String property, ObservableList list ) {
+        DispatcherKey key = new DispatcherKey(property, list);
+        Dispatcher listener = dispatchers.remove(key);
+        if( listener != null ) {
+            list.removePropertyChangeListener(listener);
+        }   
+    }
+    
+    protected void attachDispatcher( String property, ObservableList list ) {
+        DispatcherKey key = new DispatcherKey(property, list);
+        Dispatcher listener = dispatchers.get(key);
+        if( listener != null ) {
+            log.warn("Property already has a dispatcher:" + property + " for value:" + list);
+            return;
+        }
+        listener = new Dispatcher(property, list);
+        list.addPropertyChangeListener(listener);
+        dispatchers.put(key, listener);
+    }
     
     private class Binding implements PropertyChangeListener {
         private Property target;
@@ -114,5 +154,55 @@ public class DefaultBlackboard implements Blackboard {
             }
             target.setValue(value);
         }       
+    }
+    
+    private class DispatcherKey {
+        private String property;
+        private Object object;
+        
+        public DispatcherKey( String property, Object object ) {
+            this.property = property;
+            this.object = object;
+        }
+        
+        public boolean equals( Object o ) {
+            if( o == this ) {
+                return true;
+            }
+            if( o == null || o.getClass() != getClass() ) {
+                return false;
+            }
+            DispatcherKey other = (DispatcherKey)o;
+            if( !Objects.equals(property, other.property) ) {
+                return false;
+            }
+            return other.object == object;
+        }
+        
+        public int hashCode() {
+            return Objects.hash(property, System.identityHashCode(object));
+        }
+    }
+    
+    private class Dispatcher implements PropertyChangeListener {
+        private String property;
+        private Object object;
+        
+        public Dispatcher( String property, Object object ) {
+            this.property = property;
+            this.object = object;
+        }
+        
+        public void propertyChange( PropertyChangeEvent event ) {
+            if( event instanceof ObservableList.ElementEvent ) {
+                // Forward it
+                PropertyChangeEvent newEvent = new PropertyChangeEvent(object, property, null, object);
+                for( PropertyChangeListener l : properties.getPropertyChangeListeners(property) ) {
+                    // So we can't forward the list events along which is a shame.
+                    // It's because we can't change their properties.
+                    l.propertyChange(newEvent);  
+                }
+            }
+        }
     }
 }

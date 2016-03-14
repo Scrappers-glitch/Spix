@@ -349,6 +349,32 @@ System.out.println("Wrote file:" + file);
         AmbientLight ambient = new AmbientLight();
         ambient.setColor(new ColorRGBA(0.5f, 0.5f, 0.2f, 1));
         rootNode.addLight(ambient);
+        
+ 
+        spix.getBlackboard().addListener("test.list", new PropertyChangeListener() {
+            public void propertyChange( PropertyChangeEvent event ) {
+                System.out.println("=======test.list changed:" + event);
+            }
+        });
+        
+        // Testing something
+        groovy.util.ObservableList list1 = new groovy.util.ObservableList();
+        spix.getBlackboard().set("test.list", list1);
+
+        System.out.println("---- adding Testing 1");
+        list1.add("Testing 1");
+        System.out.println("---- adding Testing 2");
+        list1.add("Testing 2");
+        list1.clear();
+        System.out.println("---- adding Single");
+        list1.add("Single");
+
+        groovy.util.ObservableList list2 = new groovy.util.ObservableList();
+        spix.getBlackboard().set("test.list", list2);
+
+        System.out.println("---- adding Silent");
+        list1.add("Silent");
+        
     }
 
     @Override
