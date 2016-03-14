@@ -36,6 +36,7 @@
 
 package spix.core;
 
+import java.beans.PropertyChangeListener;
 
 /**
  *
@@ -47,4 +48,7 @@ public interface Blackboard {
     public void set( String path, Object value );
     public Object get( String path );
     public <T> T get( String path, Class<T> type );
+    
+    public void addListener( String property, PropertyChangeListener l );
+    public void removeListener( String property, PropertyChangeListener l );
 }

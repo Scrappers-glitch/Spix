@@ -70,4 +70,12 @@ public class DefaultBlackboard implements Blackboard {
         }
         return type.cast(result);
     }
+    
+    public void addListener( String property, PropertyChangeListener l ) {
+        properties.addPropertyChangeListener(property, l);
+    }
+    
+    public void removeListener( String property, PropertyChangeListener l ) {
+        properties.removePropertyChangeListener(property, l);
+    }
 }

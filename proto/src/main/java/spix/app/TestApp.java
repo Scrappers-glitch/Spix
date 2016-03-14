@@ -232,7 +232,7 @@ System.out.println("Wrote file:" + file);
         edit.add(new NopAction("Paste"));
  
         ActionList camera = main.add(new DefaultActionList("Camera"));
-        ToggleAction fly = camera.add(new AbstractToggleAction("Fly") {
+        final ToggleAction fly = camera.add(new AbstractToggleAction("Fly") {
             public void performAction( Spix spix ) {
                 System.out.println("camera.mode=fly");
                 spix.getBlackboard().set("camera.mode", "fly");
@@ -241,11 +241,27 @@ System.out.println("Wrote file:" + file);
         fly.setToggled(true);
         Function<Boolean, Void> testSetter = Reflection.setter(fly, "setToggled", Boolean.class);
         System.out.println("test setter:" + testSetter);
+ 
+        spix.getBlackboard().addListener("camera.mode", new PropertyChangeListener() {
+            public void propertyChange( PropertyChangeEvent event ) {
+                String s = spix.getBlackboard().get("camera.mode", String.class);
+                System.out.println("fly listener... s:" + s + "  propval:" +event.getNewValue());                
+                fly.setToggled("fly".equals(s));   
+            }
+        });
         
-        ToggleAction orbit = camera.add(new AbstractToggleAction("Orbit") {
+        final ToggleAction orbit = camera.add(new AbstractToggleAction("Orbit") {
             public void performAction( Spix spix ) {
                 System.out.println("camera.mode=orbit");
                 spix.getBlackboard().set("camera.mode", "orbit");
+            }
+        });
+        
+        spix.getBlackboard().addListener("camera.mode", new PropertyChangeListener() {
+            public void propertyChange( PropertyChangeEvent event ) {
+                String s = spix.getBlackboard().get("camera.mode", String.class);
+                System.out.println("orbit listener... s:" + s + "  propval:" +event.getNewValue());                
+                orbit.setToggled("orbit".equals(s));   
             }
         });
         
