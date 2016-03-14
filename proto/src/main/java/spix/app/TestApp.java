@@ -72,6 +72,7 @@ import spix.core.AbstractToggleAction;
 import spix.core.Action;
 import spix.core.ActionList;
 import spix.core.DefaultActionList;
+import spix.core.SelectionModel;
 import spix.core.Spix;
 import spix.core.ToggleAction;
 import spix.reflect.*;
@@ -127,6 +128,10 @@ System.out.println("Wrote file:" + file);
         });
  
         this.spix = new Spix();
+
+        SelectionModel selectionModel = new SelectionModel();
+        spix.getBlackboard().set("main.selection", selectionModel);
+        selectionModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");
  
         // Have to create the frame on the AWT EDT.
         SwingUtilities.invokeAndWait(new Runnable() {
@@ -147,7 +152,8 @@ System.out.println("Wrote file:" + file);
                 split.setBackground(Color.black);
                 
                 JPanel left = new JPanel();
-                left.add(new JLabel("Testing"));
+                JLabel testLabel = new JLabel("Testing");
+                left.add(testLabel);
                 split.add(left, JSplitPane.LEFT);
                 mainFrame.getContentPane().add(split, BorderLayout.CENTER); 
  
@@ -159,6 +165,12 @@ System.out.println("Wrote file:" + file);
                 // An alternate approach that uses more defined services
                 spix.registerService(FileRequester.class, new SwingFileRequester(spix, mainFrame));
                 spix.registerService(MessageRequester.class, new SwingMessageRequester(mainFrame));
+                
+                
+                // Setup a selection test to change the test label
+                spix.getBlackboard().bind("main.selection.singleSelect", testLabel, "text", Functions.toStringFunction());
+                
+                spix.getBlackboard().get("main.selection", SelectionModel.class).add("Test Selection");                
             }
         });
  
@@ -173,6 +185,8 @@ System.out.println("Wrote file:" + file);
                 }
             }
         });                              
+        
+        
     }
 
     private JMenuBar createMainMenu() {
@@ -374,7 +388,30 @@ System.out.println("Wrote file:" + file);
 
         System.out.println("---- adding Silent");
         list1.add("Silent");
+
+        /*        
+        SelectionModel testModel = new SelectionModel();
+        spix.getBlackboard().set("mainSelection", testModel);
+        testModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");
         
+        spix.getBlackboard().addListener("main.selection.singleSelect", new PropertyChangeListener() {
+            public void propertyChange( PropertyChangeEvent event ) {
+                System.out.println("main.selection.singleSelect change:" + event.getNewValue());
+            }
+        });
+    
+        System.out.println("---- adding 1");
+        testModel.add("1");    
+        System.out.println("---- adding 2");
+        testModel.add("2");
+        System.out.println("---- adding 3");
+        testModel.add("3");    
+        System.out.println("---- setting a");
+        testModel.setSingleSelection("a");
+        System.out.println("---- clearing");        
+        testModel.clear();
+        */    
+            
     }
 
     @Override
