@@ -111,8 +111,6 @@ public class TestApp extends SimpleApplication {
               new FlyCamAppState()); 
  
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
-            /*
-            requires JME head until apha 3 is pushed
             @Override
             protected void writeImageFile( final File file ) throws IOException {
                 super.writeImageFile(file);
@@ -124,7 +122,7 @@ System.out.println("Wrote file:" + file);
                         spix.getService(MessageRequester.class).showMessage("File Saved", "Saved screenshot:" + file, null); 
                     }
                 });
-            }*/
+            }
         });
  
         this.spix = new Spix();

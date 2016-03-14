@@ -36,8 +36,8 @@ repositories {
     jcenter()
 }
 
-//ext.jmeVersion = "[3.1,)" 
-ext.jmeVersion = "unknown" 
+ext.jmeVersion = "[3.1,)" 
+//ext.jmeVersion = "unknown" 
 
 dependencies {
 
