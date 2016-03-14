@@ -38,6 +38,9 @@ package spix.core;
 
 import java.beans.PropertyChangeListener;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+
 /**
  *
  *
@@ -48,6 +51,10 @@ public interface Blackboard {
     public void set( String path, Object value );
     public Object get( String path );
     public <T> T get( String path, Class<T> type );
+ 
+    public void bind( String billboardProperty, Object target, String targetProperty ); 
+    public void bind( String billboardProperty, Object target, String targetProperty, Function transform ); 
+    public void bind( String billboardProperty, Object target, String targetProperty, Predicate transform ); 
     
     public void addListener( String property, PropertyChangeListener l );
     public void removeListener( String property, PropertyChangeListener l );

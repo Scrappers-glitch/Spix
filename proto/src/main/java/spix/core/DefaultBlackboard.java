@@ -39,8 +39,12 @@ package spix.core;
 import java.beans.*;
 import java.util.*;
 
+import com.google.common.base.*;
+
 import groovy.util.ObservableMap;
 
+import spix.*;
+import spix.reflect.*;
 import spix.type.*;
 
 /**
@@ -71,11 +75,44 @@ public class DefaultBlackboard implements Blackboard {
         return type.cast(result);
     }
     
+    public void bind( String billboardProperty, Object target, String targetProperty ) {
+        bind(billboardProperty, target, targetProperty, (Function)null);
+    }
+     
+    public void bind( String billboardProperty, Object target, String targetProperty, Predicate transform ) {
+        bind(billboardProperty, target, targetProperty, 
+             transform == null ? null : Functions.forPredicate(transform));
+    } 
+    
+    public void bind( String billboardProperty, Object target, String targetProperty, Function transform ) {
+        BeanProperty property = BeanProperty.create(target, targetProperty);
+        Binding binding = new Binding(property, transform);
+        addListener(billboardProperty, binding);
+    }
+     
     public void addListener( String property, PropertyChangeListener l ) {
         properties.addPropertyChangeListener(property, l);
     }
     
     public void removeListener( String property, PropertyChangeListener l ) {
         properties.removePropertyChangeListener(property, l);
+    }
+    
+    private class Binding implements PropertyChangeListener {
+        private Property target;
+        private Function transform;
+ 
+        public Binding( Property target, Function transform ) {
+            this.target = target;
+            this.transform = transform;
+        }
+ 
+        public void propertyChange( PropertyChangeEvent event ) {
+            Object value = event.getNewValue();
+            if( transform != null ) {
+                value = transform.apply(value);
+            }
+            target.setValue(value);
+        }       
     }
 }
