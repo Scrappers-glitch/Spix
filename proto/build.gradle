@@ -38,7 +38,7 @@ repositories {
 
 ext.jmeVersion = "[3.1,)" 
 //ext.jmeVersion = "unknown" 
-ext.lemurVersion = "[1.6,)"
+ext.lemurVersion = "[1.7,)"
 
 dependencies {
 

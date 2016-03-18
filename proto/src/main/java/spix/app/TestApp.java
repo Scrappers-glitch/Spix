@@ -112,7 +112,7 @@ public class TestApp extends SimpleApplication {
  
     public TestApp() throws Exception {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
-              new FlyCamAppState()); 
+              new FlyCamAppState(), new OrbitCameraState(false)); 
  
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
@@ -283,6 +283,10 @@ System.out.println("Wrote file:" + file);
             }
         });
         spix.getBlackboard().bind("camera.mode", orbit, "toggled", Predicates.equalTo("orbit"));
+
+        // Bind it to the orbit app state
+        spix.getBlackboard().bind("camera.mode", stateManager.getState(OrbitCameraState.class), 
+                                  "enabled", Predicates.equalTo("orbit"));
  
         /*
         spix.getBlackboard().addListener("camera.mode", new PropertyChangeListener() {
@@ -383,7 +387,10 @@ System.out.println("Wrote file:" + file);
                 
                 if( !event.isPressed() && lastMotion != null ) {
                     // Set the selection
-                    Geometry selected = lastMotion.getCollision().getGeometry();
+                    Geometry selected = null;
+                    if( lastMotion.getCollision() != null ) {
+                        selected = lastMotion.getCollision().getGeometry();
+                    }
                     System.out.println("Setting selection to:" + selected);
                     spix.getBlackboard().get("main.selection", SelectionModel.class).setSingleSelection(selected);                    
                 }
