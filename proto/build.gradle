@@ -38,6 +38,7 @@ repositories {
 
 ext.jmeVersion = "[3.1,)" 
 //ext.jmeVersion = "unknown" 
+ext.lemurVersion = "[1.6,)"
 
 dependencies {
 
@@ -46,6 +47,9 @@ dependencies {
     compile 'com.google.guava:guava:19.0'
     
     compile "org.jmonkeyengine:jme3-core:$jmeVersion"
+
+    // Because Lemur has some useful stuff that we'll need for in-scene things
+    compile "com.simsilica:lemur:$lemurVersion" 
 
     // So we can run a test app
     compile "org.jmonkeyengine:jme3-core:$jmeVersion"

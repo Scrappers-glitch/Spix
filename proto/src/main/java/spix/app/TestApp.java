@@ -67,6 +67,9 @@ import org.pushingpixels.substance.api.skin.*;
 
 import com.google.common.base.*;
 
+import com.simsilica.lemur.*;
+import com.simsilica.lemur.event.*;
+
 import spix.awt.*;
 import spix.core.AbstractToggleAction;
 import spix.core.Action;
@@ -75,6 +78,7 @@ import spix.core.DefaultActionList;
 import spix.core.SelectionModel;
 import spix.core.Spix;
 import spix.core.ToggleAction;
+import spix.core.ToStringFunction;
 import spix.reflect.*;
 import spix.swing.*;
 import spix.ui.*;
@@ -166,9 +170,10 @@ System.out.println("Wrote file:" + file);
                 
                 
                 // Setup a selection test to change the test label
-                spix.getBlackboard().bind("main.selection.singleSelect", testLabel, "text", Functions.toStringFunction());
+                spix.getBlackboard().bind("main.selection.singleSelect", 
+                                           testLabel, "text", ToStringFunction.INSTANCE);
                 
-                spix.getBlackboard().get("main.selection", SelectionModel.class).add("Test Selection");                
+                spix.getBlackboard().get("main.selection", SelectionModel.class).add("Test Selection");
             }
         });
  
@@ -361,6 +366,43 @@ System.out.println("Wrote file:" + file);
         AmbientLight ambient = new AmbientLight();
         ambient.setColor(new ColorRGBA(0.5f, 0.5f, 0.2f, 1));
         rootNode.addLight(ambient);
+        
+ 
+        // Because we will use Lemur for some things... go ahead and setup
+        // the very basics
+        GuiGlobals.initialize(this);
+        
+        // Setup for some scene picking... need to move this to an app state or something
+        // but we're just hacking
+        CursorEventControl.addListenersToSpatial(rootNode, new CursorListener() {
+ 
+            private CursorMotionEvent lastMotion;
+        
+            public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
+                System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
+                
+                if( !event.isPressed() && lastMotion != null ) {
+                    // Set the selection
+                    Geometry selected = lastMotion.getCollision().getGeometry();
+                    System.out.println("Setting selection to:" + selected);
+                    spix.getBlackboard().get("main.selection", SelectionModel.class).setSingleSelection(selected);                    
+                }
+            }
+
+            public void cursorEntered( CursorMotionEvent event, Spatial target, Spatial capture ) {
+                System.out.println("cursorEntered(" + event + ", " + target + ", " + capture + ")");
+            }
+
+            public void cursorExited( CursorMotionEvent event, Spatial target, Spatial capture ) {
+                System.out.println("cursorExited(" + event + ", " + target + ", " + capture + ")");
+            }
+
+            public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
+                //System.out.println("cursorMoved(" + event + ", " + target + ", " + capture + ")");
+                this.lastMotion = event;
+            }
+            
+        });
         
  
         spix.getBlackboard().addListener("test.list", new PropertyChangeListener() {
