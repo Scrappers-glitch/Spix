@@ -102,7 +102,20 @@ public class OrbitCameraState extends BaseAppState {
         inputMapper.addStateListener(inputHandler, F_FAST, F_ORBIT_ON);
         
         // See if there are already mappings for these functions.
-        if( !inputMapper.hasMappings(F_ORBIT_X) ) {
+        if( !inputMapper.hasMappings(F_ORBIT_ON) ) {
+            System.out.println("Initializing default mappings for:" + F_ORBIT_ON);
+            inputMapper.map(F_ORBIT_ON, Button.MOUSE_BUTTON2);
+            setupMouseOrbit(inputMapper, Button.MOUSE_BUTTON2); 
+        } else {
+            // Go through the configured mappings and make sure orbit will
+            // work for all of the buttons
+            for( InputMapper.Mapping m : inputMapper.getMappings(F_ORBIT_ON) ) {
+                // Only handle single values right now
+                Object primary = m.getPrimaryActivator();
+                setupMouseOrbit(inputMapper, primary);
+            }
+        }
+        /*if( !inputMapper.hasMappings(F_ORBIT_X) ) {
             System.out.println("Initializing default mappings for:" + F_ORBIT_X);
             inputMapper.map(F_ORBIT_X, Axis.MOUSE_X, Button.MOUSE_BUTTON2); 
             inputMapper.map(F_ORBIT_ON, Button.MOUSE_BUTTON2); 
@@ -111,7 +124,7 @@ public class OrbitCameraState extends BaseAppState {
             System.out.println("Initializing default mappings for:" + F_ORBIT_Y);
             inputMapper.map(F_ORBIT_Y, Axis.MOUSE_Y, Button.MOUSE_BUTTON2); 
             inputMapper.map(F_ORBIT_ON, Button.MOUSE_BUTTON2); 
-        }
+        }*/
         if( !inputMapper.hasMappings(F_MOVE) ) {
             System.out.println("Initializing default mappings for:" + F_MOVE);
             inputMapper.map(F_MOVE, Axis.MOUSE_Y, Button.MOUSE_BUTTON3);
@@ -133,6 +146,12 @@ public class OrbitCameraState extends BaseAppState {
         System.out.println("Input functions:" + inputMapper.getFunctionIds());
         
         System.out.println("Show mappings:" + inputMapper.getMappings(F_ORBIT_X));
+    }
+    
+    protected void setupMouseOrbit( InputMapper inputMapper, Object button ) {
+        System.out.println("Setting up mouse orbit for:" + button);
+        inputMapper.map(F_ORBIT_X, Axis.MOUSE_X, button); 
+        inputMapper.map(F_ORBIT_Y, Axis.MOUSE_Y, button); 
     }
     
     @Override   
