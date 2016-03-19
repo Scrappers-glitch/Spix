@@ -310,7 +310,7 @@ System.out.println("Wrote file:" + file);
         });
         spix.getBlackboard().bind("view.grid", showGrid, "toggled");
 
-        // Set the initial state of the view.grid property
+        // Set the initial state of the view.grid property to match the app state
         spix.getBlackboard().set("view.grid", stateManager.getState(GridState.class).isEnabled());
         
         // Bind it to the grid app state
