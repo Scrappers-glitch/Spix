@@ -115,16 +115,6 @@ public class OrbitCameraState extends BaseAppState {
                 setupMouseOrbit(inputMapper, primary);
             }
         }
-        /*if( !inputMapper.hasMappings(F_ORBIT_X) ) {
-            System.out.println("Initializing default mappings for:" + F_ORBIT_X);
-            inputMapper.map(F_ORBIT_X, Axis.MOUSE_X, Button.MOUSE_BUTTON2); 
-            inputMapper.map(F_ORBIT_ON, Button.MOUSE_BUTTON2); 
-        }
-        if( !inputMapper.hasMappings(F_ORBIT_Y) ) {
-            System.out.println("Initializing default mappings for:" + F_ORBIT_Y);
-            inputMapper.map(F_ORBIT_Y, Axis.MOUSE_Y, Button.MOUSE_BUTTON2); 
-            inputMapper.map(F_ORBIT_ON, Button.MOUSE_BUTTON2); 
-        }*/
         if( !inputMapper.hasMappings(F_MOVE) ) {
             System.out.println("Initializing default mappings for:" + F_MOVE);
             inputMapper.map(F_MOVE, Axis.MOUSE_Y, Button.MOUSE_BUTTON3);
@@ -134,8 +124,15 @@ public class OrbitCameraState extends BaseAppState {
         if( !inputMapper.hasMappings(F_STRAFE) ) {
             System.out.println("Initializing default mappings for:" + F_STRAFE);
             inputMapper.map(F_STRAFE, Axis.MOUSE_X, Button.MOUSE_BUTTON3); 
+            inputMapper.map(F_STRAFE, Axis.MOUSE_X, Button.MOUSE_BUTTON3, Button.MOUSE_BUTTON2); 
             inputMapper.map(F_STRAFE, KeyInput.KEY_D); 
             inputMapper.map(F_STRAFE, InputState.Negative, KeyInput.KEY_A); 
+        }
+        if( !inputMapper.hasMappings(F_ELEVATION) ) {
+            System.out.println("Initializing default mappings for:" + F_STRAFE);
+            inputMapper.map(F_ELEVATION, Axis.MOUSE_Y, Button.MOUSE_BUTTON3, Button.MOUSE_BUTTON2); 
+            inputMapper.map(F_ELEVATION, KeyInput.KEY_Q); 
+            inputMapper.map(F_ELEVATION, InputState.Negative, KeyInput.KEY_Z); 
         }
         if( !inputMapper.hasMappings(F_FAST) ) {
             System.out.println("Initializing default mappings for:" + F_FAST);
@@ -257,7 +254,7 @@ public class OrbitCameraState extends BaseAppState {
                 }
             }
         }        
-    
+ 
         public void valueActive( FunctionId func, double value, double tpf ) {
             System.out.println("Function:" + func + "  value:" + value + "  tpf:" + tpf + "  speed:" + speed);
  
@@ -268,62 +265,42 @@ public class OrbitCameraState extends BaseAppState {
             Vector3f translate = new Vector3f();
             
             if( func == F_ORBIT_X || func == F_ORBIT_Y ) {
-            
-                // Special processing to both rotate and move around a particular
-                // focal point.
-                //Vector3f fp = getFocalPoint();
  
-                System.out.println("fp:" + fp);
-                
-                Vector3f relative = cam.getLocation().subtract(fp);
-                Quaternion rot = cam.getRotation();
-                
-                // Except the camera is looking at the point and we want to
-                // look from the point to the camera... so we'll flip ourselves
-                // around
-                Quaternion orbitRot = rot.mult(flip);
-                
-                float[] angles = orbitRot.toAngles(null);
-System.out.println("angles[" + angles[0] + ", " + angles[1] + ", " + angles[2] + "]");                
-                float yaw = angles[1];
-                float pitch = angles[0];
-                
+                // Just do straight relative rotation based on x or y
+                Quaternion locDelta;
+                Quaternion camDelta;
                 if( func == F_ORBIT_X ) {
-                    yaw += amount;
-                } else if( func == F_ORBIT_Y ) {
-                    pitch -= amount;
+                    // yaw
+                    locDelta = new Quaternion().fromAngles(0, amount, 0);
+                    camDelta = new Quaternion().fromAngles(0, amount, 0);  
+                } else {
+                    // pitch
+                    locDelta = new Quaternion().fromAngles(amount, 0, 0); 
+                    camDelta = new Quaternion().fromAngles(amount, 0, 0);  
                 }
-                Quaternion newRot = new Quaternion().fromAngles(pitch, yaw, angles[2]);
- 
-                // Find the difference to figure out how much to orbit               
-                Quaternion delta = orbitRot.inverse().mult(newRot);
+
+                Quaternion cameraRot = cam.getRotation();
+
+                // For rotation of the camera location, we need to be looking
+                // in the opposite direction of the camera.  Then these deltas
+                // are relative to that rotation
+                Quaternion orbitRot = cameraRot.mult(flip);
                 
-                relative = delta.mult(relative);
+                // We need to find what world space rotation we'd need to
+                // rotate the location.  For example, if the camera is moving
+                // pitch up and down but the camera is facing along the X axis
+                // then we need to be rotating in x,y and not z,y (as would
+                // be normal for local pitch).
+                // This requires a change of basis.
+                Quaternion worldLocDelta = cameraRot.mult(locDelta);                
+                worldLocDelta = worldLocDelta.mult(cameraRot.inverse());
+                                                
+                Vector3f relative = cam.getLocation().subtract(fp);
+                relative = worldLocDelta.mult(relative);
                 cam.setLocation(fp.add(relative));
  
-                // Now flip the rotation back around for the camera view
-                newRot = newRot.mult(flip);
- 
-                // Rotate the camera
-                cam.setRotation(newRot);
- 
-                /*               
-                // Something's wrong with the above but let's see if we can partially
-                // salvage it at least
-                Vector3f up = Vector3f.UNIT_Y;
-                Vector3f lookDir = relative.normalize().negateLocal(); 
-                if( Math.abs(lookDir.dot(Vector3f.UNIT_Y)) >= 0.9 ) {
-                    // We'll be nearly looking straight up or straight down
-                    // so we need to calculate a different up vector
-                    up = cam.getLeft().cross(lookDir).normalizeLocal();                   
-                }
-                cam.lookAtDirection(lookDir, up);
-                
-                ....no because the point we clicked is not in the center of the screen.
-                Just going to have to fix the math.
-                
-                */               
-            
+                cameraRot = cameraRot.mult(camDelta);
+                cam.setRotation(cameraRot);
             } else if( func == F_MOVE ) {
                 translate.addLocal(cam.getDirection().mult(amount));
             } else if( func == F_STRAFE ) {
