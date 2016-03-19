@@ -113,7 +113,8 @@ public class TestApp extends SimpleApplication {
     public TestApp() throws Exception {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
               new FlyCamAppState(), new OrbitCameraState(false),
-              new DecoratorViewPortState(), new GridState()); 
+              new DecoratorViewPortState(), new GridState(),
+              new SpixState(new Spix())); 
  
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
@@ -130,7 +131,8 @@ System.out.println("Wrote file:" + file);
             }
         });
  
-        this.spix = new Spix();
+        //this.spix = new Spix();
+        this.spix = stateManager.getState(SpixState.class).getSpix();
 
         SelectionModel selectionModel = new SelectionModel();
         spix.getBlackboard().set("main.selection", selectionModel);
@@ -297,7 +299,7 @@ System.out.println("Wrote file:" + file);
                 orbit.setToggled("orbit".equals(s));   
             }
         });*/
- 
+
         ActionList view = main.add(new DefaultActionList("View"));
         ToggleAction showGrid = view.add(new AbstractToggleAction("Grid") {
             public void performAction( Spix spix ) {
