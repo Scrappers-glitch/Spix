@@ -297,6 +297,25 @@ System.out.println("Wrote file:" + file);
                 orbit.setToggled("orbit".equals(s));   
             }
         });*/
+ 
+        ActionList view = main.add(new DefaultActionList("View"));
+        ToggleAction showGrid = view.add(new AbstractToggleAction("Grid") {
+            public void performAction( Spix spix ) {
+                Boolean on = spix.getBlackboard().get("view.grid", Boolean.class);
+                if( on == null ) {
+                    on = Boolean.FALSE;
+                }
+                spix.getBlackboard().set("view.grid", !on);
+            }
+        });
+        spix.getBlackboard().bind("view.grid", showGrid, "toggled");
+
+        // Set the initial state of the view.grid property
+        spix.getBlackboard().set("view.grid", stateManager.getState(GridState.class).isEnabled());
+        
+        // Bind it to the grid app state
+        spix.getBlackboard().bind("view.grid", stateManager.getState(GridState.class), 
+                                  "enabled");
         
         ActionList test = main.add(createTestActions());
         
