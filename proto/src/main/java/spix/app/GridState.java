@@ -68,6 +68,10 @@ public class GridState extends BaseAppState {
  
     public GridState() {
     }
+ 
+    protected Node getRoot() {
+        return getState(DecoratorViewPortState.class).getRoot();
+    }
     
     @Override   
     protected void initialize( Application app ) {
@@ -108,8 +112,7 @@ public class GridState extends BaseAppState {
     
     @Override   
     protected void onEnable() {
-        Node root = ((SimpleApplication)getApplication()).getRootNode();
-        root.attachChild(grid);
+        getRoot().attachChild(grid);
     }
     
     @Override   

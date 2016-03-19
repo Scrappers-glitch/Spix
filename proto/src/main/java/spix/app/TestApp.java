@@ -113,7 +113,7 @@ public class TestApp extends SimpleApplication {
     public TestApp() throws Exception {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
               new FlyCamAppState(), new OrbitCameraState(false),
-              new GridState()); 
+              new DecoratorViewPortState(), new GridState()); 
  
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
