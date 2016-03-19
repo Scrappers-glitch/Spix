@@ -40,6 +40,20 @@ ext.jmeVersion = "[3.1,)"
 //ext.jmeVersion = "unknown" 
 ext.lemurVersion = "[1.7,)"
 
+project(":assets") {
+    apply plugin: "java"
+    
+    buildDir = rootProject.file("build/assets")
+    
+    sourceSets {
+        main {
+            resources {
+                srcDir '.'
+            }
+        }
+    }    
+}
+
 dependencies {
 
     compile 'org.codehaus.groovy:groovy-all:2.4.4'
@@ -59,7 +73,8 @@ dependencies {
     compile "com.github.insubstantial:substance:[7.3,)"
     
     compile 'org.slf4j:slf4j-api:1.7.13'
-    
+
+    runtime project(':assets')        
 }
 
 task runTestApp(type: JavaExec) {

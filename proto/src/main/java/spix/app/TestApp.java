@@ -112,7 +112,8 @@ public class TestApp extends SimpleApplication {
  
     public TestApp() throws Exception {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
-              new FlyCamAppState(), new OrbitCameraState(false)); 
+              new FlyCamAppState(), new OrbitCameraState(false),
+              new GridState()); 
  
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
@@ -352,6 +353,9 @@ System.out.println("Wrote file:" + file);
         System.out.println("---------simpleInitApp()");
                     
         flyCam.setDragToRotate(true);
+
+        // Set an initial camera position
+        cam.setLocation(new Vector3f(0, 1, 10));
 
         Box b = new Box(Vector3f.ZERO, 1, 1, 1);
         Geometry geom = new Geometry("Box", b);
