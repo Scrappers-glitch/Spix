@@ -192,8 +192,7 @@ System.out.println("Wrote file:" + file);
                 }
             }
         });                              
-        
-        
+                
     }
 
     private JMenuBar createMainMenu() {
