@@ -36,52 +36,34 @@
 
 package spix.app;
 
+import com.google.common.base.Predicates;
 import com.jme3.app.*;
-import com.jme3.app.state.*;
-import com.jme3.bounding.BoundingBox;
-import com.jme3.bounding.BoundingVolume;
-import com.jme3.light.AmbientLight;
-import com.jme3.light.DirectionalLight;
-import com.jme3.material.Material;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector3f;
+import com.jme3.app.state.ScreenshotAppState;
 import com.jme3.asset.plugins.FileLocator;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Spatial;
+import com.jme3.bounding.BoundingBox;
+import com.jme3.light.*;
+import com.jme3.material.Material;
+import com.jme3.math.*;
+import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
-import com.jme3.system.awt.AwtPanel;
 import com.jme3.system.awt.AwtPanelsContext;
-import com.jme3.system.awt.PaintMode;
-import java.awt.*;
-import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.CountDownLatch;
-import javax.swing.*;
-
-import org.pushingpixels.substance.api.skin.*;
-
-import com.google.common.base.*;
-
-import com.simsilica.lemur.*;
+import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
-
-import spix.awt.*;
-import spix.core.AbstractToggleAction;
+import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
+import spix.BeanProperty;
+import spix.awt.AwtPanelState;
+import spix.core.*;
 import spix.core.Action;
-import spix.core.ActionList;
-import spix.core.DefaultActionList;
-import spix.core.SelectionModel;
-import spix.core.Spix;
-import spix.core.ToggleAction;
-import spix.core.ToStringFunction;
-import spix.reflect.*;
+import spix.swing.ActionUtils;
 import spix.swing.*;
 import spix.ui.*;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.beans.*;
+import java.io.*;
 
 
 /**
@@ -138,6 +120,8 @@ System.out.println("Wrote file:" + file);
         SelectionModel selectionModel = new SelectionModel();
         spix.getBlackboard().set("main.selection", selectionModel);
         selectionModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");
+        BeanProperty highlight = BeanProperty.create(getStateManager().getState(SelectionHighlightState.class), "highlightMode");
+        spix.getBlackboard().set("highlight.mode", highlight);
  
         // Have to create the frame on the AWT EDT.
         SwingUtilities.invokeAndWait(new Runnable() {
@@ -318,6 +302,31 @@ System.out.println("Wrote file:" + file);
         // Bind it to the grid app state
         spix.getBlackboard().bind("view.grid", stateManager.getState(GridState.class), 
                                   "enabled");
+
+
+        ActionList highlight = main.add(new DefaultActionList("Highlight"));
+        ToggleAction highlightWireframe = highlight.add(new AbstractToggleAction("Wireframe") {
+            public void performAction( Spix spix ) {
+                BeanProperty mode = spix.getBlackboard().get("highlight.mode", BeanProperty.class);
+                mode.setValue(SelectionHighlightState.HighlightMode.Wireframe);
+                spix.getBlackboard().set("highlight.mode", mode);
+            }
+        });
+        highlightWireframe.isToggled();
+        //@Paul Not sure how to use the predicate here.
+        //Clearly something is missing to untoggle the other check box, but since my value is embed in a BeanProperty, idk how to test it.
+        spix.getBlackboard().bind("highlight.mode", highlightWireframe, "toggled", Predicates.equalTo(SelectionHighlightState.HighlightMode.Wireframe));
+
+
+        ToggleAction highlighOutLine = highlight.add(new AbstractToggleAction("Outline") {
+            public void performAction( Spix spix ) {
+                BeanProperty mode = spix.getBlackboard().get("highlight.mode", BeanProperty.class);
+                mode.setValue(SelectionHighlightState.HighlightMode.Outline);
+                spix.getBlackboard().set("highlight.mode", mode);
+            }
+        });
+        spix.getBlackboard().bind("highlight.mode", highlighOutLine, "toggled", Predicates.equalTo(SelectionHighlightState.HighlightMode.Outline));
+
         
         ActionList test = main.add(createTestActions());
         
