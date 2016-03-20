@@ -66,8 +66,17 @@ public class SelectionModel extends ObservableList {
         if( Objects.equals(singleSelection, single) ) {
             return;
         }
-        clear();
-        add(single);        
+        
+        if( size() == 1 ) {
+            // Just swap it out
+            set(0, single);
+        } else if( size() == 0 ) {
+            // Just add it
+            add(single);
+        } else {            
+            clear();
+            add(single);
+        }        
         
         // The singleSelection field gets updated as a side-effect of the list change.       
     }
@@ -76,10 +85,15 @@ public class SelectionModel extends ObservableList {
         return singleSelection; 
     }
 
-    protected void fireSizeChangedEvent(int oldValue, int newValue) {
+    protected void fireSizeChangedEvent( int oldValue, int newValue ) {
         super.fireSizeChangedEvent(oldValue, newValue);        
         updateSingleSelection(newValue == 1 ? get(0) : null);               
     }
+    
+    protected void fireElementUpdatedEvent( int index, Object oldValue, Object newValue ) {
+        super.fireElementUpdatedEvent(index, oldValue, newValue);
+        updateSingleSelection(size() == 1 ? get(0) : null);               
+    } 
     
     protected void updateSingleSelection( Object o ) {
         Object old = singleSelection;
