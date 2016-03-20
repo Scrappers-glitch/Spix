@@ -114,6 +114,7 @@ public class TestApp extends SimpleApplication {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
               new FlyCamAppState(), new OrbitCameraState(false),
               new DecoratorViewPortState(), new GridState(),
+              new SelectionHighlightState(),
               new SpixState(new Spix())); 
  
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
