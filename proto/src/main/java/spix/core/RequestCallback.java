@@ -34,45 +34,14 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.swing;
+package spix.core;
 
-import java.io.File;
-import java.awt.Component;
-import javax.swing.JFileChooser;
-import javax.swing.SwingUtilities;
-
-import spix.core.Spix;
-import spix.ui.UserRequestHandler;
-import spix.ui.RequestCallback;
-
-import spix.ui.*;
 
 /**
- *
+ *  Provided by callers to receive responses from a user request.  
  *
  *  @author    Paul Speed
  */
-public class GetFileHandler implements UserRequestHandler<File, GetFile> {
-
-    private Component mainWindow;
-    
-    public GetFileHandler( Component mainWindow ) {
-        this.mainWindow = mainWindow;
-    }
-
-    public void handleRequest( final Spix spix, final GetFile request, final RequestCallback<File> callback ) {
-System.out.println("GetFileHandler.handleReqeust(" + request + ") on thread:" + Thread.currentThread());    
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {    
-System.out.println("getFile() on thread:" + Thread.currentThread());    
-                File f = FileChooser.getFile(mainWindow, request.title, 
-                                            request.typeDescription, request.extensions,
-                                            request.initialValue, request.forOpen,
-                                            JFileChooser.FILES_ONLY);
-                spix.sendResponse(callback, f);
-            }
-        });   
-    }
+public interface RequestCallback<T> {
+    public void done( T result );
 }
-
-

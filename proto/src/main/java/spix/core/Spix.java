@@ -41,7 +41,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import spix.type.*;
-import spix.ui.*;
 
 /**
  *
@@ -52,8 +51,6 @@ public class Spix {
 
     private final Blackboard blackboard = new DefaultBlackboard();
     
-    private final HandlerRegistry<UserRequestHandler> requestHandlers = new HandlerRegistry<>();
- 
     private final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
  
     private final Map<Class, Object> services = new ConcurrentHashMap<>();
@@ -63,19 +60,6 @@ public class Spix {
     
     public Blackboard getBlackboard() {
         return blackboard;
-    }
- 
-    public <T, R extends UserRequest<T>> void registerRequestHandler( Class<R> type, UserRequestHandler<T, R> handler ) {
-        requestHandlers.register(type, handler);     
-    } 
-  
-    protected <T, R extends UserRequest<T>> UserRequestHandler<T, R> getHandler( Class<R> type ) {
-        return (UserRequestHandler<T, R>)requestHandlers.get(type, false);
-    } 
-    
-    public <T, R extends UserRequest<T>> void request( R request, RequestCallback<T> callback ) {
-        UserRequestHandler<T, R> handler = getHandler(request.getClass());
-        handler.handleRequest(this, request, callback);
     }
  
     public <T> void registerService( Class<? super T> type, T service ) {

@@ -38,6 +38,8 @@ package spix.ui;
 
 import java.io.File;
 
+import spix.core.RequestCallback;
+
 /**
  *  Provides user interface implementation-specific support for requesting
  *  a file from the user. 

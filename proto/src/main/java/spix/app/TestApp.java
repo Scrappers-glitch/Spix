@@ -149,10 +149,7 @@ System.out.println("Wrote file:" + file);
  
                 stateManager.attach(new AwtPanelState(split, JSplitPane.RIGHT));
                 
-                // Register some handlers that depend on the main window
-                spix.registerRequestHandler(GetFile.class, new GetFileHandler(mainFrame));
-                
-                // An alternate approach that uses more defined services
+                // Register services to handle certain UI requests
                 spix.registerService(FileRequester.class, new SwingFileRequester(spix, mainFrame));
                 spix.registerService(MessageRequester.class, new SwingMessageRequester(mainFrame));
                 
@@ -486,7 +483,6 @@ System.out.println("Wrote file:" + file);
 
     @Override
     public void simpleUpdate( float tpf ) {
-        spix.runTasks();
     }
 
 

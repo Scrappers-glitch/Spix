@@ -71,6 +71,11 @@ public class SpixState extends BaseAppState {
     @Override   
     protected void onEnable() {
     }
+ 
+    @Override
+    public void update( float tpf ) {
+        spix.runTasks();
+    }
     
     @Override   
     protected void onDisable() {
