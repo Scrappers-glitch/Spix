@@ -106,6 +106,9 @@ public class DefaultBlackboard implements Blackboard {
     
     public void bind( String billboardProperty, Object target, String targetProperty, Function transform ) {
         BeanProperty property = BeanProperty.create(target, targetProperty);
+        if( property == null ) {
+            throw new RuntimeException("No property found:" + targetProperty + " on " + target);
+        }
         Binding binding = new Binding(property, transform);
         addListener(billboardProperty, binding);
     }
@@ -143,6 +146,9 @@ public class DefaultBlackboard implements Blackboard {
         private Function transform;
  
         public Binding( Property target, Function transform ) {
+            if( target == null ) {
+                throw new IllegalArgumentException("Target cannot be null.");
+            }
             this.target = target;
             this.transform = transform;
         }
