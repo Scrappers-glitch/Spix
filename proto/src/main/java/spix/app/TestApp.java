@@ -1,41 +1,42 @@
 /*
  * $Id$
- * 
+ *
  * Copyright (c) 2016, Simsilica, LLC
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions 
+ * modification, are permitted provided that the following conditions
  * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright 
+ *
+ * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
- * 2. Redistributions in binary form must reproduce the above copyright 
- *    notice, this list of conditions and the following disclaimer in 
- *    the documentation and/or other materials provided with the 
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
  *    distribution.
- * 
- * 3. Neither the name of the copyright holder nor the names of its 
- *    contributors may be used to endorse or promote products derived 
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 package spix.app;
 
+import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
 import com.jme3.app.*;
 import com.jme3.app.state.ScreenshotAppState;
@@ -75,30 +76,30 @@ public class TestApp extends SimpleApplication {
 
     private volatile JFrame mainFrame;
     private Spix spix;
-    
+
     public static void main(String[] args) throws Exception {
- 
+
         JFrame.setDefaultLookAndFeelDecorated(true);
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
         UIManager.setLookAndFeel(new SubstanceGraphiteGlassLookAndFeel());
 
         final TestApp app = new TestApp();
         app.setShowSettings(false);
-        
+
         AppSettings settings = new AppSettings(true);
         settings.setCustomRenderer(AwtPanelsContext.class);
         settings.setFrameRate(60);
         app.setSettings(settings);
         app.start();
     }
- 
+
     public TestApp() throws Exception {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
               new FlyCamAppState(), new OrbitCameraState(false),
               new DecoratorViewPortState(), new GridState(),
               new SelectionHighlightState(),
-              new SpixState(new Spix())); 
- 
+              new SpixState(new Spix()));
+
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
             protected void writeImageFile( final File file ) throws IOException {
@@ -106,21 +107,23 @@ public class TestApp extends SimpleApplication {
                 System.out.println("Wrote file:" + file);
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                        spix.getService(MessageRequester.class).showMessage("File Saved", "Saved screenshot:" + file, null); 
+                        spix.getService(MessageRequester.class).showMessage("File Saved", "Saved screenshot:" + file, null);
                     }
                 });
             }
         });
- 
+
         this.spix = stateManager.getState(SpixState.class).getSpix();
+
+        spix.registerPropertySetFactory(Spatial.class, new SpatialPropertySetFactory());
 
         SelectionModel selectionModel = new SelectionModel();
         spix.getBlackboard().set("main.selection", selectionModel);
-        selectionModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");        
- 
+        selectionModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");
+
         // Have to create the frame on the AWT EDT.
         SwingUtilities.invokeAndWait(new Runnable() {
-            public void run() {       
+            public void run() {
                 mainFrame = new JFrame("Test App");
                 mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 mainFrame.addWindowListener(new WindowAdapter() {
@@ -129,34 +132,42 @@ public class TestApp extends SimpleApplication {
                         stop();
                     }
                 });
- 
+
                 mainFrame.setJMenuBar(createMainMenu());
-                
+
                 JSplitPane split = new JSplitPane();
                 split.setContinuousLayout(false);
                 split.setBackground(Color.black);
-                
+
                 JPanel left = new JPanel();
                 JLabel testLabel = new JLabel("Testing");
+                JLabel testLabel2 = new JLabel("Testing2");
                 left.add(testLabel);
+                left.add(testLabel2);
                 split.add(left, JSplitPane.LEFT);
-                mainFrame.getContentPane().add(split, BorderLayout.CENTER); 
- 
+                mainFrame.getContentPane().add(split, BorderLayout.CENTER);
+
                 stateManager.attach(new AwtPanelState(split, JSplitPane.RIGHT));
-                
+
                 // Register services to handle certain UI requests
                 spix.registerService(FileRequester.class, new SwingFileRequester(spix, mainFrame));
                 spix.registerService(MessageRequester.class, new SwingMessageRequester(mainFrame));
-                
-                
+
+
                 // Setup a selection test to change the test label
-                spix.getBlackboard().bind("main.selection.singleSelect", 
+                spix.getBlackboard().bind("main.selection.singleSelect",
                                            testLabel, "text", ToStringFunction.INSTANCE);
-                
+
+                spix.getBlackboard().bind("main.selection.singleSelect",
+                                           testLabel2, "text",
+                                           Functions.compose(
+                                                ToStringFunction.INSTANCE,
+                                                new ToPropertySetFunction(spix)));
+
                 spix.getBlackboard().get("main.selection", SelectionModel.class).add("Test Selection");
             }
         });
- 
+
 
         stateManager.getState(AwtPanelState.class).addEnabledCommand(new Runnable() {
             public void run() {
@@ -167,25 +178,25 @@ public class TestApp extends SimpleApplication {
                     mainFrame.setVisible(true);
                 }
             }
-        });                              
-                
+        });
+
     }
 
     private JMenuBar createMainMenu() {
         return ActionUtils.createActionMenuBar(createMainActions(), spix);
     }
-    
+
     private ActionList createMainActions() {
         ActionList main = new DefaultActionList("root");
- 
+
         ActionList file = main.add(new DefaultActionList("File"));
         file.add(new NopAction("New"));
         file.add(null); // separator
         file.add(new NopAction("Open") {
             public void performAction( Spix spix ) {
                 // Uses the alternate requester service approach
-                spix.getService(FileRequester.class).requestFile("Open Scene", 
-                                                                 "JME Object", "j3o", null, true, 
+                spix.getService(FileRequester.class).requestFile("Open Scene",
+                                                                 "JME Object", "j3o", null, true,
                              new RequestCallback<File>() {
                                 public void done( File f ) {
                                     System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
@@ -207,15 +218,15 @@ public class TestApp extends SimpleApplication {
                 // Need to tell the app to shutdown... this is one case where
                 // we need some back chain.  We'll cheat for now.
                 // FIXME
-                mainFrame.dispose();                
+                mainFrame.dispose();
             }
         });
-        
+
         ActionList edit = main.add(new DefaultActionList("Edit"));
         edit.add(new NopAction("Cut"));
         edit.add(new NopAction("Copy"));
         edit.add(new NopAction("Paste"));
- 
+
         ActionList camera = main.add(new DefaultActionList("Camera"));
         final ToggleAction fly = camera.add(new AbstractToggleAction("Fly") {
             public void performAction( Spix spix ) {
@@ -225,12 +236,12 @@ public class TestApp extends SimpleApplication {
         });
         fly.setToggled(true);
         spix.getBlackboard().bind("camera.mode", fly, "toggled", Predicates.equalTo("fly"));
- 
+
         // Bind it to the flycam app state also
-        spix.getBlackboard().bind("camera.mode", stateManager.getState(FlyCamAppState.class), 
+        spix.getBlackboard().bind("camera.mode", stateManager.getState(FlyCamAppState.class),
                                   "enabled", Predicates.equalTo("fly"));
-        
-        
+
+
         final ToggleAction orbit = camera.add(new AbstractToggleAction("Orbit") {
             public void performAction( Spix spix ) {
                 System.out.println("camera.mode=orbit");
@@ -240,9 +251,9 @@ public class TestApp extends SimpleApplication {
         spix.getBlackboard().bind("camera.mode", orbit, "toggled", Predicates.equalTo("orbit"));
 
         // Bind it to the orbit app state
-        spix.getBlackboard().bind("camera.mode", stateManager.getState(OrbitCameraState.class), 
+        spix.getBlackboard().bind("camera.mode", stateManager.getState(OrbitCameraState.class),
                                   "enabled", Predicates.equalTo("orbit"));
- 
+
 
         ActionList view = main.add(new DefaultActionList("View"));
         ToggleAction showGrid = view.add(new AbstractToggleAction("Grid") {
@@ -258,9 +269,9 @@ public class TestApp extends SimpleApplication {
 
         // Set the initial state of the view.grid property to match the app state
         spix.getBlackboard().set("view.grid", stateManager.getState(GridState.class).isEnabled());
-        
+
         // Bind it to the grid app state
-        spix.getBlackboard().bind("view.grid", stateManager.getState(GridState.class), 
+        spix.getBlackboard().bind("view.grid", stateManager.getState(GridState.class),
                                   "enabled");
 
 
@@ -281,64 +292,64 @@ public class TestApp extends SimpleApplication {
         spix.getBlackboard().bind("highlight.mode", highlighOutLine, "toggled", Predicates.equalTo(SelectionHighlightState.HighlightMode.Outline));
 
         // Bind the highlight.mode blackboard property to the state's property
-        spix.getBlackboard().bind("highlight.mode", stateManager.getState(SelectionHighlightState.class), 
+        spix.getBlackboard().bind("highlight.mode", stateManager.getState(SelectionHighlightState.class),
                                   "highlightMode");
 
         // Set the mode default
         spix.getBlackboard().set("highlight.mode", SelectionHighlightState.HighlightMode.Outline);
 
-        
+
         ActionList test = main.add(createTestActions());
-        
+
         ActionList help = main.add(new DefaultActionList("Help"));
         help.add(new NopAction("About") {
             public void performAction( Spix spix ) {
-                spix.getService(MessageRequester.class).showMessage("About", "What's it all about?", null); 
+                spix.getService(MessageRequester.class).showMessage("About", "What's it all about?", null);
             }
         });
-                
-        return main;        
+
+        return main;
     }
-    
+
     private ActionList createTestActions() {
         final ActionList testActions = new DefaultActionList("Test");
         final ActionList testActions2 = new DefaultActionList("Test");
- 
-        // A self test       
+
+        // A self test
         final Action testAction = testActions.add(new spix.core.AbstractAction("Test") {
             private int count = 1;
-            
+
             public void performAction( Spix spix ) {
                 System.out.println("A test spix action.  Thread:" + Thread.currentThread());
                 put(Action.NAME, "Test " + (++count));
             }
         });
-        
+
         // An add test
-        Action addAction = testActions.add(new spix.core.AbstractAction("Add") {            
+        Action addAction = testActions.add(new spix.core.AbstractAction("Add") {
             public void performAction( Spix spix ) {
-                testActions.add(testAction);               
-                testActions2.add(testAction);               
+                testActions.add(testAction);
+                testActions2.add(testAction);
             }
-        }); 
- 
+        });
+
         // A remove test
         Action removeAction = testActions.add(new spix.core.AbstractAction("Remove") {
             public void performAction( Spix spix ) {
                 testActions.remove(testAction);
                 testActions2.remove(testAction);
             }
-        }); 
- 
+        });
+
         testActions.add(testActions2);
-        
+
         return testActions;
     }
 
     @Override
-    public void simpleInitApp() {        
+    public void simpleInitApp() {
         System.out.println("---------simpleInitApp()");
-                    
+
         flyCam.setDragToRotate(true);
 
         // Set an initial camera position
@@ -353,29 +364,29 @@ public class TestApp extends SimpleApplication {
         mat.setBoolean("UseMaterialColors", true);
         geom.setMaterial(mat);
         rootNode.attachChild(geom);
-        
+
         DirectionalLight light = new DirectionalLight();
         light.setDirection(new Vector3f(-0.2f, -1, -0.3f).normalizeLocal());
         rootNode.addLight(light);
-        
+
         AmbientLight ambient = new AmbientLight();
         ambient.setColor(new ColorRGBA(0.5f, 0.5f, 0.2f, 1));
         rootNode.addLight(ambient);
-        
- 
+
+
         // Because we will use Lemur for some things... go ahead and setup
         // the very basics
         GuiGlobals.initialize(this);
-        
+
         // Setup for some scene picking... need to move this to an app state or something
         // but we're just hacking
         CursorEventControl.addListenersToSpatial(rootNode, new CursorListener() {
- 
+
             private CursorMotionEvent lastMotion;
-        
+
             public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
                 System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
-                
+
                 if( !event.isPressed() && lastMotion != null ) {
                     // Set the selection
                     Geometry selected = null;
@@ -383,7 +394,7 @@ public class TestApp extends SimpleApplication {
                         selected = lastMotion.getCollision().getGeometry();
                     }
                     System.out.println("Setting selection to:" + selected);
-                    spix.getBlackboard().get("main.selection", SelectionModel.class).setSingleSelection(selected);                    
+                    spix.getBlackboard().get("main.selection", SelectionModel.class).setSingleSelection(selected);
                 }
             }
 
@@ -399,9 +410,9 @@ public class TestApp extends SimpleApplication {
                 //System.out.println("cursorMoved(" + event + ", " + target + ", " + capture + ")");
                 this.lastMotion = event;
             }
-            
+
         });
-        
+
     }
 
     @Override
@@ -419,20 +430,20 @@ public class TestApp extends SimpleApplication {
             assetRoot = assetRoot.getParentFile();
         }
         System.out.println("Asset root:" + assetRoot + "   modelPath:" + modelPath);
-        
+
         assetManager.registerLocator(assetRoot.toString(), FileLocator.class);
-        
+
         Spatial scene = assetManager.loadModel(modelPath);
-        
+
         System.out.println("Scene:" + scene);
- 
+
         // For now, find out where to put the scene so that it is next to whatever
-        // is currently loaded       
-        BoundingBox currentBounds = (BoundingBox)rootNode.getWorldBound();        
+        // is currently loaded
+        BoundingBox currentBounds = (BoundingBox)rootNode.getWorldBound();
         BoundingBox modelBounds = (BoundingBox)scene.getWorldBound();
-        
+
         System.out.println("root bounds:" + currentBounds);
-        System.out.println("model bounds:" + modelBounds);        
+        System.out.println("model bounds:" + modelBounds);
 
         float worldRight = currentBounds.getCenter().x + currentBounds.getXExtent();
         float modelLeft = -modelBounds.getCenter().x + modelBounds.getXExtent();
@@ -442,12 +453,12 @@ public class TestApp extends SimpleApplication {
     }
 
     public static class NopAction extends spix.core.AbstractAction {
-        
+
         public NopAction( String name ) {
             super(name);
         }
-        
+
         public void performAction( Spix spix ) {
         }
-    } 
+    }
 }
