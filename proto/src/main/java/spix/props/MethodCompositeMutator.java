@@ -34,7 +34,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix;
+package spix.props;
 
 import java.lang.reflect.*;
 import java.util.Arrays;

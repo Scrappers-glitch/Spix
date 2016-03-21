@@ -34,18 +34,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix;
+package spix.props;
 
-import java.util.*;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
+import java.util.Objects;
 
+import com.jme3.util.SafeArrayList;
 
 /**
- *
+ *  A Property implementation that simply holds its own value
+ *  and does not delegate to any underlying bean-like implemention.
  *
  *  @author    Paul Speed
  */
-public interface PropertyMap {
-
-    public Object getObject();
-    public Class getType();
+public class DefaultProperty extends AbstractProperty {
+ 
+    private Class type;
+    private Object value;
+    
+    public DefaultProperty( String name, Class type, Object value ) {
+        super(name);
+        this.type = type;
+        this.value = value;
+    }
+ 
+    public Class getType() {
+        return type;
+    }
+    
+    public void setValue( Object value ) {
+        Object old = this.value;
+        this.value = value;
+        firePropertyChange(old, value, true);
+    }
+    
+    public Object getValue() {
+        return value;
+    }   
 }

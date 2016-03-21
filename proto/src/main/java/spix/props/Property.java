@@ -34,16 +34,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix;
+package spix.props;
 
+import java.beans.PropertyChangeListener; // available on android
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public interface PropertySet {
+public interface Property {
+
+    public String getName();    
+    public Class getType();
+    public void setValue( Object value );
+    public Object getValue();
     
-    public Property getProperty( String name );
-    public Class getType(); 
+    public void addPropertyChangeListener( PropertyChangeListener l ); 
+    public void removePropertyChangeListener( PropertyChangeListener l ); 
 }
+
+/*
+We know we want PropertySet of Property objects or something.  Where
+a Property has:
+-name
+-value
+-type
+
+PropertySet has:
+-properties
+-originalObject
+-type
+
+*/

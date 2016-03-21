@@ -34,36 +34,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix;
+package spix.props;
 
-import java.beans.PropertyChangeListener; // available on android
 
 /**
- *
+ *  Applies multiple values to a specified object using some
+ *  type of composite function.  For example, a single set()
+ *  method that takes all of the parameters.
  *
  *  @author    Paul Speed
  */
-public interface Property {
-
-    public String getName();    
-    public Class getType();
-    public void setValue( Object value );
-    public Object getValue();
+public interface CompositeMutator<T> {
     
-    public void addPropertyChangeListener( PropertyChangeListener l ); 
-    public void removePropertyChangeListener( PropertyChangeListener l ); 
+    public void apply( T object, Object... values );
 }
-
-/*
-We know we want PropertySet of Property objects or something.  Where
-a Property has:
--name
--value
--type
-
-PropertySet has:
--properties
--originalObject
--type
-
-*/

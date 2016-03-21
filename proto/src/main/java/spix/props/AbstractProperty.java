@@ -34,7 +34,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix;
+package spix.props;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
@@ -43,33 +43,38 @@ import java.util.Objects;
 import com.jme3.util.SafeArrayList;
 
 /**
- *  A Property implementation that simply holds its own value
- *  and does not delegate to any underlying bean-like implemention.
+ *
  *
  *  @author    Paul Speed
  */
-public class DefaultProperty extends AbstractProperty {
- 
-    private Class type;
-    private Object value;
+public abstract class AbstractProperty implements Property {
     
-    public DefaultProperty( String name, Class type, Object value ) {
-        super(name);
-        this.type = type;
-        this.value = value;
-    }
- 
-    public Class getType() {
-        return type;
+    private final String name;
+    private final SafeArrayList<PropertyChangeListener> listeners = new SafeArrayList<>(PropertyChangeListener.class);
+    
+    protected AbstractProperty( String name ) {
+        this.name = name;
     }
     
-    public void setValue( Object value ) {
-        Object old = this.value;
-        this.value = value;
-        firePropertyChange(old, value, true);
+    public final String getName() {
+        return name;
+    }
+
+    public void addPropertyChangeListener( PropertyChangeListener l ) {
+        listeners.add(l);
+    }
+     
+    public void removePropertyChangeListener( PropertyChangeListener l ) {
+        listeners.remove(l);
     }
     
-    public Object getValue() {
-        return value;
-    }   
+    protected void firePropertyChange( Object oldValue, Object newValue, boolean checkForChange ) {
+        if( checkForChange && Objects.equals(oldValue, newValue) ) {
+            return;
+        }
+        PropertyChangeEvent event = new PropertyChangeEvent(this, name, oldValue, newValue);
+        for( PropertyChangeListener l : listeners.getArray() ) {
+            l.propertyChange(event);
+        } 
+    } 
 }

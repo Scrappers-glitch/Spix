@@ -34,38 +34,34 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix;
+package spix.props;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.*;
+
+import com.google.common.base.MoreObjects;
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public class DefaultPropertyMap //extends AbstractMap<String, Property> 
-                                implements PropertyMap {
- 
-    private Object object;
-    //private final Map<String, Property> map = new HashMap<>();
-                                
-    public DefaultPropertyMap( Object object, Property... properties ) {
-        this.object = object;
+public class DefaultPropertySet extends AbstractPropertySet {
+    
+    public DefaultPropertySet( Object object, Property... props ) {
+        this(null, object, props);
     }
 
-    /* 
-    public Set<Map.Entry<String, Property>> entrySet() {
-        // Don't allow removal from the set.
-        return Collections.unmodifiableSet(map.entrySet());
+    public DefaultPropertySet( Property parent, Object object, Property... props ) {
+        super(parent, object, props);
     }
-    
-    public*/ 
-    
-    public Object getObject() {
-        return object;
+ 
+    @Override
+    protected void propertyChange( PropertyChangeEvent e ) {
+        // If we're delegating to the parent then reset the value
+        if( getParent() != null ) {
+            setObject(getObject());
+        }
     }
-    
-    public Class getType() {
-        return object != null ? object.getClass() : null;
-    }                                
 }

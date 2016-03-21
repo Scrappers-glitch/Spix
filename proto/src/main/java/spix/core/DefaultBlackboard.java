@@ -50,6 +50,7 @@ import groovy.util.ObservableMap;
 
 import spix.*;
 import spix.reflect.*;
+import spix.props.*;
 import spix.type.*;
 
 /**

@@ -34,34 +34,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix;
+package spix.props;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.*;
-
-import com.google.common.base.MoreObjects;
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public class DefaultPropertySet extends AbstractPropertySet {
+public interface PropertySet {
     
-    public DefaultPropertySet( Object object, Property... props ) {
-        this(null, object, props);
-    }
-
-    public DefaultPropertySet( Property parent, Object object, Property... props ) {
-        super(parent, object, props);
-    }
- 
-    @Override
-    protected void propertyChange( PropertyChangeEvent e ) {
-        // If we're delegating to the parent then reset the value
-        if( getParent() != null ) {
-            setObject(getObject());
-        }
-    }
+    public Property getProperty( String name );
+    public Class getType(); 
 }

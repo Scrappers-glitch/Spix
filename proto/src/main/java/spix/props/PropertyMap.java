@@ -34,47 +34,18 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix;
+package spix.props;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
-import java.util.Objects;
+import java.util.*;
 
-import com.jme3.util.SafeArrayList;
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public abstract class AbstractProperty implements Property {
-    
-    private final String name;
-    private final SafeArrayList<PropertyChangeListener> listeners = new SafeArrayList<>(PropertyChangeListener.class);
-    
-    protected AbstractProperty( String name ) {
-        this.name = name;
-    }
-    
-    public final String getName() {
-        return name;
-    }
+public interface PropertyMap {
 
-    public void addPropertyChangeListener( PropertyChangeListener l ) {
-        listeners.add(l);
-    }
-     
-    public void removePropertyChangeListener( PropertyChangeListener l ) {
-        listeners.remove(l);
-    }
-    
-    protected void firePropertyChange( Object oldValue, Object newValue, boolean checkForChange ) {
-        if( checkForChange && Objects.equals(oldValue, newValue) ) {
-            return;
-        }
-        PropertyChangeEvent event = new PropertyChangeEvent(this, name, oldValue, newValue);
-        for( PropertyChangeListener l : listeners.getArray() ) {
-            l.propertyChange(event);
-        } 
-    } 
+    public Object getObject();
+    public Class getType();
 }

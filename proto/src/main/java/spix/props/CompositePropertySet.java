@@ -34,17 +34,55 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix;
+package spix.props;
 
+import java.beans.PropertyChangeEvent;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 
 /**
- *  Applies multiple values to a specified object using some
- *  type of composite function.  For example, a single set()
- *  method that takes all of the parameters.
+ *  A PropertySet implementation that resets the object's values
+ *  all at once using a CompositeMutator.
  *
  *  @author    Paul Speed
  */
-public interface CompositeMutator<T> {
+public class CompositePropertySet extends AbstractPropertySet {
+     
+    private Property[] propertyArray;
+    private Object[] values;
+    private CompositeMutator mutator;
     
-    public void apply( T object, Object... values );
+    public CompositePropertySet( Object object, CompositeMutator mutator, Property... props ) {
+        this(null, object, mutator, props);      
+    }
+
+    public CompositePropertySet( Property parent, Object object, CompositeMutator mutator, Property... props ) {
+        super(parent, object, props);
+        this.mutator = mutator;
+        this.propertyArray = props;
+        this.values = new Object[props.length];
+    }
+    
+    public static CompositePropertySet create( Property parent, CompositeMutator mutator, Property... props ) {
+        return new CompositePropertySet(parent, parent.getValue(), mutator, props);    
+    }
+    
+    protected void resetValues() {
+        for( int i = 0; i < values.length; i++ ) {
+            values[i] = propertyArray[i].getValue();
+        }
+    }
+ 
+    protected Object resetObject() {
+        resetValues();
+System.out.println("Reset values for:" + Arrays.asList(values));        
+        mutator.apply(getObject(), values);
+        return getObject();
+    }
+ 
+    @Override
+    protected void propertyChange( PropertyChangeEvent e ) {
+        setObject(resetObject());          
+    }
 }
