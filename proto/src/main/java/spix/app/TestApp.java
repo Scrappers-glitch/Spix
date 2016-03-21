@@ -103,18 +103,15 @@ public class TestApp extends SimpleApplication {
             @Override
             protected void writeImageFile( final File file ) throws IOException {
                 super.writeImageFile(file);
-System.out.println("Wrote file:" + file);
+                System.out.println("Wrote file:" + file);
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                        // For now do it the 'incorrect' way 
-                        //JOptionPane.showMessageDialog(mainFrame, "Saved screenshot:" + file);
                         spix.getService(MessageRequester.class).showMessage("File Saved", "Saved screenshot:" + file, null); 
                     }
                 });
             }
         });
  
-        //this.spix = new Spix();
         this.spix = stateManager.getState(SpixState.class).getSpix();
 
         SelectionModel selectionModel = new SelectionModel();
@@ -236,19 +233,6 @@ System.out.println("Wrote file:" + file);
                                   "enabled", Predicates.equalTo("fly"));
         
         
-        /*
-        final Function<Boolean, Void> testSetter = Reflection.setter(fly, "setToggled", Boolean.class);
-        System.out.println("test setter:" + testSetter);
- 
-        spix.getBlackboard().addListener("camera.mode", new PropertyChangeListener() {
-            public void propertyChange( PropertyChangeEvent event ) {
-                String s = spix.getBlackboard().get("camera.mode", String.class);
-                System.out.println("fly listener... s:" + s + "  propval:" +event.getNewValue());                
-                //fly.setToggled("fly".equals(s));
-                testSetter.apply("fly".equals(s));   
-            }
-        });*/
-        
         final ToggleAction orbit = camera.add(new AbstractToggleAction("Orbit") {
             public void performAction( Spix spix ) {
                 System.out.println("camera.mode=orbit");
@@ -261,14 +245,6 @@ System.out.println("Wrote file:" + file);
         spix.getBlackboard().bind("camera.mode", stateManager.getState(OrbitCameraState.class), 
                                   "enabled", Predicates.equalTo("orbit"));
  
-        /*
-        spix.getBlackboard().addListener("camera.mode", new PropertyChangeListener() {
-            public void propertyChange( PropertyChangeEvent event ) {
-                String s = spix.getBlackboard().get("camera.mode", String.class);
-                System.out.println("orbit listener... s:" + s + "  propval:" +event.getNewValue());                
-                orbit.setToggled("orbit".equals(s));   
-            }
-        });*/
 
         ActionList view = main.add(new DefaultActionList("View"));
         ToggleAction showGrid = view.add(new AbstractToggleAction("Grid") {
@@ -319,9 +295,6 @@ System.out.println("Wrote file:" + file);
         ActionList help = main.add(new DefaultActionList("Help"));
         help.add(new NopAction("About") {
             public void performAction( Spix spix ) {
-                // Another case where we'll cheat until we have proper
-                // user request objects
-                //JOptionPane.showMessageDialog(mainFrame, "What's it all about?");
                 spix.getService(MessageRequester.class).showMessage("About", "What's it all about?", null); 
             }
         });
@@ -431,54 +404,6 @@ System.out.println("Wrote file:" + file);
             
         });
         
- 
-        spix.getBlackboard().addListener("test.list", new PropertyChangeListener() {
-            public void propertyChange( PropertyChangeEvent event ) {
-                System.out.println("=======test.list changed:" + event);
-            }
-        });
-        
-        // Testing something
-        groovy.util.ObservableList list1 = new groovy.util.ObservableList();
-        spix.getBlackboard().set("test.list", list1);
-
-        System.out.println("---- adding Testing 1");
-        list1.add("Testing 1");
-        System.out.println("---- adding Testing 2");
-        list1.add("Testing 2");
-        list1.clear();
-        System.out.println("---- adding Single");
-        list1.add("Single");
-
-        groovy.util.ObservableList list2 = new groovy.util.ObservableList();
-        spix.getBlackboard().set("test.list", list2);
-
-        System.out.println("---- adding Silent");
-        list1.add("Silent");
-
-        /*        
-        SelectionModel testModel = new SelectionModel();
-        spix.getBlackboard().set("mainSelection", testModel);
-        testModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");
-        
-        spix.getBlackboard().addListener("main.selection.singleSelect", new PropertyChangeListener() {
-            public void propertyChange( PropertyChangeEvent event ) {
-                System.out.println("main.selection.singleSelect change:" + event.getNewValue());
-            }
-        });
-    
-        System.out.println("---- adding 1");
-        testModel.add("1");    
-        System.out.println("---- adding 2");
-        testModel.add("2");
-        System.out.println("---- adding 3");
-        testModel.add("3");    
-        System.out.println("---- setting a");
-        testModel.setSingleSelection("a");
-        System.out.println("---- clearing");        
-        testModel.clear();
-        */    
-            
     }
 
     @Override
