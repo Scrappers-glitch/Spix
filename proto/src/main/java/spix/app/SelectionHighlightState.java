@@ -60,7 +60,7 @@ public class SelectionHighlightState extends BaseAppState {
 
     private String selectionProperty = "main.selection";
     private SelectionModel selection;
-    private HighlightMode highlightMode;
+    private HighlightMode highlightMode = HighlightMode.Wireframe;
     private SelectionObserver selectionObserver = new SelectionObserver();
     private SafeArrayList<SelectionLink> links = new SafeArrayList<>(SelectionLink.class);
     private Map<Object, SelectionLink> linkIndex = new HashMap<>();
@@ -70,7 +70,7 @@ public class SelectionHighlightState extends BaseAppState {
     private float minAlpha = 0.1f;
     private float maxAlpha = 0.3f;
 
-    public enum HighlightMode{
+    public enum HighlightMode {
         Wireframe,
         Outline
     }
@@ -89,7 +89,7 @@ public class SelectionHighlightState extends BaseAppState {
     @Override
     protected void initialize( Application app ) {
         wireMaterial = GuiGlobals.getInstance().createMaterial(wireColor, false).getMaterial();
-        setHighlightMode(HighlightMode.Wireframe);
+        resetHighlightMode();
     }
 
     @Override
@@ -154,8 +154,22 @@ public class SelectionHighlightState extends BaseAppState {
     }
 
     public void setHighlightMode(HighlightMode mode){
+        if( this.highlightMode == mode ) {
+            return;
+        }
         this.highlightMode = mode;
-        switch (mode){
+        resetHighlightMode();
+    }
+    
+    public HighlightMode getHighlightMode() {
+        return highlightMode;
+    }
+    
+    protected void resetHighlightMode() {
+        if( wireMaterial == null ) {
+            return;
+        }
+        switch( highlightMode ) {
             case Wireframe:
                 wireMaterial.getAdditionalRenderState().setWireframe(true);
                 wireMaterial.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
@@ -177,10 +191,6 @@ public class SelectionHighlightState extends BaseAppState {
                 maxAlpha = 0.8f;
                 break;
         }
-    }
-
-    public HighlightMode getHighlightMode() {
-        return highlightMode;
     }
 
     protected class SelectionLink {
