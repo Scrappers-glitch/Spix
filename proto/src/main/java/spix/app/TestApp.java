@@ -95,7 +95,7 @@ public class TestApp extends SimpleApplication {
 
     public TestApp() throws Exception {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
-              new FlyCamAppState(), new OrbitCameraState(false),
+              new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(false),
               new DecoratorViewPortState(), new GridState(),
               new SelectionHighlightState(),
               new SpixState(new Spix()));
@@ -254,6 +254,19 @@ public class TestApp extends SimpleApplication {
         // Bind it to the orbit app state
         spix.getBlackboard().bind("camera.mode", stateManager.getState(OrbitCameraState.class),
                                   "enabled", Predicates.equalTo("orbit"));
+
+        final ToggleAction blenderCam = camera.add(new AbstractToggleAction("Blender") {
+            public void performAction( Spix spix ) {
+                System.out.println("camera.mode=blender");
+                spix.getBlackboard().set("camera.mode", "blender");
+            }
+        });
+        spix.getBlackboard().bind("camera.mode", blenderCam, "toggled", Predicates.equalTo("blender"));
+
+        // Bind it to the orbit app state
+        spix.getBlackboard().bind("camera.mode", stateManager.getState(BlenderCameraState.class),
+                "enabled", Predicates.equalTo("blender"));
+
 
 
         ActionList view = main.add(new DefaultActionList("View"));
