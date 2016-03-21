@@ -51,7 +51,7 @@ import com.jme3.system.awt.AwtPanelsContext;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
-import spix.BeanProperty;
+
 import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.core.Action;
@@ -116,9 +116,7 @@ public class TestApp extends SimpleApplication {
 
         SelectionModel selectionModel = new SelectionModel();
         spix.getBlackboard().set("main.selection", selectionModel);
-        selectionModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");
-        BeanProperty highlight = BeanProperty.create(getStateManager().getState(SelectionHighlightState.class), "highlightMode");
-        spix.getBlackboard().set("highlight.mode", highlight);
+        selectionModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");        
  
         // Have to create the frame on the AWT EDT.
         SwingUtilities.invokeAndWait(new Runnable() {
