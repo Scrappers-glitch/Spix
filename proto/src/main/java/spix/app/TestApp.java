@@ -152,6 +152,7 @@ public class TestApp extends SimpleApplication {
                 // Register services to handle certain UI requests
                 spix.registerService(FileRequester.class, new SwingFileRequester(spix, mainFrame));
                 spix.registerService(MessageRequester.class, new SwingMessageRequester(mainFrame));
+                spix.registerService(ColorRequester.class, new SwingColorRequester(spix, mainFrame));
 
 
                 // Setup a selection test to change the test label
@@ -314,6 +315,28 @@ public class TestApp extends SimpleApplication {
     private ActionList createTestActions() {
         final ActionList testActions = new DefaultActionList("Test");
         final ActionList testActions2 = new DefaultActionList("Test");
+
+        testActions.add(new NopAction("Select Color") {
+            public void performAction( Spix spix ) {
+                spix.getService(ColorRequester.class).requestColor("Select a Test Color", null, false,
+                                                                   new RequestCallback<ColorRGBA>() {
+                    public void done( ColorRGBA color ) {
+                        System.out.println("Selected color:" + color);
+                    }
+                });
+            }
+        });
+
+        testActions.add(new NopAction("Select Color Interactive") {
+            public void performAction( Spix spix ) {
+                spix.getService(ColorRequester.class).requestColor("Select a Test Color", null, true,
+                                                                   new RequestCallback<ColorRGBA>() {
+                    public void done( ColorRGBA color ) {
+                        System.out.println("Selected color:" + color);
+                    }
+                });
+            }
+        });
 
         // A self test
         final Action testAction = testActions.add(new spix.core.AbstractAction("Test") {
