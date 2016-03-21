@@ -96,7 +96,7 @@ public class TestApp extends SimpleApplication {
     public TestApp() throws Exception {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
               new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(false),
-              new DecoratorViewPortState(), new GridState(),
+              new DecoratorViewPortState(), new GridState(), new BackgroundColorState(),
               new SelectionHighlightState(),
               new SpixState(new Spix()));
 
@@ -287,6 +287,19 @@ public class TestApp extends SimpleApplication {
         // Bind it to the grid app state
         spix.getBlackboard().bind("view.grid", stateManager.getState(GridState.class),
                                   "enabled");
+
+        view.add(new NopAction("Viewport Color") {
+            public void performAction( Spix spix ) {
+                ColorRGBA initialColor = spix.getBlackboard().get("viewport.color", ColorRGBA.class);
+                spix.getService(ColorRequester.class).requestColor("Select the viewport color", initialColor, true,
+                        new RequestCallback<ColorRGBA>() {
+                            public void done( ColorRGBA color ) {
+                                spix.getBlackboard().set("viewport.color", color);
+                            }
+                        });
+            }
+        });
+        spix.getBlackboard().bind("viewport.color", getStateManager().getState(BackgroundColorState.class), "backgroundColor");
 
 
         ActionList highlight = view.add(new DefaultActionList("Highlight"));
