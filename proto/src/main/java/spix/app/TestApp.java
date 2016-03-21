@@ -191,17 +191,6 @@ System.out.println("Wrote file:" + file);
         file.add(null); // separator
         file.add(new NopAction("Open") {
             public void performAction( Spix spix ) {
-                spix.request(new GetFile("Open Scene", "JME Object", "j3o", true), 
-                             new RequestCallback<File>() {
-                                public void done( File f ) {
-                                    System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
-                                    loadFile(f);
-                                }
-                             });
-            }
-        });
-        file.add(new NopAction("Open 2") {
-            public void performAction( Spix spix ) {
                 // Uses the alternate requester service approach
                 spix.getService(FileRequester.class).requestFile("Open Scene", 
                                                                  "JME Object", "j3o", null, true, 
@@ -304,28 +293,28 @@ System.out.println("Wrote file:" + file);
                                   "enabled");
 
 
-        ActionList highlight = main.add(new DefaultActionList("Highlight"));
+        ActionList highlight = view.add(new DefaultActionList("Highlight"));
         ToggleAction highlightWireframe = highlight.add(new AbstractToggleAction("Wireframe") {
             public void performAction( Spix spix ) {
-                BeanProperty mode = spix.getBlackboard().get("highlight.mode", BeanProperty.class);
-                mode.setValue(SelectionHighlightState.HighlightMode.Wireframe);
-                spix.getBlackboard().set("highlight.mode", mode);
+                spix.getBlackboard().set("highlight.mode", SelectionHighlightState.HighlightMode.Wireframe);
             }
         });
-        highlightWireframe.isToggled();
-        //@Paul Not sure how to use the predicate here.
-        //Clearly something is missing to untoggle the other check box, but since my value is embed in a BeanProperty, idk how to test it.
         spix.getBlackboard().bind("highlight.mode", highlightWireframe, "toggled", Predicates.equalTo(SelectionHighlightState.HighlightMode.Wireframe));
 
 
         ToggleAction highlighOutLine = highlight.add(new AbstractToggleAction("Outline") {
             public void performAction( Spix spix ) {
-                BeanProperty mode = spix.getBlackboard().get("highlight.mode", BeanProperty.class);
-                mode.setValue(SelectionHighlightState.HighlightMode.Outline);
-                spix.getBlackboard().set("highlight.mode", mode);
+                spix.getBlackboard().set("highlight.mode", SelectionHighlightState.HighlightMode.Outline);
             }
         });
         spix.getBlackboard().bind("highlight.mode", highlighOutLine, "toggled", Predicates.equalTo(SelectionHighlightState.HighlightMode.Outline));
+
+        // Bind the highlight.mode blackboard property to the state's property
+        spix.getBlackboard().bind("highlight.mode", stateManager.getState(SelectionHighlightState.class), 
+                                  "highlightMode");
+
+        // Set the mode default
+        spix.getBlackboard().set("highlight.mode", SelectionHighlightState.HighlightMode.Outline);
 
         
         ActionList test = main.add(createTestActions());
