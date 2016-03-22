@@ -289,7 +289,7 @@ public class TestApp extends SimpleApplication {
                                   "enabled");
 
         view.add(new NopAction("Viewport Color") {
-            public void performAction( Spix spix ) {
+            public void performAction( final Spix spix ) {
                 ColorRGBA initialColor = spix.getBlackboard().get("viewport.color", ColorRGBA.class);
                 spix.getService(ColorRequester.class).requestColor("Select the viewport color", initialColor, true,
                         new RequestCallback<ColorRGBA>() {
