@@ -96,8 +96,10 @@ public class TestApp extends SimpleApplication {
     public TestApp() throws Exception {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
               new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(false),
-              new DecoratorViewPortState(), new GridState(), new BackgroundColorState(),
+              new GridState(), new BackgroundColorState(),
               new SelectionHighlightState(),
+              new TranslationWidgetState(),
+              new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
               new SpixState(new Spix()));
 
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
@@ -224,6 +226,24 @@ public class TestApp extends SimpleApplication {
         });
 
         ActionList edit = main.add(new DefaultActionList("Edit"));
+        ActionList transform = edit.add(new DefaultActionList("Transform"));
+
+        ToggleAction translate = transform.add(new AbstractToggleAction("Translate") {
+            public void performAction( Spix spix ) {
+                spix.getBlackboard().set("transform.mode", "translate");
+            }
+        });
+        spix.getBlackboard().bind("transform.mode", translate, "toggled", Predicates.equalTo("translate"));
+
+        // Bind it to the translation widget app state also
+        spix.getBlackboard().bind("transform.mode", stateManager.getState(TranslationWidgetState.class),
+                                  "enabled", Predicates.equalTo("translate"));
+
+        // And translate by default
+        spix.getBlackboard().set("transform.mode", "translate");
+
+        edit.add(null);
+        // Just some test edit actions
         edit.add(new NopAction("Cut"));
         edit.add(new NopAction("Copy"));
         edit.add(new NopAction("Paste"));
@@ -267,7 +287,10 @@ public class TestApp extends SimpleApplication {
         spix.getBlackboard().bind("camera.mode", stateManager.getState(BlenderCameraState.class),
                 "enabled", Predicates.equalTo("blender"));
 
-
+        // Set the default camera mode
+        //spix.getBlackboard().set("camera.mode", "blender");
+        // ...except flycam app state is stupid and NPEs... we'll wait until
+        // we replace it.  And when the blender state stops resetting the camera location.
 
         ActionList view = main.add(new DefaultActionList("View"));
         ToggleAction showGrid = view.add(new AbstractToggleAction("Grid") {
@@ -466,6 +489,7 @@ public class TestApp extends SimpleApplication {
 
     @Override
     public void simpleUpdate( float tpf ) {
+//System.out.println("-----------frame-------------");
     }
 
 

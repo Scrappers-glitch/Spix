@@ -4,10 +4,10 @@ apply plugin: 'application'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
-//mainClassName='spix.Test'
+mainClassName='spix.props.Test'
 //mainClassName='spix.blackboard.BlackboardTest'
 //mainClassName='spix.type.TypeRegistryTest'
-mainClassName='spix.core.SpixTest'
+//mainClassName='spix.core.SpixTest'
 
 // I want to compile groovy and Java together instead of in two passes
 //sourceSets.main.java.srcDirs = []
@@ -36,45 +36,45 @@ repositories {
     jcenter()
 }
 
-ext.jmeVersion = "[3.1,)" 
-//ext.jmeVersion = "unknown" 
+ext.jmeVersion = "[3.1,)"
+//ext.jmeVersion = "unknown"
 ext.lemurVersion = "[1.7,)"
 
 project(":assets") {
     apply plugin: "java"
-    
+
     buildDir = rootProject.file("build/assets")
-    
+
     sourceSets {
         main {
             resources {
                 srcDir '.'
             }
         }
-    }    
+    }
 }
 
 dependencies {
 
     compile 'org.codehaus.groovy:groovy-all:2.4.4'
-     
+
     compile 'com.google.guava:guava:19.0'
-    
+
     compile "org.jmonkeyengine:jme3-core:$jmeVersion"
 
     // Because Lemur has some useful stuff that we'll need for in-scene things
-    compile "com.simsilica:lemur:$lemurVersion" 
+    compile "com.simsilica:lemur:$lemurVersion"
 
     // So we can run a test app
     compile "org.jmonkeyengine:jme3-core:$jmeVersion"
     compile "org.jmonkeyengine:jme3-desktop:$jmeVersion"
     compile "org.jmonkeyengine:jme3-lwjgl:$jmeVersion"
-           
+
     compile "com.github.insubstantial:substance:[7.3,)"
-    
+
     compile 'org.slf4j:slf4j-api:1.7.13'
 
-    runtime project(':assets')        
+    runtime project(':assets')
 }
 
 task runTestApp(type: JavaExec) {
