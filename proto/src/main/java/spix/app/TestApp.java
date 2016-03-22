@@ -143,7 +143,7 @@ public class TestApp extends SimpleApplication {
                 JLabel testLabel = new JLabel("Testing");
                 JLabel testLabel2 = new JLabel("Testing2");
                 left.add(testLabel);
-                left.add(testLabel2);
+                //left.add(testLabel2);
                 split.add(left, JSplitPane.LEFT);
                 mainFrame.getContentPane().add(split, BorderLayout.CENTER);
 
@@ -159,11 +159,11 @@ public class TestApp extends SimpleApplication {
                 spix.getBlackboard().bind("main.selection.singleSelect",
                                            testLabel, "text", ToStringFunction.INSTANCE);
 
-                spix.getBlackboard().bind("main.selection.singleSelect",
+                /*spix.getBlackboard().bind("main.selection.singleSelect",
                                            testLabel2, "text",
                                            Functions.compose(
                                                 ToStringFunction.INSTANCE,
-                                                new ToPropertySetFunction(spix)));
+                                                new ToPropertySetFunction(spix)));*/
 
                 spix.getBlackboard().get("main.selection", SelectionModel.class).add("Test Selection");
             }

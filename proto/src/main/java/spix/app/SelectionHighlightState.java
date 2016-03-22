@@ -58,7 +58,7 @@ import java.util.*;
  */
 public class SelectionHighlightState extends BaseAppState {
 
-    public final static String SELECTION_PROPERTY = "main.selection";
+    private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
     private SelectionModel selection;
     private HighlightMode highlightMode = HighlightMode.Wireframe;
     private SelectionObserver selectionObserver = new SelectionObserver();
@@ -98,7 +98,7 @@ public class SelectionHighlightState extends BaseAppState {
 
     @Override
     protected void onEnable() {
-        this.selection = getSpix().getBlackboard().get(SELECTION_PROPERTY, SelectionModel.class);
+        this.selection = getSpix().getBlackboard().get(selectionProperty, SelectionModel.class);
         selection.addPropertyChangeListener(selectionObserver);
         updateSelection();
     }
@@ -160,11 +160,11 @@ public class SelectionHighlightState extends BaseAppState {
         this.highlightMode = mode;
         resetHighlightMode();
     }
-    
+
     public HighlightMode getHighlightMode() {
         return highlightMode;
     }
-    
+
     protected void resetHighlightMode() {
         if( wireMaterial == null ) {
             return;

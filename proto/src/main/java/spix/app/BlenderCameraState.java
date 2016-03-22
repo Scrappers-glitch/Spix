@@ -1,36 +1,36 @@
 /*
  * $Id$
- * 
+ *
  * Copyright (c) 2016, Simsilica, LLC
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions 
+ * modification, are permitted provided that the following conditions
  * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright 
+ *
+ * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
- * 2. Redistributions in binary form must reproduce the above copyright 
- *    notice, this list of conditions and the following disclaimer in 
- *    the documentation and/or other materials provided with the 
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
  *    distribution.
- * 
- * 3. Neither the name of the copyright holder nor the names of its 
- *    contributors may be used to endorse or promote products derived 
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -70,6 +70,7 @@ public class BlenderCameraState extends BaseAppState {
     private final static float PAN_FACTOR = 0.1f;
     private final static float ROT_FACTOR = 0.1f;
 
+    private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
     private Camera cam;
     private Node target;
     private Node verticalPivot;
@@ -84,19 +85,19 @@ public class BlenderCameraState extends BaseAppState {
     public BlenderCameraState(boolean enabled ) {
         setEnabled(enabled);
     }
-    
+
     public void setCamera( Camera cam ) {
         this.cam = cam;
     }
-    
+
     public Camera getCamera() {
         return cam;
     }
- 
-    @Override   
+
+    @Override
     protected void initialize( Application app ) {
- 
-        if( this.cam == null ) {   
+
+        if( this.cam == null ) {
             this.cam = app.getCamera();
         }
 
@@ -107,7 +108,7 @@ public class BlenderCameraState extends BaseAppState {
         camNode.setEnabled(false);
         target.attachChild(verticalPivot);
         verticalPivot.attachChild(camNode);
-    
+
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.addAnalogListener(inputHandler, F_VERTICAL_MOVE, F_HORIZONTAL_MOVE, F_VERTICAL_ROTATE, F_HORIZONTAL_ROTATE, F_ZOOM);
         inputMapper.addStateListener(inputHandler, F_CENTER);
@@ -138,15 +139,15 @@ public class BlenderCameraState extends BaseAppState {
         System.out.println("Input functions:" + inputMapper.getFunctionIds());
 
     }
-    
-    @Override   
+
+    @Override
     protected void cleanup( Application app ) {
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.removeAnalogListener(inputHandler, F_VERTICAL_MOVE, F_HORIZONTAL_MOVE, F_VERTICAL_ROTATE, F_HORIZONTAL_ROTATE, F_ZOOM);
         inputMapper.removeStateListener(inputHandler, F_CENTER);
     }
-    
-    @Override   
+
+    @Override
     protected void onEnable() {
         System.out.println(getClass().getName() + " Enabled");
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
@@ -158,8 +159,8 @@ public class BlenderCameraState extends BaseAppState {
         camNode.setEnabled(true);
 
     }
-    
-    @Override   
+
+    @Override
     protected void onDisable() {
         System.out.println(getClass().getName() + " Disabled");
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
@@ -168,25 +169,25 @@ public class BlenderCameraState extends BaseAppState {
         target.removeFromParent();
         camNode.setEnabled(false);
     }
- 
+
     @Override
     public void update( float tpf ) {
     }
 
     @Override
-    public void postRender() { 
+    public void postRender() {
     }
 
     private class InputHandler implements AnalogFunctionListener, StateFunctionListener {
 
         private Vector3f tmpVec = new Vector3f();
         private Quaternion tmpRot = new Quaternion();
- 
+
         public void valueChanged( FunctionId func, InputState value, double tpf ) {
             if( func == F_CENTER ) {
                 System.out.println("Function:" + func + "  value:" + value + "  tpf:" + tpf );
                 if(value == InputState.Off){
-                    SelectionModel model = getState(SpixState.class).getSpix().getBlackboard().get(SelectionHighlightState.SELECTION_PROPERTY, SelectionModel.class);
+                    SelectionModel model = getState(SpixState.class).getSpix().getBlackboard().get(selectionProperty, SelectionModel.class);
                     Object o = model.getSingleSelection();
                     if(o != null){
                         Spatial selected = (Spatial)o;
@@ -196,8 +197,8 @@ public class BlenderCameraState extends BaseAppState {
                     }
                 }
             }
-        }        
- 
+        }
+
         public void valueActive( FunctionId func, double value, double tpf ) {
             if(func == F_HORIZONTAL_MOVE){
                 tmpVec.set(cam.getLeft()).multLocal((float)value * PAN_FACTOR);
@@ -220,5 +221,5 @@ public class BlenderCameraState extends BaseAppState {
                 camNode.setLocalTranslation(tmpVec);
             }
         }
-    }   
+    }
 }
