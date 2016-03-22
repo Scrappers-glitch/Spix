@@ -152,8 +152,7 @@ public class BlenderCameraState extends BaseAppState {
         System.out.println(getClass().getName() + " Enabled");
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.activateGroup(GROUP);
-        Node rootNode = ((SimpleApplication)getApplication()).getRootNode();
-        rootNode.attachChild(target);
+
         camNode.setLocalTranslation(0,0,10);
         camNode.lookAt(target.getWorldTranslation(),Vector3f.UNIT_Y);
         camNode.setEnabled(true);
@@ -172,6 +171,8 @@ public class BlenderCameraState extends BaseAppState {
 
     @Override
     public void update( float tpf ) {
+        target.updateLogicalState(tpf);
+        target.updateGeometricState();
     }
 
     @Override
