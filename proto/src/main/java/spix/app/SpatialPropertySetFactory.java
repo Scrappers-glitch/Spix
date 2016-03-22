@@ -53,6 +53,14 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
 
     public PropertySet createPropertySet( Spatial spatial, Spix spix ) {
         System.out.println("Need to create a property set for:" + spatial);
-        return new DefaultPropertySet(spatial);
+
+        // Just expose some minimum properties so we can test
+        // editing and manipulator widgets
+
+        // Configure the local translation property
+        Property translation = BeanProperty.create(spatial, "localTranslation");
+        Property rotation = BeanProperty.create(spatial, "localRotation");
+
+        return new DefaultPropertySet(spatial, translation, rotation);
     }
 }
