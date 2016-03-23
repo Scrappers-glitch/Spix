@@ -51,6 +51,7 @@ import com.jme3.scene.shape.Line;
 import com.jme3.texture.Texture;
 import com.jme3.util.SafeArrayList;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.event.*;
 import spix.core.*;
 
 import java.beans.*;
@@ -179,6 +180,8 @@ public class TranslationWidgetState extends BaseAppState {
         rot.lookAt(dir, up);
         axis.setLocalRotation(rot);
 
+        CursorEventControl.addListenersToSpatial(axis, new AxisManipulator(index));
+
         return axis;
     }
 
@@ -267,6 +270,28 @@ public class TranslationWidgetState extends BaseAppState {
         System.out.println("screen dist:" + (s2.x - s1.x));
         // Should be 100 when facing directly down z axis
         */
+    }
+
+    private class AxisManipulator implements CursorListener {
+
+        private int axis;
+
+        public AxisManipulator( int axis ) {
+            this.axis = axis;
+        }
+
+        public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
+            System.out.println("Axis:" + axis + "  button event:" + event);
+        }
+
+        public void cursorEntered( CursorMotionEvent event, Spatial target, Spatial capture ) {
+        }
+
+        public void cursorExited( CursorMotionEvent event, Spatial target, Spatial capture ) {
+        }
+
+        public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
+        }
     }
 
     private class SelectionObserver implements PropertyChangeListener {
