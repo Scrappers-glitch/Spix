@@ -73,10 +73,12 @@ public class TranslationWidgetState extends BaseAppState {
     private Node centerNode;
     private Geometry radial;
     private Geometry center;
+    private Spatial[] axisSpatials = new Spatial[3];
     private Material[] axisMaterials = new Material[3];
     private ColorRGBA[] axisColors = new ColorRGBA[3];
     private Camera cam;
 
+    private SafeArrayList<Spatial> selectedSpatials = new SafeArrayList<>(Spatial.class);
     private Vector3f selectionCenter = new Vector3f();
 
     public TranslationWidgetState() {
@@ -154,6 +156,7 @@ public class TranslationWidgetState extends BaseAppState {
     protected Spatial createAxis( int index, Vector3f dir, ColorRGBA color ) {
 
         Node axis = new Node("axis:" + index);
+        axisSpatials[index] = axis;
 
         // Create the cone tip
         Mesh mesh = new Cylinder(2, 12, 0f, 0.045f, 0.18f, true, false);
@@ -206,19 +209,19 @@ public class TranslationWidgetState extends BaseAppState {
 
         // Calculate the selection center
         Vector3f pos = new Vector3f();
-        int count = 0;
+        selectedSpatials.clear();
         for( Object o : selection ) {
             if( o instanceof Spatial ) {
                 Spatial s = (Spatial)o;
+                selectedSpatials.add(s);
                 pos.addLocal(s.getWorldTranslation());
-                count++;
             }
         }
-        if( count == 0 ) {
+        if( selectedSpatials.isEmpty() ) {
             widget.removeFromParent();
         } else {
             getRoot().attachChild(widget);
-            pos.divideLocal(count);
+            pos.divideLocal(selectedSpatials.size());
             selectionCenter.set(pos);
             widget.setLocalTranslation(selectionCenter);
         }
@@ -272,16 +275,107 @@ public class TranslationWidgetState extends BaseAppState {
         */
     }
 
+    private void startAxisDrag( int axis ) {
+        radial.setCullHint(Spatial.CullHint.Always);
+        for( Spatial s : axisSpatials ) {
+            s.setCullHint(Spatial.CullHint.Always);
+        }
+    }
+
+    private void stopAxisDrag( int axis ) {
+        radial.setCullHint(Spatial.CullHint.Inherit);
+        for( Spatial s : axisSpatials ) {
+            s.setCullHint(Spatial.CullHint.Inherit);
+        }
+    }
+
+    protected void moveSelectedObjects( Vector3f delta ) {
+        Vector3f pos = new Vector3f();
+        for( Spatial s : selectedSpatials ) {
+            // Translate the delta into the spatial's local space
+            Vector3f v = s.getWorldTranslation().add(delta);
+            v = s.worldToLocal(v, null);
+            s.move(v);
+            pos.addLocal(s.getWorldTranslation());
+        }
+        pos.divide(selectedSpatials.size());
+        selectionCenter.set(pos);
+        widget.setLocalTranslation(selectionCenter);
+    }
+
     private class AxisManipulator implements CursorListener {
 
         private int axis;
+        private Vector3f dir;
+
+        private Vector2f cursor = new Vector2f();
+        private float startDistance = 0;
+        private Vector3f base = null;
+        private Vector3f last;
 
         public AxisManipulator( int axis ) {
             this.axis = axis;
+            dir = new Vector3f();
+            dir.set(axis, 1);
+        }
+
+        /**
+         *  Find the closest points between two lines p0 + u(t) and q0 + v(t)
+         *  based on: http://geomalgorithms.com/a07-_distance.html
+         */
+        protected float closestPointProjected( Vector3f p0, Vector3f u, Vector3f q0, Vector3f v ) {
+
+            //System.out.println("P0:" + p0 + "  u:" + u);
+            //System.out.println("Q0:" + q0 + "  v:" + v);
+            Vector3f w0 = p0.subtract(q0);
+
+            float a = u.dot(u);
+            float b = u.dot(v);
+            float c = v.dot(v);
+            float d = u.dot(w0);
+            float e = v.dot(w0);
+
+            float sc = ((b * e) - (c * d)) / ((a * c) - (b * b));
+
+            /*
+            For testing, it's fun to calculate the rest and project them onto the line
+            float tc = ((a * e) - (b * d)) / ((a * c) - (b * b));
+
+            System.out.println("sc:" + sc + "  tc:" + tc);
+            System.out.println("psc:" + p0.add(u.mult(sc)) + "  qtc:" + q0.add(v.mult(tc)));
+            */
+
+            return sc;
+        }
+
+        protected Vector3f getPickDir( AbstractCursorEvent event ) {
+            cursor.set(event.getX(), event.getY());
+            Vector3f near = cam.getWorldCoordinates(cursor, 0);
+            Vector3f far = cam.getWorldCoordinates(cursor, 1);
+            return far.subtract(near).normalizeLocal();
         }
 
         public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
-            System.out.println("Axis:" + axis + "  button event:" + event);
+            if( event.isPressed() ) {
+                startAxisDrag(axis);
+
+                // Keep track of the starting location for the object
+                base = selectionCenter.clone(); //target.getWorldTranslation();
+
+                // Find the pick direction from our eye
+                Vector3f pickDir = getPickDir(event);
+
+                // Find the closest point between the axis line starting at the
+                // object and the pick line starting at the camera.  This returns
+                // the projected point on the first line (object -> axis)
+                startDistance = closestPointProjected(base, dir, cam.getLocation(), pickDir);
+
+                last = new Vector3f();
+            } else {
+                stopAxisDrag(axis);
+                base = null;
+            }
+            event.setConsumed();
         }
 
         public void cursorEntered( CursorMotionEvent event, Spatial target, Spatial capture ) {
@@ -291,6 +385,25 @@ public class TranslationWidgetState extends BaseAppState {
         }
 
         public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
+            if( base == null ) {
+                // Not dragging
+                return;
+            }
+
+            // Find the pick direction from our eye
+            Vector3f pickDir = getPickDir(event);
+
+            // Find the closest point between the axis line starting at the
+            // object and the pick line starting at the camera.  This returns
+            // the projected point on the first line (object -> axis)
+            float distance = closestPointProjected(base, dir, cam.getLocation(), pickDir);
+
+            //System.out.println("distance:" + distance + "  Dragged:" + (distance - startDistance));
+            float dragged = distance - startDistance;
+            Vector3f newOffset = dir.mult(dragged);
+            Vector3f delta = newOffset.subtract(last);
+            last.set(newOffset);
+            moveSelectedObjects(delta);
         }
     }
 
