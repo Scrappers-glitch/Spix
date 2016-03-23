@@ -41,6 +41,7 @@ import com.jme3.app.state.BaseAppState;
 import com.jme3.material.*;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.*;
+import com.jme3.renderer.RenderManager;
 import com.jme3.scene.*;
 import com.jme3.util.SafeArrayList;
 import com.simsilica.lemur.GuiGlobals;
@@ -147,7 +148,15 @@ public class SelectionHighlightState extends BaseAppState {
         float sine = (FastMath.sin(alphaTime * 6) + 1) * 0.5f;
         float a = minAlpha + sine * (maxAlpha - minAlpha);
         wireColor.a = a;
+    }
 
+    @Override
+    public void render( RenderManager renderManager ) {
+
+        // Updating the position of the wire frames needs to be done in render()
+        // because dragging is done in update and this lets the states be a little
+        // more order independent.  We could also have just made sure this state
+        // was always after the transform states.
         for( SelectionLink link : links.getArray() ) {
             link.update();
         }
