@@ -36,6 +36,9 @@
 
 package spix.app;
 
+import java.beans.*;
+import java.util.*;
+
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.material.*;
@@ -50,12 +53,13 @@ import com.jme3.scene.shape.*;
 import com.jme3.scene.shape.Line;
 import com.jme3.texture.Texture;
 import com.jme3.util.SafeArrayList;
+
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
-import spix.core.*;
 
-import java.beans.*;
-import java.util.*;
+
+import spix.core.*;
+import spix.props.*;
 
 
 /**
@@ -78,8 +82,9 @@ public class TranslationWidgetState extends BaseAppState {
     private ColorRGBA[] axisColors = new ColorRGBA[3];
     private Camera cam;
 
-    private SafeArrayList<Spatial> selectedSpatials = new SafeArrayList<>(Spatial.class);
+    private SafeArrayList<SelectedObject> selectedObjects = new SafeArrayList<>(SelectedObject.class);
     private Vector3f selectionCenter = new Vector3f();
+
 
     public TranslationWidgetState() {
     }
@@ -207,21 +212,41 @@ public class TranslationWidgetState extends BaseAppState {
 
     protected void updateSelection() {
 
+        Spix spix = getSpix();
+
         // Calculate the selection center
         Vector3f pos = new Vector3f();
-        selectedSpatials.clear();
+        selectedObjects.clear();
+System.out.println("Selection:" + selection);
         for( Object o : selection ) {
+
+            PropertySet wrapper = spix.getPropertySet(o);
+            if( wrapper == null ) {
+                continue;
+            }
+            Property translation = wrapper.getProperty("worldTranslation");
+            if( translation == null ) {
+                continue;
+            }
+
+            Vector3f v = (Vector3f)translation.getValue();
+            pos.addLocal(v);
+
+            selectedObjects.add(new SelectedObject(wrapper, translation));
+
+/*
+System.out.println("Translation:" + translation + "  value:" + translation.getValue());
             if( o instanceof Spatial ) {
                 Spatial s = (Spatial)o;
-                selectedSpatials.add(s);
+                selectedObjects.add(s);
                 pos.addLocal(s.getWorldTranslation());
-            }
+            }*/
         }
-        if( selectedSpatials.isEmpty() ) {
+        if( selectedObjects.isEmpty() ) {
             widget.removeFromParent();
         } else {
             getRoot().attachChild(widget);
-            pos.divideLocal(selectedSpatials.size());
+            pos.divideLocal(selectedObjects.size());
             selectionCenter.set(pos);
             widget.setLocalTranslation(selectionCenter);
         }
@@ -291,14 +316,15 @@ public class TranslationWidgetState extends BaseAppState {
 
     protected void moveSelectedObjects( Vector3f delta ) {
         Vector3f pos = new Vector3f();
-        for( Spatial s : selectedSpatials ) {
+        for( SelectedObject s : selectedObjects ) {
             // Translate the delta into the spatial's local space
             Vector3f v = s.getWorldTranslation().add(delta);
-            v = s.worldToLocal(v, null);
-            s.move(v);
-            pos.addLocal(s.getWorldTranslation());
+            s.setWorldTranslation(v);
+            //v = s.worldToLocal(v, null);
+            //s.move(v);
+            pos.addLocal(v);
         }
-        pos.divide(selectedSpatials.size());
+        pos.divide(selectedObjects.size());
         selectionCenter.set(pos);
         widget.setLocalTranslation(selectionCenter);
     }
@@ -404,6 +430,24 @@ public class TranslationWidgetState extends BaseAppState {
             Vector3f delta = newOffset.subtract(last);
             last.set(newOffset);
             moveSelectedObjects(delta);
+        }
+    }
+
+    private class SelectedObject {
+        private PropertySet properties;
+        private Property translation;
+
+        public SelectedObject( PropertySet properties, Property translation ) {
+            this.properties = properties;
+            this.translation = translation;
+        }
+
+        public Vector3f getWorldTranslation() {
+            return (Vector3f)translation.getValue();
+        }
+
+        public void setWorldTranslation( Vector3f v ) {
+            translation.setValue(v);
         }
     }
 

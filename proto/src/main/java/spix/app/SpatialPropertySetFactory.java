@@ -36,10 +36,12 @@
 
 package spix.app;
 
+import com.jme3.math.Vector3f;
+import com.jme3.scene.Spatial;
+
 import spix.core.*;
 import spix.props.*;
 
-import com.jme3.scene.Spatial;
 
 /**
  *
@@ -61,6 +63,56 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
         Property translation = BeanProperty.create(spatial, "localTranslation");
         Property rotation = BeanProperty.create(spatial, "localRotation");
 
-        return new DefaultPropertySet(spatial, translation, rotation);
+        // For manipulators, create some special transform properties that work in world
+        // space.
+        Property worldTranslation = new WorldTranslationProperty(spatial);
+
+        return new DefaultPropertySet(spatial, worldTranslation, translation, rotation);
+    }
+
+    private class WorldTranslationProperty extends AbstractProperty {
+        private final Spatial spatial;
+
+        public WorldTranslationProperty( Spatial spatial ) {
+            super("worldTranslation");
+            this.spatial = spatial;
+        }
+
+        public Class getType() {
+            return Vector3f.class;
+        }
+
+        public void setValue( Object value ) {
+            if( value == null ) {
+                return;
+            }
+            Vector3f v = (Vector3f)value;
+            Vector3f last = spatial.getWorldTranslation();
+            if( v.equals(last) ) {
+                return;
+            }
+
+            // Else see how we'd have to move the spatial to get it
+            // to the specified world translation... so find the point
+            // in the parent's local space and calculate a delta from
+            // the child's currentl location.
+            Vector3f delta;
+            if( spatial.getParent() != null ) {
+                Vector3f local = spatial.getParent().worldToLocal(v, null);
+                delta = local.subtract(spatial.getLocalTranslation());
+            } else {
+                // It is the root... so everything is already in world space
+                delta = v.subtract(spatial.getLocalTranslation());
+            }
+
+            //...and that should be how far we need to move it
+            spatial.move(delta);
+
+            firePropertyChange(last, spatial.getWorldTranslation(), true);
+        }
+
+        public Object getValue() {
+            return spatial.getWorldTranslation();
+        }
     }
 }
