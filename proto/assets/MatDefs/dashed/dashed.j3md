@@ -1,0 +1,37 @@
+MaterialDef Simple {
+    MaterialParameters {
+        Float DashSize
+        Color Color
+    }
+    Technique {
+        WorldParameters {
+            WorldViewProjectionMatrix
+        }
+        VertexShaderNodes {
+            ShaderNode CommonVert {
+                Definition : CommonVert : Common/MatDefs/ShaderNodes/Common/CommonVert.j3sn
+                InputMappings {
+                    worldViewProjectionMatrix = WorldParam.WorldViewProjectionMatrix
+                    modelPosition = Global.position.xyz
+                    texCoord1 = Attr.inTexCoord
+                }
+                OutputMappings {
+                    Global.position = projPosition
+                }
+            }
+        }
+        FragmentShaderNodes {
+            ShaderNode Dashed {
+                Definition : Dashed : MatDefs/dashed/dashed.j3sn
+                InputMappings {
+                    texCoord = CommonVert.texCoord1
+                    inColor = MatParam.Color
+                    size = MatParam.DashSize
+                }
+                OutputMappings {
+                    Global.color = outColor
+                }
+            }
+        }
+    }
+}

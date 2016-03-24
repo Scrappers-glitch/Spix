@@ -36,7 +36,6 @@
 
 package spix.app;
 
-import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
 import com.jme3.app.*;
 import com.jme3.app.state.ScreenshotAppState;
@@ -53,6 +52,7 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 
+import spix.app.light.LightWidgetState;
 import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.core.Action;
@@ -63,7 +63,6 @@ import spix.ui.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.*;
 import java.io.*;
 
 
@@ -99,6 +98,7 @@ public class TestApp extends SimpleApplication {
               new GridState(), new BackgroundColorState(),
               new SelectionHighlightState(),
               new TranslationWidgetState(),
+                new LightWidgetState(),
               new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
               new SpixState(new Spix()));
 
@@ -443,6 +443,7 @@ public class TestApp extends SimpleApplication {
         // Set an initial camera position
         cam.setLocation(new Vector3f(0, 1, 10));
 
+
         Box b = new Box(Vector3f.ZERO, 1, 1, 1);
         Geometry geom = new Geometry("Box", b);
         Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
@@ -461,6 +462,13 @@ public class TestApp extends SimpleApplication {
         ambient.setColor(new ColorRGBA(0.5f, 0.5f, 0.2f, 1));
         rootNode.addLight(ambient);
 
+        PointLight pl = new PointLight(new Vector3f(-2,-2,-2), 4);
+        rootNode.addLight(pl);
+
+        SpotLight sl = new SpotLight(new Vector3f(3,3,-3),new Vector3f(-1f, -1, 1f).normalizeLocal(), 10, ColorRGBA.White.mult(2));
+        sl.setSpotOuterAngle(FastMath.DEG_TO_RAD * 15);
+        sl.setSpotInnerAngle(FastMath.DEG_TO_RAD * 5);
+        rootNode.addLight(sl);
 
         // Because we will use Lemur for some things... go ahead and setup
         // the very basics
