@@ -34,17 +34,57 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.props;
+package spix.form;
 
-import spix.type.Type;
+import java.util.*;
+
+import com.google.common.base.MoreObjects;
 
 /**
- *
+ *  Defines a loose field ordering and layout for
+ *  a particular object type.
  *
  *  @author    Paul Speed
  */
-public interface PropertySet extends Iterable<Property> {
+public class Form implements Iterable<Field> {
+    public enum Orientation { Vertical, Horizontal }
 
-    public Property getProperty( String name );
-    public Type getType();
+    private final List<Field> fields = new ArrayList<>();
+
+    public Form( Field... fields ) {
+        this.fields.addAll(Arrays.asList(fields));
+    }
+
+    public <T extends Field> T add( T field ) {
+        fields.add(field);
+        return field;
+    }
+
+    public <T extends Field> T add( int index, T field ) {
+        fields.add(index, field);
+        return field;
+    }
+
+    public Field get( int index ) {
+        return fields.get(index);
+    }
+
+    public int size() {
+        return fields.size();
+    }
+
+    /*public boolean remove( String propertyId ) {
+
+    }*/
+
+    public Iterator<Field> iterator() {
+        return fields.iterator();
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(getClass().getSimpleName())
+                .add("fields", fields)
+                .toString();
+    }
 }

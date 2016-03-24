@@ -34,17 +34,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.props;
+package spix.form;
 
-import spix.type.Type;
+import spix.core.Spix;
+import spix.props.PropertySet;
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public interface PropertySet extends Iterable<Property> {
+public interface FormFactory {
 
-    public Property getProperty( String name );
-    public Type getType();
+    public Form createForm( Spix spix, PropertySet properties );
 }

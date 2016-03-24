@@ -34,17 +34,25 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.props;
-
-import spix.type.Type;
+package spix.form;
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public interface PropertySet extends Iterable<Property> {
+public abstract class Field {
+    private String name;
 
-    public Property getProperty( String name );
-    public Type getType();
+    protected Field( String name ) {
+        this.name = name;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

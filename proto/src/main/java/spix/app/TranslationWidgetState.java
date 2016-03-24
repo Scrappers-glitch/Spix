@@ -241,6 +241,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
                 selectedObjects.add(s);
                 pos.addLocal(s.getWorldTranslation());
             }*/
+
         }
         if( selectedObjects.isEmpty() ) {
             widget.removeFromParent();

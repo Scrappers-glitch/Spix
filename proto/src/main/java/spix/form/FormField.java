@@ -34,17 +34,33 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.props;
+package spix.form;
 
-import spix.type.Type;
+import com.google.common.base.MoreObjects;
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public interface PropertySet extends Iterable<Property> {
+public class FormField extends Field {
 
-    public Property getProperty( String name );
-    public Type getType();
+    private Form form;
+
+    public FormField( String name, Form form ) {
+        super(name);
+        this.form = form;
+    }
+
+    public Form getForm() {
+        return form;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(getClass().getSimpleName())
+                .add("name", getName())
+                .add("form", form)
+                .toString();
+    }
 }

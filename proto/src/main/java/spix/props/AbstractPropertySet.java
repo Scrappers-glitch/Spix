@@ -54,12 +54,12 @@ public abstract class AbstractPropertySet implements PropertySet {
     private Object object;
     private Property parent;
     private Type type;
-    private final Map<String, Property> properties = new HashMap<>();
+    private final Map<String, Property> properties = new LinkedHashMap<>();
 
     protected AbstractPropertySet( Property parent, Object object, Property... props ) {
         this.parent = parent;
         this.object = object;
-        this.type = new Type(object.getClass());
+        this.type = object != null ? new Type(object.getClass()) : null;
 
         // We own the child properties we are passed so it should be safe to
         // register a listener without having to worry about unregistering it later.
@@ -80,6 +80,10 @@ public abstract class AbstractPropertySet implements PropertySet {
     @Override
     public final Property getProperty( String name ) {
         return properties.get(name);
+    }
+
+    public Iterator<Property> iterator() {
+        return properties.values().iterator();
     }
 
     protected Property getParent() {

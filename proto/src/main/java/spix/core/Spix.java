@@ -42,6 +42,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.cache.*;
 
+import spix.form.*;
 import spix.props.*;
 import spix.type.*;
 
@@ -58,7 +59,15 @@ public class Spix {
 
     private final Map<Class, Object> services = new ConcurrentHashMap<>();
 
-    private final HandlerRegistry<PropertySetFactory> handlers = new HandlerRegistry<>();
+    private final HandlerRegistry<PropertySetFactory> propertySetFactories = new HandlerRegistry<>();
+
+    /**
+     *  Special marker value indicating that an object has no property set wrapper.
+     *  It's a peculiarity of the cache we use that it doesn't like nulls for values.
+     */
+    private static final DefaultPropertySet NULL_PROPERTIES = new DefaultPropertySet(null);
+
+    private final HandlerRegistry<FormFactory> formFactories = new HandlerRegistry<>();
 
     /**
      *  A central cache for property set wrappers.  This is here instead of
@@ -73,6 +82,10 @@ public class Spix {
                                        .weakKeys()
                                        .weakValues()
                                        .build(new PropertySetCacheLoader());
+
+        // Setup the default form factory that will cover all objects that
+        // have property set wrappers
+        formFactories.register(Object.class, new DefaultFormFactory());
     }
 
     public Blackboard getBlackboard() {
@@ -88,11 +101,11 @@ public class Spix {
     }
 
     public <T> void registerPropertySetFactory( Class<T> type, PropertySetFactory<T> factory ) {
-        handlers.register(type, factory);
+        propertySetFactories.register(type, factory);
     }
 
     public <T> PropertySetFactory<T> getPropertySetFactory( Class<T> type ) {
-        return (PropertySetFactory<T>)handlers.get(type, false);
+        return (PropertySetFactory<T>)propertySetFactories.get(type, false);
     }
 
     /**
@@ -103,7 +116,24 @@ public class Spix {
         if( value == null ) {
             return null;
         }
-        return propertySetCache.getUnchecked(value);
+        PropertySet result = propertySetCache.getUnchecked(value);
+        return result != NULL_PROPERTIES ? result : null;
+    }
+
+    public <T> void registerFormFactory( Type type, FormFactory factory ) {
+        formFactories.register(type, factory);
+    }
+
+    public FormFactory getFormFactory( Type type ) {
+        return formFactories.get(type, false);
+    }
+
+    public Form createForm( PropertySet properties ) {
+        if( properties == null ) {
+            return null;
+        }
+        FormFactory factory = getFormFactory(properties.getType());
+        return factory.createForm(this, properties);
     }
 
     public <T> void sendResponse( final RequestCallback<T> callback, final T result ) {
@@ -136,7 +166,7 @@ System.out.println("Creating a property set for:" + value);
             PropertySetFactory factory = getPropertySetFactory(value.getClass());
             if( factory == null ) {
                 // Have to return something or the loading cache gets unhappy
-                return new DefaultPropertySet(value);
+                return NULL_PROPERTIES;
             }
             return factory.createPropertySet(value, Spix.this);
         }

@@ -34,17 +34,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.props;
+package spix.form;
 
-import spix.type.Type;
+import spix.core.Spix;
+import spix.props.Property;
+import spix.props.PropertySet;
 
 /**
- *
+ *  A default implementation that creates a form that directly
+ *  mirrors the property set (and nested property sets).
  *
  *  @author    Paul Speed
  */
-public interface PropertySet extends Iterable<Property> {
+public class DefaultFormFactory implements FormFactory {
 
-    public Property getProperty( String name );
-    public Type getType();
+    public Form createForm( Spix spix, PropertySet properties ) {
+
+        Form result = new Form();
+        for( Property property : properties ) {
+            // See if spix will wrap the value in a property set
+            Object value = property.getValue();
+System.out.println("Value:" + value);
+            PropertySet wrapper = spix.getPropertySet(value);
+System.out.println("Wrapper:" + wrapper);
+            if( wrapper != null ) {
+                result.add(new FormField(property.getName(), spix.createForm(wrapper)));
+            } else {
+                result.add(new PropertyField(property));
+            }
+        }
+
+        return result;
+    }
 }
