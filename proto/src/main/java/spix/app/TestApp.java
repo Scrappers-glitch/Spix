@@ -149,7 +149,17 @@ public class TestApp extends SimpleApplication {
                 split.add(left, JSplitPane.LEFT);
                 mainFrame.getContentPane().add(split, BorderLayout.CENTER);
 
-                stateManager.attach(new AwtPanelState(split, JSplitPane.RIGHT));
+                // For the right panel, we'll split it again so we can have a property
+                // pane on the right-right.
+                JSplitPane rightSplit = new JSplitPane();
+                split.add(rightSplit, JSplitPane.RIGHT);
+                rightSplit.setContinuousLayout(false);
+                rightSplit.setBackground(Color.black);
+
+                PropertyEditorPanel objectEditor = new PropertyEditorPanel(spix);
+                rightSplit.add(objectEditor, JSplitPane.RIGHT);
+
+                stateManager.attach(new AwtPanelState(rightSplit, JSplitPane.LEFT));
 
                 // Register services to handle certain UI requests
                 spix.registerService(FileRequester.class, new SwingFileRequester(spix, mainFrame));
@@ -160,6 +170,12 @@ public class TestApp extends SimpleApplication {
                 // Setup a selection test to change the test label
                 spix.getBlackboard().bind("main.selection.singleSelect",
                                            testLabel, "text", ToStringFunction.INSTANCE);
+
+                // Bind the selection to the editor panel, converting objects to
+                // property set wrappers if appropriate.
+                spix.getBlackboard().bind("main.selection.singleSelect",
+                                          objectEditor, "object",
+                                          new ToPropertySetFunction(spix));
 
                 /*spix.getBlackboard().bind("main.selection.singleSelect",
                                            testLabel2, "text",

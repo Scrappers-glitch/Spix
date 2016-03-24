@@ -34,34 +34,65 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.form;
+package spix.swing;
+
+import java.awt.Dimension;
+import javax.swing.JPanel;
+
+import com.google.common.base.MoreObjects;
 
 import spix.core.Spix;
-import spix.props.Property;
-import spix.props.PropertySet;
+import spix.form.*;
+import spix.props.*;
 
 /**
- *  A default implementation that creates a form that directly
- *  mirrors the property set (and nested property sets).
+ *  A UI that presents property value editors for a particular
+ *  object.
  *
  *  @author    Paul Speed
  */
-public class DefaultFormFactory implements FormFactory {
+public class PropertyEditorPanel extends JPanel {
 
-    public Form createForm( Spix spix, PropertySet properties ) {
+    private Spix spix;
+    private PropertySet properties;
+    private Form form;
 
-        Form result = new Form();
-        for( Property property : properties ) {
-            // See if spix will wrap the value in a property set
-            Object value = property.getValue();
-            PropertySet wrapper = spix.getPropertySet(value);
-            if( wrapper != null ) {
-                result.add(new FormField(property.getName(), spix.createForm(wrapper)));
-            } else {
-                result.add(new PropertyField(property));
-            }
+    public PropertyEditorPanel( Spix spix ) {
+        this.spix = spix;
+        setPreferredSize(new Dimension(100, 100));
+    }
+
+    public void setObject( PropertySet properties ) {
+System.out.println("PropertyEditorPanel.setObject(" + properties + ")");
+
+        if( this.properties == properties ) {
+            return;
         }
 
-        return result;
+        // Clear out any old setup
+        if( this.properties != null ) {
+            // for now we'll just clear the properties but there will
+            // be more work to do when there is a real editor
+            this.properties = null;
+            this.form = null;
+        }
+
+        if( properties == null ) {
+            return;
+        }
+        this.form = spix.createForm(properties);
+System.out.println(form.debugString());
+    }
+
+    public PropertySet getObject() {
+        return properties;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(getClass().getSimpleName())
+                .add("properties", properties)
+                .add("form", form)
+                .toString();
     }
 }

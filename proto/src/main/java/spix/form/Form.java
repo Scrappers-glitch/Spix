@@ -47,12 +47,26 @@ import com.google.common.base.MoreObjects;
  *  @author    Paul Speed
  */
 public class Form implements Iterable<Field> {
-    public enum Orientation { Vertical, Horizontal }
+    public enum Orientation { Vertical, Horizontal };
 
+    private Orientation orientation;
     private final List<Field> fields = new ArrayList<>();
 
     public Form( Field... fields ) {
+        this(Orientation.Vertical, fields);
+    }
+
+    public Form( Orientation orientation, Field... fields ) {
+        this.orientation = orientation;
         this.fields.addAll(Arrays.asList(fields));
+    }
+
+    public void setOrientation( Orientation orientation ) {
+        this.orientation = orientation;
+    }
+
+    public Orientation getOrientation() {
+        return orientation;
     }
 
     public <T extends Field> T add( T field ) {
@@ -79,6 +93,29 @@ public class Form implements Iterable<Field> {
 
     public Iterator<Field> iterator() {
         return fields.iterator();
+    }
+
+    public String debugString() {
+        return debugString("    ");
+    }
+
+    protected String debugString( String indent ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Form[" + orientation + "]:\n");
+        for( Field field : fields ) {
+            sb.append(indent);
+            sb.append(field.getName() + ":");
+            if( field instanceof FormField ) {
+                sb.append(((FormField)field).getForm().debugString(indent + "    "));
+            } else if( field instanceof PropertyField ) {
+                PropertyField pf = (PropertyField)field;
+                sb.append(pf.getProperty().getValue());
+                sb.append("->");
+                sb.append(pf.getProperty());
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     @Override
