@@ -36,6 +36,8 @@
 
 package spix.app;
 
+import java.util.*;
+
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 
@@ -60,15 +62,21 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
         // Just expose some minimum properties so we can test
         // editing and manipulator widgets
 
-        // Configure the local translation property
-        Property translation = BeanProperty.create(spatial, "localTranslation");
-        Property rotation = BeanProperty.create(spatial, "localRotation");
+        List<Property> props = new ArrayList<>();
+
+        props.add(BeanProperty.create(spatial, "name"));
+        props.add(BeanProperty.create(spatial, "cullHint"));
+        props.add(BeanProperty.create(spatial, "queueBucket"));
 
         // For manipulators, create some special transform properties that work in world
         // space.
-        Property worldTranslation = new WorldTranslationProperty(spatial);
+        props.add(new WorldTranslationProperty(spatial));
 
-        return new DefaultPropertySet(spatial, worldTranslation, translation, rotation);
+        // Configure the local translation property
+        props.add(BeanProperty.create(spatial, "localTranslation"));
+        props.add(BeanProperty.create(spatial, "localRotation"));
+
+        return new DefaultPropertySet(spatial, props);
     }
 
     private class WorldTranslationProperty extends AbstractProperty {
