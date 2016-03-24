@@ -68,7 +68,7 @@ public class NameUtils {
                 // last char is lower case then we're starting a new word.
                 // If the next char is lower case then this is also the beggining
                 // of a new word at the end of an acronym run.  Like HTTPTest.
-                if( !nextCap || !lastCap ) {
+                if( i > 0 && (!nextCap || !lastCap) ) {
                     result.append(' ');
                 }
                 lastCap = true;
