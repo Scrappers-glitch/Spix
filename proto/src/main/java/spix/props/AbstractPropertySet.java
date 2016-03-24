@@ -57,6 +57,10 @@ public abstract class AbstractPropertySet implements PropertySet {
     private final Map<String, Property> properties = new LinkedHashMap<>();
 
     protected AbstractPropertySet( Property parent, Object object, Property... props ) {
+        this(parent, object, Arrays.asList(props));
+    }
+
+    protected AbstractPropertySet( Property parent, Object object, Iterable<Property> props ) {
         this.parent = parent;
         this.object = object;
         this.type = object != null ? new Type(object.getClass()) : null;
