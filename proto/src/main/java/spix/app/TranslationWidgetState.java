@@ -217,7 +217,7 @@ public class TranslationWidgetState extends BaseAppState {
         // Calculate the selection center
         Vector3f pos = new Vector3f();
         selectedObjects.clear();
-System.out.println("Selection:" + selection);
+System.out.println("TranslationWidgetSelection: Selection:" + selection);
         for( Object o : selection ) {
 
             PropertySet wrapper = spix.getPropertySet(o);

@@ -46,7 +46,7 @@ public abstract class AbstractToggleAction extends AbstractAction
                                            implements ToggleAction {
 
     protected AbstractToggleAction( String id ) {
-        this(id, idToName(id));
+        super(id);
     }
 
     protected AbstractToggleAction( String id, String name ) {

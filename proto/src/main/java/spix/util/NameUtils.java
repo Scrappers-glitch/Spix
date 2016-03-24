@@ -34,60 +34,50 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.props;
+package spix.util;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
-import java.util.Objects;
-
-import com.jme3.util.SafeArrayList;
-
-import spix.util.NameUtils;
 
 /**
  *
  *
  *  @author    Paul Speed
  */
-public abstract class AbstractProperty implements Property {
+public class NameUtils {
 
-    private final String id;
-    private final String name;
-    private final SafeArrayList<PropertyChangeListener> listeners = new SafeArrayList<>(PropertyChangeListener.class);
+    /**
+     *  Converts a potentially camel-cased id to a display name
+     *  by breaking it up at camel case boundaries.  Some care is
+     *  taken to handle sequences of upper case letters as if they
+     *  were acronymes.
+     */
+    public static String idToName( String id ) {
+        StringBuilder result = new StringBuilder();
+        boolean lastCap = false;
+        for( int i = 0; i < id.length(); i++ ) {
+            boolean nextCap = true;
+            if( i < id.length() - 1 ) {
+                nextCap = Character.isUpperCase(id.charAt(i + 1));
+            }
+            char c = id.charAt(i);
+            if( i == 0 ) {
+                c = Character.toUpperCase(c);
+            }
 
-    protected AbstractProperty( String id ) {
-        this.id = id;
-        this.name = NameUtils.idToName(id);
-    }
-
-    protected AbstractProperty( String id, String name ) {
-        this.id = id;
-        this.name = name;
-    }
-
-    public final String getId() {
-        return id;
-    }
-
-    public final String getName() {
-        return name;
-    }
-
-    public void addPropertyChangeListener( PropertyChangeListener l ) {
-        listeners.add(l);
-    }
-
-    public void removePropertyChangeListener( PropertyChangeListener l ) {
-        listeners.remove(l);
-    }
-
-    protected void firePropertyChange( Object oldValue, Object newValue, boolean checkForChange ) {
-        if( checkForChange && Objects.equals(oldValue, newValue) ) {
-            return;
+            if( Character.isUpperCase(c) ) {
+                // Is it a boundary between words?  If the
+                // last char is lower case then we're starting a new word.
+                // If the next char is lower case then this is also the beggining
+                // of a new word at the end of an acronym run.  Like HTTPTest.
+                if( !nextCap || !lastCap ) {
+                    result.append(' ');
+                }
+                lastCap = true;
+            } else {
+                lastCap = false;
+            }
+            result.append(c);
         }
-        PropertyChangeEvent event = new PropertyChangeEvent(this, name, oldValue, newValue);
-        for( PropertyChangeListener l : listeners.getArray() ) {
-            l.propertyChange(event);
-        }
+
+        return result.toString();
     }
 }

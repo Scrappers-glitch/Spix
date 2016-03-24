@@ -41,6 +41,7 @@ import com.jme3.scene.Spatial;
 
 import spix.core.*;
 import spix.props.*;
+import spix.type.Type;
 
 
 /**
@@ -78,8 +79,8 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
             this.spatial = spatial;
         }
 
-        public Class getType() {
-            return Vector3f.class;
+        public Type getType() {
+            return new Type(Vector3f.class);
         }
 
         public void setValue( Object value ) {
