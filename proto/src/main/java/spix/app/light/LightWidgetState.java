@@ -50,6 +50,7 @@ import com.jme3.scene.shape.*;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.*;
+import javafx.scene.shape.Circle;
 import spix.app.*;
 import spix.core.*;
 
@@ -123,7 +124,7 @@ public class LightWidgetState extends BaseAppState {
                     widget.setLocalTranslation(pos);
                     DirectionalLight dl = (DirectionalLight)light;
                     widget.attachChild(makeDirectionalLightWidget());
-                    Spatial lightDirW = widget.getChild("LightDirection");
+                    Spatial lightDirW = widget.getChild("lightDirection");
                     tmpRot.set(lightDirW.getWorldRotation()).lookAt(dl.getDirection(),Vector3f.UNIT_Y);
                     lightDirW.setLocalRotation(tmpRot);
                     break;
@@ -142,10 +143,20 @@ public class LightWidgetState extends BaseAppState {
                     widget.setLocalTranslation(((SpotLight)light).getPosition());
                     SpotLight sl = (SpotLight)light;
                     widget.attachChild(makeSpotLightWidget());
-                    lightDirW = widget.getChild("LightDirection");
-                    tmpRot.set(lightDirW.getWorldRotation()).lookAt(sl.getDirection(),Vector3f.UNIT_Y);
-                    lightDirW.setLocalRotation(tmpRot);
+                    lightDirW = widget.getChild("lightDirection");
+                    Spatial cone = widget.getChild("cone");
+                    tmpRot.set(cone.getWorldRotation()).lookAt(sl.getDirection(),Vector3f.UNIT_Y);
+                    cone.setLocalRotation(tmpRot);
                     lightDirW.setLocalScale(sl.getSpotRange());
+                    Spatial innerCircle = widget.getChild("innerCircle");
+                    Spatial outerCircle = widget.getChild("outerCircle");
+                    innerCircle.move(0,0,sl.getSpotRange());
+                    outerCircle.move(0,0,sl.getSpotRange());
+                    float innerScale = sl.getSpotRange() * FastMath.tan(sl.getSpotInnerAngle());
+                    float outerScale = sl.getSpotRange() * FastMath.tan(sl.getSpotOuterAngle());
+                    innerCircle.setLocalScale(innerScale);
+                    outerCircle.setLocalScale(outerScale);
+
                     break;
                 default:
                     widget.setLocalTranslation(pos);
@@ -246,7 +257,7 @@ public class LightWidgetState extends BaseAppState {
         line.updateBound();
         line.setStatic();
 
-        Geometry geom2 = new Geometry("LightDirection", line);
+        Geometry geom2 = new Geometry("lightDirection", line);
         geom2.setQueueBucket(RenderQueue.Bucket.Transparent);
         geom2.setMaterial(dashed);
 
@@ -351,35 +362,15 @@ public class LightWidgetState extends BaseAppState {
     }
 
     private Node makeSpotLightWidget() {
-        Mesh m = new Mesh();
-        m.setMode(Mesh.Mode.Lines);
-        int radialSamples = 16;
-
-        FloatBuffer posBuf = BufferUtils.createVector3Buffer((radialSamples + 1));
-        FloatBuffer texBuf = BufferUtils.createVector2Buffer((radialSamples + 1));
-        ShortBuffer idxBuf = BufferUtils.createShortBuffer((2 * radialSamples));
-
-        m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
-        m.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
-        m.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
-
-        makeCircle(radialSamples, 0.11f, posBuf, texBuf, idxBuf, 0);
-
-        m.updateBound();
-        m.setStatic();
-
-        Geometry geom = new Geometry("LightDebug", m);
-        geom.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom.setMaterial(dashed);
-
+        Geometry lightGeom = makeCircleGeometry("lightDebug", 0.11f, 16);
 
         Mesh line = new Mesh();
         line.setMode(Mesh.Mode.Lines);
         int lineSegments = 30;
 
-        posBuf = BufferUtils.createVector3Buffer((lineSegments + 1));
-        texBuf = BufferUtils.createVector2Buffer((lineSegments + 1));
-        idxBuf = BufferUtils.createShortBuffer(2 * lineSegments);
+        FloatBuffer posBuf = BufferUtils.createVector3Buffer((lineSegments + 1));
+        FloatBuffer texBuf = BufferUtils.createVector2Buffer((lineSegments + 1));
+        ShortBuffer idxBuf = BufferUtils.createShortBuffer(2 * lineSegments);
 
         line.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
         line.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
@@ -390,18 +381,50 @@ public class LightWidgetState extends BaseAppState {
         line.updateBound();
         line.setStatic();
 
-        Geometry geom2 = new Geometry("LightDirection", line);
-        geom2.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom2.setMaterial(dashed);
+        Geometry lightDirection = new Geometry("lightDirection", line);
+        lightDirection.setQueueBucket(RenderQueue.Bucket.Transparent);
+        lightDirection.setMaterial(dashed);
 
 
         Node widget = new Node();
         Node center = makeCenter();
-        center.attachChild(geom);
+        Node cone = new Node("cone");
+        Geometry innerCircle = makeCircleGeometry("innerCircle", 1, 128);
+        Geometry outerCircle = makeCircleGeometry("outerCircle", 1, 128);
+
+        center.attachChild(lightGeom);
         widget.attachChild(center);
-        widget.attachChild(geom2);
+        cone.attachChild(lightDirection);
+        cone.attachChild(innerCircle);
+        cone.attachChild(outerCircle);
+        widget.attachChild(cone);
+
         return widget;
 
+    }
+
+    private Geometry makeCircleGeometry(String name,float radius, int radialSamples) {
+        Mesh m = new Mesh();
+        m.setMode(Mesh.Mode.Lines);
+
+
+        FloatBuffer posBuf = BufferUtils.createVector3Buffer((radialSamples + 1));
+        FloatBuffer texBuf = BufferUtils.createVector2Buffer((radialSamples + 1));
+        ShortBuffer idxBuf = BufferUtils.createShortBuffer((2 * radialSamples));
+
+        m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
+        m.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
+        m.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
+
+        makeCircle(radialSamples, radius, posBuf, texBuf, idxBuf, 0);
+
+        m.updateBound();
+        m.setStatic();
+
+        Geometry geom = new Geometry(name, m);
+        geom.setQueueBucket(RenderQueue.Bucket.Transparent);
+        geom.setMaterial(dashed);
+        return geom;
     }
 
 

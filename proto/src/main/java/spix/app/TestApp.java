@@ -467,7 +467,7 @@ public class TestApp extends SimpleApplication {
 
         SpotLight sl = new SpotLight(new Vector3f(3,3,-3),new Vector3f(-1f, -1, 1f).normalizeLocal(), 10, ColorRGBA.White.mult(2));
         sl.setSpotOuterAngle(FastMath.DEG_TO_RAD * 15);
-        sl.setSpotInnerAngle(FastMath.DEG_TO_RAD * 5);
+        sl.setSpotInnerAngle(FastMath.DEG_TO_RAD * 10);
         rootNode.addLight(sl);
 
         // Because we will use Lemur for some things... go ahead and setup
