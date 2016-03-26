@@ -261,14 +261,6 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
 
     @Override
     public void update( float tpf ) {
-    }
-
-    @Override
-    public void render( RenderManager renderManager ) {
-
-        // The blender camera state updates the camera using a camera node...
-        // which means it happens post-update.  So we have to update our scaling
-        // in render().
 
         Vector3f relative = widget.getWorldTranslation().subtract(cam.getLocation());
         Vector3f dir = relative.normalize();
@@ -299,6 +291,10 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         System.out.println("screen dist:" + (s2.x - s1.x));
         // Should be 100 when facing directly down z axis
         */
+    }
+
+    @Override
+    public void render( RenderManager renderManager ) {
     }
 
     private void startAxisDrag( int axis ) {
