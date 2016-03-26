@@ -367,12 +367,43 @@ public class TestApp extends SimpleApplication {
 
         ActionList test = main.add(createTestActions());
 
+
+        ActionList sceneMenu = main.add(new DefaultActionList("Scene"));
+        ActionList lightMenu = sceneMenu.add(new DefaultActionList("Add light"));
+        lightMenu.add(new NopAction("Directional light") {
+            @Override
+            public void performAction(Spix spix) {
+                addLight(DirectionalLight.class);
+            }
+        });
+        lightMenu.add(new NopAction("Spot light") {
+            @Override
+            public void performAction(Spix spix) {
+                addLight(SpotLight.class);
+            }
+        });
+        lightMenu.add(new NopAction("Point light") {
+            @Override
+            public void performAction(Spix spix) {
+                addLight(PointLight.class);
+            }
+        });
+        lightMenu.add(new NopAction("Ambient light") {
+            @Override
+            public void performAction(Spix spix) {
+                addLight(AmbientLight.class);
+            }
+        });
+
+
         ActionList help = main.add(new DefaultActionList("Help"));
         help.add(new NopAction("About") {
             public void performAction( Spix spix ) {
                 spix.getService(MessageRequester.class).showMessage("About", "What's it all about?", null);
             }
         });
+
+
 
         return main;
     }
@@ -547,6 +578,39 @@ public class TestApp extends SimpleApplication {
 
         scene.setLocalTranslation(worldRight + modelLeft, 0, 0);
         rootNode.attachChild(scene);
+    }
+
+    private void addLight(Class<? extends Light> lightClass){
+        Spatial selected = getSelectedSpatial();
+        Spatial anchor;
+        if(selected != null){
+            anchor = selected;
+            while(anchor != null && !(anchor instanceof Node)){
+                anchor = anchor.getParent();
+            }
+        }else {
+            anchor = rootNode;
+        }
+
+        try {
+            Light l = lightClass.newInstance();
+            anchor.addLight(l);
+            getStateManager().getState(LightWidgetState.class).addLight(new Vector3f(3,3,3), l);
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private Spatial getSelectedSpatial() {
+        SelectionModel model = getStateManager().getState(SpixState.class).getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+        Object obj = model.getSingleSelection();
+        if( obj != null && obj instanceof Spatial){
+            return (Spatial) obj;
+        }
+        return null;
     }
 
     public static class NopAction extends spix.core.AbstractAction {

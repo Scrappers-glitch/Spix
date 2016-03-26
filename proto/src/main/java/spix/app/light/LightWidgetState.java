@@ -118,55 +118,60 @@ public class LightWidgetState extends BaseAppState {
         //light are loaded at initialization, for now
         // there will be a process to update them whenever they get modified/added/removed
         for (Light light : rootNode.getLocalLightList()) {
-            Node widget = new Node();
-            switch (light.getType()){
-                case Directional:
-                    widget.setLocalTranslation(pos);
-                    DirectionalLight dl = (DirectionalLight)light;
-                    widget.attachChild(makeDirectionalLightWidget());
-                    Spatial lightDirW = widget.getChild("lightDirection");
-                    tmpRot.set(lightDirW.getWorldRotation()).lookAt(dl.getDirection(),Vector3f.UNIT_Y);
-                    lightDirW.setLocalRotation(tmpRot);
-                    break;
-                case Ambient:
-                    widget.setLocalTranslation(pos);
-                    widget.attachChild(makeAmbientLightWidget());
-                    break;
-                case Point:
-                    PointLight pl = (PointLight)light;
-                    widget.setLocalTranslation(pl.getPosition());
-                    widget.attachChild(makePointLightWidget());
-                    Spatial lightRadiusW = widget.getChild("LightRadius");
-                    lightRadiusW.setLocalScale(pl.getRadius());
-                    break;
-                case Spot:
-                    widget.setLocalTranslation(((SpotLight)light).getPosition());
-                    SpotLight sl = (SpotLight)light;
-                    widget.attachChild(makeSpotLightWidget());
-                    lightDirW = widget.getChild("lightDirection");
-                    Spatial cone = widget.getChild("cone");
-                    tmpRot.set(cone.getWorldRotation()).lookAt(sl.getDirection(),Vector3f.UNIT_Y);
-                    cone.setLocalRotation(tmpRot);
-                    lightDirW.setLocalScale(sl.getSpotRange());
-                    Spatial innerCircle = widget.getChild("innerCircle");
-                    Spatial outerCircle = widget.getChild("outerCircle");
-                    innerCircle.move(0,0,sl.getSpotRange());
-                    outerCircle.move(0,0,sl.getSpotRange());
-                    float innerScale = sl.getSpotRange() * FastMath.tan(sl.getSpotInnerAngle());
-                    float outerScale = sl.getSpotRange() * FastMath.tan(sl.getSpotOuterAngle());
-                    innerCircle.setLocalScale(innerScale);
-                    outerCircle.setLocalScale(outerScale);
-
-                    break;
-                default:
-                    widget.setLocalTranslation(pos);
-                    break;
-            }
+            addLight(pos, light);
             //Offset the position so that the next light doesn't overlap
             pos.addLocal(1f,0,0);
-            lightNode.attachChild(widget);
+
         }
 
+    }
+
+    public void addLight(Vector3f pos, Light light) {
+        Node widget = new Node();
+        switch (light.getType()){
+            case Directional:
+                widget.setLocalTranslation(pos);
+                DirectionalLight dl = (DirectionalLight)light;
+                widget.attachChild(makeDirectionalLightWidget());
+                Spatial lightDirW = widget.getChild("lightDirection");
+                tmpRot.set(lightDirW.getWorldRotation()).lookAt(dl.getDirection(),Vector3f.UNIT_Y);
+                lightDirW.setLocalRotation(tmpRot);
+                break;
+            case Ambient:
+                widget.setLocalTranslation(pos);
+                widget.attachChild(makeAmbientLightWidget());
+                break;
+            case Point:
+                PointLight pl = (PointLight)light;
+                widget.setLocalTranslation(pl.getPosition());
+                widget.attachChild(makePointLightWidget());
+                Spatial lightRadiusW = widget.getChild("LightRadius");
+                lightRadiusW.setLocalScale(pl.getRadius());
+                break;
+            case Spot:
+                widget.setLocalTranslation(((SpotLight)light).getPosition());
+                SpotLight sl = (SpotLight)light;
+                widget.attachChild(makeSpotLightWidget());
+                lightDirW = widget.getChild("lightDirection");
+                Spatial cone = widget.getChild("cone");
+                tmpRot.set(cone.getWorldRotation()).lookAt(sl.getDirection(),Vector3f.UNIT_Y);
+                cone.setLocalRotation(tmpRot);
+                lightDirW.setLocalScale(sl.getSpotRange());
+                Spatial innerCircle = widget.getChild("innerCircle");
+                Spatial outerCircle = widget.getChild("outerCircle");
+                innerCircle.move(0,0,sl.getSpotRange());
+                outerCircle.move(0,0,sl.getSpotRange());
+                float innerScale = sl.getSpotRange() * FastMath.tan(sl.getSpotInnerAngle());
+                float outerScale = sl.getSpotRange() * FastMath.tan(sl.getSpotOuterAngle());
+                innerCircle.setLocalScale(innerScale);
+                outerCircle.setLocalScale(outerScale);
+
+                break;
+            default:
+                widget.setLocalTranslation(pos);
+                break;
+        }
+        lightNode.attachChild(widget);
     }
 
     private void initMaterials() {
