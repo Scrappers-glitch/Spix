@@ -365,7 +365,9 @@ public class TestApp extends SimpleApplication {
         spix.getBlackboard().set("highlight.mode", SelectionHighlightState.HighlightMode.Outline);
 
 
-        ActionList test = main.add(createTestActions());
+        ActionList objects = main.add(createObjectActions());
+
+        //ActionList test = main.add(createTestActions());
 
 
         ActionList sceneMenu = main.add(new DefaultActionList("Scene"));
@@ -406,6 +408,17 @@ public class TestApp extends SimpleApplication {
 
 
         return main;
+    }
+
+    private ActionList createObjectActions() {
+        ActionList objects = new DefaultActionList("Selection");
+
+        AnimationActionList animation = objects.add(new AnimationActionList("Animation"));
+        spix.getBlackboard().bind("main.selection.singleSelect",
+                                  animation, "selection");
+
+
+        return objects;
     }
 
     private ActionList createTestActions() {
