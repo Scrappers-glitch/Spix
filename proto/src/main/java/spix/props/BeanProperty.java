@@ -59,7 +59,12 @@ public class BeanProperty extends AbstractProperty {
         this.object = object;
         this.getter = getter;
         this.setter = setter;
-        this.type = new Type(getter.getReturnType());
+        if( getter != null ) {
+            this.type = new Type(getter.getReturnType());
+        } else {
+            // Must have a setter then
+            this.type = new Type(setter.getParameterTypes()[0]);
+        }
     }
 
     private static Method findSetter( Class type, String methodName, Class parameterType ) {
@@ -139,7 +144,7 @@ public class BeanProperty extends AbstractProperty {
     @Override
     public Object getValue() {
         try {
-            return getter.invoke(object);
+            return getter == null ? null : getter.invoke(object);
         } catch( IllegalAccessException | InvocationTargetException e ) {
             throw new RuntimeException("Error getting property:" + getName(), e);
         }
