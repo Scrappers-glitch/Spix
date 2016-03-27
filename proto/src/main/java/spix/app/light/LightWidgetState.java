@@ -50,7 +50,7 @@ import com.jme3.scene.shape.*;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.*;
-import javafx.scene.shape.Circle;
+//import javafx.scene.shape.Circle;
 import spix.app.*;
 import spix.core.*;
 
