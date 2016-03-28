@@ -94,7 +94,7 @@ public class TestApp extends SimpleApplication {
 
     public TestApp() throws Exception {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
-              new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(false),
+              new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(true),
               new GridState(), new BackgroundColorState(),
               new SelectionHighlightState(),
               new TranslationWidgetState(),
@@ -271,7 +271,6 @@ public class TestApp extends SimpleApplication {
                 spix.getBlackboard().set("camera.mode", "fly");
             }
         });
-        fly.setToggled(true);
         spix.getBlackboard().bind("camera.mode", fly, "toggled", Predicates.equalTo("fly"));
 
         // Bind it to the flycam app state also
@@ -297,6 +296,7 @@ public class TestApp extends SimpleApplication {
                 spix.getBlackboard().set("camera.mode", "blender");
             }
         });
+        blenderCam.setToggled(true);
         spix.getBlackboard().bind("camera.mode", blenderCam, "toggled", Predicates.equalTo("blender"));
 
         // Bind it to the orbit app state
