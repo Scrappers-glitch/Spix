@@ -58,6 +58,7 @@ public class AnimationActionList extends DefaultActionList {
 
     public AnimationActionList( String id ) {
         super(id);
+        setEnabled(false);
     }
 
     public AnimationActionList( String id, String name ) {
