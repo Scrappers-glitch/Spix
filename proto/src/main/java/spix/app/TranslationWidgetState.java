@@ -369,11 +369,12 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
                 Vector3f up = cam.getUp();
                 Vector3f right = cam.getLeft().negate();
 
+                Vector3f originScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation());
                 Vector3f xScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation().add(right));
                 Vector3f yScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation().add(up));
 
-                float x = xScreen.x - event.getX();
-                float y = yScreen.y - event.getY();
+                float x = xScreen.x - originScreen.x;
+                float y = yScreen.y - originScreen.y;
 
                 System.out.println("delta x:" + x + "  delta y:" + y);
 
