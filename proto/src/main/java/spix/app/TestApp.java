@@ -505,6 +505,7 @@ public class TestApp extends SimpleApplication {
     public void simpleInitApp() {
         System.out.println("---------simpleInitApp()");
 
+        stateManager.getState(FlyCamAppState.class).setEnabled(false);
         flyCam.setDragToRotate(true);
 
         // Set an initial camera position
