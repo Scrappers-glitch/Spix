@@ -63,11 +63,10 @@ public class BlenderCameraState extends BaseAppState {
     public static final FunctionId F_CENTER = new FunctionId(GROUP, "Center");
     public static final FunctionId F_VERTICAL_MOVE = new FunctionId(GROUP, "Vertical Move");
     public static final FunctionId F_HORIZONTAL_MOVE = new FunctionId(GROUP, "Horizontal Move");
+    public static final FunctionId F_START_PAN = new FunctionId(GROUP, "Start pan");
     public static final FunctionId F_VERTICAL_ROTATE = new FunctionId(GROUP, "Vertical Rotate");
     public static final FunctionId F_HORIZONTAL_ROTATE = new FunctionId(GROUP, "Horizontal Rotate");
     public static final FunctionId F_ZOOM = new FunctionId(GROUP, "Zoom");
-
-    private final static float PAN_FACTOR = 0.3f;
     private final static float ROT_FACTOR = 0.1f;
 
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
@@ -111,7 +110,7 @@ public class BlenderCameraState extends BaseAppState {
 
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.addAnalogListener(inputHandler, F_VERTICAL_MOVE, F_HORIZONTAL_MOVE, F_VERTICAL_ROTATE, F_HORIZONTAL_ROTATE, F_ZOOM);
-        inputMapper.addStateListener(inputHandler, F_CENTER);
+        inputMapper.addStateListener(inputHandler, F_CENTER, F_START_PAN);
 
         // See if there are already mappings for these functions.
         if( !inputMapper.hasMappings(F_VERTICAL_ROTATE) && ! inputMapper.hasMappings(F_HORIZONTAL_ROTATE)) {
@@ -124,6 +123,7 @@ public class BlenderCameraState extends BaseAppState {
             System.out.println("Initializing default mappings for:" + F_VERTICAL_MOVE + " and " + F_HORIZONTAL_MOVE);
             inputMapper.map(F_HORIZONTAL_MOVE, Axis.MOUSE_X, Button.MOUSE_BUTTON3, KeyInput.KEY_LSHIFT);
             inputMapper.map(F_VERTICAL_MOVE, Axis.MOUSE_Y, Button.MOUSE_BUTTON3, KeyInput.KEY_LSHIFT);
+            inputMapper.map(F_START_PAN,Button.MOUSE_BUTTON3, KeyInput.KEY_LSHIFT);
         }
 
         if( !inputMapper.hasMappings(F_ZOOM)) {
@@ -183,6 +183,9 @@ public class BlenderCameraState extends BaseAppState {
 
         private Vector3f tmpVec = new Vector3f();
         private Quaternion tmpRot = new Quaternion();
+        protected Vector3f xDelta = new Vector3f();
+        protected Vector3f yDelta = new Vector3f();
+        protected Vector2f lastCursor = new Vector2f();
 
         public void valueChanged( FunctionId func, InputState value, double tpf ) {
             if( func == F_CENTER ) {
@@ -197,16 +200,34 @@ public class BlenderCameraState extends BaseAppState {
                         target.setLocalTranslation(Vector3f.ZERO);
                     }
                 }
+            } else if(func == F_START_PAN && value == InputState.Positive){
+
+                Vector3f up = cam.getUp();
+                Vector3f right = cam.getLeft().negate();
+
+                Vector3f originScreen = cam.getScreenCoordinates(target.getWorldTranslation());
+                Vector3f xScreen = cam.getScreenCoordinates(target.getWorldTranslation().add(right));
+                Vector3f yScreen = cam.getScreenCoordinates(target.getWorldTranslation().add(up));
+
+                float x = xScreen.x - originScreen.x;
+                float y = yScreen.y - originScreen.y;
+
+                xDelta.set(right).divideLocal(x);
+                yDelta.set(up).divideLocal(y);
+
+                lastCursor.set(getApplication().getInputManager().getCursorPosition());
             }
         }
 
         public void valueActive( FunctionId func, double value, double tpf ) {
-            if(func == F_HORIZONTAL_MOVE){
-                tmpVec.set(cam.getLeft()).multLocal((float)value * PAN_FACTOR);
-                target.move(tmpVec);
-            } else if(func == F_VERTICAL_MOVE){
-                tmpVec.set(cam.getUp()).multLocal((float)-value * PAN_FACTOR);
-                target.move(tmpVec);
+            if(func == F_HORIZONTAL_MOVE || func == F_VERTICAL_MOVE){
+                Vector2f cursor = getApplication().getInputManager().getCursorPosition();
+                float x = cursor.getX() - lastCursor.x;
+                float y = cursor.getY() - lastCursor.y;
+
+                target.move(xDelta.mult(-x).addLocal(yDelta.mult(-y)));
+
+                lastCursor.set(cursor);
             } else if(func == F_HORIZONTAL_ROTATE){
                 tmpRot.fromAngleAxis((float)-value * ROT_FACTOR, Vector3f.UNIT_Y);
                 target.rotate(tmpRot);
