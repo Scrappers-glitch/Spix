@@ -41,7 +41,7 @@ import java.util.*;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.input.MouseInput;
+import com.jme3.input.*;
 import com.jme3.material.*;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.*;
@@ -59,6 +59,7 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 
 
+import com.simsilica.lemur.input.*;
 import spix.core.*;
 import spix.props.*;
 
@@ -72,6 +73,7 @@ import spix.props.*;
 public class TranslationWidgetState extends BaseAppState {
 
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
+    private String highlightColorProperty = DefaultConstants.SELECTION_HIGHLIGHT_COLOR;
     private SelectionModel selection;
     private SelectionObserver selectionObserver = new SelectionObserver();
     private Node widget;
@@ -87,6 +89,16 @@ public class TranslationWidgetState extends BaseAppState {
     private Vector3f selectionCenter = new Vector3f();
 
     private int dragMouseButton = MouseInput.BUTTON_LEFT;
+
+    private static final String GROUP = "Move State";
+    private static final String GROUP_MOVING = "Moving";
+    private static final FunctionId F_GRAB = new FunctionId(GROUP, "Grab");
+    private static final FunctionId F_DONE = new FunctionId(GROUP_MOVING, "Done");
+    private static final FunctionId F_CANCEL = new FunctionId(GROUP_MOVING, "Cancel");
+    private static final FunctionId F_HORIZONTAL_DRAG = new FunctionId(GROUP_MOVING, "Drag Horizontally");
+    private static final FunctionId F_VERTICAL_DRAG = new FunctionId(GROUP_MOVING, "Drag vertically");
+
+    private InputMapper inputMapper;
 
     public TranslationWidgetState() {
     }
@@ -157,6 +169,51 @@ public class TranslationWidgetState extends BaseAppState {
         widget.setQueueBucket(Bucket.Transparent);
 
         //getRoot().attachChild(widget);
+
+        inputMapper = GuiGlobals.getInstance().getInputMapper();
+        inputMapper.map(F_GRAB, KeyInput.KEY_G);
+        inputMapper.map(F_DONE, KeyInput.KEY_RETURN);
+        inputMapper.map(F_DONE, Button.MOUSE_BUTTON1);
+        inputMapper.map(F_CANCEL, KeyInput.KEY_ESCAPE);
+        inputMapper.map(F_CANCEL, Button.MOUSE_BUTTON2);
+        inputMapper.map(F_HORIZONTAL_DRAG, Axis.MOUSE_X);
+        inputMapper.map(F_VERTICAL_DRAG, Axis.MOUSE_Y);
+
+        inputMapper.deactivateGroup(GROUP_MOVING);
+        inputMapper.activateGroup(GROUP);
+        final Vector3f temp = new Vector3f();
+        final DragManager dragManager = new DragManager();
+        inputMapper.addStateListener(new StateFunctionListener() {
+            Vector3f base;
+            @Override
+            public void valueChanged(FunctionId func, InputState value, double tpf) {
+                if(func == F_GRAB && value == InputState.Positive){
+                    inputMapper.activateGroup(GROUP_MOVING);
+                    Vector2f cursor = getApplication().getInputManager().getCursorPosition();
+                    dragManager.startDrag(cursor.getX(), cursor.getY());
+                    base = selectionCenter.clone();
+                    //CursorEventControl.addListenersToSpatial(rootNode, focalPointListener);
+                }
+                if(func == F_DONE && value == InputState.Off){
+                    inputMapper.deactivateGroup(GROUP_MOVING);
+                    dragManager.stopDrag();
+                    base = null;
+                }
+                if(func == F_CANCEL && value == InputState.Off){
+                    inputMapper.deactivateGroup(GROUP_MOVING);
+                    dragManager.stopDrag();
+                    moveSelectedObjects(base.subtractLocal(selectionCenter));
+                }
+            }
+        },F_GRAB, F_DONE, F_CANCEL);
+
+        inputMapper.addAnalogListener(new AnalogFunctionListener() {
+            @Override
+            public void valueActive(FunctionId func, double value, double tpf) {
+                Vector2f cursor = getApplication().getInputManager().getCursorPosition();
+                dragManager.drag(cursor.getX(), cursor.getY());
+            }
+        }, F_HORIZONTAL_DRAG, F_VERTICAL_DRAG);
 
     }
 
@@ -313,6 +370,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         for( Spatial s : axisSpatials ) {
             s.setCullHint(Spatial.CullHint.Always);
         }
+        getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, ColorRGBA.White.clone());
     }
 
     private void stopAxisDrag( int axis ) {
@@ -320,6 +378,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         for( Spatial s : axisSpatials ) {
             s.setCullHint(Spatial.CullHint.Inherit);
         }
+        getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, null);
     }
 
     private void startRadialDrag() {
@@ -327,6 +386,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         for( Spatial s : axisSpatials ) {
             s.setCullHint(Spatial.CullHint.Always);
         }
+        getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, ColorRGBA.White.clone());
     }
 
     private void stopRadialDrag() {
@@ -334,6 +394,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         for( Spatial s : axisSpatials ) {
             s.setCullHint(Spatial.CullHint.Inherit);
         }
+        getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, null);
     }
 
     protected void moveSelectedObjects( Vector3f delta ) {
@@ -351,11 +412,58 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         widget.setLocalTranslation(selectionCenter);
     }
 
+    private class DragManager{
+        protected Vector3f xDelta;
+        protected Vector3f yDelta;
+        protected Vector2f lastCursor = new Vector2f();
+
+        public void startDrag(float startX, float startY){
+            startRadialDrag();
+
+            Vector3f up = cam.getUp();
+            Vector3f right = cam.getLeft().negate();
+
+            Vector3f originScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation());
+            Vector3f xScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation().add(right));
+            Vector3f yScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation().add(up));
+
+            float x = xScreen.x - originScreen.x;
+            float y = yScreen.y - originScreen.y;
+
+            System.out.println("delta x:" + x + "  delta y:" + y);
+
+            xDelta = right.divide(x);
+            yDelta = up.divide(y);
+
+            System.out.println("xDelta:" + xDelta + "  yDelta:" + yDelta);
+
+            lastCursor.set(startX, startY);
+        }
+
+        public void stopDrag(){
+            stopRadialDrag();
+            xDelta = null;
+            yDelta = null;
+        }
+
+        public void drag(float newX, float newY){
+            if( xDelta == null ) {
+                // Not dragging
+                return;
+            }
+
+            float x = newX - lastCursor.x;
+            float y = newY - lastCursor.y;
+
+            moveSelectedObjects(xDelta.mult(x).addLocal(yDelta.mult(y)));
+
+            lastCursor.set(newX, newY);
+        }
+    }
+
     private class RadialManipulator implements CursorListener {
 
-        private Vector3f xDelta;
-        private Vector3f yDelta;
-        private Vector2f lastCursor = new Vector2f();
+        private DragManager dragManager = new DragManager();
 
         public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
 
@@ -364,31 +472,10 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             }
 
             if( event.isPressed() ) {
-                startRadialDrag();
-
-                Vector3f up = cam.getUp();
-                Vector3f right = cam.getLeft().negate();
-
-                Vector3f originScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation());
-                Vector3f xScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation().add(right));
-                Vector3f yScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation().add(up));
-
-                float x = xScreen.x - originScreen.x;
-                float y = yScreen.y - originScreen.y;
-
-                System.out.println("delta x:" + x + "  delta y:" + y);
-
-                xDelta = right.divide(x);
-                yDelta = up.divide(y);
-
-                System.out.println("xDelta:" + xDelta + "  yDelta:" + yDelta);
-
-                lastCursor.set(event.getX(), event.getY());
+                dragManager.startDrag(event.getX(), event.getY());
 
             } else {
-                stopRadialDrag();
-                xDelta = null;
-                yDelta = null;
+                dragManager.stopDrag();
             }
             event.setConsumed();
         }
@@ -400,17 +487,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
 
         public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
-            if( xDelta == null ) {
-                // Not dragging
-                return;
-            }
-
-            float x = event.getX() - lastCursor.x;
-            float y = event.getY() - lastCursor.y;
-
-            moveSelectedObjects(xDelta.mult(x).addLocal(yDelta.mult(y)));
-
-            lastCursor.set(event.getX(), event.getY());
+            dragManager.drag(event.getX(), event.getY());
         }
     }
 

@@ -44,4 +44,5 @@ package spix.app;
  */
 public class DefaultConstants {
     public static final String SELECTION_PROPERTY = "main.selection";
+    public static final String SELECTION_HIGHLIGHT_COLOR = "main.selection.highlight.color";
 }

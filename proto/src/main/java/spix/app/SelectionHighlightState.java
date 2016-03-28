@@ -60,13 +60,15 @@ import java.util.*;
 public class SelectionHighlightState extends BaseAppState {
 
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
+    private String highlightColorProperty = DefaultConstants.SELECTION_HIGHLIGHT_COLOR;
     private SelectionModel selection;
     private HighlightMode highlightMode = HighlightMode.Wireframe;
     private SelectionObserver selectionObserver = new SelectionObserver();
     private SafeArrayList<SelectionLink> links = new SafeArrayList<>(SelectionLink.class);
     private Map<Object, SelectionLink> linkIndex = new HashMap<>();
     private Material wireMaterial;
-    private ColorRGBA wireColor = new ColorRGBA(1, 1, 0, 0.1f);
+    private static final ColorRGBA DEFAULT_HIGHLIGHT_COLOR = new ColorRGBA(1, 1, 0, 0.7f);
+    private ColorRGBA highlightColor = new ColorRGBA(DEFAULT_HIGHLIGHT_COLOR);
     private float alphaTime = 0;
     private float minAlpha = 0.1f;
     private float maxAlpha = 0.3f;
@@ -89,8 +91,9 @@ public class SelectionHighlightState extends BaseAppState {
 
     @Override
     protected void initialize( Application app ) {
-        wireMaterial = GuiGlobals.getInstance().createMaterial(wireColor, false).getMaterial();
+        wireMaterial = GuiGlobals.getInstance().createMaterial(highlightColor, false).getMaterial();
         resetHighlightMode();
+        getState(SpixState.class).getSpix().getBlackboard().bind(highlightColorProperty, this, "highlightColor");
     }
 
     @Override
@@ -141,13 +144,12 @@ public class SelectionHighlightState extends BaseAppState {
 
     @Override
     public void update( float tpf ) {
-
         alphaTime += tpf;
 
         // Calculate the sin from 0 to 1
         float sine = (FastMath.sin(alphaTime * 6) + 1) * 0.5f;
         float a = minAlpha + sine * (maxAlpha - minAlpha);
-        wireColor.a = a;
+        highlightColor.a = a;
     }
 
     @Override
@@ -182,8 +184,7 @@ public class SelectionHighlightState extends BaseAppState {
             case Wireframe:
                 wireMaterial.getAdditionalRenderState().setWireframe(true);
                 wireMaterial.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
-                //uncomment this once we use alpha 4
-                //wireMaterial.getAdditionalRenderState().setLineWidth(1);
+                wireMaterial.getAdditionalRenderState().setLineWidth(1);
                 wireMaterial.getAdditionalRenderState().setPolyOffset(0,0);
                 wireMaterial.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Back);
                 minAlpha = 0.3f;
@@ -192,12 +193,11 @@ public class SelectionHighlightState extends BaseAppState {
             case Outline:
                 wireMaterial.getAdditionalRenderState().setWireframe(true);
                 wireMaterial.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
-                //uncomment this once we use alpha 4
-                //wireMaterial.getAdditionalRenderState().setLineWidth(2);
+                wireMaterial.getAdditionalRenderState().setLineWidth(2);
                 wireMaterial.getAdditionalRenderState().setPolyOffset(-3f,-3f);
                 wireMaterial.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Front);
                 minAlpha = 0.5f;
-                maxAlpha = 0.8f;
+                maxAlpha = 0.7f;
                 break;
         }
     }
@@ -245,5 +245,18 @@ public class SelectionHighlightState extends BaseAppState {
         public void propertyChange( PropertyChangeEvent event ) {
             updateSelection();
         }
+    }
+
+
+    public void setHighlightColor(ColorRGBA highlightColor) {
+        if(highlightColor == null){
+            this.highlightColor.set(DEFAULT_HIGHLIGHT_COLOR);
+        } else {
+            this.highlightColor.set(highlightColor);
+        }
+    }
+
+    public ColorRGBA getHighlightColor() {
+        return highlightColor;
     }
 }
