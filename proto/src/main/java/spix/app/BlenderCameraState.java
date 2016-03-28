@@ -67,7 +67,7 @@ public class BlenderCameraState extends BaseAppState {
     public static final FunctionId F_HORIZONTAL_ROTATE = new FunctionId(GROUP, "Horizontal Rotate");
     public static final FunctionId F_ZOOM = new FunctionId(GROUP, "Zoom");
 
-    private final static float PAN_FACTOR = 0.1f;
+    private final static float PAN_FACTOR = 0.3f;
     private final static float ROT_FACTOR = 0.1f;
 
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
