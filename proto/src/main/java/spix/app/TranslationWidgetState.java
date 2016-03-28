@@ -37,7 +37,6 @@
 package spix.app;
 
 import java.beans.*;
-import java.util.*;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
@@ -73,6 +72,8 @@ import spix.props.*;
 public class TranslationWidgetState extends BaseAppState {
 
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
+    private DragManager dragManager = new DragManager();
+
     private String highlightColorProperty = DefaultConstants.SELECTION_HIGHLIGHT_COLOR;
     private SelectionModel selection;
     private SelectionObserver selectionObserver = new SelectionObserver();
@@ -91,10 +92,11 @@ public class TranslationWidgetState extends BaseAppState {
     private int dragMouseButton = MouseInput.BUTTON_LEFT;
 
     private static final String GROUP = "Move State";
+    private static final String GROUP_MOVING_DONE_CANCEL = "Moving Done or Cancel";
     private static final String GROUP_MOVING = "Moving";
     private static final FunctionId F_GRAB = new FunctionId(GROUP, "Grab");
-    private static final FunctionId F_DONE = new FunctionId(GROUP_MOVING, "Done");
-    private static final FunctionId F_CANCEL = new FunctionId(GROUP_MOVING, "Cancel");
+    private static final FunctionId F_DONE = new FunctionId(GROUP_MOVING_DONE_CANCEL, "Done");
+    private static final FunctionId F_CANCEL = new FunctionId(GROUP_MOVING_DONE_CANCEL, "Cancel");
     private static final FunctionId F_HORIZONTAL_DRAG = new FunctionId(GROUP_MOVING, "Drag Horizontally");
     private static final FunctionId F_VERTICAL_DRAG = new FunctionId(GROUP_MOVING, "Drag vertically");
 
@@ -170,6 +172,11 @@ public class TranslationWidgetState extends BaseAppState {
 
         //getRoot().attachChild(widget);
 
+        initKeyMappings();
+
+    }
+
+    private void initKeyMappings() {
         inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.map(F_GRAB, KeyInput.KEY_G);
         inputMapper.map(F_DONE, KeyInput.KEY_RETURN);
@@ -181,32 +188,26 @@ public class TranslationWidgetState extends BaseAppState {
 
         inputMapper.deactivateGroup(GROUP_MOVING);
         inputMapper.activateGroup(GROUP);
-        final Vector3f temp = new Vector3f();
-        final DragManager dragManager = new DragManager();
         inputMapper.addStateListener(new StateFunctionListener() {
-            Vector3f base;
             @Override
             public void valueChanged(FunctionId func, InputState value, double tpf) {
                 if(func == F_GRAB && value == InputState.Positive){
                     inputMapper.activateGroup(GROUP_MOVING);
                     Vector2f cursor = getApplication().getInputManager().getCursorPosition();
                     dragManager.startDrag(cursor.getX(), cursor.getY());
-                    base = selectionCenter.clone();
-                    //CursorEventControl.addListenersToSpatial(rootNode, focalPointListener);
                 }
-                if(func == F_DONE && value == InputState.Off){
+                if(func == F_DONE && value == InputState.Positive){
                     inputMapper.deactivateGroup(GROUP_MOVING);
                     dragManager.stopDrag();
-                    base = null;
                 }
-                if(func == F_CANCEL && value == InputState.Off){
+                if(func == F_CANCEL && value == InputState.Positive){
                     inputMapper.deactivateGroup(GROUP_MOVING);
-                    dragManager.stopDrag();
-                    moveSelectedObjects(base.subtractLocal(selectionCenter));
+                    dragManager.cancel();
                 }
             }
         },F_GRAB, F_DONE, F_CANCEL);
 
+        // This part may not be needed and maybe a CursorListener can be used.
         inputMapper.addAnalogListener(new AnalogFunctionListener() {
             @Override
             public void valueActive(FunctionId func, double value, double tpf) {
@@ -214,7 +215,6 @@ public class TranslationWidgetState extends BaseAppState {
                 dragManager.drag(cursor.getX(), cursor.getY());
             }
         }, F_HORIZONTAL_DRAG, F_VERTICAL_DRAG);
-
     }
 
     protected Material createMaterial( ColorRGBA color ) {
@@ -285,7 +285,7 @@ public class TranslationWidgetState extends BaseAppState {
         // Calculate the selection center
         Vector3f pos = new Vector3f();
         selectedObjects.clear();
-System.out.println("TranslationWidgetSelection: Selection:" + selection);
+        System.out.println("TranslationWidgetSelection: Selection:" + selection);
         for( Object o : selection ) {
 
             PropertySet wrapper = spix.getPropertySet(o);
@@ -416,6 +416,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         protected Vector3f xDelta;
         protected Vector3f yDelta;
         protected Vector2f lastCursor = new Vector2f();
+        private Vector3f basePosition = null;
 
         public void startDrag(float startX, float startY){
             startRadialDrag();
@@ -438,12 +439,17 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             System.out.println("xDelta:" + xDelta + "  yDelta:" + yDelta);
 
             lastCursor.set(startX, startY);
+
+            inputMapper.activateGroup(GROUP_MOVING_DONE_CANCEL);
+            basePosition = selectionCenter.clone();
         }
 
         public void stopDrag(){
             stopRadialDrag();
             xDelta = null;
             yDelta = null;
+            inputMapper.deactivateGroup(GROUP_MOVING_DONE_CANCEL);
+            basePosition = null;
         }
 
         public void drag(float newX, float newY){
@@ -459,11 +465,15 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
 
             lastCursor.set(newX, newY);
         }
+
+        public void cancel(){
+            moveSelectedObjects(basePosition.subtractLocal(selectionCenter));
+            stopDrag();
+        }
     }
 
     private class RadialManipulator implements CursorListener {
 
-        private DragManager dragManager = new DragManager();
 
         public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
 
