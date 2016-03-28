@@ -417,6 +417,29 @@ public class TestApp extends SimpleApplication {
         spix.getBlackboard().bind("main.selection.singleSelect",
                                   animation, "selection");
 
+        NopAction test1 = objects.add(new NopAction("Clone Test 1") {
+            public void performAction( Spix spix ) {
+                cloneTest1();
+            }
+        });
+        spix.getBlackboard().bind("main.selection.singleSelect",
+                                  test1, "enabled", Predicates.instanceOf(Spatial.class));
+
+        NopAction test2 = objects.add(new NopAction("Clone Test 2") {
+            public void performAction( Spix spix ) {
+                cloneTest2();
+            }
+        });
+        spix.getBlackboard().bind("main.selection.singleSelect",
+                                  test2, "enabled", Predicates.instanceOf(Spatial.class));
+
+        NopAction test3 = objects.add(new NopAction("Clone Test 3") {
+            public void performAction( Spix spix ) {
+                cloneTest3();
+            }
+        });
+        spix.getBlackboard().bind("main.selection.singleSelect",
+                                  test3, "enabled", Predicates.instanceOf(Spatial.class));
 
         return objects;
     }
@@ -591,6 +614,67 @@ public class TestApp extends SimpleApplication {
 
         scene.setLocalTranslation(worldRight + modelLeft, 0, 0);
         rootNode.attachChild(scene);
+    }
+
+    private void addSpatial( Spatial spatial ) {
+
+        spatial.setLocalTranslation(0, 0, 0);
+
+        // For now, find out where to put the scene so that it is next to whatever
+        // is currently loaded
+        BoundingBox currentBounds = (BoundingBox)rootNode.getWorldBound();
+        BoundingBox modelBounds = (BoundingBox)spatial.getWorldBound();
+
+        System.out.println("root bounds:" + currentBounds);
+        System.out.println("model bounds:" + modelBounds);
+
+        float worldRight = currentBounds.getCenter().x + currentBounds.getXExtent();
+        float modelLeft = -modelBounds.getCenter().x + modelBounds.getXExtent();
+
+        spatial.setLocalTranslation(worldRight + modelLeft, 0, 0);
+        rootNode.attachChild(spatial);
+    }
+
+    private Spatial getSelectedModel() {
+        Spatial selected = spix.getBlackboard().get("main.selection.singleSelect", Spatial.class);
+        if( selected == null ) {
+            return null;
+        }
+
+        // We need to traverse up and find the spatial that was actually loaded...
+        // the 'node' that contained us.  This is a bit of a hack but we keep
+        // going up until we find a node with an asset key.
+        for( Spatial parent = selected.getParent(); parent != null; parent = parent.getParent() ) {
+            if( parent.getKey() != null ) {
+                selected = parent;
+                break;
+            }
+        }
+        return selected;
+    }
+
+    private void cloneTest1() {
+        Spatial selected = getSelectedModel();
+        if( selected == null ) {
+            return;
+        }
+        addSpatial(selected.clone());
+    }
+
+    private void cloneTest2() {
+        Spatial selected = getSelectedModel();
+        if( selected == null ) {
+            return;
+        }
+        addSpatial(selected.clone(false));
+    }
+
+    private void cloneTest3() {
+        Spatial selected = getSelectedModel();
+        if( selected == null ) {
+            return;
+        }
+        addSpatial(selected.deepClone());
     }
 
     private void addLight(Class<? extends Light> lightClass){
