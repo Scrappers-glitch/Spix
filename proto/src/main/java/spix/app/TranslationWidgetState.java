@@ -41,6 +41,7 @@ import java.util.*;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
+import com.jme3.input.MouseInput;
 import com.jme3.material.*;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.*;
@@ -85,8 +86,17 @@ public class TranslationWidgetState extends BaseAppState {
     private SafeArrayList<SelectedObject> selectedObjects = new SafeArrayList<>(SelectedObject.class);
     private Vector3f selectionCenter = new Vector3f();
 
+    private int dragMouseButton = MouseInput.BUTTON_LEFT;
 
     public TranslationWidgetState() {
+    }
+
+    public void setDragMouseButton( int i ) {
+        this.dragMouseButton = i;
+    }
+
+    public int getDragMouseButton() {
+        return dragMouseButton;
     }
 
     protected Spix getSpix() {
@@ -134,6 +144,7 @@ public class TranslationWidgetState extends BaseAppState {
         center.center();
         centerNode.attachChild(center);
 
+        CursorEventControl.addListenersToSpatial(centerNode, new RadialManipulator());
 
         centerNode.addControl(new BillboardControl());
         widget.attachChild(centerNode);
@@ -311,6 +322,20 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
     }
 
+    private void startRadialDrag() {
+        radial.setCullHint(Spatial.CullHint.Always);
+        for( Spatial s : axisSpatials ) {
+            s.setCullHint(Spatial.CullHint.Always);
+        }
+    }
+
+    private void stopRadialDrag() {
+        radial.setCullHint(Spatial.CullHint.Inherit);
+        for( Spatial s : axisSpatials ) {
+            s.setCullHint(Spatial.CullHint.Inherit);
+        }
+    }
+
     protected void moveSelectedObjects( Vector3f delta ) {
         Vector3f pos = new Vector3f();
         for( SelectedObject s : selectedObjects ) {
@@ -324,6 +349,68 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         pos.divide(selectedObjects.size());
         selectionCenter.set(pos);
         widget.setLocalTranslation(selectionCenter);
+    }
+
+    private class RadialManipulator implements CursorListener {
+
+        private Vector3f xDelta;
+        private Vector3f yDelta;
+        private Vector2f lastCursor = new Vector2f();
+
+        public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
+
+            if( event.getButtonIndex() != dragMouseButton ) {
+                return;
+            }
+
+            if( event.isPressed() ) {
+                startRadialDrag();
+
+                Vector3f up = cam.getUp();
+                Vector3f right = cam.getLeft().negate();
+
+                Vector3f xScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation().add(right));
+                Vector3f yScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation().add(up));
+
+                float x = xScreen.x - event.getX();
+                float y = yScreen.y - event.getY();
+
+                System.out.println("delta x:" + x + "  delta y:" + y);
+
+                xDelta = right.divide(x);
+                yDelta = up.divide(y);
+
+                System.out.println("xDelta:" + xDelta + "  yDelta:" + yDelta);
+
+                lastCursor.set(event.getX(), event.getY());
+
+            } else {
+                stopRadialDrag();
+                xDelta = null;
+                yDelta = null;
+            }
+            event.setConsumed();
+        }
+
+        public void cursorEntered( CursorMotionEvent event, Spatial target, Spatial capture ) {
+        }
+
+        public void cursorExited( CursorMotionEvent event, Spatial target, Spatial capture ) {
+        }
+
+        public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
+            if( xDelta == null ) {
+                // Not dragging
+                return;
+            }
+
+            float x = event.getX() - lastCursor.x;
+            float y = event.getY() - lastCursor.y;
+
+            moveSelectedObjects(xDelta.mult(x).addLocal(yDelta.mult(y)));
+
+            lastCursor.set(event.getX(), event.getY());
+        }
     }
 
     private class AxisManipulator implements CursorListener {
@@ -379,6 +466,10 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
 
         public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
+            if( event.getButtonIndex() != dragMouseButton ) {
+                return;
+            }
+
             if( event.isPressed() ) {
                 startAxisDrag(axis);
 
