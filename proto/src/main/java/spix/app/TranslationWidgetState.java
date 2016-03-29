@@ -73,6 +73,7 @@ public class TranslationWidgetState extends BaseAppState {
 
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
     private DragManager dragManager = new DragManager();
+    private AxisDragManager axisDragManager = new AxisDragManager();
 
     private String highlightColorProperty = DefaultConstants.SELECTION_HIGHLIGHT_COLOR;
     private SelectionModel selection;
@@ -528,19 +529,22 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
     }
 
-    private class AxisManipulator implements CursorListener {
-
+    private class AxisDragManager{
         private int axis;
         private Vector3f dir;
 
         private Vector2f cursor = new Vector2f();
         private float startDistance = 0;
-        private Vector3f base = null;
+        private Vector3f basePosition = null;
         private Vector3f last;
 
-        public AxisManipulator( int axis ) {
-            this.axis = axis;
+        public AxisDragManager(){
             dir = new Vector3f();
+        }
+
+        public void setAxis(int axis){
+            this.axis = axis;
+            dir.set(0,0,0);
             dir.set(axis, 1);
         }
 
@@ -573,36 +577,81 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             return sc;
         }
 
-        protected Vector3f getPickDir( AbstractCursorEvent event ) {
-            cursor.set(event.getX(), event.getY());
+        protected Vector3f getPickDir( float x, float y ) {
+            cursor.set(x, y);
             Vector3f near = cam.getWorldCoordinates(cursor, 0);
             Vector3f far = cam.getWorldCoordinates(cursor, 1);
             return far.subtract(near).normalizeLocal();
         }
 
+        public void startDrag(float x, float y){
+            startAxisDrag(axis);
+
+            // Keep track of the starting location for the object
+            basePosition = selectionCenter.clone(); //target.getWorldTranslation();
+
+            // Find the pick direction from our eye
+            Vector3f pickDir = getPickDir(x, y);
+
+            // Find the closest point between the axis line starting at the
+            // object and the pick line starting at the camera.  This returns
+            // the projected point on the first line (object -> axis)
+            startDistance = closestPointProjected(basePosition, dir, cam.getLocation(), pickDir);
+
+            last = new Vector3f();
+            inputMapper.activateGroup(GROUP_MOVING_DONE_CANCEL);
+        }
+
+        public void stopDrag(){
+            stopAxisDrag(axis);
+            basePosition = null;
+            inputMapper.deactivateGroup(GROUP_MOVING_DONE_CANCEL);
+        }
+
+        public void drag(float x, float y){
+            if( basePosition == null ) {
+                // Not dragging
+                return;
+            }
+
+            // Find the pick direction from our eye
+            Vector3f pickDir = getPickDir(x, y);
+
+            // Find the closest point between the axis line starting at the
+            // object and the pick line starting at the camera.  This returns
+            // the projected point on the first line (object -> axis)
+            float distance = closestPointProjected(basePosition, dir, cam.getLocation(), pickDir);
+
+            //System.out.println("distance:" + distance + "  Dragged:" + (distance - startDistance));
+            float dragged = distance - startDistance;
+            Vector3f newOffset = dir.mult(dragged);
+            Vector3f delta = newOffset.subtract(last);
+            last.set(newOffset);
+            moveSelectedObjects(delta);
+        }
+
+    }
+
+    private class AxisManipulator implements CursorListener {
+
+        private int axis;
+
+        public AxisManipulator( int axis ) {
+            axisDragManager = new AxisDragManager();
+            this.axis = axis;
+        }
+
+
         public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
             if( event.getButtonIndex() != dragMouseButton ) {
                 return;
             }
+            axisDragManager.setAxis(axis);
 
             if( event.isPressed() ) {
-                startAxisDrag(axis);
-
-                // Keep track of the starting location for the object
-                base = selectionCenter.clone(); //target.getWorldTranslation();
-
-                // Find the pick direction from our eye
-                Vector3f pickDir = getPickDir(event);
-
-                // Find the closest point between the axis line starting at the
-                // object and the pick line starting at the camera.  This returns
-                // the projected point on the first line (object -> axis)
-                startDistance = closestPointProjected(base, dir, cam.getLocation(), pickDir);
-
-                last = new Vector3f();
+                axisDragManager.startDrag(event.getX(), event.getY());
             } else {
-                stopAxisDrag(axis);
-                base = null;
+                axisDragManager.stopDrag();
             }
             event.setConsumed();
         }
@@ -614,25 +663,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
 
         public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
-            if( base == null ) {
-                // Not dragging
-                return;
-            }
-
-            // Find the pick direction from our eye
-            Vector3f pickDir = getPickDir(event);
-
-            // Find the closest point between the axis line starting at the
-            // object and the pick line starting at the camera.  This returns
-            // the projected point on the first line (object -> axis)
-            float distance = closestPointProjected(base, dir, cam.getLocation(), pickDir);
-
-            //System.out.println("distance:" + distance + "  Dragged:" + (distance - startDistance));
-            float dragged = distance - startDistance;
-            Vector3f newOffset = dir.mult(dragged);
-            Vector3f delta = newOffset.subtract(last);
-            last.set(newOffset);
-            moveSelectedObjects(delta);
+            axisDragManager.drag(event.getX(), event.getY());
         }
     }
 
