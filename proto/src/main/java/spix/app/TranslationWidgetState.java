@@ -100,6 +100,9 @@ public class TranslationWidgetState extends BaseAppState {
     private static final FunctionId F_HORIZONTAL_DRAG = new FunctionId(GROUP_MOVING, "Drag Horizontally");
     private static final FunctionId F_VERTICAL_DRAG = new FunctionId(GROUP_MOVING, "Drag vertically");
 
+    //Axis move axis line visual cue.
+    private Geometry axisLine;
+
     private InputMapper inputMapper;
 
     public TranslationWidgetState() {
@@ -173,6 +176,12 @@ public class TranslationWidgetState extends BaseAppState {
         //getRoot().attachChild(widget);
 
         initKeyMappings();
+
+        Line l = new Line(new Vector3f(0, 0, -1000), new Vector3f(0, 0, 1000));
+        axisLine = new Geometry("Axis Line", l);
+        axisLine.setMaterial(globals.createMaterial(false).getMaterial());
+        axisLine.setCullHint(Spatial.CullHint.Always);
+        widget.attachChild(axisLine);
 
     }
 
@@ -371,6 +380,23 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             s.setCullHint(Spatial.CullHint.Always);
         }
         getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, ColorRGBA.White.clone());
+        axisLine.setCullHint(Spatial.CullHint.Dynamic);
+        Quaternion rot = new Quaternion();
+        switch (axis){
+            case 0://X
+                rot.lookAt(Vector3f.UNIT_X, Vector3f.UNIT_Y);
+                axisLine.getMaterial().setColor("Color", ColorRGBA.Red);
+                break;
+            case 1://Y
+                rot.lookAt(Vector3f.UNIT_Y, Vector3f.UNIT_Y);
+                axisLine.getMaterial().setColor("Color", ColorRGBA.Green);
+                break;
+            case 2://Z
+                rot.lookAt(Vector3f.UNIT_Z, Vector3f.UNIT_Y);
+                axisLine.getMaterial().setColor("Color", ColorRGBA.Blue);
+                break;
+        }
+        axisLine.setLocalRotation(rot);
     }
 
     private void stopAxisDrag( int axis ) {
@@ -379,6 +405,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             s.setCullHint(Spatial.CullHint.Inherit);
         }
         getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, null);
+        axisLine.setCullHint(Spatial.CullHint.Always);
     }
 
     private void startRadialDrag() {
