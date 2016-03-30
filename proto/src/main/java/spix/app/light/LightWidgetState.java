@@ -51,10 +51,12 @@ import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.*;
 //import javafx.scene.shape.Circle;
+import com.simsilica.lemur.event.*;
 import spix.app.*;
 import spix.core.*;
 
 import java.nio.*;
+import java.util.Map;
 
 
 /**
@@ -65,20 +67,12 @@ import java.nio.*;
  */
 public class LightWidgetState extends BaseAppState {
 
-//    private Node widget;
-//    private Node centerNode;
-//    private Geometry radial;
-//    private Geometry center;
-//    private Material[] axisMaterials = new Material[3];
-//    private ColorRGBA[] axisColors = new ColorRGBA[3];
+
     private Camera cam;
     private Node lightNode;
     private Material dashed;
     private Material dot;
     private Quaternion tmpRot = new Quaternion();
-
-
-   // private Vector3f selectionCenter = new Vector3f();
 
     public LightWidgetState() {
     }
@@ -127,7 +121,7 @@ public class LightWidgetState extends BaseAppState {
     }
 
     public void addLight(Vector3f pos, Light light) {
-        Node widget = new Node();
+        Node widget = new Node(light.toString()+ " Widget");
         switch (light.getType()){
             case Directional:
                 widget.setLocalTranslation(pos);
@@ -166,11 +160,32 @@ public class LightWidgetState extends BaseAppState {
                 innerCircle.setLocalScale(innerScale);
                 outerCircle.setLocalScale(outerScale);
 
+                //TODO fix how the widget updates according to the light position
+                //This is wrong, and occurs one frame late.
+                //I suspect I should listen to the WorldPosition property and move whenever a change event is fired.
+                //But I wanted the widget to move so bad... :p
+                widget.addControl(new AbstractControl() {
+                    @Override
+                    protected void controlUpdate(float tpf) {
+                        widget.setLocalTranslation(sl.getPosition());
+                    }
+
+                    @Override
+                    protected void controlRender(RenderManager rm, ViewPort vp) {
+
+                    }
+                });
+
                 break;
             default:
                 widget.setLocalTranslation(pos);
                 break;
         }
+        //TODO think of a better way to map light to widgets and widgets to lights.
+        //Should make something better, though I figured it was the easiest way to get the widget => light lookup.
+        widget.setUserData("Light", light);
+        CursorEventControl.addListenersToSpatial(widget, new LightListener());
+
         lightNode.attachChild(widget);
     }
 
@@ -517,6 +532,35 @@ public class LightWidgetState extends BaseAppState {
 
         @Override
         protected void controlRender(RenderManager rm, ViewPort vp) {
+
+        }
+    }
+
+    //TODO enhance Light picking.
+    //I didn't manage to find the actual clicked geometry when adding the listener to the whole parent node.
+    //I added it to each widget. However it seems the collision only happens on the center of the widget (makes sense since it's the only geom with triangles).
+    //Idk if there is an alternative to making a wider invisible quad geom for easier picking.
+    private class LightListener implements CursorListener{
+
+        public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
+            System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
+            Object obj = target.getUserData("Light");
+            if(obj != null){
+                getState(SpixState.class).getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(obj);
+            }
+
+        }
+
+        public void cursorEntered( CursorMotionEvent event, Spatial target, Spatial capture ) {
+//            System.out.println("cursorEntered(" + event + ", " + target + ", " + capture + ")");
+        }
+
+        public void cursorExited( CursorMotionEvent event, Spatial target, Spatial capture ) {
+  //          System.out.println("cursorExited(" + event + ", " + target + ", " + capture + ")");
+        }
+
+        public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
+    //        System.out.println("cursorMoved(" + event + ", " + target + ", " + capture + ")");
 
         }
     }

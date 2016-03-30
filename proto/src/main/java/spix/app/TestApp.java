@@ -118,6 +118,7 @@ public class TestApp extends SimpleApplication {
         this.spix = stateManager.getState(SpixState.class).getSpix();
 
         spix.registerPropertySetFactory(Spatial.class, new SpatialPropertySetFactory());
+        spix.registerPropertySetFactory(SpotLight.class, new SpotLightPropertySetFactory());
 
         SelectionModel selectionModel = new SelectionModel();
         spix.getBlackboard().set("main.selection", selectionModel);
