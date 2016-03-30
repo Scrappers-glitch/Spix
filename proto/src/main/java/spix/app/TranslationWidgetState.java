@@ -73,7 +73,6 @@ public class TranslationWidgetState extends BaseAppState {
 
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
     private DragManager dragManager = new DragManager();
-  //  private AxisDragManager axisDragManager = new AxisDragManager();
 
     private String highlightColorProperty = DefaultConstants.SELECTION_HIGHLIGHT_COLOR;
     private SelectionModel selection;
@@ -221,7 +220,7 @@ public class TranslationWidgetState extends BaseAppState {
                     Vector2f cursor = getApplication().getInputManager().getCursorPosition();
                     dragManager.startDrag(cursor.getX(), cursor.getY());
                 }
-                if(func == F_DONE && value == InputState.Off){
+                if(func == F_DONE && value == InputState.Positive){
                     //The dragging is done.
                     inputMapper.deactivateGroup(GROUP_MOVING);
                     dragManager.stopDrag();
