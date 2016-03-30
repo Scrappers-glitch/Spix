@@ -73,7 +73,7 @@ public class TranslationWidgetState extends BaseAppState {
 
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
     private DragManager dragManager = new DragManager();
-    private AxisDragManager axisDragManager = new AxisDragManager();
+  //  private AxisDragManager axisDragManager = new AxisDragManager();
 
     private String highlightColorProperty = DefaultConstants.SELECTION_HIGHLIGHT_COLOR;
     private SelectionModel selection;
@@ -93,11 +93,14 @@ public class TranslationWidgetState extends BaseAppState {
     private int dragMouseButton = MouseInput.BUTTON_LEFT;
 
     private static final String GROUP = "Move State";
-    private static final String GROUP_MOVING_DONE_CANCEL = "Moving Done or Cancel";
+    private static final String GROUP_DRAG_ADDITIONAL_INPUTS = "Draggind additional inputs";
     private static final String GROUP_MOVING = "Moving";
     private static final FunctionId F_GRAB = new FunctionId(GROUP, "Grab");
-    private static final FunctionId F_DONE = new FunctionId(GROUP_MOVING_DONE_CANCEL, "Done");
-    private static final FunctionId F_CANCEL = new FunctionId(GROUP_MOVING_DONE_CANCEL, "Cancel");
+    private static final FunctionId F_DONE = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Done");
+    private static final FunctionId F_CANCEL = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Cancel");
+    private static final FunctionId F_X_CONSTRAIN = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "X axis constrain");
+    private static final FunctionId F_Y_CONSTRAIN = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Y axis constrain");
+    private static final FunctionId F_Z_CONSTRAIN = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Z axis constrain");
     private static final FunctionId F_HORIZONTAL_DRAG = new FunctionId(GROUP_MOVING, "Drag Horizontally");
     private static final FunctionId F_VERTICAL_DRAG = new FunctionId(GROUP_MOVING, "Drag vertically");
 
@@ -189,40 +192,72 @@ public class TranslationWidgetState extends BaseAppState {
     private void initKeyMappings() {
         inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.map(F_GRAB, KeyInput.KEY_G);
+
         inputMapper.map(F_DONE, KeyInput.KEY_RETURN);
         inputMapper.map(F_DONE, Button.MOUSE_BUTTON1);
+
         inputMapper.map(F_CANCEL, KeyInput.KEY_ESCAPE);
         inputMapper.map(F_CANCEL, Button.MOUSE_BUTTON2);
+
         inputMapper.map(F_HORIZONTAL_DRAG, Axis.MOUSE_X);
         inputMapper.map(F_VERTICAL_DRAG, Axis.MOUSE_Y);
 
+        inputMapper.map(F_X_CONSTRAIN, KeyInput.KEY_X);
+        inputMapper.map(F_Y_CONSTRAIN, KeyInput.KEY_Y);
+        inputMapper.map(F_Z_CONSTRAIN, KeyInput.KEY_Z);
+
+        //Deactivating the additional inputs avilable while dragging (they'll be activated when a drag is initiated)
+        inputMapper.deactivateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
+        //Deactivating the dragging mouse listener (It will be activated if a drag is initiated with the keyboard (the F_GRAB function)
         inputMapper.deactivateGroup(GROUP_MOVING);
+        //Activating keyboard manipulators to initiate dragging with the keyboard.
         inputMapper.activateGroup(GROUP);
         inputMapper.addStateListener(new StateFunctionListener() {
             @Override
             public void valueChanged(FunctionId func, InputState value, double tpf) {
                 if(func == F_GRAB && value == InputState.Positive){
+                    //Activating the mouse listener and starting to drag at current cursor coordinates.
                     inputMapper.activateGroup(GROUP_MOVING);
                     Vector2f cursor = getApplication().getInputManager().getCursorPosition();
                     dragManager.startDrag(cursor.getX(), cursor.getY());
                 }
-                if(func == F_DONE && value == InputState.Positive){
+                if(func == F_DONE && value == InputState.Off){
+                    //The dragging is done.
                     inputMapper.deactivateGroup(GROUP_MOVING);
                     dragManager.stopDrag();
                 }
                 if(func == F_CANCEL && value == InputState.Positive){
+                    //the user canceled the dragging.
                     inputMapper.deactivateGroup(GROUP_MOVING);
                     dragManager.cancel();
                 }
             }
         },F_GRAB, F_DONE, F_CANCEL);
 
-        // This part may not be needed and maybe a CursorListener can be used.
+        inputMapper.addStateListener(new StateFunctionListener() {
+            @Override
+            public void valueChanged(FunctionId func, InputState value, double tpf) {
+                //User typed one of the Axis keys to constrain the drag.
+                //We set the axis to the dragManager.
+                if (func == F_X_CONSTRAIN) {
+                    dragManager.setConstrainedAxis(0);
+                } else if (func == F_Y_CONSTRAIN) {
+                    dragManager.setConstrainedAxis(1);
+                } else {
+                    dragManager.setConstrainedAxis(2);
+                }
+            }
+        }, F_X_CONSTRAIN, F_Y_CONSTRAIN, F_Z_CONSTRAIN);
+
+        // Here I don't think we can use a CursorListener, as no click has occurred on the selection.
+        // We could emulate the click by creating a CursorButtonEvent and calling the listener manually,
+        // but seams hackish to me.
         inputMapper.addAnalogListener(new AnalogFunctionListener() {
             @Override
             public void valueActive(FunctionId func, double value, double tpf) {
                 Vector2f cursor = getApplication().getInputManager().getCursorPosition();
                 dragManager.drag(cursor.getX(), cursor.getY());
+
             }
         }, F_HORIZONTAL_DRAG, F_VERTICAL_DRAG);
     }
@@ -375,12 +410,20 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
     public void render( RenderManager renderManager ) {
     }
 
-    private void startAxisDrag( int axis ) {
+    /**
+     * Called when an axis drag starts.
+     */
+    private void onStartAxisDrag(int axis ) {
+        //Hides the widget.
         radial.setCullHint(Spatial.CullHint.Always);
         for( Spatial s : axisSpatials ) {
             s.setCullHint(Spatial.CullHint.Always);
         }
+        // sets the highlight color to white while dragging
         getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, ColorRGBA.White.clone());
+
+        //Displays the current axis line, sets its color, then compute the corresponding rotation
+        //Maybe something better could be done as the direction is already computed in the DragManager.
         axisLine.setCullHint(Spatial.CullHint.Dynamic);
         Quaternion rot = new Quaternion();
         switch (axis){
@@ -400,28 +443,44 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         axisLine.setLocalRotation(rot);
     }
 
-    private void stopAxisDrag( int axis ) {
+    /**
+     * Called when an axis drag is finished.
+     */
+    private void onStopAxisDrag(int axis ) {
+        //displays the widget
         radial.setCullHint(Spatial.CullHint.Inherit);
         for( Spatial s : axisSpatials ) {
             s.setCullHint(Spatial.CullHint.Inherit);
         }
+        //resets the highlight color
         getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, null);
+        //hides the axis line.
         axisLine.setCullHint(Spatial.CullHint.Always);
     }
 
-    private void startRadialDrag() {
+    /**
+     * Called when a radial drag starts.
+     */
+    private void onStartRadialDrag() {
+        //Hides the widget.
         radial.setCullHint(Spatial.CullHint.Always);
         for( Spatial s : axisSpatials ) {
             s.setCullHint(Spatial.CullHint.Always);
         }
+        // sets the highlight color to white while dragging
         getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, ColorRGBA.White.clone());
     }
 
-    private void stopRadialDrag() {
+    /**
+     * Called when a radial drag is finished.
+     */
+    private void onStopRadialDrag() {
+        //displays the widget
         radial.setCullHint(Spatial.CullHint.Inherit);
         for( Spatial s : axisSpatials ) {
             s.setCullHint(Spatial.CullHint.Inherit);
         }
+        //resets the highlight color
         getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, null);
     }
 
@@ -440,14 +499,66 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         widget.setLocalTranslation(selectionCenter);
     }
 
+    /**
+     * Handles dragging behaviour.
+     */
     private class DragManager{
         protected Vector3f xDelta;
         protected Vector3f yDelta;
         protected Vector2f lastCursor = new Vector2f();
         private Vector3f basePosition = null;
+        protected Vector2f startCursor = new Vector2f();
 
+        private int axis = -1;
+        private Vector3f dir = new Vector3f();
+        private Vector2f cursor = new Vector2f();
+        private float startDistance = 0;
+        private Vector3f last;
+
+        /**
+         * initiates the dragging of the current selection at x,y screen coordinates.
+         * @param startX
+         * @param startY
+         */
         public void startDrag(float startX, float startY){
-            startRadialDrag();
+            if(axis == -1){
+                startRadialDrag(startX, startY);
+            } else {
+                startAxisDrag(startX, startY);
+            }
+        }
+
+        /**
+         * Sops dragging and reset all states.
+         */
+        public void stopDrag(){
+            if(axis == -1){
+                stopRadialDrag();
+            } else {
+                stopAxisDrag();
+            }
+        }
+
+        /**
+         * drags the selection according to x,y screen coordinates
+         * @param x
+         * @param y
+         */
+        public void drag(float x, float y){
+            if(axis == -1){
+                radialDrag(x, y);
+            } else {
+                axisDrag(x, y);
+            }
+        }
+
+        /**
+         * Initiates a radial drag at x,y screen coordinates.
+         * @param x
+         * @param y
+         */
+        public void startRadialDrag(float startX, float startY){
+            onStartRadialDrag();
 
             Vector3f up = cam.getUp();
             Vector3f right = cam.getLeft().negate();
@@ -467,20 +578,29 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             System.out.println("xDelta:" + xDelta + "  yDelta:" + yDelta);
 
             lastCursor.set(startX, startY);
+            startCursor.set(startX, startY);
 
-            inputMapper.activateGroup(GROUP_MOVING_DONE_CANCEL);
+            inputMapper.activateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
             basePosition = selectionCenter.clone();
         }
 
-        public void stopDrag(){
-            stopRadialDrag();
+        /**
+         * Stops the radial drag, and reset all radial states.
+         */
+        public void stopRadialDrag(){
+            onStopRadialDrag();
             xDelta = null;
             yDelta = null;
-            inputMapper.deactivateGroup(GROUP_MOVING_DONE_CANCEL);
+            inputMapper.deactivateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
             basePosition = null;
         }
 
-        public void drag(float newX, float newY){
+        /**
+         * Drags the selection according to the x,y screen coordinates.
+         * @param x
+         * @param y
+         */
+        public void radialDrag(float newX, float newY){
             if( xDelta == null ) {
                 // Not dragging
                 return;
@@ -494,58 +614,99 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             lastCursor.set(newX, newY);
         }
 
+
+        /**
+         * Initiates an axis drag at x,y screen coordinates.
+         * @param x
+         * @param y
+         */
+        public void startAxisDrag(float x, float y){
+            onStartAxisDrag(axis);
+
+            // Keep track of the starting location for the object
+            basePosition = selectionCenter.clone(); //target.getWorldTranslation();
+
+            // Find the pick direction from our eye
+            Vector3f pickDir = getPickDir(x, y);
+
+            // Find the closest point between the axis line starting at the
+            // object and the pick line starting at the camera.  This returns
+            // the projected point on the first line (object -> axis)
+            startDistance = closestPointProjected(basePosition, dir, cam.getLocation(), pickDir);
+
+            last = new Vector3f();
+            inputMapper.activateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
+            startCursor.set(x,y);
+        }
+
+        /**
+         * Stops the axis drag. deactivate additional key inputs and reset all axis drag states.
+         */
+        public void stopAxisDrag(){
+            onStopAxisDrag(axis);
+            basePosition = null;
+            inputMapper.deactivateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
+            axis = -1;
+        }
+
+        /**
+         * Drags the selection according to the x,y screen coordinates, but constrained to the current axis.
+         * @param x
+         * @param y
+         */
+        public void axisDrag(float x, float y){
+            if( basePosition == null ) {
+                // Not dragging
+                return;
+            }
+
+            // Find the pick direction from our eye
+            Vector3f pickDir = getPickDir(x, y);
+
+            // Find the closest point between the axis line starting at the
+            // object and the pick line starting at the camera.  This returns
+            // the projected point on the first line (object -> axis)
+            float distance = closestPointProjected(basePosition, dir, cam.getLocation(), pickDir);
+
+            //System.out.println("distance:" + distance + "  Dragged:" + (distance - startDistance));
+            float dragged = distance - startDistance;
+            Vector3f newOffset = dir.mult(dragged);
+            Vector3f delta = newOffset.subtract(last);
+            last.set(newOffset);
+            lastCursor.set(x, y);
+            moveSelectedObjects(delta);
+        }
+
+        /**
+         * Resets the selection to its start position and stops the drag.
+         */
         public void cancel(){
             moveSelectedObjects(basePosition.subtractLocal(selectionCenter));
             stopDrag();
         }
-    }
 
-    private class RadialManipulator implements CursorListener {
+        /**
+         * Constrains the dragging movement to one world axis
+         * @param axis
+         */
+        public void setConstrainedAxis(int axis){
 
-
-        public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
-
-            if( event.getButtonIndex() != dragMouseButton ) {
-                return;
+            boolean dragging = basePosition != null;
+            //If we are currently dragging, we reset the drag states
+            if(dragging) {
+                cancel();
             }
 
-            if( event.isPressed() ) {
-                dragManager.startDrag(event.getX(), event.getY());
-
-            } else {
-                dragManager.stopDrag();
-            }
-            event.setConsumed();
-        }
-
-        public void cursorEntered( CursorMotionEvent event, Spatial target, Spatial capture ) {
-        }
-
-        public void cursorExited( CursorMotionEvent event, Spatial target, Spatial capture ) {
-        }
-
-        public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
-            dragManager.drag(event.getX(), event.getY());
-        }
-    }
-
-    private class AxisDragManager{
-        private int axis;
-        private Vector3f dir;
-
-        private Vector2f cursor = new Vector2f();
-        private float startDistance = 0;
-        private Vector3f basePosition = null;
-        private Vector3f last;
-
-        public AxisDragManager(){
-            dir = new Vector3f();
-        }
-
-        public void setAxis(int axis){
+            //setting the axis and the direction from that axis.
             this.axis = axis;
             dir.set(0,0,0);
             dir.set(axis, 1);
+
+            //If we were dragging, we start over
+            if(dragging) {
+                startDrag(startCursor.getX(), startCursor.getY());
+                drag(lastCursor.getX(), lastCursor.getY());
+            }
         }
 
         /**
@@ -583,75 +744,23 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             Vector3f far = cam.getWorldCoordinates(cursor, 1);
             return far.subtract(near).normalizeLocal();
         }
-
-        public void startDrag(float x, float y){
-            startAxisDrag(axis);
-
-            // Keep track of the starting location for the object
-            basePosition = selectionCenter.clone(); //target.getWorldTranslation();
-
-            // Find the pick direction from our eye
-            Vector3f pickDir = getPickDir(x, y);
-
-            // Find the closest point between the axis line starting at the
-            // object and the pick line starting at the camera.  This returns
-            // the projected point on the first line (object -> axis)
-            startDistance = closestPointProjected(basePosition, dir, cam.getLocation(), pickDir);
-
-            last = new Vector3f();
-            inputMapper.activateGroup(GROUP_MOVING_DONE_CANCEL);
-        }
-
-        public void stopDrag(){
-            stopAxisDrag(axis);
-            basePosition = null;
-            inputMapper.deactivateGroup(GROUP_MOVING_DONE_CANCEL);
-        }
-
-        public void drag(float x, float y){
-            if( basePosition == null ) {
-                // Not dragging
-                return;
-            }
-
-            // Find the pick direction from our eye
-            Vector3f pickDir = getPickDir(x, y);
-
-            // Find the closest point between the axis line starting at the
-            // object and the pick line starting at the camera.  This returns
-            // the projected point on the first line (object -> axis)
-            float distance = closestPointProjected(basePosition, dir, cam.getLocation(), pickDir);
-
-            //System.out.println("distance:" + distance + "  Dragged:" + (distance - startDistance));
-            float dragged = distance - startDistance;
-            Vector3f newOffset = dir.mult(dragged);
-            Vector3f delta = newOffset.subtract(last);
-            last.set(newOffset);
-            moveSelectedObjects(delta);
-        }
-
     }
 
-    private class AxisManipulator implements CursorListener {
-
-        private int axis;
-
-        public AxisManipulator( int axis ) {
-            axisDragManager = new AxisDragManager();
-            this.axis = axis;
-        }
+    //Radial and Axis manipulator are now pretty similar, maybe something could be done to factor the code.
+    private class RadialManipulator implements CursorListener {
 
 
         public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
+
             if( event.getButtonIndex() != dragMouseButton ) {
                 return;
             }
-            axisDragManager.setAxis(axis);
 
             if( event.isPressed() ) {
-                axisDragManager.startDrag(event.getX(), event.getY());
+                dragManager.startDrag(event.getX(), event.getY());
+
             } else {
-                axisDragManager.stopDrag();
+                dragManager.stopDrag();
             }
             event.setConsumed();
         }
@@ -663,7 +772,40 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
 
         public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
-            axisDragManager.drag(event.getX(), event.getY());
+            dragManager.drag(event.getX(), event.getY());
+        }
+    }
+
+    private class AxisManipulator implements CursorListener {
+
+        private int axis;
+
+        public AxisManipulator( int axis ) {
+            this.axis = axis;
+        }
+
+        public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
+            if( event.getButtonIndex() != dragMouseButton ) {
+                return;
+            }
+
+            if( event.isPressed() ) {
+                dragManager.setConstrainedAxis(axis);
+                dragManager.startDrag(event.getX(), event.getY());
+            } else {
+                dragManager.stopDrag();
+            }
+            event.setConsumed();
+        }
+
+        public void cursorEntered( CursorMotionEvent event, Spatial target, Spatial capture ) {
+        }
+
+        public void cursorExited( CursorMotionEvent event, Spatial target, Spatial capture ) {
+        }
+
+        public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
+            dragManager.drag(event.getX(), event.getY());
         }
     }
 
@@ -692,3 +834,4 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
     }
 }
+
