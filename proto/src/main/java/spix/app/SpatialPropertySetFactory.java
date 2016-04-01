@@ -81,7 +81,6 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
 
     private class WorldTranslationProperty extends AbstractProperty {
         private final Spatial spatial;
-        private Vector3f last = new Vector3f();
 
         public WorldTranslationProperty( Spatial spatial ) {
             super("worldTranslation");
@@ -97,7 +96,7 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
                 return;
             }
             Vector3f v = (Vector3f)value;
-            last.set(spatial.getWorldTranslation());
+            Vector3f last = spatial.getWorldTranslation().clone();
             if( v.equals(last) ) {
                 return;
             }
