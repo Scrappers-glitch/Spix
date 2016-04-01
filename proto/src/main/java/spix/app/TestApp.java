@@ -304,6 +304,8 @@ public class TestApp extends SimpleApplication {
         spix.getBlackboard().bind("camera.mode", stateManager.getState(BlenderCameraState.class),
                 "enabled", Predicates.equalTo("blender"));
 
+        initPovMenus(camera);
+
         // Set the default camera mode
         //spix.getBlackboard().set("camera.mode", "blender");
         // ...except flycam app state is stupid and NPEs... we'll wait until
@@ -409,6 +411,64 @@ public class TestApp extends SimpleApplication {
 
 
         return main;
+    }
+
+    private void initPovMenus(ActionList camera) {
+        ActionList povMenu = camera.add(new DefaultActionList("Point of view"));
+        povMenu.add(new NopAction("Front") {
+            public void performAction( final Spix spix ) {
+                BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
+                if(bcs == null){
+                    return;
+                }
+                bcs.switchToFront();
+            }
+        });
+        povMenu.add(new NopAction("Back") {
+            public void performAction( final Spix spix ) {
+                BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
+                if(bcs == null){
+                    return;
+                }
+                bcs.switchToBack();
+            }
+        });
+        povMenu.add(new NopAction("Left") {
+            public void performAction( final Spix spix ) {
+                BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
+                if(bcs == null){
+                    return;
+                }
+                bcs.switchToLeft();
+            }
+        });
+        povMenu.add(new NopAction("Right") {
+            public void performAction( final Spix spix ) {
+                BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
+                if(bcs == null){
+                    return;
+                }
+                bcs.switchToRight();
+            }
+        });
+        povMenu.add(new NopAction("Top") {
+            public void performAction( final Spix spix ) {
+                BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
+                if(bcs == null){
+                    return;
+                }
+                bcs.switchToTop();
+            }
+        });
+        povMenu.add(new NopAction("Bottom") {
+            public void performAction( final Spix spix ) {
+                BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
+                if(bcs == null){
+                    return;
+                }
+                bcs.switchToBottom();
+            }
+        });
     }
 
     private ActionList createObjectActions() {
