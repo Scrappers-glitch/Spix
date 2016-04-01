@@ -69,10 +69,10 @@ public class BlenderCameraState extends BaseAppState {
     public static final FunctionId F_ZOOM = new FunctionId(GROUP, "Zoom");
     private final static float ROT_FACTOR = 0.1f;
 
+
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
     private Camera cam;
     private Node target;
-    private Node verticalPivot;
     private CameraNode camNode;
 
     private InputHandler inputHandler = new InputHandler();
@@ -101,12 +101,10 @@ public class BlenderCameraState extends BaseAppState {
         }
 
         target = new Node("Blender cam target");
-        verticalPivot = new Node("Blender cam vertical pivot");
         camNode = new CameraNode("Blender cam holder", cam);
         camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
         camNode.setEnabled(false);
-        target.attachChild(verticalPivot);
-        verticalPivot.attachChild(camNode);
+        target.attachChild(camNode);
 
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.addAnalogListener(inputHandler, F_VERTICAL_MOVE, F_HORIZONTAL_MOVE, F_VERTICAL_ROTATE, F_HORIZONTAL_ROTATE, F_ZOOM);
@@ -183,6 +181,8 @@ public class BlenderCameraState extends BaseAppState {
 
         private Vector3f tmpVec = new Vector3f();
         private Quaternion tmpRot = new Quaternion();
+        private Quaternion tmpRot2 = new Quaternion();
+        private Quaternion tmpRot3 = new Quaternion();
         protected Vector3f xDelta = new Vector3f();
         protected Vector3f yDelta = new Vector3f();
         protected Vector2f lastCursor = new Vector2f();
@@ -228,14 +228,39 @@ public class BlenderCameraState extends BaseAppState {
                 target.move(xDelta.mult(-x).addLocal(yDelta.mult(-y)));
 
                 lastCursor.set(cursor);
-            } else if(func == F_HORIZONTAL_ROTATE){
-                tmpRot.fromAngleAxis((float)-value * ROT_FACTOR, Vector3f.UNIT_Y);
-                target.rotate(tmpRot);
-            } else if(func == F_VERTICAL_ROTATE){
-                tmpRot.set(verticalPivot.getLocalRotation());
-                tmpVec.set(tmpRot.getRotationColumn(0));
-                tmpRot.fromAngleAxis((float)value * ROT_FACTOR, tmpVec);
-                verticalPivot.rotate(tmpRot);
+            } else if(func == F_HORIZONTAL_ROTATE || func == F_VERTICAL_ROTATE){
+                //Extract horizontal rotation
+                //get left vector and cross product it with unitY (to "flatten" the direction on the horizontal plane)
+                target.getLocalRotation().getRotationColumn(0,tmpVec).crossLocal(Vector3f.UNIT_Y);
+                tmpRot.lookAt(tmpVec, Vector3f.UNIT_Y);
+
+                //Extract vertical rotation
+                //get the direction of the rotation
+                //rotate it by the inverse horizontal rotation.
+                //get the rotation from that vector.
+                target.getLocalRotation().getRotationColumn(2,tmpVec);
+                tmpRot3.set(tmpRot).inverseLocal().mult(tmpVec, tmpVec);
+                tmpRot2.lookAt(tmpVec, Vector3f.UNIT_Y);
+
+                //computing the additional rotation and combining it the right orders
+                if(func == F_HORIZONTAL_ROTATE){
+                    //the incremental horizontal rotation.
+                    tmpRot3.fromAngleAxis((float)-value * ROT_FACTOR, Vector3f.UNIT_Y);
+                    //applying the horizontal incremental rotation on the horizontal rotation.
+                    tmpRot.multLocal(tmpRot3);
+                    //applying the vertical rotation on the resulting horizontal rotation.
+                    tmpRot.multLocal(tmpRot2);
+                }else {
+                    //the incremental vertical rotation
+                    tmpRot3.fromAngleAxis((float)value * ROT_FACTOR, Vector3f.UNIT_X);
+                    //applying the incremental vertical rotation on the vertical rotation.
+                    tmpRot2.multLocal(tmpRot3);
+                    //Applying the resulting vertical rotation on the horizontal rotation.
+                    tmpRot.multLocal(tmpRot2);
+                }
+
+                //Setting the new rotation
+                target.setLocalRotation(tmpRot);
             } else if(func == F_ZOOM){
                 float factor = Math.min(camNode.getLocalTranslation().z * 0.1f, 2);
                 tmpVec.set(camNode.getLocalTranslation()).addLocal(0,0,(float) -value * factor);
