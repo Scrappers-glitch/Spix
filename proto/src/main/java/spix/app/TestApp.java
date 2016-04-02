@@ -52,7 +52,8 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 
-import spix.app.light.LightWidgetState;
+import spix.app.light.*;
+import spix.app.properties.*;
 import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.core.Action;
@@ -118,7 +119,7 @@ public class TestApp extends SimpleApplication {
         this.spix = stateManager.getState(SpixState.class).getSpix();
 
         spix.registerPropertySetFactory(Spatial.class, new SpatialPropertySetFactory());
-        spix.registerPropertySetFactory(SpotLight.class, new SpotLightPropertySetFactory());
+        spix.registerPropertySetFactory(LightWrapper.class, new LightPropertySetFactory());
 
         SelectionModel selectionModel = new SelectionModel();
         spix.getBlackboard().set("main.selection", selectionModel);
@@ -591,7 +592,7 @@ public class TestApp extends SimpleApplication {
         ambient.setColor(new ColorRGBA(0.5f, 0.5f, 0.2f, 1));
         rootNode.addLight(ambient);
 
-        PointLight pl = new PointLight(new Vector3f(-2,-2,-2), 4);
+        PointLight pl = new PointLight(new Vector3f(-2,0,-2), 4);
         rootNode.addLight(pl);
 
         SpotLight sl = new SpotLight(new Vector3f(3,3,-3),new Vector3f(-1f, -1, 1f).normalizeLocal(), 10, ColorRGBA.White.mult(2));
@@ -754,7 +755,7 @@ public class TestApp extends SimpleApplication {
         try {
             Light l = lightClass.newInstance();
             anchor.addLight(l);
-            getStateManager().getState(LightWidgetState.class).addLight(new Vector3f(3,3,3), l);
+            getStateManager().getState(LightWidgetState.class).addLight(rootNode, l);
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {

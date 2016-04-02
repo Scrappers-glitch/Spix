@@ -38,7 +38,6 @@ package spix.app.light;
 
 import com.jme3.app.*;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.bounding.*;
 import com.jme3.light.*;
 import com.jme3.material.*;
 import com.jme3.math.*;
@@ -48,7 +47,7 @@ import com.jme3.scene.*;
 import com.jme3.scene.control.*;
 import com.jme3.scene.shape.*;
 import com.jme3.texture.Texture;
-import com.jme3.util.BufferUtils;
+import com.jme3.util.*;
 import com.simsilica.lemur.*;
 //import javafx.scene.shape.Circle;
 import com.simsilica.lemur.event.*;
@@ -56,7 +55,6 @@ import spix.app.*;
 import spix.core.*;
 
 import java.nio.*;
-import java.util.Map;
 
 
 /**
@@ -72,7 +70,7 @@ public class LightWidgetState extends BaseAppState {
     private Node lightNode;
     private Material dashed;
     private Material dot;
-    private Quaternion tmpRot = new Quaternion();
+    private SafeArrayList<LightWrapper> widgets = new SafeArrayList<>(LightWrapper.class);
 
     public LightWidgetState() {
     }
@@ -89,102 +87,52 @@ public class LightWidgetState extends BaseAppState {
     protected void initialize(Application app) {
         initMaterials();
 
-
         Node rootNode = ((SimpleApplication) app).getRootNode();
         cam = app.getCamera();
         lightNode = new Node("Light Node");
 
-
-        //Compute some arbitrary position for the Directional and AmbientLight.
-        //Not really great, but will do for now
-        Vector3f pos = new Vector3f();
-        BoundingVolume bv = rootNode.getWorldBound();
-        if (bv.getType() == BoundingVolume.Type.AABB) {
-            BoundingBox bb = (BoundingBox) bv;
-            pos.set(bb.getCenter()).addLocal(bb.getXExtent(), bb.getYExtent(), bb.getZExtent());
-        } else {
-            BoundingSphere bs = (BoundingSphere) bv;
-            pos.set(bs.getCenter()).addLocal(bs.getRadius() / 2f, bs.getRadius() / 2f, bs.getRadius() / 2f);
-        }
-        pos.multLocal(4);
-
-
-        //light are loaded at initialization, for now
-        // there will be a process to update them whenever they get modified/added/removed
-        for (Light light : rootNode.getLocalLightList()) {
-            addLight(pos, light);
-            //Offset the position so that the next light doesn't overlap
-            pos.addLocal(1f,0,0);
-
-        }
-
+        recurseAddLights(rootNode);
     }
 
-    public void addLight(Vector3f pos, Light light) {
+    private void recurseAddLights(Node n){
+        for (Light light : n.getLocalLightList()) {
+            addLight(n, light);
+        }
+        for (Spatial s: n.getChildren()){
+            if(s instanceof Node){
+                recurseAddLights((Node)s);
+            }
+        }
+    }
+
+    public void addLight(Spatial parent, Light light) {
         Node widget = new Node(light.toString()+ " Widget");
+
         switch (light.getType()){
             case Directional:
-                widget.setLocalTranslation(pos);
-                DirectionalLight dl = (DirectionalLight)light;
                 widget.attachChild(makeDirectionalLightWidget());
-                Spatial lightDirW = widget.getChild("lightDirection");
-                tmpRot.set(lightDirW.getWorldRotation()).lookAt(dl.getDirection(),Vector3f.UNIT_Y);
-                lightDirW.setLocalRotation(tmpRot);
+                widget.addControl(new DirectionalLightControl((DirectionalLight)light, parent));
                 break;
             case Ambient:
-                widget.setLocalTranslation(pos);
                 widget.attachChild(makeAmbientLightWidget());
+                widget.addControl(new AmbientLightControl((AmbientLight)light, parent));
                 break;
             case Point:
-                PointLight pl = (PointLight)light;
-                widget.setLocalTranslation(pl.getPosition());
                 widget.attachChild(makePointLightWidget());
-                Spatial lightRadiusW = widget.getChild("LightRadius");
-                lightRadiusW.setLocalScale(pl.getRadius());
+                widget.addControl(new PointLightControl((PointLight)light, parent));
                 break;
             case Spot:
-                widget.setLocalTranslation(((SpotLight)light).getPosition());
-                SpotLight sl = (SpotLight)light;
                 widget.attachChild(makeSpotLightWidget());
-                lightDirW = widget.getChild("lightDirection");
-                Spatial cone = widget.getChild("cone");
-                tmpRot.set(cone.getWorldRotation()).lookAt(sl.getDirection(),Vector3f.UNIT_Y);
-                cone.setLocalRotation(tmpRot);
-                lightDirW.setLocalScale(sl.getSpotRange());
-                Spatial innerCircle = widget.getChild("innerCircle");
-                Spatial outerCircle = widget.getChild("outerCircle");
-                innerCircle.move(0,0,sl.getSpotRange());
-                outerCircle.move(0,0,sl.getSpotRange());
-                float innerScale = sl.getSpotRange() * FastMath.tan(sl.getSpotInnerAngle());
-                float outerScale = sl.getSpotRange() * FastMath.tan(sl.getSpotOuterAngle());
-                innerCircle.setLocalScale(innerScale);
-                outerCircle.setLocalScale(outerScale);
-
-                //TODO fix how the widget updates according to the light position
-                //This is wrong, and occurs one frame late.
-                //I suspect I should listen to the WorldPosition property and move whenever a change event is fired.
-                //But I wanted the widget to move so bad... :p
-                widget.addControl(new AbstractControl() {
-                    @Override
-                    protected void controlUpdate(float tpf) {
-                        widget.setLocalTranslation(sl.getPosition());
-                    }
-
-                    @Override
-                    protected void controlRender(RenderManager rm, ViewPort vp) {
-
-                    }
-                });
-
+                widget.addControl(new SpotLightControl((SpotLight)light, parent));
                 break;
             default:
-                widget.setLocalTranslation(pos);
+                widget.setLocalTranslation(Vector3f.ZERO);
                 break;
         }
-        //TODO think of a better way to map light to widgets and widgets to lights.
-        //Should make something better, though I figured it was the easiest way to get the widget => light lookup.
-        widget.setUserData("Light", light);
-        CursorEventControl.addListenersToSpatial(widget, new LightListener());
+
+        widgets.add(new LightWrapper(widget, light));
+
+        CursorEventControl.addListenersToSpatial(widget, new LightSelectionListener());
 
         lightNode.attachChild(widget);
     }
@@ -214,7 +162,6 @@ public class LightWidgetState extends BaseAppState {
     @Override
     protected void onEnable() {
         getRoot().attachChild(lightNode);
-
     }
 
     @Override
@@ -411,6 +358,8 @@ public class LightWidgetState extends BaseAppState {
         Node cone = new Node("cone");
         Geometry innerCircle = makeCircleGeometry("innerCircle", 1, 128);
         Geometry outerCircle = makeCircleGeometry("outerCircle", 1, 128);
+        innerCircle.move(0,0,1);
+        outerCircle.move(0,0,1);
 
         center.attachChild(lightGeom);
         widget.attachChild(center);
@@ -527,6 +476,10 @@ public class LightWidgetState extends BaseAppState {
             // Magic scaling... trust the math... don't question the math... magic math...
             float halfHeight = cam.getHeight() * 0.5f;
             float scale = ((distance/halfHeight) * 100)/m11;
+            if(spatial.getParent() != null){
+                //ignoring parent scale
+                scale /= (spatial.getParent().getWorldScale().length() / Vector3f.UNIT_XYZ.length());
+            }
             spatial.setLocalScale(scale);
         }
 
@@ -540,29 +493,29 @@ public class LightWidgetState extends BaseAppState {
     //I didn't manage to find the actual clicked geometry when adding the listener to the whole parent node.
     //I added it to each widget. However it seems the collision only happens on the center of the widget (makes sense since it's the only geom with triangles).
     //Idk if there is an alternative to making a wider invisible quad geom for easier picking.
-    private class LightListener implements CursorListener{
+    private class LightSelectionListener implements CursorListener{
 
         public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
-            System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
-            Object obj = target.getUserData("Light");
-            if(obj != null){
-                getState(SpixState.class).getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(obj);
-            }
-
+            getState(SpixState.class).getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(getWrapper(capture));
         }
 
         public void cursorEntered( CursorMotionEvent event, Spatial target, Spatial capture ) {
-//            System.out.println("cursorEntered(" + event + ", " + target + ", " + capture + ")");
         }
 
         public void cursorExited( CursorMotionEvent event, Spatial target, Spatial capture ) {
-  //          System.out.println("cursorExited(" + event + ", " + target + ", " + capture + ")");
         }
 
         public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
-    //        System.out.println("cursorMoved(" + event + ", " + target + ", " + capture + ")");
-
         }
+    }
+
+    private LightWrapper getWrapper(Spatial widget){
+        for(LightWrapper wrapper : widgets.getArray()){
+            if(wrapper.getNode() == widget){
+                return wrapper;
+            }
+        }
+        return null;
     }
 
 }

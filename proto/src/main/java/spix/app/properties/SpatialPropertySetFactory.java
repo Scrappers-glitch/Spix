@@ -34,81 +34,50 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.app;
+package spix.app.properties;
 
-import com.jme3.light.*;
+import java.util.*;
+
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
+
 import spix.core.*;
 import spix.props.*;
 import spix.type.Type;
-
-import java.util.*;
 
 
 /**
  *
  *
- *  @author   Rémy Bouquet
+ *  @author    Paul Speed
  */
-public class SpotLightPropertySetFactory implements PropertySetFactory<SpotLight> {
+public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
 
-    public SpotLightPropertySetFactory() {
+    public SpatialPropertySetFactory() {
     }
 
-    public PropertySet createPropertySet(SpotLight light, Spix spix ) {
-        System.out.println("Need to create a property set for:" + light);
+    public PropertySet createPropertySet( Spatial spatial, Spix spix ) {
+        System.out.println("Need to create a property set for:" + spatial);
 
         // Just expose some minimum properties so we can test
         // editing and manipulator widgets
 
         List<Property> props = new ArrayList<>();
 
-        props.add(BeanProperty.create(light, "name"));
-        props.add(BeanProperty.create(light, "color"));
+        props.add(BeanProperty.create(spatial, "name"));
+        props.add(BeanProperty.create(spatial, "cullHint"));
+        props.add(BeanProperty.create(spatial, "queueBucket"));
 
         // For manipulators, create some special transform properties that work in world
         // space.
-        props.add(new WorldTranslationProperty(light));
+        props.add(new WorldTranslationProperty(spatial));
 
         // Configure the local translation property
-     //   props.add(BeanProperty.create(light, "rotation"));
+        props.add(BeanProperty.create(spatial, "localTranslation"));
+        props.add(BeanProperty.create(spatial, "localRotation"));
 
-        return new DefaultPropertySet(light, props);
+        return new DefaultPropertySet(spatial, props);
     }
 
-    //TODO try to listen to the WorldTranslation property to update the light widget.
-    //Implementing this allows the translation widget to automatically activate when the light  is selected.
-    //Also moving the translation widget does move the light. Though the light widget needs to be updated.
-    private class WorldTranslationProperty extends AbstractProperty {
-        private final SpotLight light;
 
-        public WorldTranslationProperty( SpotLight light ) {
-            super("worldTranslation");
-            this.light = light;
-        }
-
-        public Type getType() {
-            return new Type(Vector3f.class);
-        }
-
-        public void setValue( Object value ) {
-            if( value == null ) {
-                return;
-            }
-            Vector3f v = (Vector3f)value;
-            Vector3f last = light.getPosition();
-            if( v.equals(last) ) {
-                return;
-            }
-
-            light.setPosition(v);
-
-            firePropertyChange(last, light.getPosition(), true);
-        }
-
-        public Object getValue() {
-            return light.getPosition();
-        }
-    }
 }
