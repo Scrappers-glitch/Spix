@@ -297,9 +297,11 @@ public class BlenderCameraState extends BaseAppState {
     private class InputHandler implements AnalogFunctionListener, StateFunctionListener {
 
         private Vector3f tmpVec = new Vector3f();
+        private Vector3f tmpVec2 = new Vector3f();
         private Quaternion tmpRot = new Quaternion();
         private Quaternion tmpRot2 = new Quaternion();
         private Quaternion tmpRot3 = new Quaternion();
+
         protected Vector3f xDelta = new Vector3f();
         protected Vector3f yDelta = new Vector3f();
         protected Vector2f lastCursor = new Vector2f();
@@ -367,7 +369,9 @@ public class BlenderCameraState extends BaseAppState {
                 //get the rotation from that vector.
                 target.getLocalRotation().getRotationColumn(2,tmpVec);
                 tmpRot3.set(tmpRot).inverseLocal().mult(tmpVec, tmpVec);
-                tmpRot2.lookAt(tmpVec, Vector3f.UNIT_Y);
+                //Finding the up axis (negating it when we go backward to be able to completely rotate aroudn the target)
+                tmpVec2.set(Vector3f.UNIT_Y).multLocal(FastMath.sign(tmpVec.getZ()));
+                tmpRot2.lookAt(tmpVec, tmpVec2);
 
                 //computing the additional rotation and combining it the right orders
                 if(func == F_HORIZONTAL_ROTATE){
