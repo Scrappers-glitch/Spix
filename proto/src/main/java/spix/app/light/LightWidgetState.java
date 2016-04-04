@@ -54,6 +54,7 @@ import com.simsilica.lemur.event.*;
 import spix.app.*;
 import spix.core.*;
 
+import java.beans.*;
 import java.nio.*;
 
 
@@ -71,6 +72,8 @@ public class LightWidgetState extends BaseAppState {
     private Material dashed;
     private Material dot;
     private SafeArrayList<LightWrapper> widgets = new SafeArrayList<>(LightWrapper.class);
+    private SelectionModel selection;
+    private SelectionObserver selectionObserver = new SelectionObserver();
 
     public LightWidgetState() {
     }
@@ -162,11 +165,16 @@ public class LightWidgetState extends BaseAppState {
     @Override
     protected void onEnable() {
         getRoot().attachChild(lightNode);
+        this.selection = getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+        selection.addPropertyChangeListener(selectionObserver);
     }
+
+
 
     @Override
     protected void onDisable() {
         lightNode.removeFromParent();
+        selection.removePropertyChangeListener(selectionObserver);
     }
 
 
@@ -179,6 +187,11 @@ public class LightWidgetState extends BaseAppState {
     }
 
     private Node makeDirectionalLightWidget() {
+
+        //TODO remove this when we use MPO
+        Material localDashed = dashed.clone();
+
+
         Mesh m = new Mesh();
         m.setMode(Mesh.Mode.Lines);
         int radialSamples = 16;
@@ -204,7 +217,7 @@ public class LightWidgetState extends BaseAppState {
 
         Geometry geom = new Geometry("LightDebug", m);
         geom.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom.setMaterial(dashed);
+        geom.setMaterial(localDashed);
 
 
         Mesh line = new Mesh();
@@ -226,7 +239,7 @@ public class LightWidgetState extends BaseAppState {
 
         Geometry geom2 = new Geometry("lightDirection", line);
         geom2.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom2.setMaterial(dashed);
+        geom2.setMaterial(localDashed);
 
 
         Node widget = new Node();
@@ -239,6 +252,10 @@ public class LightWidgetState extends BaseAppState {
     }
 
     private Node makePointLightWidget() {
+
+        //TODO remove this when we use MPO
+        Material localDashed = dashed.clone();
+
         Mesh m = new Mesh();
         m.setMode(Mesh.Mode.Lines);
         int radialSamples = 16;
@@ -258,7 +275,7 @@ public class LightWidgetState extends BaseAppState {
 
         Geometry geom = new Geometry("LightDebug", m);
         geom.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom.setMaterial(dashed);
+        geom.setMaterial(localDashed);
 
 
         Mesh line = new Mesh();
@@ -280,7 +297,7 @@ public class LightWidgetState extends BaseAppState {
 
         Geometry geom2 = new Geometry("LightRadius", line);
         geom2.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom2.setMaterial(dashed);
+        geom2.setMaterial(localDashed);
 
 
         Node widget = new Node();
@@ -294,6 +311,10 @@ public class LightWidgetState extends BaseAppState {
     }
 
     private Node makeAmbientLightWidget() {
+
+        //TODO remove this when we use MPO
+        Material localDashed = dashed.clone();
+
         Mesh m = new Mesh();
         m.setMode(Mesh.Mode.Lines);
         int lineSegments = 10;
@@ -317,7 +338,7 @@ public class LightWidgetState extends BaseAppState {
 
         Geometry geom = new Geometry("LightDebug", m);
         geom.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom.setMaterial(dashed);
+        geom.setMaterial(localDashed);
 
         Node widget = new Node();
         Node center = makeCenter();
@@ -329,6 +350,10 @@ public class LightWidgetState extends BaseAppState {
     }
 
     private Node makeSpotLightWidget() {
+
+        //TODO remove this when we use MPO
+        Material localDashed = dashed.clone();
+
         Geometry lightGeom = makeCircleGeometry("lightDebug", 0.11f, 16);
 
         Mesh line = new Mesh();
@@ -350,7 +375,7 @@ public class LightWidgetState extends BaseAppState {
 
         Geometry lightDirection = new Geometry("lightDirection", line);
         lightDirection.setQueueBucket(RenderQueue.Bucket.Transparent);
-        lightDirection.setMaterial(dashed);
+        lightDirection.setMaterial(localDashed);
 
 
         Node widget = new Node();
@@ -373,6 +398,10 @@ public class LightWidgetState extends BaseAppState {
     }
 
     private Geometry makeCircleGeometry(String name,float radius, int radialSamples) {
+
+        //TODO remove this when we use MPO
+        Material localDashed = dashed.clone();
+
         Mesh m = new Mesh();
         m.setMode(Mesh.Mode.Lines);
 
@@ -392,7 +421,7 @@ public class LightWidgetState extends BaseAppState {
 
         Geometry geom = new Geometry(name, m);
         geom.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom.setMaterial(dashed);
+        geom.setMaterial(localDashed);
         return geom;
     }
 
@@ -438,11 +467,14 @@ public class LightWidgetState extends BaseAppState {
 
     private Node makeCenter(){
 
+        //TODO remove this once we use MPO
+        Material centerDot = dot.clone();
+
         Node center = new Node("Light center");
         // Now the teeny tiny center that never disappears
         Mesh mesh = new Quad(0.08f, 0.08f);
         final Geometry g = new Geometry("centerOrigin", mesh);
-        g.setMaterial(dot);
+        g.setMaterial(centerDot);
         g.setLocalTranslation(-0.04f,-0.04f,0.0f);
         center.attachChild(g);
         center.addControl(new BillboardControl());
@@ -518,4 +550,39 @@ public class LightWidgetState extends BaseAppState {
         return null;
     }
 
+    //Light widget selection Highlighting is handled by listening to the selection change event.
+    //The SelectionHighlightState only handles Spatials and I felt hackish to manage an exception for Light widgets
+    private class SelectionObserver implements PropertyChangeListener {
+
+        public void propertyChange( PropertyChangeEvent event ) {
+            if(event.getNewValue() != event.getOldValue() ){
+
+                if(event.getNewValue() instanceof LightWrapper) {
+                    Node widget = ((LightWrapper) event.getNewValue()).getNode();
+                    //TODO Perfect candidate for MPO, let's do it when we are on alpha 5
+                    //for now we recurse and set the color on every material.
+                    //this would also avoid to have to clone the materials when creating the widgets
+                    setColorRecurse(ColorRGBA.Orange, widget);
+                }
+                if(event.getOldValue() instanceof LightWrapper) {
+                    Node oldWidget = ((LightWrapper) event.getOldValue()).getNode();
+                    setColorRecurse(ColorRGBA.Black, oldWidget);
+                }
+            }
+
+        }
+    }
+
+    private void setColorRecurse(ColorRGBA color, Node node){
+        for(Spatial s:node.getChildren()){
+            if(s instanceof Geometry){
+                Material m = ((Geometry)s).getMaterial();
+                if (m.getMaterialDef().getMaterialParam("Color") != null) {
+                    m.setColor("Color", color);
+                }
+            } else if(s instanceof  Node){
+                setColorRecurse(color,(Node)s);
+            }
+        }
+    }
 }
