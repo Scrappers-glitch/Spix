@@ -191,7 +191,6 @@ public class LightWidgetState extends BaseAppState {
         //TODO remove this when we use MPO
         Material localDashed = dashed.clone();
 
-
         Mesh m = new Mesh();
         m.setMode(Mesh.Mode.Lines);
         int radialSamples = 16;
@@ -477,6 +476,14 @@ public class LightWidgetState extends BaseAppState {
         g.setMaterial(centerDot);
         g.setLocalTranslation(-0.04f,-0.04f,0.0f);
         center.attachChild(g);
+
+        //This is a hidden quad that sole purpose is to increase the area where the user can click and select the light
+        final Geometry g2 = new Geometry("hitQuad", new Quad(0.4f,0.4f));
+        g2.setMaterial(centerDot);
+        g2.setCullHint(Spatial.CullHint.Always);
+        g2.setLocalTranslation(-0.2f,-0.2f,-0.2f);
+        center.attachChild(g2);
+
         center.addControl(new BillboardControl());
         center.addControl(new ScaleControl());
         return center;
@@ -521,10 +528,6 @@ public class LightWidgetState extends BaseAppState {
         }
     }
 
-    //TODO enhance Light picking.
-    //I didn't manage to find the actual clicked geometry when adding the listener to the whole parent node.
-    //I added it to each widget. However it seems the collision only happens on the center of the widget (makes sense since it's the only geom with triangles).
-    //Idk if there is an alternative to making a wider invisible quad geom for easier picking.
     private class LightSelectionListener implements CursorListener{
 
         public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
