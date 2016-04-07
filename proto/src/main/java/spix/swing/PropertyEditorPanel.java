@@ -56,9 +56,15 @@ public class PropertyEditorPanel extends JPanel {
     private Spix spix;
     private PropertySet properties;
     private Form form;
+    private String context;
 
     public PropertyEditorPanel( Spix spix ) {
+        this(spix, null);
+    }
+    
+    public PropertyEditorPanel( Spix spix, String context ) {
         this.spix = spix;
+        this.context = context;
         setPreferredSize(new Dimension(100, 100));
     }
 
@@ -80,7 +86,7 @@ System.out.println("PropertyEditorPanel.setObject(" + properties + ")");
         if( properties == null ) {
             return;
         }
-        this.form = spix.createForm(properties);
+        this.form = spix.createForm(properties, context);
 System.out.println(form.debugString());
     }
 

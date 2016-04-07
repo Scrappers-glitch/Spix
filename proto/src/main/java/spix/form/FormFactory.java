@@ -46,5 +46,5 @@ import spix.props.PropertySet;
  */
 public interface FormFactory {
 
-    public Form createForm( Spix spix, PropertySet properties );
+    public Form createForm( Spix spix, PropertySet properties, String context );
 }

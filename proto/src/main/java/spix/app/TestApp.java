@@ -158,7 +158,7 @@ public class TestApp extends SimpleApplication {
                 rightSplit.setContinuousLayout(false);
                 rightSplit.setBackground(Color.black);
 
-                PropertyEditorPanel objectEditor = new PropertyEditorPanel(spix);
+                PropertyEditorPanel objectEditor = new PropertyEditorPanel(spix, "ui.editor");
                 rightSplit.add(objectEditor, JSplitPane.RIGHT);
 
                 stateManager.attach(new AwtPanelState(rightSplit, JSplitPane.LEFT));

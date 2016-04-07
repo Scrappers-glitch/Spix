@@ -48,7 +48,7 @@ import spix.props.PropertySet;
  */
 public class DefaultFormFactory implements FormFactory {
 
-    public Form createForm( Spix spix, PropertySet properties ) {
+    public Form createForm( Spix spix, PropertySet properties, String context ) {
 
         Form result = new Form();
         for( Property property : properties ) {

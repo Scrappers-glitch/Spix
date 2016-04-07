@@ -67,7 +67,7 @@ public class Spix {
      */
     private static final DefaultPropertySet NULL_PROPERTIES = new DefaultPropertySet(null);
 
-    private final HandlerRegistry<FormFactory> formFactories = new HandlerRegistry<>();
+    private final ContextHandlerRegistry<FormFactory> formFactories = new ContextHandlerRegistry<>();
 
     /**
      *  A central cache for property set wrappers.  This is here instead of
@@ -85,7 +85,7 @@ public class Spix {
 
         // Setup the default form factory that will cover all objects that
         // have property set wrappers
-        formFactories.register(Object.class, new DefaultFormFactory());
+        formFactories.getRegistry(ContextHandlerRegistry.DEFAULT).register(Object.class, new DefaultFormFactory());
     }
 
     public Blackboard getBlackboard() {
@@ -121,19 +121,34 @@ public class Spix {
     }
 
     public <T> void registerFormFactory( Type type, FormFactory factory ) {
-        formFactories.register(type, factory);
+        registerFormFactory(null, type, factory);
+    }
+    
+    public <T> void registerFormFactory( String context, Type type, FormFactory factory ) {
+        context = context != null ? context : ContextHandlerRegistry.DEFAULT;
+        formFactories.getRegistry(context).register(type, factory);
     }
 
     public FormFactory getFormFactory( Type type ) {
-        return formFactories.get(type, false);
+        return getFormFactory(null, type);
+    }
+    
+    public FormFactory getFormFactory( String context, Type type ) {
+        context = context != null ? context : ContextHandlerRegistry.DEFAULT;
+        return formFactories.getHandler(context, type, false);
     }
 
     public Form createForm( PropertySet properties ) {
+        return createForm(properties, null);
+    }
+    
+    public Form createForm( PropertySet properties, String context ) {
         if( properties == null ) {
             return null;
         }
-        FormFactory factory = getFormFactory(properties.getType());
-        return factory.createForm(this, properties);
+        context = context != null ? context : ContextHandlerRegistry.DEFAULT;
+        FormFactory factory = getFormFactory(context, properties.getType());
+        return factory.createForm(this, properties, context);
     }
 
     public <T> void sendResponse( final RequestCallback<T> callback, final T result ) {
