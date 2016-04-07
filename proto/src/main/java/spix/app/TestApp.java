@@ -721,6 +721,7 @@ public class TestApp extends SimpleApplication {
         if( selected == null ) {
             return;
         }
+System.out.println("Cloning, cloning materials.");        
         addSpatial(selected.clone());
     }
 
@@ -729,6 +730,7 @@ public class TestApp extends SimpleApplication {
         if( selected == null ) {
             return;
         }
+System.out.println("Cloning, sharing materials.");        
         addSpatial(selected.clone(false));
     }
 
@@ -737,6 +739,7 @@ public class TestApp extends SimpleApplication {
         if( selected == null ) {
             return;
         }
+System.out.println("Deep cloning.");
         addSpatial(selected.deepClone());
     }
 
