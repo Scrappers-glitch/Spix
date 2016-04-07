@@ -38,7 +38,14 @@ repositories {
 
 ext.jmeVersion = "[3.1,)"
 //ext.jmeVersion = "unknown"
+
 ext.lemurVersion = "[1.8,)"
+
+configurations.all {
+    resolutionStrategy {
+        force "org.jmonkeyengine:jme3-core:$jmeVersion"
+    }
+}
 
 project(":assets") {
     apply plugin: "java"
