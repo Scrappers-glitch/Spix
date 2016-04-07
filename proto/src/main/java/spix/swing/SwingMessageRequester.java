@@ -49,10 +49,10 @@ import spix.ui.*;
  */
 public class SwingMessageRequester implements MessageRequester {
  
-    private Component rootWindow;
+    private SwingGui swingGui;
  
-    public SwingMessageRequester( Component rootWindow ) {
-        this.rootWindow = rootWindow;
+    public SwingMessageRequester( SwingGui swingGui ) {
+        this.swingGui = swingGui;
     } 
        
     public void showMessage( final String title, final String message, final Type type ) {
@@ -68,7 +68,7 @@ public class SwingMessageRequester implements MessageRequester {
                         msgType = JOptionPane.ERROR_MESSAGE;
                         break;
                 }
-                JOptionPane.showMessageDialog(rootWindow, message, title, msgType);
+                JOptionPane.showMessageDialog(swingGui.getRootWindow(), message, title, msgType);
             }
         });                            
     } 

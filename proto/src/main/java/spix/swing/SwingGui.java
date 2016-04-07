@@ -37,38 +37,58 @@
 package spix.swing;
 
 import java.awt.Component;
-import java.io.File;
-import javax.swing.JFileChooser;
-import javax.swing.SwingUtilities;
 
-import spix.core.*;
+import spix.core.Spix;
 import spix.ui.*;
 
 /**
- *
+ *  Consolidates the general swing-related user interface configuration
+ *  and handling.
  *
  *  @author    Paul Speed
  */
-public class SwingFileRequester implements FileRequester {
+public class SwingGui {
+
+    public static final Class[] STANDARD_REQUEST_HANDLERS = {
+            FileRequester.class,
+            MessageRequester.class,
+            ColorRequester.class  
+        }; 
+
+    private Spix spix;
+    private Component rootWindow;
+
+    public SwingGui( Spix spix, Component rootWindow ) {
+        this(spix, rootWindow, STANDARD_REQUEST_HANDLERS); 
+    }
+    
+    public SwingGui( Spix spix, Component rootWindow, Class... requestHandlers ) {
+        this.spix = spix;
+        this.rootWindow = rootWindow;
  
-    private SwingGui swingGui;
- 
-    public SwingFileRequester( SwingGui swingGui ) {
-        this.swingGui = swingGui;
+        for( Class c : requestHandlers ) {
+            setupSwingService(c);
+        }   
+    }
+    
+    public Spix getSpix() {
+        return spix;
     }
  
-    @Override   
-    public void requestFile( final String title, final String typeDescription, final String extensions,
-                             final File initialValue, final boolean forOpen,
-                             final RequestCallback<File> callback ) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                File f = FileChooser.getFile(swingGui.getRootWindow(), title, typeDescription, extensions,
-                                             initialValue, forOpen, JFileChooser.FILES_ONLY);
-                swingGui.getSpix().sendResponse(callback, f);                
-            }
-        });                             
-    }
+    public Component getRootWindow() {
+        return rootWindow;
+    } 
+ 
+    public void setupSwingService( Class type ) {
+        if( FileRequester.class.isAssignableFrom(type) ) {
+            spix.registerService(type, new SwingFileRequester(this));
+        } else if( MessageRequester.class.isAssignableFrom(type) ) { 
+            spix.registerService(type, new SwingMessageRequester(this));
+        } else if( ColorRequester.class.isAssignableFrom(type) ) {
+            spix.registerService(type, new SwingColorRequester(this));
+        } else {
+            throw new IllegalArgumentException("Swing requester not found for:" + type);
+        }  
+    }   
+   
 }
-
-

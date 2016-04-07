@@ -54,12 +54,10 @@ import spix.ui.*;
  */
 public class SwingColorRequester implements ColorRequester {
 
-    private Spix spix;
-    private Component rootWindow;
+    private SwingGui swingGui;
 
-    public SwingColorRequester( Spix spix, Component rootWindow ) {
-        this.spix = spix;
-        this.rootWindow = rootWindow;
+    public SwingColorRequester( SwingGui swingGui ) {
+        this.swingGui = swingGui;
     }
 
     public static Color toSwing( ColorRGBA color ) {
@@ -84,13 +82,14 @@ public class SwingColorRequester implements ColorRequester {
             public void run() {
                 Color defaultColor = toSwing(initialColor);
                 if( interactive ) {
-                    ColorChooser.getColor(rootWindow, title, defaultColor, new CallbackAdapter(callback));
+                    ColorChooser.getColor(swingGui.getRootWindow(), title, defaultColor, 
+                                          new CallbackAdapter(callback));
 
                     // No need to forward a final color because all color changes were already sent
                 } else {
-                    Color color = ColorChooser.getColor(rootWindow, title, defaultColor, null);
+                    Color color = ColorChooser.getColor(swingGui.getRootWindow(), title, defaultColor, null);
                     if( color != null ) {
-                        spix.sendResponse(callback, fromSwing(color));
+                        swingGui.getSpix().sendResponse(callback, fromSwing(color));
                     } // else was canceled
                 }
             }
@@ -105,7 +104,7 @@ public class SwingColorRequester implements ColorRequester {
         }
 
         public void done( Color color ) {
-            spix.sendResponse(delegate, fromSwing(color));
+            swingGui.getSpix().sendResponse(delegate, fromSwing(color));
         }
     }
 }

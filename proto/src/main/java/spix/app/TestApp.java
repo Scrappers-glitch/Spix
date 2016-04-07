@@ -163,11 +163,15 @@ public class TestApp extends SimpleApplication {
 
                 stateManager.attach(new AwtPanelState(rightSplit, JSplitPane.LEFT));
 
+                /*
                 // Register services to handle certain UI requests
                 spix.registerService(FileRequester.class, new SwingFileRequester(spix, mainFrame));
                 spix.registerService(MessageRequester.class, new SwingMessageRequester(mainFrame));
                 spix.registerService(ColorRequester.class, new SwingColorRequester(spix, mainFrame));
-
+                */
+                // Register the SwingGui layer and let it handle all of the requests
+                // for which it is capable.
+                spix.registerService(SwingGui.class, new SwingGui(spix, mainFrame));
 
                 // Setup a selection test to change the test label
                 spix.getBlackboard().bind("main.selection.singleSelect",
