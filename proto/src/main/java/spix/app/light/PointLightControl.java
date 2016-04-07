@@ -35,8 +35,6 @@ import com.jme3.light.*;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.*;
 
-import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type.Node;
-
 
 /**
  *
