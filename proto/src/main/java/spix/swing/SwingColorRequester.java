@@ -60,11 +60,21 @@ public class SwingColorRequester implements ColorRequester {
         this.swingGui = swingGui;
     }
 
+    private static float clamp( float f ) {
+        if( f < 0 ) {
+            return 0;
+        }
+        if( f > 1 ) {
+            return 1;
+        }
+        return f;        
+    }
+
     public static Color toSwing( ColorRGBA color ) {
         if( color == null ) {
             return null;
         }
-        return new Color(color.r, color.g, color.b, color.a);
+        return new Color(clamp(color.r), clamp(color.g), clamp(color.b), clamp(color.a));
     }
 
     public static ColorRGBA fromSwing( Color color ) {
