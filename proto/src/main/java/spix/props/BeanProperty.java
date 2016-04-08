@@ -38,6 +38,7 @@ package spix.props;
 
 import java.beans.*;
 import java.lang.reflect.*;
+import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
 
@@ -150,8 +151,21 @@ public class BeanProperty extends AbstractProperty {
     public void setValue( Object value ) {
         try {
             Object old = getValue();
+            
+            boolean changed = Objects.equals(old, value);
+            if( old == value ) {
+                // Then we can't really tell so we have to assume it changed
+                changed = true;
+            }
+            
             setter.invoke(object, value);
-            firePropertyChange(old, value, true);
+
+            // We can't let the superclass do the check because many of our
+            // setters set back to the existing value... so old and value will
+            // be the same after invoke().
+            if( changed ) {
+                firePropertyChange(old, value, false);
+            }
         } catch( IllegalAccessException | InvocationTargetException e ) {
             throw new RuntimeException("Error setting property:" + getName(), e);
         }
