@@ -67,18 +67,15 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
 
         props.add(BeanProperty.create(wrapper.getLight(), "name"));
         props.add(BeanProperty.create(wrapper.getLight(), "color"));
-        // For manipulators, create some special transform properties that work in world
-        // space.
-        props.add(new WorldTranslationProperty(wrapper.getNode()));
 
         Light.Type type = wrapper.getLight().getType();
         if(type == Light.Type.Spot) {
             props.add(BeanProperty.create(wrapper.getLight(), "spotRange", 
                                           new NumberRangeType(0f, null, 0.1f)));
             props.add(BeanProperty.create(wrapper.getLight(), "spotOuterAngle", 
-                                          new NumberRangeType(0f, FastMath.HALF_PI, 0.1f)));
+                                          new NumberRangeType(0f, FastMath.HALF_PI, 0.01f)));
             props.add(BeanProperty.create(wrapper.getLight(), "spotInnerAngle", 
-                                          new NumberRangeType(0f, FastMath.HALF_PI, 0.1f)));
+                                          new NumberRangeType(0f, FastMath.HALF_PI, 0.01f)));
         } else if (type == Light.Type.Directional){
             props.add(BeanProperty.create(wrapper.getLight(), "direction"));
         } else if (type == Light.Type.Point){
@@ -86,6 +83,10 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
                                           new NumberRangeType(0f, null, 0.1f)));
         }
 
+        // For manipulators, create some special transform properties that work in world
+        // space.
+        props.add(new WorldTranslationProperty(wrapper.getNode()));
+        
         return new DefaultPropertySet(wrapper, props);
     }
 }
