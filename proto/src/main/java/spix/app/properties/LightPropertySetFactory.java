@@ -39,7 +39,6 @@ package spix.app.properties;
 import com.jme3.light.*;
 import com.jme3.math.FastMath;
 import spix.app.light.LightWrapper;
-import spix.app.properties.SpatialPropertySetFactory;
 import spix.core.*;
 import spix.props.*;
 import spix.type.NumberRangeType;
@@ -85,7 +84,7 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
 
         // For manipulators, create some special transform properties that work in world
         // space.
-        props.add(new WorldTranslationProperty(wrapper.getNode()));
+        props.add(new WorldTranslationProperty(wrapper.getWidget()));
         
         return new DefaultPropertySet(wrapper, props);
     }

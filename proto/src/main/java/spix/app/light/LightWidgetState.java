@@ -69,9 +69,7 @@ public class LightWidgetState extends BaseAppState {
 
     private Camera cam;
     private Node lightNode;
-    private Material dashed;
-    private Material dot;
-    private SafeArrayList<LightWrapper> widgets = new SafeArrayList<>(LightWrapper.class);
+    private SafeArrayList<LightWrapper> wrappers = new SafeArrayList<>(LightWrapper.class);
     private SelectionModel selection;
     private SelectionObserver selectionObserver = new SelectionObserver();
 
@@ -88,8 +86,6 @@ public class LightWidgetState extends BaseAppState {
 
     @Override
     protected void initialize(Application app) {
-        initMaterials();
-
         Node rootNode = ((SimpleApplication) app).getRootNode();
         cam = app.getCamera();
         lightNode = new Node("Light Node");
@@ -113,49 +109,25 @@ public class LightWidgetState extends BaseAppState {
 
         switch (light.getType()){
             case Directional:
-                widget.attachChild(makeDirectionalLightWidget());
-                widget.addControl(new DirectionalLightControl((DirectionalLight)light, parent));
+                wrappers.add(new DirectionalLightWrapper(widget,(DirectionalLight)light, parent, getApplication().getAssetManager()));
                 break;
             case Ambient:
-                widget.attachChild(makeAmbientLightWidget());
-                widget.addControl(new AmbientLightControl((AmbientLight)light, parent));
+                wrappers.add(new AmbientLightWrapper(widget,(AmbientLight) light, parent, getApplication().getAssetManager()));
                 break;
             case Point:
-                widget.attachChild(makePointLightWidget());
-                widget.addControl(new PointLightControl((PointLight)light, parent));
+                wrappers.add(new PointLightWrapper(widget,(PointLight) light, parent, getApplication().getAssetManager()));
                 break;
             case Spot:
-                widget.attachChild(makeSpotLightWidget());
-                widget.addControl(new SpotLightControl((SpotLight)light, parent));
+                wrappers.add(new SpotLightWrapper(widget,(SpotLight)light, parent, getApplication().getAssetManager()));
                 break;
             default:
                 widget.setLocalTranslation(Vector3f.ZERO);
                 break;
         }
 
-        widgets.add(new LightWrapper(widget, light));
-
         CursorEventControl.addListenersToSpatial(widget, new LightSelectionListener());
 
         lightNode.attachChild(widget);
-    }
-
-    private void initMaterials() {
-        GuiGlobals globals = GuiGlobals.getInstance();
-
-        Texture texture = globals.loadTexture("Interface/small-circle.png", false, false);
-        texture.setMinFilter(Texture.MinFilter.NearestNoMipMaps);
-        texture.setMagFilter(Texture.MagFilter.Nearest);
-        dot = globals.createMaterial(texture, false).getMaterial();
-        dot.setColor("Color", ColorRGBA.Black);
-        dot.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-
-        dashed = new Material(getApplication().getAssetManager(), "MatDefs/dashed/dashed.j3md");
-        dashed.getAdditionalRenderState().setWireframe(true);
-        dashed.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-        dashed.getAdditionalRenderState().setDepthWrite(false);
-        dashed.setFloat("DashSize", 0.5f);
-        dashed.setColor("Color", ColorRGBA.Black);
     }
 
     @Override
@@ -169,363 +141,21 @@ public class LightWidgetState extends BaseAppState {
         selection.addPropertyChangeListener(selectionObserver);
     }
 
-
-
     @Override
     protected void onDisable() {
         lightNode.removeFromParent();
         selection.removePropertyChangeListener(selectionObserver);
     }
 
-
     @Override
     public void update(float tpf) {
+        for (LightWrapper wrapper: wrappers.getArray()){
+            wrapper.update(tpf, cam);
+        }
     }
 
     @Override
     public void render(RenderManager renderManager) {
-    }
-
-    private Node makeDirectionalLightWidget() {
-
-        //TODO remove this when we use MPO
-        Material localDashed = dashed.clone();
-
-        Mesh m = new Mesh();
-        m.setMode(Mesh.Mode.Lines);
-        int radialSamples = 16;
-        int lineSegments = 10;
-
-        FloatBuffer posBuf = BufferUtils.createVector3Buffer((radialSamples + 1 + lineSegments + 1) * 2);
-        FloatBuffer texBuf = BufferUtils.createVector2Buffer((radialSamples + 1 + lineSegments + 1) * 2);
-        ShortBuffer idxBuf = BufferUtils.createShortBuffer((2 * (radialSamples + lineSegments)) * 2);
-
-        m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
-        m.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
-        m.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
-
-        int idx = 0;
-
-        idx = makeCircle(radialSamples, 0.14f, posBuf, texBuf, idxBuf, idx);
-        idx = makeCircle(radialSamples, 0.11f, posBuf, texBuf, idxBuf, idx);
-        idx = makeSegmentedLine(lineSegments, Axis.X , 0.4f, -0.2f, Vector3f.ZERO, posBuf, texBuf, idxBuf, idx);
-        idx = makeSegmentedLine(lineSegments, Axis.Y , 0.4f, -0.2f, Vector3f.ZERO, posBuf, texBuf, idxBuf, idx);
-
-        m.updateBound();
-        m.setStatic();
-
-        Geometry geom = new Geometry("LightDebug", m);
-        geom.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom.setMaterial(localDashed);
-
-
-        Mesh line = new Mesh();
-        line.setMode(Mesh.Mode.Lines);
-        lineSegments = 30;
-
-        posBuf = BufferUtils.createVector3Buffer(lineSegments + 1);
-        texBuf = BufferUtils.createVector2Buffer(lineSegments + 1);
-        idxBuf = BufferUtils.createShortBuffer(2 * lineSegments);
-
-        line.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
-        line.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
-        line.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
-
-        makeSegmentedLine(lineSegments, Axis.Z , 4f, 0.2f, Vector3f.ZERO, posBuf, texBuf, idxBuf, 0);
-
-        line.updateBound();
-        line.setStatic();
-
-        Geometry geom2 = new Geometry("lightDirection", line);
-        geom2.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom2.setMaterial(localDashed);
-
-
-        Node widget = new Node();
-        Node center = makeCenter();
-        center.attachChild(geom);
-        widget.attachChild(center);
-        widget.attachChild(geom2);
-        return widget;
-
-    }
-
-    private Node makePointLightWidget() {
-
-        //TODO remove this when we use MPO
-        Material localDashed = dashed.clone();
-
-        Mesh m = new Mesh();
-        m.setMode(Mesh.Mode.Lines);
-        int radialSamples = 16;
-
-        FloatBuffer posBuf = BufferUtils.createVector3Buffer(radialSamples + 1);
-        FloatBuffer texBuf = BufferUtils.createVector2Buffer(radialSamples + 1);
-        ShortBuffer idxBuf = BufferUtils.createShortBuffer(2 * radialSamples);
-
-        m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
-        m.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
-        m.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
-
-        makeCircle(radialSamples, 0.14f, posBuf, texBuf, idxBuf, 0);
-
-        m.updateBound();
-        m.setStatic();
-
-        Geometry geom = new Geometry("LightDebug", m);
-        geom.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom.setMaterial(localDashed);
-
-
-        Mesh line = new Mesh();
-        line.setMode(Mesh.Mode.Lines);
-        radialSamples = 128;
-
-        posBuf = BufferUtils.createVector3Buffer(radialSamples + 1);
-        texBuf = BufferUtils.createVector2Buffer(radialSamples + 1);
-        idxBuf = BufferUtils.createShortBuffer(2 * radialSamples);
-
-        line.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
-        line.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
-        line.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
-
-        makeCircle(radialSamples, 1f, posBuf, texBuf, idxBuf, 0);
-
-        line.updateBound();
-        line.setStatic();
-
-        Geometry geom2 = new Geometry("LightRadius", line);
-        geom2.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom2.setMaterial(localDashed);
-
-
-        Node widget = new Node();
-        Node center = makeCenter();
-        center.attachChild(geom);
-        widget.attachChild(center);
-        widget.attachChild(geom2);
-        geom2.addControl(new BillboardControl());
-        return widget;
-
-    }
-
-    private Node makeAmbientLightWidget() {
-
-        //TODO remove this when we use MPO
-        Material localDashed = dashed.clone();
-
-        Mesh m = new Mesh();
-        m.setMode(Mesh.Mode.Lines);
-        int lineSegments = 10;
-
-        FloatBuffer posBuf = BufferUtils.createVector3Buffer(( lineSegments + 1) * 3);
-        FloatBuffer texBuf = BufferUtils.createVector2Buffer(( lineSegments + 1) * 3);
-        ShortBuffer idxBuf = BufferUtils.createShortBuffer(2 * (lineSegments * 3));
-
-        m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
-        m.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
-        m.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
-
-        int idx = 0;
-
-        idx = makeSegmentedLine(lineSegments, Axis.X , 0.3f, -0.15f,  new Vector3f(0, 0.1f, 0), posBuf, texBuf, idxBuf, idx);
-        idx = makeSegmentedLine(lineSegments, Axis.X , 0.4f, -0.2f,  Vector3f.ZERO, posBuf, texBuf, idxBuf, idx);
-        idx = makeSegmentedLine(lineSegments, Axis.X , 0.3f, -0.15f,  new Vector3f(0, -0.1f, 0), posBuf, texBuf, idxBuf, idx);
-
-        m.updateBound();
-        m.setStatic();
-
-        Geometry geom = new Geometry("LightDebug", m);
-        geom.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom.setMaterial(localDashed);
-
-        Node widget = new Node();
-        Node center = makeCenter();
-        center.attachChild(geom);
-        widget.attachChild(center);
-
-        return widget;
-
-    }
-
-    private Node makeSpotLightWidget() {
-
-        //TODO remove this when we use MPO
-        Material localDashed = dashed.clone();
-
-        Geometry lightGeom = makeCircleGeometry("lightDebug", 0.11f, 16);
-
-        Mesh line = new Mesh();
-        line.setMode(Mesh.Mode.Lines);
-        int lineSegments = 30;
-
-        FloatBuffer posBuf = BufferUtils.createVector3Buffer((lineSegments + 1));
-        FloatBuffer texBuf = BufferUtils.createVector2Buffer((lineSegments + 1));
-        ShortBuffer idxBuf = BufferUtils.createShortBuffer(2 * lineSegments);
-
-        line.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
-        line.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
-        line.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
-
-        makeSegmentedLine(lineSegments, Axis.Z , 1f, 0, Vector3f.ZERO, posBuf, texBuf, idxBuf, 0);
-
-        line.updateBound();
-        line.setStatic();
-
-        Geometry lightDirection = new Geometry("lightDirection", line);
-        lightDirection.setQueueBucket(RenderQueue.Bucket.Transparent);
-        lightDirection.setMaterial(localDashed);
-
-
-        Node widget = new Node();
-        Node center = makeCenter();
-        Node cone = new Node("cone");
-        Geometry innerCircle = makeCircleGeometry("innerCircle", 1, 128);
-        Geometry outerCircle = makeCircleGeometry("outerCircle", 1, 128);
-        innerCircle.move(0,0,1);
-        outerCircle.move(0,0,1);
-
-        center.attachChild(lightGeom);
-        widget.attachChild(center);
-        cone.attachChild(lightDirection);
-        cone.attachChild(innerCircle);
-        cone.attachChild(outerCircle);
-        widget.attachChild(cone);
-
-        return widget;
-
-    }
-
-    private Geometry makeCircleGeometry(String name,float radius, int radialSamples) {
-
-        //TODO remove this when we use MPO
-        Material localDashed = dashed.clone();
-
-        Mesh m = new Mesh();
-        m.setMode(Mesh.Mode.Lines);
-
-
-        FloatBuffer posBuf = BufferUtils.createVector3Buffer((radialSamples + 1));
-        FloatBuffer texBuf = BufferUtils.createVector2Buffer((radialSamples + 1));
-        ShortBuffer idxBuf = BufferUtils.createShortBuffer((2 * radialSamples));
-
-        m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
-        m.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
-        m.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
-
-        makeCircle(radialSamples, radius, posBuf, texBuf, idxBuf, 0);
-
-        m.updateBound();
-        m.setStatic();
-
-        Geometry geom = new Geometry(name, m);
-        geom.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom.setMaterial(localDashed);
-        return geom;
-    }
-
-
-    private int makeCircle(int radialSamples, float radius, FloatBuffer posBuf, FloatBuffer texBuf, ShortBuffer idxBuf, int idx) {
-        // generate geometry
-        float fInvRS = 1.0f / radialSamples;
-
-        // Generate points on the unit circle to be used in computing the mesh
-        // points on a sphere slice.
-        float[] afSin = new float[(radialSamples + 1)];
-        float[] afCos = new float[(radialSamples + 1)];
-        for (int iR = 0; iR < radialSamples; iR++) {
-            float fAngle = FastMath.TWO_PI * fInvRS * iR;
-            afCos[iR] = FastMath.cos(fAngle) * radius;
-            afSin[iR] = FastMath.sin(fAngle) * radius;
-        }
-        afSin[radialSamples] = afSin[0];
-        afCos[radialSamples] = afCos[0];
-
-        for (int iR = 0; iR <= radialSamples; iR++) {
-            posBuf.put(afCos[iR])
-                    .put(afSin[iR])
-                    .put(0);
-            texBuf.put(iR % 2f)
-                    .put(iR % 2f);
-
-        }
-        return writeIndex(radialSamples, idxBuf, idx);
-    }
-
-    private int writeIndex(int radialSamples, ShortBuffer idxBuf, int idx) {
-        int segDone = 0;
-        while (segDone < radialSamples) {
-            idxBuf.put((short) idx);
-            idxBuf.put((short) (idx + 1));
-            idx++;
-            segDone++;
-        }
-        idx++;
-        return idx;
-    }
-
-    private Node makeCenter(){
-
-        //TODO remove this once we use MPO
-        Material centerDot = dot.clone();
-
-        Node center = new Node("Light center");
-        // Now the teeny tiny center that never disappears
-        Mesh mesh = new Quad(0.08f, 0.08f);
-        final Geometry g = new Geometry("centerOrigin", mesh);
-        g.setMaterial(centerDot);
-        g.setLocalTranslation(-0.04f,-0.04f,0.0f);
-        center.attachChild(g);
-
-        //This is a hidden quad that sole purpose is to increase the area where the user can click and select the light
-        final Geometry g2 = new Geometry("hitQuad", new Quad(0.4f,0.4f));
-        g2.setMaterial(centerDot);
-        g2.setCullHint(Spatial.CullHint.Always);
-        g2.setLocalTranslation(-0.2f,-0.2f,-0.2f);
-        center.attachChild(g2);
-
-        center.addControl(new BillboardControl());
-        center.addControl(new ScaleControl());
-        return center;
-    }
-
-    private int makeSegmentedLine(int nbSegments, Axis xAxis, float size, float start, Vector3f offset,FloatBuffer posBuf, FloatBuffer texBuf, ShortBuffer idxBuf, int idx) {
-
-        for (int i = 0; i <= nbSegments; i++) {
-            float value = start + (size / nbSegments) * i;
-            float x = xAxis == Axis.X?value:offset.x;
-            float y = xAxis == Axis.Y?value:offset.y;
-            float z = xAxis == Axis.Z?value:offset.z;
-            posBuf.put(x).put(y).put(z);
-            texBuf.put(i % 2f).put(i % 2f);
-        }
-        return writeIndex(nbSegments, idxBuf, idx);
-    }
-
-    private class ScaleControl extends AbstractControl {
-
-        @Override
-        protected void controlUpdate(float tpf) {
-            Vector3f dir = cam.getDirection();
-            float distance = dir.dot(spatial.getWorldTranslation().subtract(cam.getLocation()));
-
-            // m11 of the projection matrix defines the distance at which 1 pixel
-            // is 1 unit.  Kind of.
-            float m11 = cam.getProjectionMatrix().m11;
-            // Magic scaling... trust the math... don't question the math... magic math...
-            float halfHeight = cam.getHeight() * 0.5f;
-            float scale = ((distance/halfHeight) * 100)/m11;
-            if(spatial.getParent() != null){
-                //ignoring parent scale
-                scale /= (spatial.getParent().getWorldScale().length() / Vector3f.UNIT_XYZ.length());
-            }
-            spatial.setLocalScale(scale);
-        }
-
-        @Override
-        protected void controlRender(RenderManager rm, ViewPort vp) {
-
-        }
     }
 
     private class LightSelectionListener implements CursorListener{
@@ -545,8 +175,8 @@ public class LightWidgetState extends BaseAppState {
     }
 
     private LightWrapper getWrapper(Spatial widget){
-        for(LightWrapper wrapper : widgets.getArray()){
-            if(wrapper.getNode() == widget){
+        for(LightWrapper wrapper : wrappers.getArray()){
+            if(wrapper.getWidget() == widget){
                 return wrapper;
             }
         }
@@ -554,21 +184,20 @@ public class LightWidgetState extends BaseAppState {
     }
 
     //Light widget selection Highlighting is handled by listening to the selection change event.
-    //The SelectionHighlightState only handles Spatials and I felt hackish to manage an exception for Light widgets
+    //The SelectionHighlightState only handles Spatials and I felt hackish to manage an exception for Light wrappers
     private class SelectionObserver implements PropertyChangeListener {
 
         public void propertyChange( PropertyChangeEvent event ) {
             if(event.getNewValue() != event.getOldValue() ){
 
                 if(event.getNewValue() instanceof LightWrapper) {
-                    Node widget = ((LightWrapper) event.getNewValue()).getNode();
+                    Node widget = ((LightWrapper) event.getNewValue()).getWidget();
                     //TODO Perfect candidate for MPO, let's do it when we are on alpha 5
                     //for now we recurse and set the color on every material.
-                    //this would also avoid to have to clone the materials when creating the widgets
                     setColorRecurse(ColorRGBA.Orange, widget);
                 }
                 if(event.getOldValue() instanceof LightWrapper) {
-                    Node oldWidget = ((LightWrapper) event.getOldValue()).getNode();
+                    Node oldWidget = ((LightWrapper) event.getOldValue()).getWidget();
                     setColorRecurse(ColorRGBA.Black, oldWidget);
                 }
             }

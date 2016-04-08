@@ -31,25 +31,32 @@
  */
 package spix.app.light;
 
+import com.jme3.asset.AssetManager;
 import com.jme3.bounding.*;
 import com.jme3.light.*;
+import com.jme3.material.Material;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.*;
-import com.jme3.scene.Spatial;
+import com.jme3.renderer.queue.RenderQueue;
+import com.jme3.scene.*;
 import com.jme3.scene.control.AbstractControl;
+import com.jme3.util.BufferUtils;
+import com.simsilica.lemur.Axis;
+
+import java.nio.*;
 
 
 /**
  *
  * @author Rémy Bouquet
  */
-public class AmbientLightControl extends BaseLightControl<AmbientLight> {
+public class AmbientLightWrapper extends LightWrapper<AmbientLight> {
 
     /**
      * @param light The light to be synced.
      */
-    public AmbientLightControl(AmbientLight light, Spatial target) {
-        super(light, target);
+    public AmbientLightWrapper(Node widget, AmbientLight light, Spatial target, AssetManager assetManager) {
+        super(widget, light, target, assetManager);
     }
 
     @Override
@@ -64,6 +71,42 @@ public class AmbientLightControl extends BaseLightControl<AmbientLight> {
     @Override
     protected void widgetUpdate(Spatial target, Spatial widget, AmbientLight light, float tpf) {
         //nothing to do
+    }
+
+    @Override
+    protected Spatial makeWidget() {
+
+        Mesh m = new Mesh();
+        m.setMode(Mesh.Mode.Lines);
+        int lineSegments = 10;
+
+        FloatBuffer posBuf = BufferUtils.createVector3Buffer(( lineSegments + 1) * 3);
+        FloatBuffer texBuf = BufferUtils.createVector2Buffer(( lineSegments + 1) * 3);
+        ShortBuffer idxBuf = BufferUtils.createShortBuffer(2 * (lineSegments * 3));
+
+        m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
+        m.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
+        m.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
+
+        int idx = 0;
+
+        idx = makeSegmentedLine(lineSegments, Axis.X , 0.3f, -0.15f,  new Vector3f(0, 0.1f, 0), posBuf, texBuf, idxBuf, idx);
+        idx = makeSegmentedLine(lineSegments, Axis.X , 0.4f, -0.2f,  Vector3f.ZERO, posBuf, texBuf, idxBuf, idx);
+        idx = makeSegmentedLine(lineSegments, Axis.X , 0.3f, -0.15f,  new Vector3f(0, -0.1f, 0), posBuf, texBuf, idxBuf, idx);
+
+        m.updateBound();
+        m.setStatic();
+
+        Geometry geom = new Geometry("LightDebug", m);
+        geom.setQueueBucket(RenderQueue.Bucket.Transparent);
+        geom.setMaterial(dashed);
+
+        Node widget = new Node();
+        center.attachChild(geom);
+        widget.attachChild(center);
+
+        return widget;
+
     }
 
 }
