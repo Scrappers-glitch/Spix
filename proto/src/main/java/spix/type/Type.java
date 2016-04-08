@@ -36,6 +36,7 @@
 
 package spix.type;
 
+import com.google.common.primitives.Primitives;
 
 /**
  *
@@ -59,7 +60,13 @@ public class Type<T> {
     }
     
     public boolean isAssignableFrom( Type type ) {
-        return javaClass.isAssignableFrom(type.javaClass);
+        if( javaClass.isAssignableFrom(type.javaClass) ) {
+            return true;
+        }
+        // Else check for wrappers
+        Class thisWrap = Primitives.wrap(javaClass);
+        Class otherWrap = Primitives.wrap(type.javaClass);
+        return thisWrap.isAssignableFrom(otherWrap);  
     }
  
     @Override
@@ -79,6 +86,7 @@ public class Type<T> {
         return javaClass.hashCode();
     }
     
+    @Override   
     public String toString() {
         return "Type[" + javaClass.getName() + "]";
     }
