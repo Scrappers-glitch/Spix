@@ -38,6 +38,7 @@ package spix.swing;
 
 import java.awt.Component;
 import java.lang.reflect.*;
+import java.util.Arrays;
 
 import spix.props.Property;
 
@@ -54,17 +55,17 @@ public class DefaultComponentFactory implements ComponentFactory {
     private int propIndex = -1;
     private Object[] parms;
     
-    public DefaultComponentFactory() {
-        this(DefaultViewPanel.class);
+    public DefaultComponentFactory(Object... args ) {
+        this(DefaultViewPanel.class, args);
     }
     
-    public DefaultComponentFactory( Class<? extends Component> componentClass ) {
+    public DefaultComponentFactory( Class<? extends Component> componentClass, Object... args ) {
         this.componentClass = componentClass;
         
         // Find the appropriate constructor
         for( Constructor<?> ctor : componentClass.getConstructors() ) {
             Class[] parms = ctor.getParameterTypes();
-            if( parms.length == 0 ) {
+            if( parms.length <= args.length ) {
                 continue;
             }
             for( int i = 0; i < parms.length; i++ ) {
@@ -82,6 +83,17 @@ public class DefaultComponentFactory implements ComponentFactory {
                 break;
             }              
         }
+        
+        // Kind of a hacky way to shuffle in custom parameters
+        int arg = 0;
+        for( int i = 0; i < parms.length; i++ ) {
+            if( arg >= args.length ) {
+                break;
+            }
+            if( i != guiIndex && i != propIndex ) {
+                parms[i] = args[arg++];
+            }
+        } 
     } 
 
     public Component createComponent( SwingGui gui, Property property ) {
@@ -96,4 +108,11 @@ public class DefaultComponentFactory implements ComponentFactory {
         }
     }
 
+    @Override
+    public String toString() {
+        return getClass().getName() + "[ctor=" + ctor 
+                        + ", guiIndex=" + guiIndex 
+                        + ", propIndex=" + propIndex 
+                        + ", args=" + Arrays.asList(parms) + "]"; 
+    }
 }

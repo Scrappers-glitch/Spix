@@ -100,12 +100,21 @@ public class SwingGui {
         }  
     }   
  
+    public void registerComponentFactory( Class type, ComponentFactory factory ) {
+        componentFactories.getRegistry(null).register(type, factory);   
+    }
+    
     public void registerComponentFactory( String context, Class type, ComponentFactory factory ) {
+        componentFactories.getRegistry(context).register(type, factory);   
+    }
+    
+    public void registerComponentFactory( String context, Type type, ComponentFactory factory ) {
         componentFactories.getRegistry(context).register(type, factory);
     }
     
     public Component createComponent( String context, Property prop ) {
         ComponentFactory factory = componentFactories.getHandler(context, prop.getType(), false);
+System.out.println("context:" + context + "  type:" + prop.getType() + "  factory=" + factory);        
         if( factory == null ) {
             // Might have requested for a primitive type so we'll retry with just object
             // Kind of a hack.

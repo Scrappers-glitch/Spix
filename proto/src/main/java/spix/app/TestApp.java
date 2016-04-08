@@ -162,6 +162,12 @@ public class TestApp extends SimpleApplication {
                 // for which it is capable.
                 SwingGui gui = spix.registerService(SwingGui.class, new SwingGui(spix, mainFrame));
 
+                
+                // Register a custom read-only display for Vector3fs that formats the values
+                // a little better.
+                gui.registerComponentFactory(Vector3f.class, 
+                                             new DefaultComponentFactory(new Vec3fStringFunction())); 
+
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");
                 rightSplit.add(objectEditor, JSplitPane.RIGHT);
 
