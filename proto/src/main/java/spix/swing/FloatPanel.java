@@ -36,36 +36,51 @@
 
 package spix.swing;
 
-import javax.swing.*;
+import javax.swing.*;                 
+import javax.swing.event.*;
 
 import com.google.common.base.*;
 
 import spix.core.ToStringFunction;
 import spix.props.Property;
+import spix.type.Type;
+import spix.type.NumberRangeType;
 
 /**
- *  A read-only Property view that uses a JLabel and simple string formatting.
+ *  A panel for editing float values.
  *
  *  @author    Paul Speed
  */
-public class DefaultViewPanel extends AbstractPropertyPanel<JLabel> {
+public class FloatPanel extends AbstractPropertyPanel<JSpinner> {
 
-    private Function<Object, String> toString;
+    private SpinnerNumberModel model;
+    private boolean updating = false;
 
-    public DefaultViewPanel( Property prop ) {
-        this(prop, ToStringFunction.INSTANCE);
-    }
-    
-    public DefaultViewPanel( Property prop, Function<Object, String> toString ) {
+    public FloatPanel( Property prop ) {
         super(prop);
-        this.toString = toString;
-        if( toString == null ) {
-            throw new IllegalArgumentException("toString function cannot be null.");
-        } 
-        setView(new JLabel());
+        this.model = new SpinnerNumberModel();
+        Type type = prop.getType();
+        if( type instanceof NumberRangeType ) {
+            NumberRangeType numRange = (NumberRangeType)type; 
+            model.setStepSize(numRange.getPreferredStepSize());
+            model.setMinimum((Comparable)numRange.getMinimum());
+            model.setMaximum((Comparable)numRange.getMaximum());
+        } else {
+            // Set it up with defaults and no range
+            model.setStepSize(0.1f);
+        }        
+        model.setValue(prop.getValue());
+        model.addChangeListener(new ModelObserver());
+        setView(new JSpinner(model));                
     }
     
-    protected void updateView( JLabel label, Object value ) {
-        label.setText(toString.apply(value));
+    protected void updateView( JSpinner label, Object value ) {
+        model.setValue(value);
     }
+
+    private class ModelObserver implements ChangeListener {
+        public void stateChanged( ChangeEvent e ) {
+            updateProperty(model.getValue());
+        }
+    }    
 }

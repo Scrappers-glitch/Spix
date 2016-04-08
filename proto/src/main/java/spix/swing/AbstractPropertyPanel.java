@@ -78,7 +78,9 @@ public abstract class AbstractPropertyPanel<V extends Component> extends JPanel 
  
     protected abstract void updateView( V view, Object value );
     
-    protected abstract void updateProperty( Object value );
+    protected void updateProperty( Object value ) {
+        prop.setValue(value);
+    }
 
     @Override
     public void addNotify() {

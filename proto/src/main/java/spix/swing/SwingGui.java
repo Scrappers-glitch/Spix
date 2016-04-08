@@ -78,6 +78,9 @@ public class SwingGui {
         
         // Setup some default component factories just to avoid hassles
         componentFactories.getRegistry(null).register(Object.class, new DefaultComponentFactory());
+        DefaultComponentFactory floatFactory = new DefaultComponentFactory(FloatPanel.class);
+        componentFactories.getRegistry(EDIT_CONTEXT).register(Float.class, floatFactory);
+        componentFactories.getRegistry(EDIT_CONTEXT).register(Float.TYPE, floatFactory);
     }
     
     public Spix getSpix() {
