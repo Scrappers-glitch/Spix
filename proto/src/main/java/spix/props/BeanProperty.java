@@ -67,6 +67,18 @@ public class BeanProperty extends AbstractProperty {
         }
     }
 
+    public BeanProperty( Object object, String name, Method getter, Method setter, Type overrideType ) {
+        this(object, name, getter, setter);
+        
+        if( overrideType != null ) { 
+            // Make sure the detected type is compatible with the override type
+            if( !this.type.isAssignableFrom(overrideType) ) {
+                throw new IllegalArgumentException("Type override:" + overrideType + " is incompatible with bean property type:" + this.type);
+            }
+            this.type = overrideType;
+        }       
+    }
+
     private static Method findSetter( Class type, String methodName, Class parameterType ) {
         try {
             // Try the easy lookup first
@@ -93,6 +105,10 @@ public class BeanProperty extends AbstractProperty {
     }
 
     public static BeanProperty create( Object object, String name ) {
+        return create(object, name, null);
+    }
+    
+    public static BeanProperty create( Object object, String name, Type overrideType ) {
         try {
             // Use the bean property info to find the appropriate property
             // We'll move this method later as we will likely have different
@@ -116,7 +132,7 @@ public class BeanProperty extends AbstractProperty {
                     write = findSetter(type, n, read.getReturnType());
                 }
 
-                return new BeanProperty(object, name, read, write);
+                return new BeanProperty(object, name, read, write, overrideType);
             }
 
             return null;
