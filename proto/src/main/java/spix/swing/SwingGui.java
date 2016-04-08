@@ -39,6 +39,8 @@ package spix.swing;
 import java.awt.Component;
 
 import spix.core.Spix;
+import spix.props.Property;
+import spix.type.*;
 import spix.ui.*;
 
 /**
@@ -55,8 +57,12 @@ public class SwingGui {
             ColorRequester.class  
         }; 
 
+    public static final String EDIT_CONTEXT = "edit";
+    
+
     private Spix spix;
     private Component rootWindow;
+    private ContextHandlerRegistry<ComponentFactory> componentFactories = new ContextHandlerRegistry<>(); 
 
     public SwingGui( Spix spix, Component rootWindow ) {
         this(spix, rootWindow, STANDARD_REQUEST_HANDLERS); 
@@ -68,7 +74,10 @@ public class SwingGui {
  
         for( Class c : requestHandlers ) {
             setupSwingService(c);
-        }   
+        }
+        
+        // Setup some default component factories just to avoid hassles
+        componentFactories.getRegistry(null).register(Object.class, new DefaultComponentFactory());
     }
     
     public Spix getSpix() {
@@ -90,5 +99,21 @@ public class SwingGui {
             throw new IllegalArgumentException("Swing requester not found for:" + type);
         }  
     }   
-   
+ 
+    public void registerComponentFactory( String context, Class type, ComponentFactory factory ) {
+        componentFactories.getRegistry(context).register(type, factory);
+    }
+    
+    public Component createComponent( String context, Property prop ) {
+        ComponentFactory factory = componentFactories.getHandler(context, prop.getType(), false);
+        if( factory == null ) {
+            // Might have requested for a primitive type so we'll retry with just object
+            // Kind of a hack.
+            factory = componentFactories.getHandler(context, Object.class, false); 
+        }
+        if( factory == null ) {
+            throw new RuntimeException("ComponentFactory not found for context:" + context + "  type:" + prop.getType());
+        }
+        return factory.createComponent(this, prop);
+    }  
 }

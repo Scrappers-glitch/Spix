@@ -68,6 +68,9 @@ public class ContextHandlerRegistry<V> {
     }
     
     public HandlerRegistry<V> getRegistry( String context, boolean create ) {
+        if( context == null ) {
+            context = DEFAULT;
+        }
         HandlerRegistry<V> result = registries.get(context);
         if( result == null && create ) {
             synchronized( this ) {

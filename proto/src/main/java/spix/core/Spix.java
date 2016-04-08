@@ -92,16 +92,19 @@ public class Spix {
         return blackboard;
     }
 
-    public <T> void registerService( Class<? super T> type, T service ) {
+    public <T> T registerService( Class<? super T> type, T service ) {
         services.put(type, service);
+        return service;
     }
 
     public <T> T getService( Class<T> type ) {
         return type.cast(services.get(type));
     }
 
-    public <T> void registerPropertySetFactory( Class<T> type, PropertySetFactory<T> factory ) {
+    public <T> PropertySetFactory<T> registerPropertySetFactory( Class<T> type, 
+                                                                 PropertySetFactory<T> factory ) {
         propertySetFactories.register(type, factory);
+        return factory;
     }
 
     public <T> PropertySetFactory<T> getPropertySetFactory( Class<T> type ) {
@@ -120,13 +123,14 @@ public class Spix {
         return result != NULL_PROPERTIES ? result : null;
     }
 
-    public <T> void registerFormFactory( Type type, FormFactory factory ) {
-        registerFormFactory(null, type, factory);
+    public FormFactory registerFormFactory( Type type, FormFactory factory ) {
+        return registerFormFactory(null, type, factory);
     }
     
-    public <T> void registerFormFactory( String context, Type type, FormFactory factory ) {
+    public FormFactory registerFormFactory( String context, Type type, FormFactory factory ) {
         context = context != null ? context : ContextHandlerRegistry.DEFAULT;
         formFactories.getRegistry(context).register(type, factory);
+        return factory;
     }
 
     public FormFactory getFormFactory( Type type ) {
