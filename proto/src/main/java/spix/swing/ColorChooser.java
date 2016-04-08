@@ -58,18 +58,25 @@ public class ColorChooser {
     public static Color getColor( Component owner, String title, Color defaultColor,
                                   RequestCallback<Color> interactiveListener ) {
 
-        if( colorDialog == null ) {
+        // For some reason, reusing the dialog doesn't reset the new initial
+        // color in the selectors.  So we won't reuse it for now... and wait to see
+        // if we have issues.
+        if( colorDialog != null ) {
+            // At least dispose the last one
+            colorDialog.dispose();
+        }
+//        if( colorDialog == null ) {
             colorChooser = new JColorChooser(defaultColor == null ? Color.white : defaultColor);
             colorObserver = new ColorObserver();
             colorChooser.getSelectionModel().addChangeListener(colorObserver);
             colorDialog = JColorChooser.createDialog(owner, title, true, colorChooser,
                                                      colorObserver, colorObserver);
-        } else {
+/*        } else {
             colorDialog.setTitle(title);
             if( defaultColor != null ) {
                 colorChooser.setColor(defaultColor);
             } // else whatever the last color was
-        }
+        }*/
 
         colorObserver.setup(defaultColor, interactiveListener);
         colorDialog.show();
@@ -108,6 +115,9 @@ public class ColorChooser {
                 } else {
                     color = null;
                 }
+            } else {
+                // Still clear the listener and stuff
+                interactiveListener = null;
             }
         }
 
