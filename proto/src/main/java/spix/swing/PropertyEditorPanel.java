@@ -107,6 +107,7 @@ System.out.println(form.debugString());
         gbc.weighty = 0;
         gbc.weightx = 0;
         gbc.insets = new Insets(0, 2, 0, 2);
+        gbc.fill = GridBagConstraints.BOTH;
         
         // Now each field
         for( Field field : form ) {
