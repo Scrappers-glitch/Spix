@@ -38,6 +38,8 @@ package spix.swing;
 
 import java.awt.Component;
 
+import com.jme3.math.ColorRGBA;
+
 import spix.core.Spix;
 import spix.props.Property;
 import spix.type.*;
@@ -78,13 +80,20 @@ public class SwingGui {
         
         // Setup some default component factories just to avoid hassles
         componentFactories.getRegistry(null).register(Object.class, new DefaultComponentFactory());
+        
+        HandlerRegistry<ComponentFactory> editFactories = componentFactories.getRegistry(EDIT_CONTEXT); 
         DefaultComponentFactory floatFactory = new DefaultComponentFactory(FloatPanel.class);
-        componentFactories.getRegistry(EDIT_CONTEXT).register(Float.class, floatFactory);
-        componentFactories.getRegistry(EDIT_CONTEXT).register(Float.TYPE, floatFactory);
+        editFactories.register(Float.class, floatFactory);
+        editFactories.register(Float.TYPE, floatFactory);
+        editFactories.register(ColorRGBA.class, new DefaultComponentFactory(ColorPanel.class)); 
     }
     
     public Spix getSpix() {
         return spix;
+    }
+ 
+    public <T> T getService( Class<T> type ) {
+        return spix.getService(type);
     }
  
     public Component getRootWindow() {
