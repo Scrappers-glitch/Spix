@@ -72,6 +72,10 @@ public abstract class AbstractPropertyPanel<V extends Component> extends JPanel 
         }
     }
  
+    protected Property getProperty() {
+        return prop;
+    }
+ 
     protected V getView() {
         return view;
     }
@@ -106,8 +110,12 @@ public abstract class AbstractPropertyPanel<V extends Component> extends JPanel 
     } 
     
     private class ChangeObserver implements PropertyChangeListener {
-        public void propertyChange( PropertyChangeEvent event ) {
-            AbstractPropertyPanel.this.propertyChange(event);
+        public void propertyChange( final PropertyChangeEvent event ) {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {           
+                    AbstractPropertyPanel.this.propertyChange(event);
+                }
+            });
         }
     }    
 }
