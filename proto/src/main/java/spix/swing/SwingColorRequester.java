@@ -88,10 +88,12 @@ public class SwingColorRequester implements ColorRequester {
     @Override
     public void requestColor( final String title, final ColorRGBA initialColor, final boolean interactive,
                               final RequestCallback<ColorRGBA> callback ) {
+
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 Color defaultColor = toSwing(initialColor);
-                if( interactive ) {
+                
+                if( interactive ) {                
                     ColorChooser.getColor(swingGui.getRootWindow(), title, defaultColor, 
                                           new CallbackAdapter(callback));
 
@@ -107,7 +109,7 @@ public class SwingColorRequester implements ColorRequester {
     }
 
     private class CallbackAdapter implements RequestCallback<Color> {
-        private RequestCallback<ColorRGBA> delegate;
+        private final RequestCallback<ColorRGBA> delegate;
 
         public CallbackAdapter( RequestCallback<ColorRGBA> delegate ) {
             this.delegate = delegate;
