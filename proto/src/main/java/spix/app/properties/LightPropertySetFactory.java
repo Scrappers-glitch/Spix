@@ -37,10 +37,12 @@
 package spix.app.properties;
 
 import com.jme3.light.*;
+import com.jme3.math.FastMath;
 import spix.app.light.LightWrapper;
 import spix.app.properties.SpatialPropertySetFactory;
 import spix.core.*;
 import spix.props.*;
+import spix.type.NumberRangeType;
 
 import java.util.*;
 
@@ -71,13 +73,17 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
 
         Light.Type type = wrapper.getLight().getType();
         if(type == Light.Type.Spot) {
-            props.add(BeanProperty.create(wrapper.getLight(), "spotRange"));
-            props.add(BeanProperty.create(wrapper.getLight(), "spotOuterAngle"));
-            props.add(BeanProperty.create(wrapper.getLight(), "spotInnerAngle"));
+            props.add(BeanProperty.create(wrapper.getLight(), "spotRange", 
+                                          new NumberRangeType(0f, null, 0.1f)));
+            props.add(BeanProperty.create(wrapper.getLight(), "spotOuterAngle", 
+                                          new NumberRangeType(0f, FastMath.HALF_PI, 0.1f)));
+            props.add(BeanProperty.create(wrapper.getLight(), "spotInnerAngle", 
+                                          new NumberRangeType(0f, FastMath.HALF_PI, 0.1f)));
         } else if (type == Light.Type.Directional){
             props.add(BeanProperty.create(wrapper.getLight(), "direction"));
         } else if (type == Light.Type.Point){
-            props.add(BeanProperty.create(wrapper.getLight(), "radius"));
+            props.add(BeanProperty.create(wrapper.getLight(), "radius", 
+                                          new NumberRangeType(0f, null, 0.1f)));
         }
 
         return new DefaultPropertySet(wrapper, props);
