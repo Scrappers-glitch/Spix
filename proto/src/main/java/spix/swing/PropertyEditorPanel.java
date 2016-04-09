@@ -107,7 +107,6 @@ System.out.println(form.debugString());
         gbc.weighty = 0;
         gbc.weightx = 0;
         gbc.insets = new Insets(0, 2, 0, 2);
-        gbc.fill = GridBagConstraints.BOTH;
         
         // Now each field
         for( Field field : form ) {
@@ -119,12 +118,14 @@ System.out.println(form.debugString());
                 gbc.gridx = 0;
                 gbc.weightx = 0;
                 gbc.anchor = GridBagConstraints.EAST;
+                gbc.fill = GridBagConstraints.NONE;
                 add(label, gbc);
                 
                 Component view = gui.createComponent(SwingGui.EDIT_CONTEXT, pf.getProperty());
                 gbc.gridx++;
                 gbc.weightx = 1;
                 gbc.anchor = GridBagConstraints.WEST;
+                gbc.fill = GridBagConstraints.BOTH;
                 add(view, gbc);
             }
             
@@ -132,12 +133,10 @@ System.out.println(form.debugString());
         }
         
         // Add a spacer at the end that can take up the slack
-        gbc.gridx = 0;
+        gbc.gridx = 1;
         gbc.weighty = 1;
         add(new JLabel(""), gbc);
         
-        //invalidate();
-        //repaint();
         revalidate();
         repaint();
     }
