@@ -36,51 +36,29 @@
 
 package spix.swing;
 
-import java.awt.event.*;
-import javax.swing.*;                 
-import javax.swing.event.*;
+import java.awt.*;
+import javax.swing.*;
 
 import com.google.common.base.*;
 
-import spix.core.ToStringFunction;
-import spix.props.Property;
-import spix.type.Type;
-import spix.type.NumberRangeType;
 
 /**
- *  A panel for editing enum values.
+ *  A ListCellRenderer implementation that transforms the values to
+ *  strings using a Guava function.
  *
  *  @author    Paul Speed
  */
-public class EnumPanel extends AbstractPropertyPanel<JComboBox> {
-
-    private Function<Object, String> toString;    
-
-    public EnumPanel( Property prop ) {
-        this(prop, null);
-    }
-
-    public EnumPanel( Property prop, Function<Object, String> toString ) {
-        super(prop);
-        this.toString = toString;
- 
-        Object[] enumValues = prop.getType().getJavaType().getEnumConstants();
-        setView(new JComboBox(enumValues));
-        getView().addItemListener(new ComboObserver());
-        
-        if( toString != null ) {
-            // Setup a custom renderer
-            getView().setRenderer(new StringListCellRenderer(toString)); 
-        }         
-    }
+public class StringListCellRenderer extends DefaultListCellRenderer {
     
-    protected void updateView( JComboBox combo, Object value ) {
-        combo.setSelectedItem(value);
+    private Function<Object, String> toString;
+    
+    public StringListCellRenderer( Function<Object, String> toString ) {
+        this.toString = toString;
     }
 
-    private class ComboObserver implements ItemListener {
-        public void itemStateChanged( ItemEvent e ) {
-            updateProperty(getView().getSelectedItem());
-        }
+    public Component getListCellRendererComponent( JList<?> list, Object value, int index, 
+                                                   boolean isSelected, boolean cellHasFocus ) {
+        value = toString.apply(value);                                                   
+        return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus); 
     }    
 }
