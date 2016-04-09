@@ -45,7 +45,6 @@ import com.google.common.base.*;
 import spix.core.ToStringFunction;
 import spix.props.Property;
 import spix.type.Type;
-import spix.type.NumberRangeType;
 
 /**
  *  A panel for editing String values or values that can be converted

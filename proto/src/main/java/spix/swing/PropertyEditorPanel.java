@@ -106,27 +106,58 @@ System.out.println(form.debugString());
         gbc.gridy = 0;
         gbc.weighty = 0;
         gbc.weightx = 0;
-        gbc.insets = new Insets(0, 2, 0, 2);
+        Insets main = new Insets(0, 2, 0, 2);
+        Insets multi = new Insets(0, 0, 0, 0);
+
+        boolean lastTwoColumn = false;
         
         // Now each field
         for( Field field : form ) {
             if( field instanceof PropertyField ) {
                 PropertyField pf = (PropertyField)field;
-                 
-                // Right now just assume everything is name:value
-                JLabel label = new JLabel(pf.getName() + ":");
-                gbc.gridx = 0;
-                gbc.weightx = 0;
-                gbc.anchor = GridBagConstraints.EAST;
-                gbc.fill = GridBagConstraints.NONE;
-                add(label, gbc);
-                
+
                 Component view = gui.createComponent(SwingGui.EDIT_CONTEXT, pf.getProperty());
-                gbc.gridx++;
-                gbc.weightx = 1;
-                gbc.anchor = GridBagConstraints.WEST;
-                gbc.fill = GridBagConstraints.BOTH;
-                add(view, gbc);
+                if( view instanceof MulticolumnComponent ) {
+                    if( view instanceof JComponent ) {
+                        JComponent c = (JComponent)view;
+                        if( c.getBorder() == null ) {
+                            c.setBorder(BorderFactory.createTitledBorder(pf.getName()));
+                        } 
+                    }
+ 
+                    if( lastTwoColumn ) {                   
+                        gbc.insets = new Insets(5, 0, 0, 0);
+                    } else {
+                        gbc.insets = multi;
+                    }
+                    gbc.gridwidth = 2;
+                    gbc.gridx = 0;
+                    gbc.weightx = 1;
+                    gbc.anchor = GridBagConstraints.WEST;
+                    gbc.fill = GridBagConstraints.BOTH;
+                    add(view, gbc);
+                    
+                    lastTwoColumn = false;
+                } else {
+                    gbc.insets = main;
+
+                    // It follows the normal name: value layout                 
+                    JLabel label = new JLabel(pf.getName() + ":");
+                    gbc.gridwidth = 1;
+                    gbc.gridx = 0;
+                    gbc.weightx = 0;
+                    gbc.anchor = GridBagConstraints.EAST;
+                    gbc.fill = GridBagConstraints.NONE;
+                    add(label, gbc);
+                
+                    gbc.gridx++;
+                    gbc.weightx = 1;
+                    gbc.anchor = GridBagConstraints.WEST;
+                    gbc.fill = GridBagConstraints.BOTH;
+                    add(view, gbc);
+                    
+                    lastTwoColumn = true;
+                }
             }
             
             gbc.gridy++;            

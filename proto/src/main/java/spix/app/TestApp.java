@@ -167,6 +167,8 @@ public class TestApp extends SimpleApplication {
                 // a little better.
                 gui.registerComponentFactory(Vector3f.class, 
                                              new DefaultComponentFactory(new Vec3fStringFunction())); 
+                gui.registerComponentFactory(Quaternion.class, 
+                                             new DefaultComponentFactory(QuaternionPanel.class)); 
 
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");
                 rightSplit.add(objectEditor, JSplitPane.RIGHT);
