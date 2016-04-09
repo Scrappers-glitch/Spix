@@ -63,6 +63,7 @@ public class DefaultViewPanel extends AbstractPropertyPanel<JLabel> {
             throw new IllegalArgumentException("toString function cannot be null.");
         } 
         setView(new JLabel());
+        getView().setBorder(BorderFactory.createEtchedBorder());
     }
     
     protected void updateView( JLabel label, Object value ) {
