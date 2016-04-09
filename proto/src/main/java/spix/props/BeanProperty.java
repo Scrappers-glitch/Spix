@@ -152,7 +152,7 @@ public class BeanProperty extends AbstractProperty {
         try {
             Object old = getValue();
             
-            boolean changed = Objects.equals(old, value);
+            boolean changed = !Objects.equals(old, value);
             if( old == value ) {
                 // Then we can't really tell so we have to assume it changed
                 changed = true;
