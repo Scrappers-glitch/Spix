@@ -85,7 +85,8 @@ public class SwingGui {
         DefaultComponentFactory floatFactory = new DefaultComponentFactory(FloatPanel.class);
         editFactories.register(Float.class, floatFactory);
         editFactories.register(Float.TYPE, floatFactory);
-        editFactories.register(ColorRGBA.class, new DefaultComponentFactory(ColorPanel.class)); 
+        editFactories.register(ColorRGBA.class, new DefaultComponentFactory(ColorPanel.class));
+        editFactories.register(Enum.class, new DefaultComponentFactory(EnumPanel.class));  
     }
     
     public Spix getSpix() {
