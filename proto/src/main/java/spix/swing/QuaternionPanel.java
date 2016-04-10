@@ -37,9 +37,13 @@
 package spix.swing;
 
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
 import javax.swing.*;
 
-import spix.props.Property;
+import com.jme3.math.*;
+
+import spix.props.*;
+import spix.type.*;
 
 /**
  *  Presents several tabs or subpanels for configuring a quaternion
@@ -50,10 +54,15 @@ import spix.props.Property;
 public class QuaternionPanel extends AbstractPropertyPanel<Component> 
                              implements MulticolumnComponent {
  
+    private SwingGui gui;
     private JTabbedPane tabs;
+    private QuaternionProperties quatProps;
+    private EulerProperties eulerProps;
+    private EulerProperties eulerProps2;
     
-    public QuaternionPanel( Property prop ) {
+    public QuaternionPanel( SwingGui gui, Property prop ) {
         super(prop);
+        this.gui = gui;
         
         // We may want to use tabs or we may want to use something
         // else... so we'll let the parent class think it's its own
@@ -61,13 +70,204 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         // manage our property listeners and stuff for us.
         
         tabs = new JTabbedPane();
-        tabs.addTab("Euler", new JLabel("Testing"));
-        tabs.addTab("Angle/Axis", new JLabel("Testing"));
-        tabs.addTab("Quaternion", new JLabel("Testing"));
+        tabs.addTab("Euler", createEulerPanel());
+        tabs.addTab("Euler2", createEulerPanel2());
+        tabs.addTab("Angle/Axis", createAngleAxisPanel());
+        tabs.addTab("Quaternion", createQuaternionPanel());
         
         setView(tabs);
     }
 
     protected void updateView( Component view, Object value ) {
+        Quaternion q = (Quaternion)value;
+        quatProps.updateValue(q);
+        eulerProps.updateValue(q);
+        eulerProps2.updateValue(q);
+        //euler.updateRotation(q);
+        //euler2.updateRotation(q);
     }
+  
+    protected JComponent createEulerPanel() {
+    
+        /*
+        BeanProperty yaw = BeanProperty.create(euler, "yaw", new NumberRangeType(null, null, 0.01f));
+        BeanProperty pitch = BeanProperty.create(euler, "pitch", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f));
+        BeanProperty roll = BeanProperty.create(euler, "roll", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f));
+ 
+        eulerProps = new DefaultPropertySet(euler, yaw, pitch, roll);*/
+ 
+        eulerProps = new EulerProperties(getProperty());
+        
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
+        panel.setObject(eulerProps);
+        
+        return panel;              
+    }
+
+    protected JComponent createEulerPanel2() {
+        /*BeanProperty yaw = BeanProperty.create(euler2, "yaw", new NumberRangeType(null, null, 0.01f));
+        BeanProperty pitch = BeanProperty.create(euler2, "pitch", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f));
+        BeanProperty roll = BeanProperty.create(euler2, "roll", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f));
+ 
+        eulerProps2 = new DefaultPropertySet(euler2, yaw, pitch, roll);*/
+        eulerProps2 = new EulerProperties(getProperty());
+        
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
+        panel.setObject(eulerProps2);
+        
+        return panel;              
+    }
+
+    protected JComponent createAngleAxisPanel() {
+        return new JLabel("Testing");
+    }
+    
+    protected JComponent createQuaternionPanel() {
+    
+        quatProps = new QuaternionProperties(getProperty());
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
+        panel.setObject(quatProps);
+        
+        /*
+        Quaternion q = (Quaternion)getProperty().getValue();
+    
+        BeanProperty x = BeanProperty.create(q, "x");
+        BeanProperty y = BeanProperty.create(q, "y");
+        BeanProperty z = BeanProperty.create(q, "z");
+        BeanProperty w = BeanProperty.create(q, "w");
+ 
+        PropertySet props = new DefaultPropertySet(q, x, y, z, w);
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
+        panel.setObject(props);*/
+        
+        return panel;              
+    }
+
+    private class QuaternionProperties extends AbstractPropertySet {
+        private boolean updating = false;
+        
+        public QuaternionProperties( Property parent ) {
+            super(parent, new Quaternion(),
+                  new DefaultProperty("x", Float.class, 0f),
+                  new DefaultProperty("y", Float.class, 0f),
+                  new DefaultProperty("z", Float.class, 0f),
+                  new DefaultProperty("w", Float.class, 1f));
+        }
+    
+        public void updateValue( Quaternion quat ) {
+            updating = true;
+            try {           
+                // Just reset them all... it's easier
+                getProperty("x").setValue(quat.getX());
+                getProperty("y").setValue(quat.getY());
+                getProperty("z").setValue(quat.getZ());
+                getProperty("w").setValue(quat.getW());
+            } finally {
+                updating = false;
+            }
+        }
+        
+        @Override
+        protected void propertyChange( PropertyChangeEvent e ) {
+            if( updating ) {
+                // This is a property change because of our own changes
+                return;
+            }        
+            // Just reset them all... it's easier
+            float x = (Float)getProperty("x").getValue();    
+            float y = (Float)getProperty("y").getValue();    
+            float z = (Float)getProperty("z").getValue();    
+            float w = (Float)getProperty("w").getValue();    
+            Quaternion rotation = (Quaternion)getObject(); 
+            rotation.set(x, y, z, w);
+            updateProperty(rotation);              
+        }        
+    } 
+ 
+    private class EulerProperties extends AbstractPropertySet {
+ 
+        private float[] angles = new float[3];
+        private boolean updating = false;
+        
+        public EulerProperties( Property parent ) {
+            super(parent, new Quaternion(),
+                  new DefaultProperty("yaw", new NumberRangeType(null, null, 0.01f), 0f),
+                  new DefaultProperty("pitch", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f), 0f),
+                  new DefaultProperty("roll", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f), 0f));
+        }
+ 
+        public void updateValue( Quaternion quat ) {
+            angles = quat.toAngles(angles);
+ 
+            updating = true;
+            try {           
+                // Just reset them all... it's easier
+                getProperty("pitch").setValue(angles[0]);
+                getProperty("yaw").setValue(angles[1]);
+                getProperty("roll").setValue(angles[2]);
+            } finally {
+                updating = false;
+            }
+        }
+        
+        @Override
+        protected void propertyChange( PropertyChangeEvent e ) {
+            if( updating ) {
+                // This is a property change because of our own changes
+                return;
+            }        
+            // Just reset them all... it's easier
+            angles[0] = (Float)getProperty("pitch").getValue();    
+            angles[1] = (Float)getProperty("yaw").getValue();   
+            angles[2] = (Float)getProperty("roll").getValue();
+            Quaternion rotation = (Quaternion)getObject(); 
+            rotation.fromAngles(angles);
+            updateProperty(rotation);              
+        }        
+    }
+ 
+ /*   
+    public class Euler {
+        private float[] angles = new float[3];
+        private Quaternion rotation = new Quaternion();
+        
+        public Euler() {
+        }
+        
+        public void updateRotation( Quaternion rotation ) {
+            angles = rotation.toAngles(angles);
+        } 
+ 
+        private void pushRotation() {
+            rotation.fromAngles(angles);
+            updateProperty(rotation);
+        }
+        
+        public void setYaw( float yaw ) {
+            angles[1] = yaw;
+            pushRotation();
+        }
+        
+        public float getYaw() {
+            return angles[1];
+        }
+        
+        public void setPitch( float pitch ) {
+            angles[0] = pitch;
+            pushRotation();
+        }
+        
+        public float getPitch() {
+            return angles[0];
+        }
+        
+        public void setRoll( float roll ) {
+            angles[2] = roll;
+            pushRotation();
+        }
+        
+        public float getRoll() {
+            return angles[2];
+        }
+    }*/ 
 }
