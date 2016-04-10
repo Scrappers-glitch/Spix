@@ -89,7 +89,7 @@ public abstract class AbstractProperty implements Property {
         if( checkForChange && Objects.equals(oldValue, newValue) ) {
             return;
         }
-        PropertyChangeEvent event = new PropertyChangeEvent(this, name, oldValue, newValue);
+        PropertyChangeEvent event = new PropertyChangeEvent(this, id, oldValue, newValue);
         for( PropertyChangeListener l : listeners.getArray() ) {
             l.propertyChange(event);
         }
