@@ -38,6 +38,8 @@ package spix.props;
 
 import java.util.Objects;
 
+import com.jme3.util.clone.Cloner;
+
 import spix.type.Type;
 
 /**
@@ -47,6 +49,10 @@ import spix.type.Type;
  *  @author    Paul Speed
  */
 public class PropertyWrapper extends AbstractProperty {
+
+    // Keep a static cloner just for its javaClone() method
+    private static final Cloner CLONER = new Cloner();
+
     private PropertySetWrapper parent;
     private Property delegate;
 
@@ -66,24 +72,39 @@ public class PropertyWrapper extends AbstractProperty {
     public Type getType() {
         return type;
     }
+ 
+    protected Object cloneValue( Object value ) {
+        if( value instanceof Cloneable ) {
+            try {
+                return CLONER.javaClone(value); 
+            } catch( CloneNotSupportedException e ) {
+                throw new RuntimeException("Error cloning Cloneable object:" + value, e);
+            }
+        } else {
+            return value;
+        }
+    }
     
     @Override
     public void setValue( Object value ) {
 System.out.println("  ## PropertyWrapper.setValue(" + value + ")  old:" + this.value);    
         Object old = this.value;
         boolean changed = !Objects.equals(old, value);
-        if( old == value ) {
+        /*if( old == value ) {
             // We can't really tell... we might have been given an altered
             // version of ourselves back.  Could be fixed with a second clone
             changed = true;
-        }        
-        this.value = value;
+        }*/
+        // Keep a cloned value if possible to avoid mis-notifying cases where
+        // the value itself is mutable and we're sent the same reference multiple
+        // times.        
+        this.value = cloneValue(value);
         if( changed ) {
             // Let the parent know that the property has changed
-            parent.updateProperty(this, delegate, old, value);
+            parent.updateProperty(this, delegate, old, this.value);
             
             // And let our own listeners know
-            firePropertyChange(old, value, false);            
+            firePropertyChange(old, this.value, false);            
         }
     }
     

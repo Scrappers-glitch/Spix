@@ -95,8 +95,7 @@ System.out.println("PropertyEditorPanel.setObject(" + properties + ")");
             return;
         }
         
-        // Indiscriminantly wrap for a moment
-        this.properties = new PropertySetWrapper(properties);        
+        this.properties = gui.wrap(properties);        
         //this.properties = properties;        
 
         if( isPeered ) {

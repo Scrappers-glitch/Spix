@@ -41,7 +41,7 @@ import java.awt.Component;
 import com.jme3.math.ColorRGBA;
 
 import spix.core.Spix;
-import spix.props.Property;
+import spix.props.*;
 import spix.type.*;
 import spix.ui.*;
 
@@ -88,7 +88,7 @@ public class SwingGui {
         editFactories.register(ColorRGBA.class, new DefaultComponentFactory(ColorPanel.class));
         editFactories.register(Enum.class, new DefaultComponentFactory(EnumPanel.class));  
         editFactories.register(String.class, new DefaultComponentFactory(StringPanel.class));  
-    }
+    }    
     
     public Spix getSpix() {
         return spix;
@@ -101,6 +101,16 @@ public class SwingGui {
     public Component getRootWindow() {
         return rootWindow;
     } 
+ 
+    /**
+     *  Wraps the specified property set for swing-render thread safety
+     *  if necessary.  Returns the original delegate if there is no need to
+     *  wrap the object.
+     */
+    public PropertySet wrap( PropertySet delegate ) {
+        // Always do it for now... we'll do some threading checks later
+        return new SwingPropertySetWrapper(this, delegate);
+    }
  
     public void setupSwingService( Class type ) {
         if( FileRequester.class.isAssignableFrom(type) ) {

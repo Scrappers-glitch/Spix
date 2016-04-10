@@ -109,11 +109,11 @@ System.out.println("Adding listener:" + listener + " to:" + p);
     protected void updateProperty( Property wrapper, Property original, Object oldValue, Object newValue ) {
         // Right now just pass the property through
 System.out.println("### updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");
-        updating = true;
+        //updating = true;
         try {        
             original.setValue(newValue);
         } finally {
-            updating = false;
+            //updating = false;
         }
     }
  
