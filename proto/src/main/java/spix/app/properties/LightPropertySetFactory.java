@@ -84,7 +84,7 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
 
         // For manipulators, create some special transform properties that work in world
         // space.
-        props.add(new WorldTranslationProperty(wrapper.getWidget()));
+        props.add(new WorldTranslationProperty(wrapper.getWidget(), null));
         
         return new DefaultPropertySet(wrapper, props);
     }
