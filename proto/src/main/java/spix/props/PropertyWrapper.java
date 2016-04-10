@@ -90,11 +90,7 @@ public class PropertyWrapper extends AbstractProperty {
 System.out.println("  ## PropertyWrapper.setValue(" + value + ")  old:" + this.value);    
         Object old = this.value;
         boolean changed = !Objects.equals(old, value);
-        /*if( old == value ) {
-            // We can't really tell... we might have been given an altered
-            // version of ourselves back.  Could be fixed with a second clone
-            changed = true;
-        }*/
+        
         // Keep a cloned value if possible to avoid mis-notifying cases where
         // the value itself is mutable and we're sent the same reference multiple
         // times.        

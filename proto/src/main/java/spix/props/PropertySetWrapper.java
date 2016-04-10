@@ -55,12 +55,13 @@ public class PropertySetWrapper implements PropertySet {
     private final Type type;
     private final Map<String, Property> properties = new LinkedHashMap<>();
     private final WrapperListener listener = new WrapperListener();
+    private final Thread creatingThread;
     private boolean attached = false;    
-    private boolean updating = false;
     
     public PropertySetWrapper( PropertySet delegate ) {
         this.delegate = delegate;
         this.type = delegate.getType();
+        this.creatingThread = Thread.currentThread();
         for( Property p : delegate ) {
              properties.put(p.getId(), wrap(p));
         }
@@ -94,42 +95,42 @@ System.out.println("Adding listener:" + listener + " to:" + p);
         return new PropertyWrapper(this, prop);
     }  
     
+    @Override
     public Property getProperty( String name ) {
         return properties.get(name);
     }
  
+    @Override
     public Iterator<Property> iterator() {
         return properties.values().iterator();
     }
     
+    @Override
     public Type getType() {
         return type; 
     }
-        
+ 
+    @Override
+    public Thread getCreatingThread() {
+        return creatingThread;
+    }
+
+    /**
+     *  Called by the wrapper when the outer property value has changed
+     *  and needs to be applied to the delegate or wrapped property. 
+     */       
     protected void updateProperty( Property wrapper, Property original, Object oldValue, Object newValue ) {
         // Right now just pass the property through
-System.out.println("### updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");
-        //updating = true;
-        try {        
-            original.setValue(newValue);
-        } finally {
-            //updating = false;
-        }
+System.out.println("### updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")  " + Thread.currentThread());
+        original.setValue(newValue);
     }
  
-    protected boolean isUpdating() {
-        return updating;
-    }
-    
+    /**
+     *  Called when the original property has changed and needs to be applied
+     *  to the outer wrapper.
+     */
     protected void updateWrapper( String id, Object value ) {
-System.out.println("### updateWrapper(" + id + ", " + value + ")");
-        if( updating ) {
-            // This event is as a result of the updateProperty() causing an
-            // update to the delegate which then calls us back.  Presumes
-            // the updateProperty() and updateWrapper() are checking on the
-            // same thread.
-            return;
-        }
+System.out.println("### updateWrapper(" + id + ", " + value + ")  " + Thread.currentThread());
         properties.get(id).setValue(value);    
     }
     

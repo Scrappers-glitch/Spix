@@ -47,19 +47,69 @@ import spix.props.*;
 public class SwingPropertySetWrapper extends PropertySetWrapper {
  
     private SwingGui gui;
+    private String jmeUpdatingProperty = null;
     
     public SwingPropertySetWrapper( SwingGui gui, PropertySet delegate ) {
         super(delegate);
+        this.gui = gui;
     }
  
-    protected void updateProperty( Property wrapper, Property original, Object oldValue, Object newValue ) {
-System.out.println("$$$ updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");
-        super.updateProperty(wrapper, original, oldValue, newValue);
+    protected void updateProperty( final Property wrapper, final Property original, final Object oldValue, final Object newValue ) {
+System.out.println(wrapper.getId() + ":$$$ updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")  " + Thread.currentThread());
+
+        // Update property should generally always be called from the
+        // AWT thread.
+
+        // Need to shunt this over to the JME thread
+        gui.runOnRender(new Runnable() {
+            public void run() {
+System.out.println(wrapper.getId() + ": >>>>>   calling super updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");
+                
+                // We are on the JME thread.  updateWrapper() will also be called
+                // on the JME thread... but if it's called while we are still in super.updateProperty()
+                // then we want to ignore the feedback as it's redundant as far as the
+                // original caller is concerned.  Meanwhile the JME side could be sending back
+                // all kinds of other events that we don't want to ignore.  So we'll gate on the 
+                // specific property
+                jmeUpdatingProperty = wrapper.getId();
+                try {             
+                    SwingPropertySetWrapper.super.updateProperty(wrapper, original, oldValue, newValue);
+                } finally {
+                    jmeUpdatingProperty = null;
+                }
+System.out.println(wrapper.getId() + ": <<<<<   done calling super updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");            
+            }
+            
+            public String toString() {
+                return "JmeRunner[" + wrapper.getId() + "]";
+            }
+        });
     }
  
-    protected void updateWrapper( String id, Object value ) {
-System.out.println("$$$ updateWrapper(" + id + ", " + value + ")");
-        super.updateWrapper(id, value);
+    protected void updateWrapper( final String id, final Object value ) {
+System.out.println(id + ":$$$ updateWrapper(" + id + ", " + value + ")  " + Thread.currentThread());
+
+        // Update wrapper should generally always be called from the
+        // the render thread.
+        // If the render thread has already marked this particular property
+        // as being updated then that means we are still inside an updateProperty() 
+        // call and this event is unneeded feedback.
+        if( id.equals(jmeUpdatingProperty) ) {
+System.out.println(id + ":  $ ignoring feedback event.");         
+            return;
+        } 
+
+        gui.runOnSwing(new Runnable() {
+            public void run() {
+                SwingPropertySetWrapper.super.updateWrapper(id, value);
+            }
+            
+            public String toString() {
+                return "SwingRunner[" + id + "]";
+            }
+        });
+        
+System.out.println(id + ":    exiting: updateWrapper(" + id + ", " + value + ")  " + Thread.currentThread());        
     }
 
 }

@@ -55,6 +55,7 @@ public abstract class AbstractPropertySet implements PropertySet {
     private Property parent;
     private Type type;
     private final Map<String, Property> properties = new LinkedHashMap<>();
+    private final Thread creatingThread;
 
     protected AbstractPropertySet( Property parent, Object object, Property... props ) {
         this(parent, object, Arrays.asList(props));
@@ -64,6 +65,7 @@ public abstract class AbstractPropertySet implements PropertySet {
         this.parent = parent;
         this.object = object;
         this.type = object != null ? new Type(object.getClass()) : null;
+        this.creatingThread = Thread.currentThread();
 
         // We own the child properties we are passed so it should be safe to
         // register a listener without having to worry about unregistering it later.
@@ -86,8 +88,14 @@ public abstract class AbstractPropertySet implements PropertySet {
         return properties.get(name);
     }
 
+    @Override
     public Iterator<Property> iterator() {
         return properties.values().iterator();
+    }
+
+    @Override
+    public Thread getCreatingThread() {
+        return creatingThread;
     }
 
     protected Property getParent() {

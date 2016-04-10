@@ -37,6 +37,8 @@
 package spix.swing;
 
 import java.awt.Component;
+import java.lang.reflect.InvocationTargetException;
+import javax.swing.SwingUtilities;
 
 import com.jme3.math.ColorRGBA;
 
@@ -64,13 +66,16 @@ public class SwingGui {
 
     private Spix spix;
     private Component rootWindow;
-    private ContextHandlerRegistry<ComponentFactory> componentFactories = new ContextHandlerRegistry<>(); 
+    private ContextHandlerRegistry<ComponentFactory> componentFactories = new ContextHandlerRegistry<>();
+    private Thread edt; 
 
     public SwingGui( Spix spix, Component rootWindow ) {
         this(spix, rootWindow, STANDARD_REQUEST_HANDLERS); 
     }
     
     public SwingGui( Spix spix, Component rootWindow, Class... requestHandlers ) {
+    
+System.out.println("Creating SwingGui on thread:" + Thread.currentThread());    
         this.spix = spix;
         this.rootWindow = rootWindow;
  
@@ -87,7 +92,23 @@ public class SwingGui {
         editFactories.register(Float.TYPE, floatFactory);
         editFactories.register(ColorRGBA.class, new DefaultComponentFactory(ColorPanel.class));
         editFactories.register(Enum.class, new DefaultComponentFactory(EnumPanel.class));  
-        editFactories.register(String.class, new DefaultComponentFactory(StringPanel.class));  
+        editFactories.register(String.class, new DefaultComponentFactory(StringPanel.class));
+        
+        // If this is the AWT thread then save it.
+        if( SwingUtilities.isEventDispatchThread() ) {
+            this.edt = Thread.currentThread();
+        } else {
+            try {
+                // Else we will force the issue
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    public void run() {
+                        edt = Thread.currentThread();
+                    }
+                });
+            } catch( InvocationTargetException | InterruptedException e ) {
+                throw new RuntimeException("Error capturing EDT", e);
+            }
+        }   
     }    
     
     public Spix getSpix() {
@@ -101,16 +122,6 @@ public class SwingGui {
     public Component getRootWindow() {
         return rootWindow;
     } 
- 
-    /**
-     *  Wraps the specified property set for swing-render thread safety
-     *  if necessary.  Returns the original delegate if there is no need to
-     *  wrap the object.
-     */
-    public PropertySet wrap( PropertySet delegate ) {
-        // Always do it for now... we'll do some threading checks later
-        return new SwingPropertySetWrapper(this, delegate);
-    }
  
     public void setupSwingService( Class type ) {
         if( FileRequester.class.isAssignableFrom(type) ) {
@@ -148,5 +159,51 @@ System.out.println("context:" + context + "  type:" + prop.getType() + "  factor
             throw new RuntimeException("ComponentFactory not found for context:" + context + "  type:" + prop.getType());
         }
         return factory.createComponent(this, prop);
-    }  
+    }
+      
+    /**
+     *  Wraps the specified property set for swing-render thread safety
+     *  if necessary.  Returns the original delegate if there is no need to
+     *  wrap the object.
+     */
+    public PropertySet wrap( PropertySet delegate ) {
+System.out.println("wrap()  Current thread:" + Thread.currentThread() + "  property set thread:" + delegate.getCreatingThread());
+        if( delegate.getCreatingThread() == edt ) {
+            // It's already safe for swing as it was created on the swing thread.
+            return delegate;
+        }
+        // Else we need to wrap it for swing.
+        return new SwingPropertySetWrapper(this, delegate);
+    }
+ 
+    /**
+     *  Executes a runnable on the swing thread.  If this is being called
+     *  from the swing thread then it will execute immediately.
+     */
+    public void runOnSwing( Runnable run ) {
+        if( SwingUtilities.isEventDispatchThread() ) {
+System.out.println("runOnSwing(): running directly:" + run);        
+            run.run();
+        } else {
+System.out.println("runOnSwing(): dispatching:" + run);        
+            SwingUtilities.invokeLater(run);
+        }
+    }
+    
+    /**
+     *  Executes a runnable on the render thread.  If this is being called
+     *  from the render thread then it will execute immediately.
+     */
+    public void runOnRender( Runnable run ) {
+        // For the moment, we'll pretend that this is only ever called from
+        // the swing thread or the render thread.  We'll be more disciminating later
+        // by keeping track of the render thread reference.
+        if( SwingUtilities.isEventDispatchThread() ) {
+System.out.println("runOnRender(): dispatching:" + run);        
+            spix.enqueueTask(run);
+        } else {
+System.out.println("runOnRender(): running directly:" + run);        
+            run.run();
+        }         
+    }
 }

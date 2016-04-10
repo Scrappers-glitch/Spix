@@ -171,6 +171,10 @@ public class Spix {
         });
     }
 
+    public void enqueueTask( Runnable runnable ) {
+        tasks.add(runnable);
+    }
+
     public void runTasks() {
         Runnable r;
         while( (r = tasks.poll()) != null ) {
