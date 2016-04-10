@@ -58,7 +58,6 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
     private JTabbedPane tabs;
     private QuaternionProperties quatProps;
     private EulerProperties eulerProps;
-    private EulerProperties eulerProps2;
     
     public QuaternionPanel( SwingGui gui, Property prop ) {
         super(prop);
@@ -71,8 +70,7 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         
         tabs = new JTabbedPane();
         tabs.addTab("Euler", createEulerPanel());
-        tabs.addTab("Euler2", createEulerPanel2());
-        tabs.addTab("Angle/Axis", createAngleAxisPanel());
+        //tabs.addTab("Angle/Axis", createAngleAxisPanel());
         tabs.addTab("Quaternion", createQuaternionPanel());
         
         setView(tabs);
@@ -82,39 +80,12 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         Quaternion q = (Quaternion)value;
         quatProps.updateValue(q);
         eulerProps.updateValue(q);
-        eulerProps2.updateValue(q);
-        //euler.updateRotation(q);
-        //euler2.updateRotation(q);
     }
   
-    protected JComponent createEulerPanel() {
-    
-        /*
-        BeanProperty yaw = BeanProperty.create(euler, "yaw", new NumberRangeType(null, null, 0.01f));
-        BeanProperty pitch = BeanProperty.create(euler, "pitch", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f));
-        BeanProperty roll = BeanProperty.create(euler, "roll", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f));
- 
-        eulerProps = new DefaultPropertySet(euler, yaw, pitch, roll);*/
- 
-        eulerProps = new EulerProperties(getProperty());
-        
+    protected JComponent createEulerPanel() {    
+        eulerProps = new EulerProperties(getProperty());        
         PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
-        panel.setObject(eulerProps);
-        
-        return panel;              
-    }
-
-    protected JComponent createEulerPanel2() {
-        /*BeanProperty yaw = BeanProperty.create(euler2, "yaw", new NumberRangeType(null, null, 0.01f));
-        BeanProperty pitch = BeanProperty.create(euler2, "pitch", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f));
-        BeanProperty roll = BeanProperty.create(euler2, "roll", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f));
- 
-        eulerProps2 = new DefaultPropertySet(euler2, yaw, pitch, roll);*/
-        eulerProps2 = new EulerProperties(getProperty());
-        
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
-        panel.setObject(eulerProps2);
-        
+        panel.setObject(eulerProps);        
         return panel;              
     }
 
@@ -122,24 +93,10 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         return new JLabel("Testing");
     }
     
-    protected JComponent createQuaternionPanel() {
-    
+    protected JComponent createQuaternionPanel() {    
         quatProps = new QuaternionProperties(getProperty());
         PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
         panel.setObject(quatProps);
-        
-        /*
-        Quaternion q = (Quaternion)getProperty().getValue();
-    
-        BeanProperty x = BeanProperty.create(q, "x");
-        BeanProperty y = BeanProperty.create(q, "y");
-        BeanProperty z = BeanProperty.create(q, "z");
-        BeanProperty w = BeanProperty.create(q, "w");
- 
-        PropertySet props = new DefaultPropertySet(q, x, y, z, w);
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
-        panel.setObject(props);*/
-        
         return panel;              
     }
 
@@ -224,50 +181,5 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
             rotation.fromAngles(angles);
             updateProperty(rotation);              
         }        
-    }
- 
- /*   
-    public class Euler {
-        private float[] angles = new float[3];
-        private Quaternion rotation = new Quaternion();
-        
-        public Euler() {
-        }
-        
-        public void updateRotation( Quaternion rotation ) {
-            angles = rotation.toAngles(angles);
-        } 
- 
-        private void pushRotation() {
-            rotation.fromAngles(angles);
-            updateProperty(rotation);
-        }
-        
-        public void setYaw( float yaw ) {
-            angles[1] = yaw;
-            pushRotation();
-        }
-        
-        public float getYaw() {
-            return angles[1];
-        }
-        
-        public void setPitch( float pitch ) {
-            angles[0] = pitch;
-            pushRotation();
-        }
-        
-        public float getPitch() {
-            return angles[0];
-        }
-        
-        public void setRoll( float roll ) {
-            angles[2] = roll;
-            pushRotation();
-        }
-        
-        public float getRoll() {
-            return angles[2];
-        }
-    }*/ 
+    } 
 }
