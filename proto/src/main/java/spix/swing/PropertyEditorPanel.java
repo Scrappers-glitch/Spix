@@ -57,6 +57,7 @@ public class PropertyEditorPanel extends JPanel {
     private PropertySet properties;
     private Form form;
     private String context;
+    private boolean isPeered;
 
     public PropertyEditorPanel( SwingGui gui ) {
         this(gui, null);
@@ -72,12 +73,18 @@ public class PropertyEditorPanel extends JPanel {
     public void setObject( PropertySet properties ) {
 System.out.println("PropertyEditorPanel.setObject(" + properties + ")");
 
-        if( this.properties == properties ) {
+        if( this.properties == properties ) {        
             return;
         }
 
         // Clear out any old setup
         if( this.properties != null ) {
+        
+            if( isPeered ) {
+                // Make to release any wrappers
+                detach();
+            }        
+        
             // for now we'll just clear the properties but there will
             // be more work to do when there is a real editor
             this.properties = null;
@@ -87,7 +94,18 @@ System.out.println("PropertyEditorPanel.setObject(" + properties + ")");
         if( properties == null ) {
             return;
         }
-        this.form = gui.getSpix().createForm(properties, context);
+        
+        // Indiscriminantly wrap for a moment
+        this.properties = new PropertySetWrapper(properties);        
+        //this.properties = properties;        
+
+        if( isPeered ) {
+            // If we are already peered then make sure to attach
+            // any wrapper to its delegate.
+            attach();
+        }        
+        
+        this.form = gui.getSpix().createForm(this.properties, context);
 System.out.println(form.debugString());
         
         SwingUtilities.invokeLater(new Runnable() {
@@ -100,7 +118,7 @@ System.out.println(form.debugString());
     protected void setupComponents() {
         // Clear anything already in the UI
         removeAll();
-        
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -174,6 +192,32 @@ System.out.println(form.debugString());
     
     public PropertySet getObject() {
         return properties;
+    }
+
+    protected void attach() {
+        if( properties instanceof PropertySetWrapper ) {
+            ((PropertySetWrapper)properties).attach();
+        }
+    }
+
+    protected void detach() {
+        if( properties instanceof PropertySetWrapper ) {
+            ((PropertySetWrapper)properties).release();
+        }
+    }
+
+    public void addNotify() {
+System.out.println("Editor panel addNotify():" + this);        
+        super.addNotify();
+        attach();
+        isPeered = true;
+    }
+    
+    public void removeNotify() {
+System.out.println("Editor panel removeNotify():" + this);    
+        isPeered = false;
+        detach();
+        super.removeNotify();
     }
 
     @Override
