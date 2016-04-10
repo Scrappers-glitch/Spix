@@ -65,18 +65,22 @@ public abstract class AbstractProperty implements Property {
         this.name = name;
     }
 
+    @Override
     public final String getId() {
         return id;
     }
 
+    @Override
     public final String getName() {
         return name;
     }
 
+    @Override
     public void addPropertyChangeListener( PropertyChangeListener l ) {
         listeners.add(l);
     }
 
+    @Override
     public void removePropertyChangeListener( PropertyChangeListener l ) {
         listeners.remove(l);
     }

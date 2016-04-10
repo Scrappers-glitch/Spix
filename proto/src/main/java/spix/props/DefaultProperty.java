@@ -65,16 +65,19 @@ public class DefaultProperty extends AbstractProperty {
         this.value = value;
     }
 
+    @Override
     public Type getType() {
         return type;
     }
 
+    @Override
     public void setValue( Object value ) {
         Object old = this.value;
         this.value = value;
         firePropertyChange(old, value, true);
     }
 
+    @Override
     public Object getValue() {
         return value;
     }
