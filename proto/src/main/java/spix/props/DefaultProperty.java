@@ -56,8 +56,12 @@ public class DefaultProperty extends AbstractProperty {
     private Object value;
 
     public DefaultProperty( String name, Class type, Object value ) {
+        this(name, new Type(type), value);
+    }
+    
+    public DefaultProperty( String name, Type type, Object value ) {
         super(name);
-        this.type = new Type(type);
+        this.type = type;
         this.value = value;
     }
 
