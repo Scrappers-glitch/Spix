@@ -58,6 +58,7 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
     private JTabbedPane tabs;
     private QuaternionProperties quatProps;
     private EulerProperties eulerProps;
+    private AngleAxisProperties angleAxisProps;
     
     public QuaternionPanel( SwingGui gui, Property prop ) {
         super(prop);
@@ -70,7 +71,7 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         
         tabs = new JTabbedPane();
         tabs.addTab("Euler", createEulerPanel());
-        //tabs.addTab("Angle/Axis", createAngleAxisPanel());
+        tabs.addTab("Angle/Axis", createAngleAxisPanel());
         tabs.addTab("Quaternion", createQuaternionPanel());
         
         setView(tabs);
@@ -80,6 +81,7 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         Quaternion q = (Quaternion)value;
         quatProps.updateValue(q);
         eulerProps.updateValue(q);
+        angleAxisProps.updateValue(q);
     }
   
     protected JComponent createEulerPanel() {    
@@ -90,7 +92,10 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
     }
 
     protected JComponent createAngleAxisPanel() {
-        return new JLabel("Testing");
+        angleAxisProps = new AngleAxisProperties(getProperty());        
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
+        panel.setObject(angleAxisProps);        
+        return panel;              
     }
     
     protected JComponent createQuaternionPanel() {    
@@ -181,5 +186,68 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
             rotation.fromAngles(angles);
             updateProperty(rotation);              
         }        
-    } 
+    }
+    
+    private class AngleAxisProperties extends AbstractPropertySet {
+ 
+        private Vector3f axis = new Vector3f(0, 1, 0);
+        private Vector3f tempAxis = new Vector3f();
+        private Vector3f normalizedAxis = new Vector3f();
+        private float angle = 0; 
+        private boolean updating = false;
+        
+        public AngleAxisProperties( Property parent ) {
+            super(parent, new Quaternion(),
+                  new DefaultProperty("angle", new NumberRangeType(-FastMath.PI, FastMath.PI, 0.01f), 0f),
+                  new DefaultProperty("x", Float.class, 0f),
+                  new DefaultProperty("y", Float.class, 1f),
+                  new DefaultProperty("z", Float.class, 0f));
+        }
+ 
+        public void updateValue( Quaternion quat ) {
+        
+            updating = true;
+            try {                       
+                angle = quat.toAngleAxis(tempAxis);
+ 
+                // See if our axis is reasonable consistent with the
+                // quaternions... if so then we won't update.
+                float dist = tempAxis.distanceSquared(normalizedAxis);
+                if( dist > 0.01f ) {
+                    // If the tips are closer than 0.01 away then we'll consider
+                    // the current axis to just be a scaled version of the new 
+                    // normalized axis.  Could be that's not close enough... but whatever.
+                    axis.set(tempAxis);               
+                }                
+ 
+                // Just reset them all... it's easier
+                getProperty("x").setValue(axis.x);
+                getProperty("y").setValue(axis.y);
+                getProperty("z").setValue(axis.z);
+                getProperty("angle").setValue(angle);
+            } finally {
+                updating = false;
+            }
+        }
+        
+        @Override
+        protected void propertyChange( PropertyChangeEvent e ) {
+            if( updating ) {
+                // This is a property change because of our own changes in
+                // updateValue
+                return;
+            }
+                    
+            // Just reset them all... it's easier
+            axis.x = (Float)getProperty("x").getValue();    
+            axis.y = (Float)getProperty("y").getValue();    
+            axis.z = (Float)getProperty("z").getValue();
+            normalizedAxis.set(axis);
+            normalizedAxis.normalizeLocal();
+            angle = (Float)getProperty("angle").getValue();   
+            Quaternion rotation = (Quaternion)getObject(); 
+            rotation.fromAngleAxis(angle, axis);
+            updateProperty(rotation);              
+        }        
+    }
 }
