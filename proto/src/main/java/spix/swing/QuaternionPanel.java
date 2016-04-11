@@ -40,6 +40,8 @@ import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import javax.swing.*;
 
+import org.slf4j.*;
+
 import com.jme3.math.*;
 
 import spix.props.*;
@@ -53,7 +55,9 @@ import spix.type.*;
  */
 public class QuaternionPanel extends AbstractPropertyPanel<Component> 
                              implements MulticolumnComponent {
- 
+
+    static Logger log = LoggerFactory.getLogger(QuaternionPanel.class); 
+    
     private SwingGui gui;
     private JTabbedPane tabs;
     private QuaternionProperties quatProps;
@@ -75,6 +79,10 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         tabs.addTab("Quaternion", createQuaternionPanel());
         
         setView(tabs);
+    }
+    
+    protected String getId() {
+        return getProperty().getId();
     }
 
     protected void updateView( Component view, Object value ) {
@@ -117,6 +125,10 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         }
     
         public void updateValue( Quaternion quat ) {
+            if( log.isTraceEnabled() ) {
+                log.trace(getId() + ".QuaternionProperties: updateValue(" + quat + ")");
+            }
+            
             updating = true;
             try {           
                 // Just reset them all... it's easier
@@ -135,6 +147,9 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
                 // This is a property change because of our own changes
                 return;
             }        
+            if( log.isTraceEnabled() ) {
+                log.trace(getId() + ".QuaternionProperties: propertyChange(" + e + ")");
+            }
             // Just reset them all... it's easier
             float x = (Float)getProperty("x").getValue();    
             float y = (Float)getProperty("y").getValue();    
@@ -159,7 +174,11 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         }
  
         public void updateValue( Quaternion quat ) {
-            angles = quat.toAngles(angles);
+            if( log.isTraceEnabled() ) {
+                log.trace(getId() + ".EulerProperties: updateValue(" + quat + ")");
+            }
+            
+            angles = quat.toAngles(angles);            
  
             updating = true;
             try {           
@@ -178,6 +197,9 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
                 // This is a property change because of our own changes
                 return;
             }        
+            if( log.isTraceEnabled() ) {
+                log.trace(getId() + ".EulerProperties: propertyChange(" + e + ")");
+            }
             // Just reset them all... it's easier
             angles[0] = (Float)getProperty("pitch").getValue();    
             angles[1] = (Float)getProperty("yaw").getValue();   
@@ -206,6 +228,10 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
  
         public void updateValue( Quaternion quat ) {
         
+            if( log.isTraceEnabled() ) {
+                log.trace(getId() + ".AngleAxisProperties: updateValue(" + quat + ")");
+            }
+            
             updating = true;
             try {                       
                 angle = quat.toAngleAxis(tempAxis);
@@ -238,6 +264,10 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
                 return;
             }
                     
+            if( log.isTraceEnabled() ) {
+                log.trace(getId() + ".AngleAxisProperties: propertyChange(" + e + ")");
+            }
+            
             // Just reset them all... it's easier
             axis.x = (Float)getProperty("x").getValue();    
             axis.y = (Float)getProperty("y").getValue();    

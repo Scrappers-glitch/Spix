@@ -40,6 +40,8 @@ import java.awt.Component;
 import java.lang.reflect.InvocationTargetException;
 import javax.swing.SwingUtilities;
 
+import org.slf4j.*;
+
 import com.jme3.math.ColorRGBA;
 
 import spix.core.Spix;
@@ -54,6 +56,8 @@ import spix.ui.*;
  *  @author    Paul Speed
  */
 public class SwingGui {
+
+    static Logger log = LoggerFactory.getLogger(SwingGui.class);
 
     public static final Class[] STANDARD_REQUEST_HANDLERS = {
             FileRequester.class,
@@ -75,7 +79,9 @@ public class SwingGui {
     
     public SwingGui( Spix spix, Component rootWindow, Class... requestHandlers ) {
     
-System.out.println("Creating SwingGui on thread:" + Thread.currentThread());    
+        if( log.isDebugEnabled() ) {
+            log.debug("Creating SwingGui on thread:" + Thread.currentThread());
+        }    
         this.spix = spix;
         this.rootWindow = rootWindow;
  
@@ -149,7 +155,9 @@ System.out.println("Creating SwingGui on thread:" + Thread.currentThread());
     
     public Component createComponent( String context, Property prop ) {
         ComponentFactory factory = componentFactories.getHandler(context, prop.getType(), false);
-System.out.println("context:" + context + "  type:" + prop.getType() + "  factory=" + factory);        
+        if( log.isDebugEnabled() ) {
+            log.debug("context:" + context + "  type:" + prop.getType() + "  factory=" + factory);
+        }        
         if( factory == null ) {
             // Might have requested for a primitive type so we'll retry with just object
             // Kind of a hack.
@@ -167,7 +175,9 @@ System.out.println("context:" + context + "  type:" + prop.getType() + "  factor
      *  wrap the object.
      */
     public PropertySet wrap( PropertySet delegate ) {
-System.out.println("wrap()  Current thread:" + Thread.currentThread() + "  property set thread:" + delegate.getCreatingThread());
+        if( log.isDebugEnabled() ) {
+            log.debug("wrap()  Current thread:" + Thread.currentThread() + "  property set thread:" + delegate.getCreatingThread());
+        }
         if( delegate.getCreatingThread() == edt ) {
             // It's already safe for swing as it was created on the swing thread.
             return delegate;
@@ -182,10 +192,14 @@ System.out.println("wrap()  Current thread:" + Thread.currentThread() + "  prope
      */
     public void runOnSwing( Runnable run ) {
         if( SwingUtilities.isEventDispatchThread() ) {
-System.out.println("runOnSwing(): running directly:" + run);        
+            if( log.isTraceEnabled() ) {
+                log.trace("runOnSwing(): running directly:" + run);
+            }        
             run.run();
         } else {
-System.out.println("runOnSwing(): dispatching:" + run);        
+            if( log.isTraceEnabled() ) {
+                log.trace("runOnSwing(): dispatching:" + run);
+            }        
             SwingUtilities.invokeLater(run);
         }
     }
@@ -199,10 +213,14 @@ System.out.println("runOnSwing(): dispatching:" + run);
         // the swing thread or the render thread.  We'll be more disciminating later
         // by keeping track of the render thread reference.
         if( SwingUtilities.isEventDispatchThread() ) {
-System.out.println("runOnRender(): dispatching:" + run);        
+            if( log.isTraceEnabled() ) {
+                log.trace("runOnRender(): dispatching:" + run);
+            }        
             spix.enqueueTask(run);
         } else {
-System.out.println("runOnRender(): running directly:" + run);        
+            if( log.isTraceEnabled() ) {
+                log.trace("runOnRender(): running directly:" + run);
+            }        
             run.run();
         }         
     }

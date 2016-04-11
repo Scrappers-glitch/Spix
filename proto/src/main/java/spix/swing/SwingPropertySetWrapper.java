@@ -36,6 +36,8 @@
 
 package spix.swing;
 
+import org.slf4j.*;
+
 import spix.props.*;
 
 /**
@@ -45,6 +47,8 @@ import spix.props.*;
  *  @author    Paul Speed
  */
 public class SwingPropertySetWrapper extends PropertySetWrapper {
+ 
+    static Logger log = LoggerFactory.getLogger(SwingPropertySetWrapper.class);
  
     private SwingGui gui;
     private String jmeUpdatingProperty = null;
@@ -56,20 +60,26 @@ public class SwingPropertySetWrapper extends PropertySetWrapper {
     }
  
     protected void updateProperty( final Property wrapper, final Property original, final Object oldValue, final Object newValue ) {
-System.out.println(wrapper.getId() + ":$$$ updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")  " + Thread.currentThread());
+        if( log.isTraceEnabled() ) {
+            log.trace(wrapper.getId() + ": updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");
+        }
 
         // Update property should generally always be called from the
         // AWT thread.
         
         if( wrapper.getId().equals(swingUpdatingProperty) ) {
-System.out.println(wrapper.getId() + ":  $ ignoring swing feedback event.");         
+            if( log.isTraceEnabled() ) {
+                log.trace(wrapper.getId() + ": ignoring swing feedback event.");
+            }         
             return;
         } 
 
         // Need to shunt this over to the JME thread
         gui.runOnRender(new Runnable() {
             public void run() {
-System.out.println(wrapper.getId() + ": >>>>>   calling super updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");
+                if( log.isTraceEnabled() ) {
+                    log.trace(wrapper.getId() + ": >>>>>   calling super updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");
+                }
                 
                 // We are on the JME thread.  updateWrapper() will also be called
                 // on the JME thread... but if it's called while we are still in super.updateProperty()
@@ -83,7 +93,9 @@ System.out.println(wrapper.getId() + ": >>>>>   calling super updateProperty(" +
                 } finally {
                     jmeUpdatingProperty = null;
                 }
-System.out.println(wrapper.getId() + ": <<<<<   done calling super updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");            
+                if( log.isTraceEnabled() ) {
+                    log.trace(wrapper.getId() + ": <<<<<   done calling super updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");
+                }            
             }
             
             public String toString() {
@@ -93,7 +105,9 @@ System.out.println(wrapper.getId() + ": <<<<<   done calling super updatePropert
     }
  
     protected void updateWrapper( final String id, final Object value ) {
-System.out.println(id + ":$$$ updateWrapper(" + id + ", " + value + ")  " + Thread.currentThread());
+        if( log.isTraceEnabled() ) {
+            log.trace(id + ": updateWrapper(" + id + ", " + value + ")");
+        }
 
         // Update wrapper should generally always be called from the
         // the render thread.
@@ -101,28 +115,36 @@ System.out.println(id + ":$$$ updateWrapper(" + id + ", " + value + ")  " + Thre
         // as being updated then that means we are still inside an updateProperty() 
         // call and this event is unneeded feedback.
         if( id.equals(jmeUpdatingProperty) ) {
-System.out.println(id + ":  $ ignoring JME feedback event.");         
+            if( log.isTraceEnabled() ) {
+                log.trace(id + ": ignoring JME feedback event.");
+            }         
             return;
         } 
 
         gui.runOnSwing(new Runnable() {
             public void run() {
-System.out.println(id + ":     >>>>> calling super.updateWrapper(" + id + ", " + value + ")");            
+                if( log.isTraceEnabled() ) {
+                    log.trace(id + ": >>>>> calling super.updateWrapper(" + id + ", " + value + ")");
+                }            
                 swingUpdatingProperty = id;
                 try {
                     SwingPropertySetWrapper.super.updateWrapper(id, value);
                 } finally {
                     swingUpdatingProperty = null;
                 }
-System.out.println(id + ":     <<<<< DONE calling super.updateWrapper(" + id + ", " + value + ")");            
+                if( log.isTraceEnabled() ) {
+                    log.trace(id + ": <<<<< DONE calling super.updateWrapper(" + id + ", " + value + ")");
+                }            
             }
             
             public String toString() {
                 return "SwingRunner[" + id + "]";
             }
         });
-        
-System.out.println(id + ":    exiting: updateWrapper(" + id + ", " + value + ")  " + Thread.currentThread());        
+ 
+        if( log.isTraceEnabled() ) {
+            log.trace(id + ": exiting: updateWrapper(" + id + ", " + value + ")");
+        }        
     }
 
 }

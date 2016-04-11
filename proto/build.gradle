@@ -36,7 +36,8 @@ repositories {
     jcenter()
 }
 
-ext.jmeVersion = "[3.1,)"
+//ext.jmeVersion = "[3.1,)"
+ext.jmeVersion = "3.1.0-alpha4"
 //ext.jmeVersion = "unknown"
 
 ext.lemurVersion = "[1.8,)"
@@ -80,6 +81,9 @@ dependencies {
     compile "com.github.insubstantial:substance:[7.3,)"
 
     compile 'org.slf4j:slf4j-api:1.7.13'
+    runtime 'org.apache.logging.log4j:log4j-api:2.5'
+    runtime 'org.apache.logging.log4j:log4j-core:2.5'
+    runtime 'org.apache.logging.log4j:log4j-slf4j-impl:2.5'    
 
     runtime project(':assets')
 }

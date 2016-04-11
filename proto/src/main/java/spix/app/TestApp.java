@@ -52,6 +52,8 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 
+import org.slf4j.*;
+
 import spix.app.light.*;
 import spix.app.properties.*;
 import spix.awt.AwtPanelState;

@@ -40,6 +40,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.*;
 
+import org.slf4j.*;
+
 import com.google.common.base.MoreObjects;
 
 import spix.type.Type;
@@ -50,6 +52,8 @@ import spix.type.Type;
  *  @author    Paul Speed
  */
 public abstract class AbstractPropertySet implements PropertySet {
+
+    static Logger log = LoggerFactory.getLogger(AbstractPropertySet.class);
 
     private Object object;
     private Property parent;
@@ -103,7 +107,9 @@ public abstract class AbstractPropertySet implements PropertySet {
     }
 
     protected void setObject( Object o ) {
-System.out.println("AbstractPropertySet(" + getType() + ").setObject(" + o + ")  thread:" + Thread.currentThread());
+        if( log.isTraceEnabled() ) {
+            log.trace(getType() + ":setObject(" + o + ")");
+        }
         this.object = o;
         if( parent != null ) {
             parent.setValue(object);

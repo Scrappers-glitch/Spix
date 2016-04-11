@@ -40,6 +40,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.*;
 
+import org.slf4j.*;
+
 import spix.type.Type;
 
 /**
@@ -50,6 +52,8 @@ import spix.type.Type;
  *  @author    Paul Speed
  */
 public class PropertySetWrapper implements PropertySet {
+ 
+    static Logger log = LoggerFactory.getLogger(PropertySetWrapper.class);
  
     private final PropertySet delegate;
     private final Type type;
@@ -72,7 +76,6 @@ public class PropertySetWrapper implements PropertySet {
             return;
         }        
         for( Property p : delegate ) {
-System.out.println("Adding listener:" + listener + " to:" + p);        
              p.addPropertyChangeListener(listener);
              
              // And update the values to match
@@ -120,8 +123,10 @@ System.out.println("Adding listener:" + listener + " to:" + p);
      *  and needs to be applied to the delegate or wrapped property. 
      */       
     protected void updateProperty( Property wrapper, Property original, Object oldValue, Object newValue ) {
+        if( log.isTraceEnabled() ) {
+            log.trace("updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")");
+        }
         // Right now just pass the property through
-System.out.println("### updateProperty(" + wrapper.getId() + ", " + oldValue + ", " + newValue + ")  " + Thread.currentThread());
         original.setValue(newValue);
     }
  
@@ -130,14 +135,18 @@ System.out.println("### updateProperty(" + wrapper.getId() + ", " + oldValue + "
      *  to the outer wrapper.
      */
     protected void updateWrapper( String id, Object value ) {
-System.out.println("### updateWrapper(" + id + ", " + value + ")  " + Thread.currentThread());
+        if( log.isTraceEnabled() ) {
+            log.trace("updateWrapper(" + id + ", " + value + ")");
+        }
         properties.get(id).setValue(value);    
     }
     
     private class WrapperListener implements PropertyChangeListener {
         
         public void propertyChange( PropertyChangeEvent event ) {
-            System.out.println("Wrapped object changed:" + event);
+            if( log.isTraceEnabled() ) {
+                log.trace("Wrapped object changed:" + event);
+            }
             updateWrapper(event.getPropertyName(), event.getNewValue());
         }
     }

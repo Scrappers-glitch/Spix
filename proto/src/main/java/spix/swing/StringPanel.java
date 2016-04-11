@@ -40,6 +40,8 @@ import java.awt.event.*;
 import javax.swing.*;                 
 import javax.swing.event.*;
 
+import org.slf4j.*;
+
 import com.google.common.base.*;
 
 import spix.core.ToStringFunction;
@@ -53,6 +55,8 @@ import spix.type.Type;
  *  @author    Paul Speed
  */
 public class StringPanel extends AbstractPropertyPanel<JTextField> {
+
+    static Logger log = LoggerFactory.getLogger(StringPanel.class);
 
     private Function<Object, String> toString;    
     private Function<String, Object> fromString;    
@@ -78,15 +82,24 @@ public class StringPanel extends AbstractPropertyPanel<JTextField> {
     }
     
     protected void updateView( JTextField view, Object value ) {
+        if( log.isTraceEnabled() ) {
+            log.trace(getProperty().getId() + ": updateView(" + value + ")");
+        }
         view.setText(toString.apply(value));
     }
     
     protected void resetValue() {
+        if( log.isTraceEnabled() ) {
+            log.trace(getProperty().getId() + ": resetValue()");
+        }
         updateView(getView(), getProperty().getValue());
     }
 
     protected void commitValue() {
         String value = getView().getText();
+        if( log.isTraceEnabled() ) {
+            log.trace(getProperty().getId() + ": commitValue() =" + value);
+        }
         if( fromString != null ) {
             updateProperty(fromString.apply(value));
         } else {

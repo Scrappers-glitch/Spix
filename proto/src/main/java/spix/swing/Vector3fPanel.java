@@ -40,6 +40,8 @@ import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import javax.swing.*;
 
+import org.slf4j.*;
+
 import com.jme3.math.*;
 
 import spix.props.*;
@@ -52,6 +54,8 @@ import spix.type.*;
  */
 public class Vector3fPanel extends AbstractPropertyPanel<Component> 
                              implements MulticolumnComponent {
+                             
+    static Logger log = LoggerFactory.getLogger(Vector3fPanel.class);
  
     private SwingGui gui;
     private PropertySet vecProps;
@@ -73,6 +77,9 @@ public class Vector3fPanel extends AbstractPropertyPanel<Component>
                 if( updating ) {
                     return;
                 }
+                if( log.isTraceEnabled() ) {
+                    log.trace("propertyChange(" + e + ")");
+                }
                 super.propertyChange(e);
             }                   
         };       
@@ -83,6 +90,10 @@ public class Vector3fPanel extends AbstractPropertyPanel<Component>
     
     protected void updateView( Component view, Object value ) {
  
+        if( log.isTraceEnabled() ) {
+            log.trace(getProperty().getId() + ": updateView(" + value + ")");
+        }
+        
         // In these cases where we hold a value outside in its own
         // property set, it's _extremely_ disruptive to the event chains
         // to send back property change events that are only due to us

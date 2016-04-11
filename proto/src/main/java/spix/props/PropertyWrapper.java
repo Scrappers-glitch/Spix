@@ -38,6 +38,8 @@ package spix.props;
 
 import java.util.Objects;
 
+import org.slf4j.*;
+
 import com.jme3.util.clone.Cloner;
 
 import spix.type.Type;
@@ -49,6 +51,8 @@ import spix.type.Type;
  *  @author    Paul Speed
  */
 public class PropertyWrapper extends AbstractProperty {
+
+    static Logger log = LoggerFactory.getLogger(PropertyWrapper.class);
 
     // Keep a static cloner just for its javaClone() method
     private static final Cloner CLONER = new Cloner();
@@ -87,7 +91,9 @@ public class PropertyWrapper extends AbstractProperty {
     
     @Override
     public void setValue( Object value ) {
-System.out.println("  ## PropertyWrapper.setValue(" + value + ")  old:" + this.value);    
+        if( log.isTraceEnabled() ) {
+            log.trace(getId() + ": PropertyWrapper.setValue(" + value + ")  old:" + this.value);    
+        }
         Object old = this.value;
         boolean changed = !Objects.equals(old, value);
         
