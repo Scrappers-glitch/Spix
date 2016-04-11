@@ -593,8 +593,8 @@ public class TestApp extends SimpleApplication {
         Geometry geom = new Geometry("Box", b);
         Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         //mat.setTexture("ColorMap", assetManager.loadTexture("Interface/Logo/Monkey.jpg"));
-        mat.setColor("Diffuse", ColorRGBA.Blue);
-        mat.setColor("Ambient", ColorRGBA.Blue);
+        mat.setColor("Diffuse", ColorRGBA.Gray);
+        mat.setColor("Ambient", ColorRGBA.Gray);
         mat.setBoolean("UseMaterialColors", true);
         geom.setMaterial(mat);
         rootNode.attachChild(geom);
@@ -604,7 +604,7 @@ public class TestApp extends SimpleApplication {
         rootNode.addLight(light);
 
         AmbientLight ambient = new AmbientLight();
-        ambient.setColor(new ColorRGBA(0.5f, 0.5f, 0.2f, 1));
+        ambient.setColor(new ColorRGBA(0.25f, 0.25f, 0.25f, 1));
         rootNode.addLight(ambient);
 
         PointLight pl = new PointLight(new Vector3f(-2,0,-2), 4);
