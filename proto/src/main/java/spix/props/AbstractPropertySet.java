@@ -103,7 +103,7 @@ public abstract class AbstractPropertySet implements PropertySet {
     }
 
     protected void setObject( Object o ) {
-System.out.println("setObject(" + o + ")");
+System.out.println("AbstractPropertySet(" + getType() + ").setObject(" + o + ")  thread:" + Thread.currentThread());
         this.object = o;
         if( parent != null ) {
             parent.setValue(object);

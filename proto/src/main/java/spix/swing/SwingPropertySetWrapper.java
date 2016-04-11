@@ -48,6 +48,7 @@ public class SwingPropertySetWrapper extends PropertySetWrapper {
  
     private SwingGui gui;
     private String jmeUpdatingProperty = null;
+    private String swingUpdatingProperty = null;
     
     public SwingPropertySetWrapper( SwingGui gui, PropertySet delegate ) {
         super(delegate);
@@ -59,6 +60,11 @@ System.out.println(wrapper.getId() + ":$$$ updateProperty(" + wrapper.getId() + 
 
         // Update property should generally always be called from the
         // AWT thread.
+        
+        if( wrapper.getId().equals(swingUpdatingProperty) ) {
+System.out.println(wrapper.getId() + ":  $ ignoring swing feedback event.");         
+            return;
+        } 
 
         // Need to shunt this over to the JME thread
         gui.runOnRender(new Runnable() {
@@ -95,13 +101,20 @@ System.out.println(id + ":$$$ updateWrapper(" + id + ", " + value + ")  " + Thre
         // as being updated then that means we are still inside an updateProperty() 
         // call and this event is unneeded feedback.
         if( id.equals(jmeUpdatingProperty) ) {
-System.out.println(id + ":  $ ignoring feedback event.");         
+System.out.println(id + ":  $ ignoring JME feedback event.");         
             return;
         } 
 
         gui.runOnSwing(new Runnable() {
             public void run() {
-                SwingPropertySetWrapper.super.updateWrapper(id, value);
+System.out.println(id + ":     >>>>> calling super.updateWrapper(" + id + ", " + value + ")");            
+                swingUpdatingProperty = id;
+                try {
+                    SwingPropertySetWrapper.super.updateWrapper(id, value);
+                } finally {
+                    swingUpdatingProperty = null;
+                }
+System.out.println(id + ":     <<<<< DONE calling super.updateWrapper(" + id + ", " + value + ")");            
             }
             
             public String toString() {

@@ -165,9 +165,11 @@ public class TestApp extends SimpleApplication {
                 
                 // Register a custom read-only display for Vector3fs that formats the values
                 // a little better.
-                gui.registerComponentFactory(Vector3f.class, 
-                                             new DefaultComponentFactory(new Vec3fStringFunction())); 
-                gui.registerComponentFactory(Quaternion.class, 
+                gui.registerComponentFactory(Vector3f.class,  
+                                             new DefaultComponentFactory(new Vec3fStringFunction()));
+                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Vector3f.class,                                                                                           
+                                             new DefaultComponentFactory(Vector3fPanel.class)); 
+                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Quaternion.class, 
                                              new DefaultComponentFactory(QuaternionPanel.class)); 
 
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");
