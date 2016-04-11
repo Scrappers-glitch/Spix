@@ -42,20 +42,14 @@ import com.jme3.light.*;
 import com.jme3.material.*;
 import com.jme3.math.*;
 import com.jme3.renderer.*;
-import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
-import com.jme3.scene.control.*;
-import com.jme3.scene.shape.*;
-import com.jme3.texture.Texture;
 import com.jme3.util.*;
-import com.simsilica.lemur.*;
 //import javafx.scene.shape.Circle;
 import com.simsilica.lemur.event.*;
 import spix.app.*;
 import spix.core.*;
 
 import java.beans.*;
-import java.nio.*;
 
 
 /**
@@ -72,6 +66,7 @@ public class LightWidgetState extends BaseAppState {
     private SafeArrayList<LightWrapper> wrappers = new SafeArrayList<>(LightWrapper.class);
     private SelectionModel selection;
     private SelectionObserver selectionObserver = new SelectionObserver();
+    private LightSelectionDispatcher selectionDispatcher = new LightSelectionDispatcher();
 
     public LightWidgetState() {
     }
@@ -125,8 +120,6 @@ public class LightWidgetState extends BaseAppState {
                 break;
         }
 
-        CursorEventControl.addListenersToSpatial(widget, new LightSelectionListener());
-
         lightNode.attachChild(widget);
     }
 
@@ -139,12 +132,14 @@ public class LightWidgetState extends BaseAppState {
         getRoot().attachChild(lightNode);
         this.selection = getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         selection.addPropertyChangeListener(selectionObserver);
+        CursorEventControl.addListenersToSpatial(lightNode, selectionDispatcher);
     }
 
     @Override
     protected void onDisable() {
         lightNode.removeFromParent();
         selection.removePropertyChangeListener(selectionObserver);
+        CursorEventControl.removeListenersFromSpatial(lightNode, selectionDispatcher);
     }
 
     @Override
@@ -158,10 +153,27 @@ public class LightWidgetState extends BaseAppState {
     public void render(RenderManager renderManager) {
     }
 
-    private class LightSelectionListener implements CursorListener{
+    private class LightSelectionDispatcher implements CursorListener{
+
+        private CursorMotionEvent lastMotion;
 
         public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
-            getState(SpixState.class).getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(getWrapper(capture));
+
+            //It's important here that the event isPressed is false (on key up)
+            //else there are some strange things with event orders
+            if( !event.isPressed() && lastMotion != null ) {
+                // Set the selection
+                Geometry selected = null;
+                if( lastMotion.getCollision() != null ) {
+                    selected = lastMotion.getCollision().getGeometry();
+                }
+                //System.out.println("Setting selection to:" + selected +" " + capture +" " + target);
+                if(selected == null){
+                    return;
+                }
+                Spatial widget = findWidget(selected);
+                getState(SpixState.class).getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(getWrapper(widget));
+            }
         }
 
         public void cursorEntered( CursorMotionEvent event, Spatial target, Spatial capture ) {
@@ -171,6 +183,18 @@ public class LightWidgetState extends BaseAppState {
         }
 
         public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
+            this.lastMotion = event;
+        }
+
+        private Spatial findWidget(Spatial s){
+            if(s == null){
+                return null;
+            }
+            if(s.getParent() == lightNode){
+                return s;
+            } else {
+                return findWidget(s.getParent());
+            }
         }
     }
 
