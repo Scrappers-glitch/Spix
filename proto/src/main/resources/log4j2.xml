@@ -4,7 +4,7 @@
     <RollingFile name="RollingFile" fileName="spix.log" ignoreExceptions="false"                
                  filePattern="logs/$${date:yyyy-MM}/spix-%d{MM-dd-yyyy}-%i.log.gz">
       <PatternLayout>
-        <Pattern>%d{ABSOLUTE} %-5p [%c{1}] %m%n</Pattern>        
+        <Pattern>%d{ABSOLUTE} %t %-5p [%c{1}] %m%n</Pattern>        
       </PatternLayout>
       <OnStartupTriggeringPolicy />
     </RollingFile>
