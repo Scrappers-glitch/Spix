@@ -52,8 +52,6 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 
-import org.slf4j.*;
-
 import spix.app.light.*;
 import spix.app.properties.*;
 import spix.awt.AwtPanelState;
@@ -100,7 +98,9 @@ public class TestApp extends SimpleApplication {
               new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(true),
               new GridState(), new BackgroundColorState(),
               new SelectionHighlightState(),
+              new TransformState(),
               new TranslationWidgetState(),
+              new ScaleWidgetState(false),
                 new LightWidgetState(),
               new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
               new SpixState(new Spix()));
@@ -273,6 +273,18 @@ public class TestApp extends SimpleApplication {
         // Bind it to the translation widget app state also
         spix.getBlackboard().bind("transform.mode", stateManager.getState(TranslationWidgetState.class),
                                   "enabled", Predicates.equalTo("translate"));
+
+
+        ToggleAction scale = transform.add(new AbstractToggleAction("Scale") {
+            public void performAction( Spix spix ) {
+                spix.getBlackboard().set("transform.mode", "scale");
+            }
+        });
+        spix.getBlackboard().bind("transform.mode", scale, "toggled", Predicates.equalTo("scale"));
+
+        // Bind it to the translation widget app state also
+        spix.getBlackboard().bind("transform.mode", stateManager.getState(ScaleWidgetState.class),
+                "enabled", Predicates.equalTo("scale"));
 
         // And translate by default
         spix.getBlackboard().set("transform.mode", "translate");

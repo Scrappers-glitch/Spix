@@ -92,9 +92,8 @@ public class TranslationWidgetState extends BaseAppState {
     private int dragMouseButton = MouseInput.BUTTON_LEFT;
 
     private static final String GROUP = "Move State";
-    private static final String GROUP_DRAG_ADDITIONAL_INPUTS = "Draggind additional inputs";
+    private static final String GROUP_DRAG_ADDITIONAL_INPUTS = "Dragging additional inputs";
     private static final String GROUP_MOVING = "Moving";
-    private static final FunctionId F_GRAB = new FunctionId(GROUP, "Grab");
     private static final FunctionId F_DONE = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Done");
     private static final FunctionId F_CANCEL = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Cancel");
     private static final FunctionId F_X_CONSTRAIN = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "X axis constrain");
@@ -190,7 +189,7 @@ public class TranslationWidgetState extends BaseAppState {
 
     private void initKeyMappings() {
         inputMapper = GuiGlobals.getInstance().getInputMapper();
-        inputMapper.map(F_GRAB, KeyInput.KEY_G);
+        //inputMapper.map(F_GRAB, KeyInput.KEY_G);
 
         inputMapper.map(F_DONE, KeyInput.KEY_RETURN);
         inputMapper.map(F_DONE, Button.MOUSE_BUTTON1);
@@ -214,12 +213,6 @@ public class TranslationWidgetState extends BaseAppState {
         inputMapper.addStateListener(new StateFunctionListener() {
             @Override
             public void valueChanged(FunctionId func, InputState value, double tpf) {
-                if(func == F_GRAB && value == InputState.Positive){
-                    //Activating the mouse listener and starting to drag at current cursor coordinates.
-                    inputMapper.activateGroup(GROUP_MOVING);
-                    Vector2f cursor = getApplication().getInputManager().getCursorPosition();
-                    dragManager.startDrag(cursor.getX(), cursor.getY());
-                }
                 if(func == F_DONE && value == InputState.Positive){
                     //The dragging is done.
                     inputMapper.deactivateGroup(GROUP_MOVING);
@@ -231,7 +224,7 @@ public class TranslationWidgetState extends BaseAppState {
                     dragManager.cancel();
                 }
             }
-        },F_GRAB, F_DONE, F_CANCEL);
+        },F_DONE, F_CANCEL);
 
         inputMapper.addStateListener(new StateFunctionListener() {
             @Override
@@ -259,6 +252,13 @@ public class TranslationWidgetState extends BaseAppState {
 
             }
         }, F_HORIZONTAL_DRAG, F_VERTICAL_DRAG);
+    }
+
+    public void startKeyTransform() {
+        //Activating the mouse listener and starting to drag at current cursor coordinates.
+        inputMapper.activateGroup(GROUP_MOVING);
+        Vector2f cursor = getApplication().getInputManager().getCursorPosition();
+        dragManager.startDrag(cursor.getX(), cursor.getY());
     }
 
     protected Material createMaterial( ColorRGBA color ) {
