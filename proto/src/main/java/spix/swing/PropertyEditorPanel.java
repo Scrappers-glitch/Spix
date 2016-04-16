@@ -41,6 +41,8 @@ import javax.swing.*;
 
 import com.google.common.base.MoreObjects;
 
+import org.slf4j.*;
+
 import spix.core.Spix;
 import spix.form.*;
 import spix.props.*;
@@ -52,6 +54,8 @@ import spix.props.*;
  *  @author    Paul Speed
  */
 public class PropertyEditorPanel extends JPanel {
+
+    static Logger log = LoggerFactory.getLogger(PropertyEditorPanel.class);
 
     private SwingGui gui;
     private PropertySet properties;
@@ -206,14 +210,14 @@ System.out.println(form.debugString());
     }
 
     public void addNotify() {
-System.out.println("Editor panel addNotify():" + this);        
+        log.trace("Editor panel addNotify():" + this);        
         super.addNotify();
         attach();
         isPeered = true;
     }
     
     public void removeNotify() {
-System.out.println("Editor panel removeNotify():" + this);    
+        log.trace("Editor panel removeNotify():" + this);    
         isPeered = false;
         detach();
         super.removeNotify();
