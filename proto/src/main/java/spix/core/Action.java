@@ -55,6 +55,7 @@ public interface Action extends Map {
     public static final String NAME = "name";
     public static final String ENABLED = "enabled";
     public static final String VISIBLE = "visible";
+    public static final String ACCELERATOR = "accelerator";
      
     public String getId();
     public void setEnabled( boolean b );

@@ -53,10 +53,6 @@ import spix.util.NameUtils;
 public abstract class AbstractAction extends ObservableMap
                                      implements Action {
 
-    public static final String NAME = "name";
-    public static final String ENABLED = "enabled";
-    public static final String VISIBLE = "visible";
-
     private final String id;
 
     protected AbstractAction( String id ) {
