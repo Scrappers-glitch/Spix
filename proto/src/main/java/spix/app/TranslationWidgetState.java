@@ -374,6 +374,8 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
     @Override
     public void update( float tpf ) {
 
+        updateWidgetPosition();
+
         Vector3f relative = widget.getWorldTranslation().subtract(cam.getLocation());
         Vector3f dir = relative.normalize();
         axisColors[0].a = dirAlpha(dir, Vector3f.UNIT_X);
@@ -483,9 +485,24 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, null);
     }
 
+    protected void updateWidgetPosition() {
+        if( selectedObjects.isEmpty() ) {
+            widget.removeFromParent();
+            return;
+        }
+        
+        // Recalculate the selected object center
+        selectionCenter.set(0,0,0);
+        for( SelectedObject s : selectedObjects.getArray() ) {
+            selectionCenter.addLocal(s.getWorldTranslation());
+        }
+        selectionCenter.divideLocal(selectedObjects.size());
+        widget.setLocalTranslation(selectionCenter);
+    }
+
     protected void moveSelectedObjects( Vector3f delta ) {
         Vector3f pos = new Vector3f();
-        for( SelectedObject s : selectedObjects ) {
+        for( SelectedObject s : selectedObjects.getArray() ) {
             // Translate the delta into the spatial's local space
             Vector3f v = s.getWorldTranslation().add(delta);
             s.setWorldTranslation(v);
