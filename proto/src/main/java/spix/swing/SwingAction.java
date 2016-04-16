@@ -40,6 +40,7 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
 import spix.core.Action;
@@ -74,8 +75,9 @@ public class SwingAction implements javax.swing.Action {
     }
 
     public Object getValue( String key ) {
-        key = toSpixProperty(key);
-        return action.get(key);
+        String spixKey = toSpixProperty(key);
+        Object result = action.get(spixKey); 
+        return toSwingValue(key, result); 
     }
 
     public void setEnabled( boolean b ) {
@@ -100,7 +102,7 @@ public class SwingAction implements javax.swing.Action {
         }
 
         key = toSpixProperty(key);
-        value = toSpixValue(value);
+        value = toSpixValue(key, value);
         action.put(key, value);
     }
 
@@ -123,6 +125,8 @@ public class SwingAction implements javax.swing.Action {
                 return NAME;
             case ToggleAction.TOGGLED:
                 return SELECTED_KEY;
+            case Action.ACCELERATOR:
+                return ACCELERATOR_KEY;
             default:
                 return s;
         }
@@ -134,6 +138,8 @@ public class SwingAction implements javax.swing.Action {
                 return Action.NAME;
             case SELECTED_KEY:
                 return ToggleAction.TOGGLED;
+            case ACCELERATOR_KEY:
+                return Action.ACCELERATOR;
             default:
                 return s;
         }
@@ -152,18 +158,31 @@ public static final String 	SMALL_ICON 	"SmallIcon"
 */
     }
 
-    public static Object toSwingValue( Object o ) {
+    public static Object toSwingValue( String key, Object o ) {
+        if( o == null ) {
+            return null;
+        }
+        if( ACCELERATOR_KEY.equals(key) ) {
+            if( o instanceof String ) {
+                KeyStroke ks = KeyStroke.getKeyStroke(String.valueOf(o));
+                return ks;
+            } else {
+                throw new UnsupportedOperationException("Currently only accept string key stroke descriptions for ACCELERATOR.");
+            }   
+        }
         return o;
     }
 
-    public static Object toSpixValue( Object o ) {
+    public static Object toSpixValue( String key, Object o ) {
         return o;
     }
 
     protected void firePropertyChange( PropertyChangeEvent event ) {
 System.out.println("SwingAction.firePropertyChange(" + event + ") on thread:" + Thread.currentThread());
         String name = toSwingProperty(event.getPropertyName());
-        dispatcher.firePropertyChange(name, event.getOldValue(), event.getNewValue());
+        Object old = toSwingValue(event.getPropertyName(), event.getOldValue()); 
+        Object value = toSwingValue(event.getPropertyName(), event.getNewValue()); 
+        dispatcher.firePropertyChange(name, old, value);
     }
 
     private class DelegateObserver implements PropertyChangeListener {
