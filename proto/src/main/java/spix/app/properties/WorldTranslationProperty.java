@@ -66,7 +66,7 @@ public class WorldTranslationProperty extends AbstractProperty {
         // Make sure the local translation matches
         if( localTranslation != null ) {
             updating = true;
-            try {            
+            try {
                 localTranslation.setValue(spatial.getLocalTranslation());
                 lastWorld.set(spatial.getWorldTranslation());
             } finally {
