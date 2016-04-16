@@ -58,12 +58,25 @@ public class CompositeEdit implements Edit {
     }
  
     public void addEdit( Edit edit ) {
+    
+        // Note: we add every edit in order because its easier but
+        // we could and maybe should be merging them when possible.
+        // For example, if the same property is being edited over and over
+        // then we could merge it into just one property edit with the earliest
+        // old value and the latest new value.
+        //
+        // However, doing so adds complexity and we could get it wrong.  For
+        // example, when just one property is getting edited then it's clear
+        // what to do... but when it's multiple we might be screwing up some
+        // order specific dependencies.  Still, it's a future improvement
+        // worth looking into.
+    
         edits.add(edit);
     }
  
     @Override   
     public void undo( Spix spix ) {
-        
+ 
         // If the edits were added in order then we need to undo them in 
         // reverse order... just in case.
         for( int i = edits.size() - 1; i >= 0; i-- ) {
