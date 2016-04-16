@@ -34,56 +34,30 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.app;
+package spix.undo;
 
-import com.jme3.app.Application;
-import com.jme3.app.state.BaseAppState;
-
+import spix.core.AbstractAction;
 import spix.core.Spix;
-import spix.undo.UndoManager;
-
 
 /**
- *  An app state wrapper for a Spix instance to make it easy
- *  to grab later.
+ *
  *
  *  @author    Paul Speed
  */
-public class SpixState extends BaseAppState {
+public class RedoAction extends AbstractAction {
 
-    private Spix spix;
-    private UndoManager undoManager;
+    public static final String DEFAULT_ID = "redo";
+    public static final Object DEFAULT_ACCELERATOR = "control Y";
 
-    public SpixState( Spix spix ) {
-        this.spix = spix;
+    private UndoManager manager;
+
+    public RedoAction( UndoManager manager ) {
+        super(DEFAULT_ID, "Redo");
+        this.manager = manager;
+        put(ACCELERATOR, DEFAULT_ACCELERATOR);
     }
     
-    public Spix getSpix() {
-        return spix;
-    }
-    
-    @Override   
-    protected void initialize( Application app ) {
-    }
-    
-    @Override   
-    protected void cleanup( Application app ) {
-    }
-    
-    @Override   
-    protected void onEnable() {
-        undoManager = spix.getService(UndoManager.class);
-    }
- 
-    @Override
-    public void update( float tpf ) {
-        spix.runTasks();
-        if( undoManager != null ) {
-            undoManager.nextFrame();
-        }
-    }
-    
-    @Override   
-    protected void onDisable() {
+    public void performAction( Spix spix ) {
+        manager.redo();
     }    
 }

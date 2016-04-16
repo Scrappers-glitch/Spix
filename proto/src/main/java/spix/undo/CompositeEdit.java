@@ -34,56 +34,55 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.app;
+package spix.undo;
 
-import com.jme3.app.Application;
-import com.jme3.app.state.BaseAppState;
+import java.util.*;
+
+import org.slf4j.*;
 
 import spix.core.Spix;
-import spix.undo.UndoManager;
-
 
 /**
- *  An app state wrapper for a Spix instance to make it easy
- *  to grab later.
+ *  A list of Edits that are run together in order.
  *
  *  @author    Paul Speed
  */
-public class SpixState extends BaseAppState {
+public class CompositeEdit implements Edit {
 
-    private Spix spix;
-    private UndoManager undoManager;
+    static Logger log = LoggerFactory.getLogger(CompositeEdit.class);
 
-    public SpixState( Spix spix ) {
-        this.spix = spix;
-    }
+    private List<Edit> edits = new ArrayList<>();
     
-    public Spix getSpix() {
-        return spix;
-    }
-    
-    @Override   
-    protected void initialize( Application app ) {
-    }
-    
-    @Override   
-    protected void cleanup( Application app ) {
-    }
-    
-    @Override   
-    protected void onEnable() {
-        undoManager = spix.getService(UndoManager.class);
+    public CompositeEdit( Edit... edits ) {
+        this.edits.addAll(Arrays.asList(edits));
     }
  
-    @Override
-    public void update( float tpf ) {
-        spix.runTasks();
-        if( undoManager != null ) {
-            undoManager.nextFrame();
+    public void addEdit( Edit edit ) {
+        edits.add(edit);
+    }
+ 
+    @Override   
+    public void undo( Spix spix ) {
+        
+        // If the edits were added in order then we need to undo them in 
+        // reverse order... just in case.
+        for( int i = edits.size() - 1; i >= 0; i-- ) {
+            Edit edit = edits.get(i);
+            log.debug("undo:" + edit);
+            edit.undo(spix);
         }
     }
     
     @Override   
-    protected void onDisable() {
-    }    
+    public void redo( Spix spix ) {
+        for( Edit edit : edits ) {
+            log.debug("redo:" + edit);
+            edit.redo(spix);
+        }
+    }
+ 
+    @Override   
+    public String toString() {
+        return "CompositeEdit" + edits;
+    }
 }

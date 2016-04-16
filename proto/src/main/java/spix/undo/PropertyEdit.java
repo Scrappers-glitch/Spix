@@ -34,56 +34,56 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.app;
+package spix.undo;
 
-import com.jme3.app.Application;
-import com.jme3.app.state.BaseAppState;
+import com.google.common.base.MoreObjects;
 
 import spix.core.Spix;
-import spix.undo.UndoManager;
-
+import spix.props.*;
 
 /**
- *  An app state wrapper for a Spix instance to make it easy
- *  to grab later.
+ *  Edits a property value by applying the old value or new value
+ *  to its PropertySet depending on if the edit's undo() or redo()
+ *  is called.
  *
  *  @author    Paul Speed
  */
-public class SpixState extends BaseAppState {
+public class PropertyEdit implements Edit {
 
-    private Spix spix;
-    private UndoManager undoManager;
+    private Object target;
+    private String property;
+    private Object oldValue;
+    private Object newValue;
+    
+    public PropertyEdit( Object target, String property, Object oldValue, Object newValue ) {
+        this.target = target;
+        this.property = property;
+        this.oldValue = oldValue;
+        this.newValue = newValue;
+    }
 
-    public SpixState( Spix spix ) {
-        this.spix = spix;
+    protected Property getProperty( Spix spix ) {
+        PropertySet set = spix.getPropertySet(target);
+        return set.getProperty(property);
     }
-    
-    public Spix getSpix() {
-        return spix;
-    }
-    
-    @Override   
-    protected void initialize( Application app ) {
-    }
-    
-    @Override   
-    protected void cleanup( Application app ) {
-    }
-    
-    @Override   
-    protected void onEnable() {
-        undoManager = spix.getService(UndoManager.class);
-    }
- 
+
     @Override
-    public void update( float tpf ) {
-        spix.runTasks();
-        if( undoManager != null ) {
-            undoManager.nextFrame();
-        }
+    public void undo( Spix spix ) {
+        getProperty(spix).setValue(oldValue);        
     }
     
-    @Override   
-    protected void onDisable() {
-    }    
+    @Override
+    public void redo( Spix spix ) {
+        getProperty(spix).setValue(newValue);        
+    }
+    
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(getClass().getSimpleName())
+            .add("target", target)
+            .add("property", property)
+            .add("undoValue", oldValue)
+            .add("redoValue", newValue)
+            .toString();
+    }
 }

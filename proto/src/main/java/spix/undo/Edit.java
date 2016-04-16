@@ -34,56 +34,18 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package spix.app;
-
-import com.jme3.app.Application;
-import com.jme3.app.state.BaseAppState;
+package spix.undo;
 
 import spix.core.Spix;
-import spix.undo.UndoManager;
-
 
 /**
- *  An app state wrapper for a Spix instance to make it easy
- *  to grab later.
+ *  A single 'edit' in command form where undo() rolls back
+ *  the change and redo() performs it again.
  *
  *  @author    Paul Speed
  */
-public class SpixState extends BaseAppState {
+public interface Edit {
 
-    private Spix spix;
-    private UndoManager undoManager;
-
-    public SpixState( Spix spix ) {
-        this.spix = spix;
-    }
-    
-    public Spix getSpix() {
-        return spix;
-    }
-    
-    @Override   
-    protected void initialize( Application app ) {
-    }
-    
-    @Override   
-    protected void cleanup( Application app ) {
-    }
-    
-    @Override   
-    protected void onEnable() {
-        undoManager = spix.getService(UndoManager.class);
-    }
- 
-    @Override
-    public void update( float tpf ) {
-        spix.runTasks();
-        if( undoManager != null ) {
-            undoManager.nextFrame();
-        }
-    }
-    
-    @Override   
-    protected void onDisable() {
-    }    
+    public void undo( Spix spix );
+    public void redo( Spix spix );
 }

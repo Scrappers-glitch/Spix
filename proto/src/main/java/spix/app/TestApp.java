@@ -60,6 +60,7 @@ import spix.core.Action;
 import spix.swing.ActionUtils;
 import spix.swing.*;
 import spix.ui.*;
+import spix.undo.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -260,7 +261,21 @@ public class TestApp extends SimpleApplication {
             }
         });
 
+        // Setup the undo manager
+        UndoManager undoManager = new UndoManager(spix);
+        spix.registerService(UndoManager.class, undoManager);
+
         ActionList edit = main.add(new DefaultActionList("Edit"));
+
+        edit.add(new UndoAction(undoManager));
+        edit.add(new RedoAction(undoManager));
+        // Just some test edit actions
+        //edit.add(null);
+        //edit.add(new NopAction("Cut"));
+        //edit.add(new NopAction("Copy"));
+        //edit.add(new NopAction("Paste"));
+
+        edit.add(null);
         ActionList transform = edit.add(new DefaultActionList("Transform"));
 
         ToggleAction translate = transform.add(new AbstractToggleAction("Translate") {
@@ -288,12 +303,6 @@ public class TestApp extends SimpleApplication {
 
         // And translate by default
         spix.getBlackboard().set("transform.mode", "translate");
-
-        edit.add(null);
-        // Just some test edit actions
-        edit.add(new NopAction("Cut"));
-        edit.add(new NopAction("Copy"));
-        edit.add(new NopAction("Paste"));
 
         ActionList camera = main.add(new DefaultActionList("Camera"));
         final ToggleAction fly = camera.add(new AbstractToggleAction("Fly") {
