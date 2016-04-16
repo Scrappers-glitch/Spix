@@ -36,9 +36,10 @@
 
 package spix.core;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.google.common.cache.*;
 
@@ -76,6 +77,11 @@ public class Spix {
      *  one to one mapping for instances.
      */
     private final LoadingCache<Object, PropertySet> propertySetCache;
+
+    /**
+     *  Notified about various spix internal events.
+     */
+    private final List<SpixListener> listeners = new CopyOnWriteArrayList<>();
 
     public Spix() {
         this.propertySetCache = CacheBuilder.newBuilder()
@@ -182,6 +188,24 @@ public class Spix {
         }
     }
 
+    public void addSpixListener( SpixListener l ) {
+        listeners.add(l);
+    }
+
+    public void removeSpixListener( SpixListener l ) {
+        listeners.remove(l);
+    }
+
+    private PropertySet firePropertySetCreated( Object value, PropertySet set ) {        
+        for( SpixListener l : listeners ) {
+            PropertySet ps = l.propertySetCreated(value, set);
+            if( ps != null ) {
+                set = ps;
+            }
+        } 
+        return set;       
+    } 
+
     private class PropertySetCacheLoader extends CacheLoader<Object, PropertySet> {
 
         public PropertySet load( Object value ) {
@@ -191,7 +215,8 @@ System.out.println("Creating a property set for:" + value);
                 // Have to return something or the loading cache gets unhappy
                 return NULL_PROPERTIES;
             }
-            return factory.createPropertySet(value, Spix.this);
+            PropertySet result = factory.createPropertySet(value, Spix.this);
+            return firePropertySetCreated(value, result);
         }
     }
 }
