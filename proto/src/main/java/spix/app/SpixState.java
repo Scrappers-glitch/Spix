@@ -53,7 +53,7 @@ public class SpixState extends BaseAppState {
 
     private Spix spix;
     private UndoManager undoManager;
-
+    
     public SpixState( Spix spix ) {
         this.spix = spix;
     }

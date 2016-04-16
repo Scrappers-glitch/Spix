@@ -64,6 +64,12 @@ public class UndoManager {
     private long frame;
     private long lastEditFrame;
  
+    private long frameDelay = 15; // presuming we are called at 60 hz then this is .25 of a second.
+                // But note the above is kind of a hack to work around the fact that the app
+                // doesn't know 'dragging' state.  I mean, we'll always probably want some small
+                // value depending on what we do but it would also be nice to hold the transaction
+                // completely during drags.
+ 
     private CompositeEdit transaction = null;
  
     private LinkedList<Edit> undoStack = new LinkedList<>();
@@ -147,7 +153,7 @@ public class UndoManager {
      */   
     public void nextFrame() {
         frame++;
-        if( frame > lastEditFrame + 1 ) {
+        if( frame > lastEditFrame + frameDelay ) {
             // The last transaction is 'done'
             transaction = null;
         }
