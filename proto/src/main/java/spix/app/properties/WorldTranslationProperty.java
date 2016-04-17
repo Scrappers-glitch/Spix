@@ -28,6 +28,7 @@ public class WorldTranslationProperty extends AbstractProperty {
             // a better idea for this.
             localTranslation.addPropertyChangeListener(new LocalTranslationObserver());
         }
+        lastWorld.set(spatial.getWorldTranslation());
     }
 
     public Type getType() {
@@ -40,7 +41,7 @@ public class WorldTranslationProperty extends AbstractProperty {
         }
 
         Vector3f v = (Vector3f)value;
-        Vector3f last = spatial.getWorldTranslation().clone();
+        Vector3f last = lastWorld; //spatial.getWorldTranslation().clone();
         if( v.equals(last) ) {
             return;
         }
@@ -63,12 +64,14 @@ public class WorldTranslationProperty extends AbstractProperty {
         
         firePropertyChange(last, spatial.getWorldTranslation(), true);
         
+        lastWorld.set(spatial.getWorldTranslation());
+        
         // Make sure the local translation matches
         if( localTranslation != null ) {
             updating = true;
             try {
                 localTranslation.setValue(spatial.getLocalTranslation());
-                lastWorld.set(spatial.getWorldTranslation());
+                //lastWorld.set(spatial.getWorldTranslation());
             } finally {
                 updating = false;
             }
@@ -76,7 +79,7 @@ public class WorldTranslationProperty extends AbstractProperty {
     }
 
     protected void updateFromLocal( Vector3f old, Vector3f local ) {
-        
+ 
         // Avoid reacting to our own updates
         if( updating ) {
             return;
