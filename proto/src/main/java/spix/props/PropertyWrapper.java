@@ -69,7 +69,7 @@ public class PropertyWrapper extends AbstractProperty {
         this.parent = parent;
         this.delegate = delegate;
         this.type = delegate.getType();
-        this.value = delegate.getValue();
+        this.value = cloneValue(delegate.getValue());
     }
  
     @Override
@@ -95,12 +95,14 @@ public class PropertyWrapper extends AbstractProperty {
             log.trace(getId() + ": PropertyWrapper.setValue(" + value + ")  old:" + this.value);    
         }
         Object old = this.value;
-        boolean changed = !Objects.equals(old, value);
         
+        boolean changed = !Objects.equals(old, value);
+
         // Keep a cloned value if possible to avoid mis-notifying cases where
         // the value itself is mutable and we're sent the same reference multiple
-        // times.        
-        this.value = cloneValue(value);
+        // times for updates.        
+        this.value = cloneValue(value);        
+        
         if( changed ) {
             // Let the parent know that the property has changed
             parent.updateProperty(this, delegate, old, this.value);
