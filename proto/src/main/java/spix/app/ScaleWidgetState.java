@@ -375,6 +375,19 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
     @Override
     public void update(float tpf) {
 
+        //This is here to update the position of the widget in the case where
+        //the selection is translated from the property panel
+        //I thought of adding a listener on the translation property, but it would be complicated to properly remove them afterward.
+        //This is the most straight forward way I could think of.
+        Vector3f pos = new Vector3f();
+        for (SelectedObject selectedObject : selectedObjects.getArray()) {
+            pos.addLocal(selectedObject.getWorldTranslation());
+        }
+        pos.divideLocal(selectedObjects.size());
+        selectionCenter.set(pos);
+        widget.setLocalTranslation(selectionCenter);
+
+
         Vector3f relative = widget.getWorldTranslation().subtract(cam.getLocation());
         Vector3f dir = relative.normalize();
         axisColors[0].a = dirAlpha(dir, Vector3f.UNIT_X);
