@@ -155,7 +155,7 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
             float y = (Float)getProperty("y").getValue();    
             float z = (Float)getProperty("z").getValue();    
             float w = (Float)getProperty("w").getValue();    
-            Quaternion rotation = (Quaternion)getObject(); 
+            Quaternion rotation = (Quaternion)getObject();             
             rotation.set(x, y, z, w);
             updateProperty(rotation);              
         }        
@@ -204,7 +204,7 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
             angles[0] = (Float)getProperty("pitch").getValue();    
             angles[1] = (Float)getProperty("yaw").getValue();   
             angles[2] = (Float)getProperty("roll").getValue();
-            Quaternion rotation = (Quaternion)getObject(); 
+            Quaternion rotation = (Quaternion)getObject();             
             rotation.fromAngles(angles);
             updateProperty(rotation);              
         }        

@@ -66,12 +66,17 @@ public class Vector3fPanel extends AbstractPropertyPanel<Component>
         this.gui = gui;
  
         // So Vector3f is pretty easy... we could even move this
-        // definition to be more global.  
-        Property x = BeanProperty.create(prop, "x"); 
-        Property y = BeanProperty.create(prop, "y"); 
-        Property z = BeanProperty.create(prop, "z"); 
+        // definition to be more global.
+        
+        // Make a clone for our local property reference so that we can
+        // properly check old values against new for property changes
+        // and stuff.
+        Vector3f vec = ((Vector3f)prop.getValue()).clone();  
+        Property x = BeanProperty.create(vec, "x"); 
+        Property y = BeanProperty.create(vec, "y"); 
+        Property z = BeanProperty.create(vec, "z"); 
  
-        vecProps = new DefaultPropertySet(prop, prop.getValue(), x, y, z) {
+        vecProps = new DefaultPropertySet(prop, vec, x, y, z) {
             @Override
             protected void propertyChange( PropertyChangeEvent e ) {    
                 if( updating ) {
