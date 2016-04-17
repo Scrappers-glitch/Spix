@@ -61,21 +61,30 @@ public class PropertyEditorPanel extends JPanel {
     private PropertySet properties;
     private Form form;
     private String context;
-    private boolean isPeered;
+    private boolean nested;
+    private boolean isPeered;    
 
     public PropertyEditorPanel( SwingGui gui ) {
         this(gui, null);
     }
     
     public PropertyEditorPanel( SwingGui gui, String context ) {
+        this(gui, context, false);
+    }
+    
+    public PropertyEditorPanel( SwingGui gui, String context, boolean nested ) {
         super(new GridBagLayout());
         this.gui = gui;
         this.context = context;
-        setPreferredSize(new Dimension(250, 100));
+        this.nested = nested;
     }
 
     public void setObject( PropertySet properties ) {
-System.out.println("PropertyEditorPanel.setObject(" + properties + ")");
+        setObject(properties, null);
+    }
+    
+    public void setObject( PropertySet properties, Form form ) {
+System.out.println("PropertyEditorPanel.setObject(" + properties + ", " + form + ")");
 
         if( this.properties == properties ) {        
             return;
@@ -107,11 +116,15 @@ System.out.println("PropertyEditorPanel.setObject(" + properties + ")");
             // any wrapper to its delegate.
             attach();
         }        
+ 
+        if( form == null ) {       
+            this.form = gui.getSpix().createForm(this.properties, context);
+        } else {
+            this.form = form;
+        }
+System.out.println(this.form.debugString());
         
-        this.form = gui.getSpix().createForm(this.properties, context);
-System.out.println(form.debugString());
-        
-        SwingUtilities.invokeLater(new Runnable() {
+        gui.runOnSwing(new Runnable() {
                 public void run() {
                     setupComponents();
                 }
@@ -155,7 +168,7 @@ System.out.println(form.debugString());
                     gbc.gridx = 0;
                     gbc.weightx = 1;
                     gbc.anchor = GridBagConstraints.WEST;
-                    gbc.fill = GridBagConstraints.BOTH;
+                    gbc.fill = GridBagConstraints.HORIZONTAL;
                     add(view, gbc);
                     
                     lastTwoColumn = false;
@@ -168,26 +181,54 @@ System.out.println(form.debugString());
                     gbc.gridx = 0;
                     gbc.weightx = 0;
                     gbc.anchor = GridBagConstraints.EAST;
-                    gbc.fill = GridBagConstraints.NONE;
+                    gbc.fill = GridBagConstraints.HORIZONTAL;
                     add(label, gbc);
                 
                     gbc.gridx++;
                     gbc.weightx = 1;
                     gbc.anchor = GridBagConstraints.WEST;
-                    gbc.fill = GridBagConstraints.BOTH;
+                    gbc.fill = GridBagConstraints.HORIZONTAL;
                     add(view, gbc);
                     
                     lastTwoColumn = true;
                 }
+            } else if( field instanceof FormField ) {
+                FormField ff = (FormField)field;
+                PropertyEditorPanel subpanel = new PropertyEditorPanel(gui, context, true);
+                subpanel.setObject(properties, ff.getForm());
+                 
+                //subpanel.setBorder(BorderFactory.createTitledBorder(ff.getName()));
+ 
+                if( lastTwoColumn ) {                   
+                    gbc.insets = new Insets(5, 0, 0, 0);
+                } else {
+                    gbc.insets = multi;
+                }
+                gbc.gridwidth = 2;
+                gbc.gridx = 0;
+                gbc.weightx = 1;
+                gbc.anchor = GridBagConstraints.WEST;
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                //add(subpanel, gbc);
+                
+                RollupPanel rollup = new RollupPanel(ff.getName(), subpanel);
+                add(rollup, gbc);
+                    
+                lastTwoColumn = false;
+            } else {
+                throw new UnsupportedOperationException("Field type not supported:" + field);
             }
             
             gbc.gridy++;            
         }
         
-        // Add a spacer at the end that can take up the slack
-        gbc.gridx = 1;
-        gbc.weighty = 1;
-        add(new JLabel(""), gbc);
+        if( !nested ) {
+            // Add a spacer at the end that can take up the slack
+            gbc.gridx = 1;
+            gbc.weighty = 1;
+            gbc.fill = GridBagConstraints.BOTH;
+            add(new JLabel(), gbc);
+        }
         
         revalidate();
         repaint();

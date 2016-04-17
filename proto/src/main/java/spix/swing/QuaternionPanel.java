@@ -94,21 +94,21 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
   
     protected JComponent createEulerPanel() {    
         eulerProps = new EulerProperties(getProperty());        
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, false); 
         panel.setObject(eulerProps);        
         return panel;              
     }
 
     protected JComponent createAngleAxisPanel() {
         angleAxisProps = new AngleAxisProperties(getProperty());        
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, false);  
         panel.setObject(angleAxisProps);        
         return panel;              
     }
     
     protected JComponent createQuaternionPanel() {    
         quatProps = new QuaternionProperties(getProperty());
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, false);  
         panel.setObject(quatProps);
         return panel;              
     }

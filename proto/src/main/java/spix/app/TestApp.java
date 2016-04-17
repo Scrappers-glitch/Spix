@@ -52,6 +52,7 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 
+import spix.app.form.*;
 import spix.app.light.*;
 import spix.app.properties.*;
 import spix.awt.AwtPanelState;
@@ -59,6 +60,7 @@ import spix.core.*;
 import spix.core.Action;
 import spix.swing.ActionUtils;
 import spix.swing.*;
+import spix.type.Type;
 import spix.ui.*;
 import spix.undo.*;
 
@@ -123,6 +125,8 @@ public class TestApp extends SimpleApplication {
 
         spix.registerPropertySetFactory(Spatial.class, new SpatialPropertySetFactory());
         spix.registerPropertySetFactory(LightWrapper.class, new LightPropertySetFactory());
+        
+        spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());
 
         SelectionModel selectionModel = new SelectionModel();
         spix.getBlackboard().set("main.selection", selectionModel);
@@ -176,6 +180,7 @@ public class TestApp extends SimpleApplication {
                                              new DefaultComponentFactory(QuaternionPanel.class)); 
 
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");
+                objectEditor.setPreferredSize(new Dimension(250, 100));
                 rightSplit.add(objectEditor, JSplitPane.RIGHT);
 
                 stateManager.attach(new AwtPanelState(rightSplit, JSplitPane.LEFT));

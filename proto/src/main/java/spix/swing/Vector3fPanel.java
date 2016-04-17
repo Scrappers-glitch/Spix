@@ -83,7 +83,7 @@ public class Vector3fPanel extends AbstractPropertyPanel<Component>
                 super.propertyChange(e);
             }                   
         };       
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui); 
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, true); 
         panel.setObject(vecProps);
         setView(panel);
     }

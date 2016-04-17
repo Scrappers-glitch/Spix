@@ -48,18 +48,29 @@ import spix.props.PropertySet;
  */
 public class DefaultFormFactory implements FormFactory {
 
+    public DefaultFormFactory() {
+    }
+
+    /**
+     *  Creates a standard field wrapper for the specified property using
+     *  default behavior.
+     */ 
+    protected Field createField( Spix spix, Property property, String context ) {
+        // See if spix will wrap the value in a property set
+        Object value = property.getValue();
+        PropertySet wrapper = spix.getPropertySet(value);
+        if( wrapper != null ) {
+            return new FormField(property.getName(), spix.createForm(wrapper, context));
+        } else {
+            return new PropertyField(property);
+        }
+    } 
+
     public Form createForm( Spix spix, PropertySet properties, String context ) {
 
         Form result = new Form();
         for( Property property : properties ) {
-            // See if spix will wrap the value in a property set
-            Object value = property.getValue();
-            PropertySet wrapper = spix.getPropertySet(value);
-            if( wrapper != null ) {
-                result.add(new FormField(property.getName(), spix.createForm(wrapper)));
-            } else {
-                result.add(new PropertyField(property));
-            }
+            result.add(createField(spix, property, context));
         }
 
         return result;
