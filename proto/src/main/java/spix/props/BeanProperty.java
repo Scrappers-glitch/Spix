@@ -180,7 +180,7 @@ public class BeanProperty extends AbstractProperty {
             Object old = getValue();
 
             boolean changed = !Objects.equals(old, value);
-            if( !cloneOldValues && old == value ) {
+            if( old == value ) {
                 // Then we can't really tell so we have to assume it changed
                 changed = true;
             }
