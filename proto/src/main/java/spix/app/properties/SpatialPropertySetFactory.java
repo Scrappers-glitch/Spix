@@ -70,16 +70,18 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
 
         Property localTranslation = BeanProperty.create(spatial, "localTranslation", true);
         Property localScale = BeanProperty.create(spatial, "localScale", true);
+        Property localRotation = BeanProperty.create(spatial, "localRotation", true);
 
         // For manipulators, create some special transform properties that work in world
         // space.
         props.add(new WorldTranslationProperty(spatial, localTranslation));
         props.add(new WorldScaleProperty(spatial, localScale));
+        props.add(new WorldRotationProperty(spatial, localRotation));
 
         // Configure the local translation property
         props.add(localTranslation);
        // props.add(localScale);
-        props.add(BeanProperty.create(spatial, "localRotation", true));
+        props.add(localRotation);
 
         return new DefaultPropertySet(spatial, props);
     }
