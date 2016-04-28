@@ -340,8 +340,7 @@ public class ScaleWidgetState extends BaseAppState {
                 continue;
             }
 
-            //TODO: This should probably be changed to world rotation once it's supported by the spatial prop.
-            Property rotation = wrapper.getProperty("localRotation");
+            Property rotation = wrapper.getProperty("worldRotation");
             if (rotation == null) {
                 continue;
             }
