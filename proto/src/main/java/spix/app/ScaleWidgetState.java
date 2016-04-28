@@ -340,11 +340,17 @@ public class ScaleWidgetState extends BaseAppState {
                 continue;
             }
 
+            //TODO: This should probably be changed to world rotation once it's supported by the spatial prop.
+            Property rotation = wrapper.getProperty("localRotation");
+            if (rotation == null) {
+                continue;
+            }
+
             Vector3f v = (Vector3f) translation.getValue();
             pos.addLocal(v);
 
 
-            selectedObjects.add(new SelectedObject(wrapper, scale, translation));
+            selectedObjects.add(new SelectedObject(wrapper, scale, translation, rotation));
 
 /*
 System.out.println("Translation:" + translation + "  value:" + translation.getValue());
@@ -375,7 +381,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
     @Override
     public void update(float tpf) {
 
-        //This is here to update the position of the widget in the case where
+        //This is here to update the position and rotation of the widget in the case where
         //the selection is translated from the property panel
         //I thought of adding a listener on the translation property, but it would be complicated to properly remove them afterward.
         //This is the most straight forward way I could think of.
@@ -386,6 +392,11 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         pos.divideLocal(selectedObjects.size());
         selectionCenter.set(pos);
         widget.setLocalTranslation(selectionCenter);
+        //rotate the widget if a geometry is selected
+        if(selectedObjects.size() == 1){
+            SelectedObject selected = selectedObjects.get(0);
+            widget.setLocalRotation(selected.getWorldRotation());
+        }
 
 
         Vector3f relative = widget.getWorldTranslation().subtract(cam.getLocation());
@@ -408,6 +419,10 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         float halfHeight = cam.getHeight() * 0.5f;
         float scale = ((distance / halfHeight) * 100) / m11;
         widget.setLocalScale(scale);
+
+
+
+
 
         /*
         // But if you want to check the magic math...
@@ -693,14 +708,16 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         private PropertySet properties;
         private Property scale;
         private Property translation;
+        private Property rotation;
 
         private Vector3f initialScale = new Vector3f();
         private Vector3f initialPos = new Vector3f();
 
-        public SelectedObject(PropertySet properties, Property scale, Property translation) {
+        public SelectedObject(PropertySet properties, Property scale, Property translation, Property rotation) {
             this.properties = properties;
             this.scale = scale;
             this.translation = translation;
+            this.rotation = rotation;
         }
 
         public Vector3f getWorldScale() {
@@ -718,6 +735,14 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
 
         public void setWorldTranslation(Vector3f v) {
             translation.setValue(v);
+        }
+
+        public Quaternion getWorldRotation() {
+            return (Quaternion) rotation.getValue();
+        }
+
+        public void setWorldRotation(Quaternion q) {
+            rotation.setValue(q);
         }
 
         public void capture() {
