@@ -42,9 +42,12 @@ import com.jme3.scene.*;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.Axis;
+import spix.app.utils.ShapeUtils;
 import spix.props.PropertySet;
 
 import java.nio.*;
+
+import static spix.app.utils.ShapeUtils.makeSegmentedLine;
 
 
 /**
@@ -91,9 +94,9 @@ public class AmbientLightWrapper extends LightWrapper<AmbientLight> {
 
         int idx = 0;
 
-        idx = makeSegmentedLine(lineSegments, Axis.X , 0.3f, -0.15f,  new Vector3f(0, 0.1f, 0), posBuf, texBuf, idxBuf, idx);
-        idx = makeSegmentedLine(lineSegments, Axis.X , 0.4f, -0.2f,  Vector3f.ZERO, posBuf, texBuf, idxBuf, idx);
-        idx = makeSegmentedLine(lineSegments, Axis.X , 0.3f, -0.15f,  new Vector3f(0, -0.1f, 0), posBuf, texBuf, idxBuf, idx);
+        idx = ShapeUtils.makeSegmentedLine(lineSegments, Axis.X , 0.3f, -0.15f,  new Vector3f(0, 0.1f, 0), posBuf, texBuf, idxBuf, idx);
+        idx = ShapeUtils.makeSegmentedLine(lineSegments, Axis.X , 0.4f, -0.2f,  Vector3f.ZERO, posBuf, texBuf, idxBuf, idx);
+        idx = ShapeUtils.makeSegmentedLine(lineSegments, Axis.X , 0.3f, -0.15f,  new Vector3f(0, -0.1f, 0), posBuf, texBuf, idxBuf, idx);
 
         m.updateBound();
         m.setStatic();

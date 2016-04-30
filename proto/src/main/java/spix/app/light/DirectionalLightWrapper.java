@@ -32,12 +32,13 @@
 package spix.app.light;
 
 import com.jme3.asset.AssetManager;
-import com.jme3.light.*;
-import com.jme3.math.*;
+import com.jme3.light.DirectionalLight;
+import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.Axis;
+import spix.app.utils.ShapeUtils;
 import spix.props.*;
 
 import java.nio.*;
@@ -111,10 +112,10 @@ public class DirectionalLightWrapper extends LightWrapper<DirectionalLight> {
 
         int idx = 0;
 
-        idx = makeCircle(radialSamples, 0.14f, posBuf, texBuf, idxBuf, idx);
-        idx = makeCircle(radialSamples, 0.11f, posBuf, texBuf, idxBuf, idx);
-        idx = makeSegmentedLine(lineSegments, Axis.X , 0.4f, -0.2f, Vector3f.ZERO, posBuf, texBuf, idxBuf, idx);
-        idx = makeSegmentedLine(lineSegments, Axis.Y , 0.4f, -0.2f, Vector3f.ZERO, posBuf, texBuf, idxBuf, idx);
+        idx = ShapeUtils.makeCircle(radialSamples, 0.14f, posBuf, texBuf, idxBuf, idx);
+        idx = ShapeUtils.makeCircle(radialSamples, 0.11f, posBuf, texBuf, idxBuf, idx);
+        idx = ShapeUtils.makeSegmentedLine(lineSegments, Axis.X , 0.4f, -0.2f, Vector3f.ZERO, posBuf, texBuf, idxBuf, idx);
+        idx = ShapeUtils.makeSegmentedLine(lineSegments, Axis.Y , 0.4f, -0.2f, Vector3f.ZERO, posBuf, texBuf, idxBuf, idx);
 
         m.updateBound();
         m.setStatic();
@@ -136,7 +137,7 @@ public class DirectionalLightWrapper extends LightWrapper<DirectionalLight> {
         line.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
         line.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
 
-        makeSegmentedLine(lineSegments, Axis.Z , 4f, 0.2f, Vector3f.ZERO, posBuf, texBuf, idxBuf, 0);
+        ShapeUtils.makeSegmentedLine(lineSegments, Axis.Z , 4f, 0.2f, Vector3f.ZERO, posBuf, texBuf, idxBuf, 0);
 
         line.updateBound();
         line.setStatic();

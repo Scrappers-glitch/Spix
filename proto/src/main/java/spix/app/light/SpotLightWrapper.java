@@ -38,10 +38,10 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.Axis;
+import spix.app.utils.ShapeUtils;
 import spix.props.*;
 
 import java.nio.*;
-
 
 /**
  *
@@ -168,7 +168,8 @@ public class SpotLightWrapper extends LightWrapper<SpotLight> {
 
     @Override
     protected Spatial makeWidget() {
-        Geometry lightGeom = makeCircleGeometry("lightDebug", 0.11f, 16);
+        Geometry lightGeom = ShapeUtils.makeCircleGeometry("lightDebug", 0.11f, 16);
+        lightGeom.setMaterial(dashed);
 
         Mesh line = new Mesh();
         line.setMode(Mesh.Mode.Lines);
@@ -182,7 +183,7 @@ public class SpotLightWrapper extends LightWrapper<SpotLight> {
         line.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
         line.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
 
-        makeSegmentedLine(lineSegments, Axis.Z , 1f, 0, Vector3f.ZERO, posBuf, texBuf, idxBuf, 0);
+        ShapeUtils.makeSegmentedLine(lineSegments, Axis.Z , 1f, 0, Vector3f.ZERO, posBuf, texBuf, idxBuf, 0);
 
         line.updateBound();
         line.setStatic();
@@ -194,8 +195,10 @@ public class SpotLightWrapper extends LightWrapper<SpotLight> {
 
         Node widget = new Node();
         Node cone = new Node("cone");
-        Geometry innerCircle = makeCircleGeometry("innerCircle", 1, 128);
-        Geometry outerCircle = makeCircleGeometry("outerCircle", 1, 128);
+        Geometry innerCircle = ShapeUtils.makeCircleGeometry("innerCircle", 1, 128);
+        innerCircle.setMaterial(dashed);
+        Geometry outerCircle = ShapeUtils.makeCircleGeometry("outerCircle", 1, 128);
+        outerCircle.setMaterial(dashed);
         innerCircle.move(0,0,1);
         outerCircle.move(0,0,1);
 

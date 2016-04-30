@@ -38,6 +38,7 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
 import com.jme3.scene.control.BillboardControl;
 import com.jme3.util.BufferUtils;
+import spix.app.utils.ShapeUtils;
 import spix.props.*;
 
 import java.nio.*;
@@ -129,7 +130,7 @@ public class PointLightWrapper extends LightWrapper<PointLight> {
         m.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
         m.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
 
-        makeCircle(radialSamples, 0.14f, posBuf, texBuf, idxBuf, 0);
+        ShapeUtils.makeCircle(radialSamples, 0.14f, posBuf, texBuf, idxBuf, 0);
 
         m.updateBound();
         m.setStatic();
@@ -150,7 +151,7 @@ public class PointLightWrapper extends LightWrapper<PointLight> {
         line.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
         line.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
 
-        makeCircle(radialSamples, 1f, posBuf, texBuf, idxBuf, 0);
+        ShapeUtils.makeCircle(radialSamples, 1f, posBuf, texBuf, idxBuf, 0);
 
         line.updateBound();
         line.setStatic();
