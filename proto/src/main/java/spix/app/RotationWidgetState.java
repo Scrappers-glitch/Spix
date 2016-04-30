@@ -168,6 +168,12 @@ public class RotationWidgetState extends BaseAppState {
         Geometry outerCircle = ShapeUtils.makeCircleGeometry("outerCircle:", OUTER_RADIUS, 32);
         outerCircle.setMaterial(createMaterial(ColorRGBA.White));
         centerNode.attachChild(outerCircle);
+        //Dummy torus geom around the circle to be able to pick it, and with a wider hit box.
+        Torus t = new Torus(12,4, 0.05f , OUTER_RADIUS );
+        Geometry pick = new Geometry("pickOuter", t);
+        pick.setCullHint(Spatial.CullHint.Always);
+        centerNode.attachChild(pick);
+
 
 
         Geometry innerCircle = ShapeUtils.makeCircleGeometry("outerCircle:", AXIS_RADIUS, 32);
@@ -286,9 +292,6 @@ public class RotationWidgetState extends BaseAppState {
         Node axis = new Node("axis:" + index);
         axisSpatials[index] = axis;
 
-        // Create the cone tip
-//        Mesh mesh = new Cylinder(2, 12, 0f, 0.045f, 0.18f, true, false);
-//        Geometry cone = new Geometry("axisCone:" + index, mesh);
         axisColors[index] = color.clone();
         Material m = new Material(getApplication().getAssetManager(), "MatDefs/circle/circle.j3md");
         m.setColor("Color", axisColors[index]);
@@ -297,15 +300,16 @@ public class RotationWidgetState extends BaseAppState {
         m.getAdditionalRenderState().setDepthTest(false);
         axisMaterials[index] = m;
 
-        //cone.setMaterial(axisMaterials[index]);
+        //Dummy torus geom around the circle to be able to pick it, and with a wider hit box.
+        Torus t = new Torus(12,4, 0.05f , AXIS_RADIUS );
+        Geometry pick = new Geometry("pick"+index, t);
+        pick.setCullHint(Spatial.CullHint.Always);
+        axis.attachChild(pick);
 
         Vector3f up = Vector3f.UNIT_Y;
         if( dir.distanceSquared(up) < 0.1 ) {
             up = Vector3f.UNIT_Z;
         }
-
-//        cone.setLocalTranslation(0, 0, 0.75f);
-//        axis.attachChild(cone);
 
         // Then the axis circle
         Geometry axisCircle = ShapeUtils.makeCircleGeometry("axisCircle:" + index, AXIS_RADIUS, 32);
