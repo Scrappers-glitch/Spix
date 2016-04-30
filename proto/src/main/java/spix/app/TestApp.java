@@ -102,8 +102,9 @@ public class TestApp extends SimpleApplication {
               new GridState(), new BackgroundColorState(),
               new SelectionHighlightState(),
               new TransformState(),
-              new TranslationWidgetState(),
+              new TranslationWidgetState(false),
               new ScaleWidgetState(false),
+                new RotationWidgetState(true),
                 new LightWidgetState(),
               new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
               new SpixState(new Spix()));
@@ -300,14 +301,27 @@ public class TestApp extends SimpleApplication {
                 spix.getBlackboard().set("transform.mode", "scale");
             }
         });
+
         spix.getBlackboard().bind("transform.mode", scale, "toggled", Predicates.equalTo("scale"));
 
         // Bind it to the translation widget app state also
         spix.getBlackboard().bind("transform.mode", stateManager.getState(ScaleWidgetState.class),
                 "enabled", Predicates.equalTo("scale"));
 
+        ToggleAction rotate = transform.add(new AbstractToggleAction("Rotate") {
+            public void performAction( Spix spix ) {
+                spix.getBlackboard().set("transform.mode", "rotate");
+            }
+        });
+
+        spix.getBlackboard().bind("transform.mode", rotate, "toggled", Predicates.equalTo("rotate"));
+
+        // Bind it to the translation widget app state also
+        spix.getBlackboard().bind("transform.mode", stateManager.getState(RotationWidgetState.class),
+                "enabled", Predicates.equalTo("rotate"));
+
         // And translate by default
-        spix.getBlackboard().set("transform.mode", "translate");
+        spix.getBlackboard().set("transform.mode", "rotate");
 
         ActionList camera = main.add(new DefaultActionList("Camera"));
         final ToggleAction fly = camera.add(new AbstractToggleAction("Fly") {
@@ -624,6 +638,7 @@ public class TestApp extends SimpleApplication {
         mat.setColor("Diffuse", ColorRGBA.Gray);
         mat.setColor("Ambient", ColorRGBA.Gray);
         mat.setBoolean("UseMaterialColors", true);
+        geom.setMaterial(mat);
         geom.setMaterial(mat);
         rootNode.attachChild(geom);
 

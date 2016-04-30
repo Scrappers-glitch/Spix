@@ -107,8 +107,10 @@ public class TranslationWidgetState extends BaseAppState {
 
     private InputMapper inputMapper;
 
-    public TranslationWidgetState() {
+    public TranslationWidgetState(boolean enabled) {
+        setEnabled(enabled);
     }
+
 
     public void setDragMouseButton( int i ) {
         this.dragMouseButton = i;

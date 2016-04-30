@@ -1,0 +1,51 @@
+MaterialDef Simple {
+    MaterialParameters {
+        Color Color
+        Vector3 DiscardPosition
+    }
+    Technique {
+        WorldParameters {
+            WorldViewProjectionMatrix
+            ViewProjectionMatrix
+        }
+        VertexShaderNodes {
+            ShaderNode CommonVert {
+                Definition : CommonVert : Common/MatDefs/ShaderNodes/Common/CommonVert.j3sn
+                InputMappings {
+                    worldViewProjectionMatrix = WorldParam.WorldViewProjectionMatrix
+                    modelPosition = Global.position.xyz
+                }
+                OutputMappings {
+                    Global.position = projPosition
+                }
+            }
+            ShaderNode TransformPosition {
+                Definition : TransformPosition : Common/MatDefs/ShaderNodes/Basic/TransformPosition.j3sn
+                InputMappings {
+                    inputPosition = MatParam.DiscardPosition
+                    transformsMatrix = WorldParam.ViewProjectionMatrix
+                }
+            }
+        }
+        FragmentShaderNodes {
+             ShaderNode DistanceDiscard {
+                    Definition : AlphaDiscard : Common/MatDefs/ShaderNodes/Basic/AlphaDiscard.j3sn
+                    InputMappings {
+                        alpha = TransformPosition.outPosition.z
+                        threshold = CommonVert.projPosition.z
+                    }
+                }
+            ShaderNode ColorMult {
+                Definition : ColorMult : Common/MatDefs/ShaderNodes/Basic/ColorMult.j3sn
+                InputMappings {
+                    color1 = MatParam.Color
+                    color2 = Global.color
+                }
+                OutputMappings {
+                    Global.color = outColor
+                }
+            }
+
+        }
+    }
+}
