@@ -1,0 +1,8 @@
+.idea/
+proto/.gradle/2.11/taskArtifacts/cache.properties
+proto/build/
+*.dll
+proto/.gradle/
+*.iml
+proto/logs/
+proto/spix.log
