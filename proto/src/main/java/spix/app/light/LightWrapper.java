@@ -13,6 +13,7 @@ import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.*;
+import spix.props.PropertySet;
 
 import java.nio.*;
 
@@ -25,9 +26,11 @@ public abstract class LightWrapper<L extends Light> {
     private L light;
     protected Material dashed;
     protected Node center;
+    private PropertySet lightPropertySet;
     private Material dot;
     private Spatial target;
     private Vector3f prevTargetPos = Vector3f.NAN.clone();
+
 
     public LightWrapper(Node node, L light, Spatial target, AssetManager assetManager) {
         this.widget = node;
@@ -39,7 +42,7 @@ public abstract class LightWrapper<L extends Light> {
     }
 
     protected abstract void setPositionRelativeToTarget(Spatial target, Spatial widget, L light);
-    protected abstract void widgetUpdate(Spatial target, Spatial widget, L light, float tpf);
+    protected abstract void widgetUpdate(Spatial target, Spatial widget, PropertySet lightPropertySet, float tpf);
     protected abstract Spatial makeWidget();
 
     public void update (float tpf, Camera cam){
@@ -48,7 +51,10 @@ public abstract class LightWrapper<L extends Light> {
             setPositionRelativeToTarget(target, widget, light);
             prevTargetPos.set(target.getWorldTranslation());
         }
-        widgetUpdate(target, widget, light, tpf);
+
+        if(lightPropertySet != null) {
+            widgetUpdate(target, widget, lightPropertySet, tpf);
+        }
 
         updateCenter(cam);
 
@@ -209,4 +215,11 @@ public abstract class LightWrapper<L extends Light> {
         return center;
     }
 
+    public PropertySet getLightPropertySet() {
+        return lightPropertySet;
+    }
+
+    public void setLightPropertySet(PropertySet lightPropertySet) {
+        this.lightPropertySet = lightPropertySet;
+    }
 }

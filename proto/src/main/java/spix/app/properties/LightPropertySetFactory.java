@@ -69,6 +69,7 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
 
         Light.Type type = wrapper.getLight().getType();
         if(type == Light.Type.Spot) {
+            props.add(BeanProperty.create(wrapper.getLight(), "direction"));
             props.add(BeanProperty.create(wrapper.getLight(), "spotRange", 
                                           new NumberRangeType(0f, null, 0.1f)));
             props.add(BeanProperty.create(wrapper.getLight(), "spotOuterAngle", 
@@ -85,7 +86,9 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
         // For manipulators, create some special transform properties that work in world
         // space.
         props.add(new WorldTranslationProperty(wrapper.getWidget(), null));
-        
-        return new DefaultPropertySet(wrapper, props);
+
+        wrapper.setLightPropertySet(new DefaultPropertySet(wrapper.getLight(), props));
+
+        return wrapper.getLightPropertySet();
     }
 }

@@ -38,6 +38,7 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
 import com.jme3.scene.control.BillboardControl;
 import com.jme3.util.BufferUtils;
+import spix.props.*;
 
 import java.nio.*;
 
@@ -71,41 +72,46 @@ public class PointLightWrapper extends LightWrapper<PointLight> {
     }
 
     @Override
-    protected void widgetUpdate(Spatial target, Spatial widget, PointLight light, float tpf) {
+    protected void widgetUpdate(Spatial target, Spatial widget, PropertySet set, float tpf) {
+
+        Property position = set.getProperty("worldTranslation");
+        Property radius = set.getProperty("radius");
+
         //Widget to light
         //widget has been moved update light position
         if(!prevSpatialPos.equals(widget.getWorldTranslation())) {
-            light.setPosition(widget.getWorldTranslation());
-            syncPosition(widget, light);
+            position.setValue(widget.getWorldTranslation());
+            syncPosition(widget, position);
         }
         //widget has been scaled update light radius.
         if(!prevSpatialScale.equals(widget.getWorldScale())) {
-            light.setRadius(widget.getWorldScale().length() / Vector3f.UNIT_XYZ.length());
-            syncScale(widget, light);
+            radius.setValue(widget.getWorldScale().length() / Vector3f.UNIT_XYZ.length());
+            syncScale(widget, radius);
         }
 
         //Light to widget
         //Light has been moved update widget position
-        if(!prevLightPos.equals(light.getPosition())) {
-            widget.setLocalTranslation(light.getPosition());
-            syncPosition(widget, light);
+        if(!prevLightPos.equals(position.getValue())) {
+            widget.setLocalTranslation((Vector3f)position.getValue());
+            syncPosition(widget, position);
         }
         //light radius has been changed, update widget scale.
-        if(prevLightRadius != light.getRadius()){
-            widget.setLocalScale(light.getRadius());
-            syncScale(widget, light);
+        float r =  (float)radius.getValue();
+        if(prevLightRadius != r){
+            widget.setLocalScale(r);
+            syncScale(widget, radius);
         }
 
     }
 
-    private void syncScale(Spatial widget, PointLight light) {
+    private void syncScale(Spatial widget, Property radius) {
         prevSpatialScale.set(widget.getWorldScale());
-        prevLightRadius = light.getRadius();
+        prevLightRadius = (float)radius.getValue();
     }
 
-    private void syncPosition(Spatial widget, PointLight light) {
+    private void syncPosition(Spatial widget, Property position) {
         prevSpatialPos.set(widget.getWorldTranslation());
-        prevLightPos.set(light.getPosition());
+        prevLightPos.set((Vector3f)position.getValue());
     }
 
     @Override

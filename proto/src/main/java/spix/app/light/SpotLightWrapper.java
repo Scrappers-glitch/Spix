@@ -38,6 +38,7 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.Axis;
+import spix.props.*;
 
 import java.nio.*;
 
@@ -73,7 +74,7 @@ public class SpotLightWrapper extends LightWrapper<SpotLight> {
     protected void setPositionRelativeToTarget(Spatial target, Spatial widget, SpotLight light) {
         //Not relative, we have a position for that light
         widget.setLocalTranslation(light.getPosition());
-        updateWidgetRotationFromLight(widget, light);
+        updateWidgetRotationFromDirection(widget, light.getDirection());
         widget.setLocalScale(light.getSpotRange());
 
         updateCircleFromAngle((Node) widget, "innerCircle", light.getSpotInnerAngle());
@@ -81,8 +82,8 @@ public class SpotLightWrapper extends LightWrapper<SpotLight> {
 
     }
 
-    private void updateWidgetRotationFromLight(Spatial widget, SpotLight light) {
-        tmpRot.lookAt(light.getDirection(), Vector3f.UNIT_Y);
+    private void updateWidgetRotationFromDirection(Spatial widget, Vector3f direction) {
+        tmpRot.lookAt(direction, Vector3f.UNIT_Y);
         widget.setLocalRotation(tmpRot);
     }
 
@@ -93,66 +94,76 @@ public class SpotLightWrapper extends LightWrapper<SpotLight> {
     }
 
     @Override
-    protected void widgetUpdate(Spatial target, Spatial widget, SpotLight light, float tpf) {
+    protected void widgetUpdate(Spatial target, Spatial widget, PropertySet set, float tpf) {
+
+        Property position = set.getProperty("worldTranslation");
+        Property direction = set.getProperty("direction");
+        Property spotRange = set.getProperty("spotRange");
+        Property spotInnerAngle = set.getProperty("spotInnerAngle");
+        Property spotOuterAngle = set.getProperty("spotOuterAngle");
+
         //Widget to light
         //widget has been moved update light position
         if(!prevSpatialPos.equals(widget.getWorldTranslation())) {
-            light.setPosition(widget.getWorldTranslation());
-            syncPosition(widget, light);
+            position.setValue(widget.getWorldTranslation());
+            syncPosition(widget, position);
         }
         //widget has been scaled update light spot range
         if(!prevSpatialScale.equals(widget.getWorldScale())) {
-            light.setSpotRange(widget.getWorldScale().length() / Vector3f.UNIT_XYZ.length());
-            syncScale(widget, light);
+            spotRange.setValue(widget.getWorldScale().length() / Vector3f.UNIT_XYZ.length());
+            syncScale(widget, spotRange);
         }
         //widget has been rotated update light direction
         if(!prevSpatialRot.equals(widget.getWorldRotation())) {
-            light.setDirection(widget.getWorldRotation().getRotationColumn(2));
-            syncRotation(widget, light);
+            direction.setValue(widget.getWorldRotation().getRotationColumn(2));
+            syncDirection(widget, direction);
         }
 
         //Light to widget
         //Light has been moved update widget position
-        if(!prevLightPos.equals(light.getPosition())) {
-            widget.setLocalTranslation(light.getPosition());
-            syncPosition(widget, light);
+        if(!prevLightPos.equals(position.getValue())) {
+            widget.setLocalTranslation((Vector3f)position.getValue());
+            syncPosition(widget, position);
         }
         //light radius has been changed, update widget scale.
-        if(prevLightSpotRange != light.getSpotRange()){
-            widget.setLocalScale(light.getSpotRange());
-            syncScale(widget, light);
+        float range = (float) spotRange.getValue();
+        if(prevLightSpotRange != range){
+            widget.setLocalScale(range);
+            syncScale(widget, spotRange);
         }
         //Light changed direction, update widget rotation
-        if(!prevLightDir.equals(light.getDirection())){
-            updateWidgetRotationFromLight(widget, light);
-            syncRotation(widget, light);
+        if(!prevLightDir.equals(direction.getValue())){
+            updateWidgetRotationFromDirection(widget,(Vector3f) direction.getValue());
+            syncDirection(widget, direction);
         }
         //Light inner angle has been changed, update widget's inner circle.
-        if(prevInnerAngle != light.getSpotInnerAngle()){
-            updateCircleFromAngle((Node) widget, "innerCircle", light.getSpotInnerAngle());
-            prevInnerAngle = light.getSpotInnerAngle();
+        float innerAngle = (float) spotInnerAngle.getValue();
+        if(prevInnerAngle != innerAngle){
+            updateCircleFromAngle((Node) widget, "innerCircle", innerAngle);
+            prevInnerAngle = innerAngle;
         }
         //Light outer angle has been changed, update widget's outer circle.
-        if(prevOuterAngle != light.getSpotOuterAngle()){
-            updateCircleFromAngle((Node) widget, "outerCircle", light.getSpotOuterAngle());
-            prevOuterAngle = light.getSpotOuterAngle();
+        float outerAngle = (float) spotOuterAngle.getValue();
+        if(prevOuterAngle != outerAngle){
+            updateCircleFromAngle((Node) widget, "outerCircle", outerAngle);
+            prevOuterAngle = outerAngle;
         }
 
     }
 
-    private void syncRotation(Spatial widget, SpotLight light) {
+    private void syncDirection(Spatial widget, Property direction) {
         prevSpatialRot.set(widget.getWorldRotation());
-        prevLightDir.set(light.getDirection());
+        prevLightDir.set((Vector3f)direction.getValue());
     }
 
-    private void syncScale(Spatial widget, SpotLight light) {
+    private void syncScale(Spatial widget, Property spotRange) {
         prevSpatialScale.set(widget.getWorldScale());
-        prevLightSpotRange = light.getSpotRange();
+        prevLightSpotRange = (float)spotRange.getValue();
     }
 
-    private void syncPosition(Spatial widget, SpotLight light) {
+    private void syncPosition(Spatial widget, Property position) {
         prevSpatialPos.set(widget.getWorldTranslation());
-        prevLightPos.set(light.getPosition());
+        prevLightPos.set((Vector3f)position.getValue());
     }
 
     @Override

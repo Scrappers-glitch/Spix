@@ -32,16 +32,13 @@
 package spix.app.light;
 
 import com.jme3.asset.AssetManager;
-import com.jme3.bounding.*;
 import com.jme3.light.*;
-import com.jme3.material.Material;
 import com.jme3.math.*;
-import com.jme3.renderer.*;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
-import com.jme3.scene.control.*;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.Axis;
+import spix.props.*;
 
 import java.nio.*;
 
@@ -64,30 +61,36 @@ public class DirectionalLightWrapper extends LightWrapper<DirectionalLight> {
 
     @Override
     protected void setPositionRelativeToTarget(Spatial target, Spatial widget, DirectionalLight light) {
-        Vector3f pos = light.getDirection().clone();
+        updateWidgetFromDirection(target, widget, light.getDirection());
+    }
+
+    private void updateWidgetFromDirection(Spatial target, Spatial widget, Vector3f direction) {
+        Vector3f pos = direction.clone();
         float scale = getGlobalScale();
-        pos.multLocal(-scale).addLocal(3,3,3);//get an arbitrary position for the light depending on the target bounding box
+        pos.multLocal(-scale).multLocal(3,3,3);//get an arbitrary position for the light depending on the target bounding box
         pos.addLocal(target.getWorldTranslation());
         widget.setLocalTranslation(pos);
+        widget.lookAt(Vector3f.ZERO, Vector3f.UNIT_Y);
     }
 
     @Override
-    protected void widgetUpdate(Spatial target, Spatial widget, DirectionalLight light, float tpf) {
+    protected void widgetUpdate(Spatial target, Spatial widget, PropertySet set, float tpf) {
+        Property direction = set.getProperty("direction");
         if(!prevSpatialPos.equals(widget.getWorldTranslation())) {
-            light.setDirection(widget.getWorldTranslation().mult(-1.0f).normalizeLocal());
+            direction.setValue(widget.getWorldTranslation().mult(-1.0f).normalizeLocal());
             widget.lookAt(Vector3f.ZERO, Vector3f.UNIT_Y);
-            syncOrientation(widget, light);
+            syncOrientation(widget, direction);
         }
 
-        if(!prevLightDir.equals(light.getDirection())){
-            setPositionRelativeToTarget(target, widget, light);
-            syncOrientation(widget, light);
+        if(!prevLightDir.equals(direction.getValue())){
+            updateWidgetFromDirection(target, widget, (Vector3f) direction.getValue() );
+            syncOrientation(widget, direction);
         }
     }
 
-    private void syncOrientation(Spatial widget, DirectionalLight light) {
+    private void syncOrientation(Spatial widget, Property direction) {
         prevSpatialPos.set(widget.getWorldTranslation());
-        prevLightDir.set(light.getDirection());
+        prevLightDir.set((Vector3f)direction.getValue());
     }
 
     @Override

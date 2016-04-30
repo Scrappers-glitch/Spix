@@ -42,6 +42,7 @@ import com.jme3.scene.*;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.Axis;
+import spix.props.PropertySet;
 
 import java.nio.*;
 
@@ -69,7 +70,7 @@ public class AmbientLightWrapper extends LightWrapper<AmbientLight> {
     }
 
     @Override
-    protected void widgetUpdate(Spatial target, Spatial widget, AmbientLight light, float tpf) {
+    protected void widgetUpdate(Spatial target, Spatial widget, PropertySet set, float tpf) {
         //nothing to do
     }
 
