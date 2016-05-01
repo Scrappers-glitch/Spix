@@ -72,7 +72,7 @@ public class RotationWidgetState extends BaseAppState {
     public static final float AXIS_RADIUS = 0.75f;
     public static final float OUTER_RADIUS = 0.9f;
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
-    private DragManager dragManager = new DragManager();
+    private RotateManager dragManager = new RotateManager();
 
     private String highlightColorProperty = DefaultConstants.SELECTION_HIGHLIGHT_COLOR;
     private SelectionModel selection;
@@ -443,7 +443,7 @@ public class RotationWidgetState extends BaseAppState {
         getState(SpixState.class).getSpix().getBlackboard().set(highlightColorProperty, ColorRGBA.White.clone());
 
         //Displays the current axis line, sets its color, then compute the corresponding rotation
-        //Maybe something better could be done as the direction is already computed in the DragManager.
+        //Maybe something better could be done as the direction is already computed in the RotateManager.
         axisLine.setCullHint(Spatial.CullHint.Dynamic);
         Quaternion rot = new Quaternion();
         switch (axis){
@@ -519,36 +519,30 @@ public class RotationWidgetState extends BaseAppState {
         widget.setLocalTranslation(selectionCenter);
     }
 
-    protected void moveSelectedObjects( Vector3f delta ) {
-        Vector3f pos = new Vector3f();
+    protected void rotateSelectedObjects(Quaternion delta ) {
+
         for( SelectedObject s : selectedObjects.getArray() ) {
-            // Translate the delta into the spatial's local space
-            Vector3f v = s.getWorldTranslation().add(delta);
-            s.setWorldTranslation(v);
-            //v = s.worldToLocal(v, null);
-            //s.move(v);
-            pos.addLocal(v);
+            //we combine the delta with the rotation of the selection
+            //note that the order is important because we want rotation in world space.
+            Quaternion q = delta.multLocal(s.getWorldRotation());
+            s.setWorldRotation(q);
         }
-        pos.divide(selectedObjects.size());
-        selectionCenter.set(pos);
-        widget.setLocalTranslation(selectionCenter);
     }
 
     /**
-     * Handles dragging behaviour.
+     * Handles rotating behaviour.
+     * to rotate the selection you have to pick a handle (axis or the white circle),
+     * then rotate your mouse cursor around the center of the selection
      */
-    private class DragManager{
-        protected Vector3f xDelta;
-        protected Vector3f yDelta;
-        protected Vector2f lastCursor = new Vector2f();
-        private Vector3f basePosition = null;
-        protected Vector2f startCursor = new Vector2f();
+    private class RotateManager {
+
+        Vector3f lastDirection;
+        Vector3f originScreen;
+        Vector3f newDirection = new Vector3f();
+        Quaternion deltaRot = new Quaternion();
 
         private int axis = -1;
         private Vector3f dir = new Vector3f();
-        private Vector2f cursor = new Vector2f();
-        private float startDistance = 0;
-        private Vector3f last;
 
         /**
          * initiates the dragging of the current selection at x,y screen coordinates.
@@ -557,10 +551,13 @@ public class RotationWidgetState extends BaseAppState {
          */
         public void startDrag(float startX, float startY){
             if(axis == -1){
-                startRadialDrag(startX, startY);
+                onStartRadialDrag();
             } else {
-                startAxisDrag(startX, startY);
+                onStartAxisDrag(axis);
             }
+            //finding the direction from the origin of the selection to the mouse cursor position
+            originScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation());
+            lastDirection = new Vector3f(startX, startY, 0).subtractLocal(originScreen).normalizeLocal();
         }
 
         /**
@@ -568,10 +565,12 @@ public class RotationWidgetState extends BaseAppState {
          */
         public void stopDrag(){
             if(axis == -1){
-                stopRadialDrag();
+                onStopRadialDrag();
             } else {
-                stopAxisDrag();
+                onStopAxisDrag(axis);
             }
+            lastDirection = null;
+            axis = -1;
         }
 
         /**
@@ -580,143 +579,39 @@ public class RotationWidgetState extends BaseAppState {
          * @param y
          */
         public void drag(float x, float y){
+            if( lastDirection == null ) {
+                // Not dragging
+                return;
+            }
+
+            //here we compute the direction from the origin of the selection to the mouse cursor position.
+            newDirection.set(x, y, 0).subtractLocal(originScreen).normalizeLocal();
+            //then we compute the angle between this direction vector and the one from previous tick
+            float angle = FastMath.acos(lastDirection.dot(newDirection));
+
+            //we find the proper axis to rotate around depending of the picked handle
+            Vector3f rotAxis = dir;
             if(axis == -1){
-                radialDrag(x, y);
-            } else {
-                axisDrag(x, y);
-            }
-        }
-
-        /**
-         * Initiates a radial drag at x,y screen coordinates.
-         * @param x
-         * @param y
-         */
-        public void startRadialDrag(float startX, float startY){
-            onStartRadialDrag();
-
-            Vector3f up = cam.getUp();
-            Vector3f right = cam.getLeft().negate();
-
-            Vector3f originScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation());
-            Vector3f xScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation().add(right));
-            Vector3f yScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation().add(up));
-
-            float x = xScreen.x - originScreen.x;
-            float y = yScreen.y - originScreen.y;
-
-            System.out.println("delta x:" + x + "  delta y:" + y);
-
-            xDelta = right.divide(x);
-            yDelta = up.divide(y);
-
-            System.out.println("xDelta:" + xDelta + "  yDelta:" + yDelta);
-
-            lastCursor.set(startX, startY);
-            startCursor.set(startX, startY);
-
-            inputMapper.activateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
-            basePosition = selectionCenter.clone();
-        }
-
-        /**
-         * Stops the radial drag, and reset all radial states.
-         */
-        public void stopRadialDrag(){
-            onStopRadialDrag();
-            xDelta = null;
-            yDelta = null;
-            inputMapper.deactivateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
-            basePosition = null;
-        }
-
-        /**
-         * Drags the selection according to the x,y screen coordinates.
-         * @param x
-         * @param y
-         */
-        public void radialDrag(float newX, float newY){
-            if( xDelta == null ) {
-                // Not dragging
-                return;
+                rotAxis = cam.getDirection().negate();
             }
 
-            float x = newX - lastCursor.x;
-            float y = newY - lastCursor.y;
+            //here we compute the sign of the angle depending of the orientation of the view.
+            float sign = Math.signum(lastDirection.crossLocal(newDirection).dot(Vector3f.UNIT_Z) *  - cam.getDirection().dot(rotAxis));
 
-            moveSelectedObjects(xDelta.mult(x).addLocal(yDelta.mult(y)));
+            //make a quaternion out of this angle
+            deltaRot.fromAngleAxis(sign * angle, rotAxis);
+            //and rotate the object
+            rotateSelectedObjects(deltaRot);
 
-            lastCursor.set(newX, newY);
-        }
-
-
-        /**
-         * Initiates an axis drag at x,y screen coordinates.
-         * @param x
-         * @param y
-         */
-        public void startAxisDrag(float x, float y){
-            onStartAxisDrag(axis);
-
-            // Keep track of the starting location for the object
-            basePosition = selectionCenter.clone(); //target.getWorldTranslation();
-
-            // Find the pick direction from our eye
-            Vector3f pickDir = getPickDir(x, y);
-
-            // Find the closest point between the axis line starting at the
-            // object and the pick line starting at the camera.  This returns
-            // the projected point on the first line (object -> axis)
-            startDistance = closestPointProjected(basePosition, dir, cam.getLocation(), pickDir);
-
-            last = new Vector3f();
-            inputMapper.activateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
-            startCursor.set(x,y);
-        }
-
-        /**
-         * Stops the axis drag. deactivate additional key inputs and reset all axis drag states.
-         */
-        public void stopAxisDrag(){
-            onStopAxisDrag(axis);
-            basePosition = null;
-            inputMapper.deactivateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
-            axis = -1;
-        }
-
-        /**
-         * Drags the selection according to the x,y screen coordinates, but constrained to the current axis.
-         * @param x
-         * @param y
-         */
-        public void axisDrag(float x, float y){
-            if( basePosition == null ) {
-                // Not dragging
-                return;
-            }
-
-            // Find the pick direction from our eye
-            Vector3f pickDir = getPickDir(x, y);
-
-            // Find the closest point between the axis line starting at the
-            // object and the pick line starting at the camera.  This returns
-            // the projected point on the first line (object -> axis)
-            float distance = closestPointProjected(basePosition, dir, cam.getLocation(), pickDir);
-
-            //System.out.println("distance:" + distance + "  Dragged:" + (distance - startDistance));
-            float dragged = distance - startDistance;
-            Vector3f newOffset = dir.mult(dragged);
-            Vector3f delta = newOffset.subtract(last);
-            last.set(newOffset);
-            lastCursor.set(x, y);
-            moveSelectedObjects(delta);
+            //saving this tick direction to use on next tick.
+            lastDirection.set(newDirection);
         }
 
         /**
          * Resets the selection to its start position and stops the drag.
          */
         public void cancel(){
-            moveSelectedObjects(basePosition.subtractLocal(selectionCenter));
+         //   rotateSelectedObjects(basePosition.subtractLocal(selectionCenter));
             stopDrag();
         }
 
@@ -726,7 +621,7 @@ public class RotationWidgetState extends BaseAppState {
          */
         public void setConstrainedAxis(int axis){
 
-            boolean dragging = basePosition != null;
+            boolean dragging = lastDirection != null;
             //If we are currently dragging, we reset the drag states
             if(dragging) {
                 cancel();
@@ -737,47 +632,11 @@ public class RotationWidgetState extends BaseAppState {
             dir.set(0,0,0);
             dir.set(axis, 1);
 
-            //If we were dragging, we start over
-            if(dragging) {
-                startDrag(startCursor.getX(), startCursor.getY());
-                drag(lastCursor.getX(), lastCursor.getY());
-            }
-        }
-
-        /**
-         *  Find the closest points between two lines p0 + u(t) and q0 + v(t)
-         *  based on: http://geomalgorithms.com/a07-_distance.html
-         */
-        protected float closestPointProjected( Vector3f p0, Vector3f u, Vector3f q0, Vector3f v ) {
-
-            //System.out.println("P0:" + p0 + "  u:" + u);
-            //System.out.println("Q0:" + q0 + "  v:" + v);
-            Vector3f w0 = p0.subtract(q0);
-
-            float a = u.dot(u);
-            float b = u.dot(v);
-            float c = v.dot(v);
-            float d = u.dot(w0);
-            float e = v.dot(w0);
-
-            float sc = ((b * e) - (c * d)) / ((a * c) - (b * b));
-
-            /*
-            For testing, it's fun to calculate the rest and project them onto the line
-            float tc = ((a * e) - (b * d)) / ((a * c) - (b * b));
-
-            System.out.println("sc:" + sc + "  tc:" + tc);
-            System.out.println("psc:" + p0.add(u.mult(sc)) + "  qtc:" + q0.add(v.mult(tc)));
-            */
-
-            return sc;
-        }
-
-        protected Vector3f getPickDir( float x, float y ) {
-            cursor.set(x, y);
-            Vector3f near = cam.getWorldCoordinates(cursor, 0);
-            Vector3f far = cam.getWorldCoordinates(cursor, 1);
-            return far.subtract(near).normalizeLocal();
+//            //If we were dragging, we start over
+//            if(dragging) {
+//                startDrag(startCursor.getX(), startCursor.getY());
+//                drag(lastCursor.getX(), lastCursor.getY());
+//            }
         }
     }
 
