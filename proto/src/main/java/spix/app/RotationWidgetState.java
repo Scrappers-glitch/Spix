@@ -92,13 +92,13 @@ public class RotationWidgetState extends BaseAppState {
     private int dragMouseButton = MouseInput.BUTTON_LEFT;
 
     private static final String GROUP = "Rotate State";
-    private static final String GROUP_DRAG_ADDITIONAL_INPUTS = "Rotate additional inputs";
+    private static final String GROUP_ROTATE_ADDITIONAL_INPUTS = "Rotate additional inputs";
     private static final String GROUP_ROTATING = "Rotating";
-    private static final FunctionId F_DONE = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Done");
-    private static final FunctionId F_CANCEL = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Cancel");
-    private static final FunctionId F_X_CONSTRAIN = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "X axis constrain");
-    private static final FunctionId F_Y_CONSTRAIN = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Y axis constrain");
-    private static final FunctionId F_Z_CONSTRAIN = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Z axis constrain");
+    private static final FunctionId F_DONE = new FunctionId(GROUP_ROTATE_ADDITIONAL_INPUTS, "Done");
+    private static final FunctionId F_CANCEL = new FunctionId(GROUP_ROTATE_ADDITIONAL_INPUTS, "Cancel");
+    private static final FunctionId F_X_CONSTRAIN = new FunctionId(GROUP_ROTATE_ADDITIONAL_INPUTS, "X axis constrain");
+    private static final FunctionId F_Y_CONSTRAIN = new FunctionId(GROUP_ROTATE_ADDITIONAL_INPUTS, "Y axis constrain");
+    private static final FunctionId F_Z_CONSTRAIN = new FunctionId(GROUP_ROTATE_ADDITIONAL_INPUTS, "Z axis constrain");
     private static final FunctionId F_HORIZONTAL_DRAG = new FunctionId(GROUP_ROTATING, "Drag Horizontally");
     private static final FunctionId F_VERTICAL_DRAG = new FunctionId(GROUP_ROTATING, "Drag vertically");
 
@@ -222,7 +222,7 @@ public class RotationWidgetState extends BaseAppState {
         inputMapper.map(F_Z_CONSTRAIN, KeyInput.KEY_Z);
 
         //Deactivating the additional inputs avilable while dragging (they'll be activated when a drag is initiated)
-        inputMapper.deactivateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
+        inputMapper.deactivateGroup(GROUP_ROTATE_ADDITIONAL_INPUTS);
         //Deactivating the dragging mouse listener (It will be activated if a drag is initiated with the keyboard (the F_GRAB function)
         inputMapper.deactivateGroup(GROUP_ROTATING);
         //Activating keyboard manipulators to initiate dragging with the keyboard.
@@ -384,22 +384,10 @@ public class RotationWidgetState extends BaseAppState {
         }
     }
 
-//    private float dirAlpha( Vector3f dir, Vector3f axis ) {
-//        float dot = FastMath.abs(dir.dot(axis));
-//        float alpha = 1f - ((FastMath.clamp(dot, 0.95f, 0.98f) - 0.95f) * (1f/0.03f));
-//        return alpha;
-//    }
-
     @Override
     public void update( float tpf ) {
 
         updateWidgetPosition();
-
-//        Vector3f relative = widget.getWorldTranslation().subtract(cam.getLocation());
-//        Vector3f dir = relative.normalize();
-//        axisColors[0].a = dirAlpha(dir, Vector3f.UNIT_X);
-//        axisColors[1].a = dirAlpha(dir, Vector3f.UNIT_Y);
-//        axisColors[2].a = dirAlpha(dir, Vector3f.UNIT_Z);
 
         // Need to figure out how much to scale the widget so that it stays
         // the same size on screen.  In our case, we want 1 unit to be
@@ -416,14 +404,6 @@ public class RotationWidgetState extends BaseAppState {
         float scale = ((distance/halfHeight) * 100)/m11;
         widget.setLocalScale(scale);
 
-        /*
-        // But if you want to check the magic math...
-        Vector3f s1 = cam.getScreenCoordinates(widget.getWorldTranslation());
-        Vector3f s2 = cam.getScreenCoordinates(widget.getWorldTranslation().add(scale, 0, 0));
-
-        System.out.println("screen dist:" + (s2.x - s1.x));
-        // Should be 100 when facing directly down z axis
-        */
     }
 
     @Override
@@ -555,9 +535,15 @@ public class RotationWidgetState extends BaseAppState {
             } else {
                 onStartAxisDrag(axis);
             }
+
+            for (SelectedObject selectedObject : selectedObjects.getArray()) {
+                selectedObject.capture();
+            }
+
             //finding the direction from the origin of the selection to the mouse cursor position
             originScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation());
             lastDirection = new Vector3f(startX, startY, 0).subtractLocal(originScreen).normalizeLocal();
+            inputMapper.activateGroup(GROUP_ROTATE_ADDITIONAL_INPUTS);
         }
 
         /**
@@ -571,6 +557,7 @@ public class RotationWidgetState extends BaseAppState {
             }
             lastDirection = null;
             axis = -1;
+            inputMapper.deactivateGroup(GROUP_ROTATE_ADDITIONAL_INPUTS);
         }
 
         /**
@@ -611,7 +598,9 @@ public class RotationWidgetState extends BaseAppState {
          * Resets the selection to its start position and stops the drag.
          */
         public void cancel(){
-         //   rotateSelectedObjects(basePosition.subtractLocal(selectionCenter));
+            for (SelectedObject selectedObject : selectedObjects.getArray()) {
+                selectedObject.reset();
+            }
             stopDrag();
         }
 
@@ -707,6 +696,7 @@ public class RotationWidgetState extends BaseAppState {
         private PropertySet properties;
         private Property translation;
         private Property rotation;
+        private Quaternion initialRot = new Quaternion();
 
         public SelectedObject( PropertySet properties, Property translation, Property rotation ) {
             this.properties = properties;
@@ -728,6 +718,14 @@ public class RotationWidgetState extends BaseAppState {
 
         public void setWorldRotation( Quaternion q ) {
             rotation.setValue(q);
+        }
+
+        public void capture() {
+            initialRot.set(getWorldRotation());
+        }
+
+        public void reset() {
+            setWorldRotation(initialRot);
         }
 
     }

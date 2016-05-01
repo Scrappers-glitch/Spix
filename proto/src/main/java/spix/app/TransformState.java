@@ -36,7 +36,7 @@ public class TransformState extends BaseAppState {
                     getState(ScaleWidgetState.class).startKeyTransform();
                 } else if(func == F_ROTATE && value == InputState.Positive){
                     getState(SpixState.class).getSpix().getBlackboard().set("transform.mode", "rotate");
-                    getState(RotationWidgetState.class);
+                    getState(RotationWidgetState.class).startKeyTransform();
                 }
             }
         },F_GRAB, F_SCALE, F_ROTATE);
