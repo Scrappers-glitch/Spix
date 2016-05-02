@@ -72,7 +72,7 @@ public class RotationWidgetState extends BaseAppState {
     public static final float AXIS_RADIUS = 0.75f;
     public static final float OUTER_RADIUS = 0.9f;
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
-    private RotateManager dragManager = new RotateManager();
+    private RotateManager rotateManager = new RotateManager();
 
     private String highlightColorProperty = DefaultConstants.SELECTION_HIGHLIGHT_COLOR;
     private SelectionModel selection;
@@ -233,12 +233,12 @@ public class RotationWidgetState extends BaseAppState {
                 if(func == F_DONE && value == InputState.Positive){
                     //The dragging is done.
                     inputMapper.deactivateGroup(GROUP_ROTATING);
-                    dragManager.stopDrag();
+                    rotateManager.stopDrag();
                 }
                 if(func == F_CANCEL && value == InputState.Positive){
                     //the user canceled the dragging.
                     inputMapper.deactivateGroup(GROUP_ROTATING);
-                    dragManager.cancel();
+                    rotateManager.cancel();
                 }
             }
         },F_DONE, F_CANCEL);
@@ -247,13 +247,13 @@ public class RotationWidgetState extends BaseAppState {
             @Override
             public void valueChanged(FunctionId func, InputState value, double tpf) {
                 //User typed one of the Axis keys to constrain the drag.
-                //We set the axis to the dragManager.
+                //We set the axis to the rotateManager.
                 if (func == F_X_CONSTRAIN) {
-                    dragManager.setConstrainedAxis(0);
+                    rotateManager.setConstrainedAxis(0);
                 } else if (func == F_Y_CONSTRAIN) {
-                    dragManager.setConstrainedAxis(1);
+                    rotateManager.setConstrainedAxis(1);
                 } else {
-                    dragManager.setConstrainedAxis(2);
+                    rotateManager.setConstrainedAxis(2);
                 }
             }
         }, F_X_CONSTRAIN, F_Y_CONSTRAIN, F_Z_CONSTRAIN);
@@ -265,7 +265,7 @@ public class RotationWidgetState extends BaseAppState {
             @Override
             public void valueActive(FunctionId func, double value, double tpf) {
                 Vector2f cursor = getApplication().getInputManager().getCursorPosition();
-                dragManager.drag(cursor.getX(), cursor.getY());
+                rotateManager.drag(cursor.getX(), cursor.getY());
 
             }
         }, F_HORIZONTAL_DRAG, F_VERTICAL_DRAG);
@@ -275,7 +275,7 @@ public class RotationWidgetState extends BaseAppState {
         //Activating the mouse listener and starting to drag at current cursor coordinates.
         inputMapper.activateGroup(GROUP_ROTATING);
         Vector2f cursor = getApplication().getInputManager().getCursorPosition();
-        dragManager.startDrag(cursor.getX(), cursor.getY());
+        rotateManager.startDrag(cursor.getX(), cursor.getY());
     }
 
     protected Material createMaterial( ColorRGBA color ) {
@@ -520,6 +520,8 @@ public class RotationWidgetState extends BaseAppState {
         Vector3f originScreen;
         Vector3f newDirection = new Vector3f();
         Quaternion deltaRot = new Quaternion();
+        private Vector2f lastCursor = new Vector2f();
+        private Vector2f startCursor = new Vector2f();
 
         private int axis = -1;
         private Vector3f dir = new Vector3f();
@@ -544,6 +546,8 @@ public class RotationWidgetState extends BaseAppState {
             originScreen = cam.getScreenCoordinates(centerNode.getWorldTranslation());
             lastDirection = new Vector3f(startX, startY, 0).subtractLocal(originScreen).normalizeLocal();
             inputMapper.activateGroup(GROUP_ROTATE_ADDITIONAL_INPUTS);
+            startCursor.set(startX, startY);
+            lastCursor.set(startCursor);
         }
 
         /**
@@ -592,6 +596,7 @@ public class RotationWidgetState extends BaseAppState {
 
             //saving this tick direction to use on next tick.
             lastDirection.set(newDirection);
+            lastCursor.set(x, y);
         }
 
         /**
@@ -621,11 +626,11 @@ public class RotationWidgetState extends BaseAppState {
             dir.set(0,0,0);
             dir.set(axis, 1);
 
-//            //If we were dragging, we start over
-//            if(dragging) {
-//                startDrag(startCursor.getX(), startCursor.getY());
-//                drag(lastCursor.getX(), lastCursor.getY());
-//            }
+            //If we were dragging, we start over
+            if(dragging) {
+                startDrag(startCursor.getX(), startCursor.getY());
+                drag(lastCursor.getX(), lastCursor.getY());
+            }
         }
     }
 
@@ -640,10 +645,10 @@ public class RotationWidgetState extends BaseAppState {
             }
 
             if( event.isPressed() ) {
-                dragManager.startDrag(event.getX(), event.getY());
+                rotateManager.startDrag(event.getX(), event.getY());
 
             } else {
-                dragManager.stopDrag();
+                rotateManager.stopDrag();
             }
             event.setConsumed();
         }
@@ -655,7 +660,7 @@ public class RotationWidgetState extends BaseAppState {
         }
 
         public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
-            dragManager.drag(event.getX(), event.getY());
+            rotateManager.drag(event.getX(), event.getY());
         }
     }
 
@@ -673,10 +678,10 @@ public class RotationWidgetState extends BaseAppState {
             }
 
             if( event.isPressed() ) {
-                dragManager.setConstrainedAxis(axis);
-                dragManager.startDrag(event.getX(), event.getY());
+                rotateManager.setConstrainedAxis(axis);
+                rotateManager.startDrag(event.getX(), event.getY());
             } else {
-                dragManager.stopDrag();
+                rotateManager.stopDrag();
             }
             event.setConsumed();
         }
@@ -688,7 +693,7 @@ public class RotationWidgetState extends BaseAppState {
         }
 
         public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
-            dragManager.drag(event.getX(), event.getY());
+            rotateManager.drag(event.getX(), event.getY());
         }
     }
 
