@@ -79,7 +79,7 @@ public class RotationWidgetState extends BaseAppState {
     private SelectionObserver selectionObserver = new SelectionObserver();
     private Node widget;
     private Node centerNode;
-    private Geometry radial;
+    private Node radial;
     private Geometry center;
     private Spatial[] axisSpatials = new Spatial[3];
     private Material[] axisMaterials = new Material[3];
@@ -139,15 +139,18 @@ public class RotationWidgetState extends BaseAppState {
         Quad mesh = new Quad(0.32f, 0.32f);
 
         centerNode = new Node("center");
-        radial = new Geometry("centerRadial", mesh);
+        radial = new Node("radial");
+
+        Geometry radGeom = new Geometry("centerRadial", mesh);
         Texture texture = globals.loadTexture("Interface/circle.png", false, false);
         texture.setMinFilter(Texture.MinFilter.NearestNoMipMaps);
         texture.setMagFilter(Texture.MagFilter.Nearest);
         Material mat = globals.createMaterial(texture, false).getMaterial();
         mat.getAdditionalRenderState().setDepthTest(false);
         mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
-        radial.setMaterial(mat);
-        radial.center();
+        radGeom.setMaterial(mat);
+        radGeom.center();
+        radial.attachChild(radGeom);
         centerNode.attachChild(radial);
 
         // Now the teeny tiny center that never disappears
@@ -167,18 +170,16 @@ public class RotationWidgetState extends BaseAppState {
 
         Geometry outerCircle = ShapeUtils.makeCircleGeometry("outerCircle:", OUTER_RADIUS, 32);
         outerCircle.setMaterial(createMaterial(ColorRGBA.White));
-        centerNode.attachChild(outerCircle);
+        radial.attachChild(outerCircle);
         //Dummy torus geom around the circle to be able to pick it, and with a wider hit box.
         Torus t = new Torus(12,4, 0.05f , OUTER_RADIUS );
         Geometry pick = new Geometry("pickOuter", t);
         pick.setCullHint(Spatial.CullHint.Always);
-        centerNode.attachChild(pick);
+        radial.attachChild(pick);
 
-
-
-        Geometry innerCircle = ShapeUtils.makeCircleGeometry("outerCircle:", AXIS_RADIUS, 32);
+        Geometry innerCircle = ShapeUtils.makeCircleGeometry("innerCircle:", AXIS_RADIUS, 32);
         innerCircle.setMaterial(createMaterial(ColorRGBA.Black));
-        centerNode.attachChild(innerCircle);
+        radial.attachChild(innerCircle);
 
         CursorEventControl.addListenersToSpatial(centerNode, new RadialManipulator());
 
