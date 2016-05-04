@@ -421,16 +421,18 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
 
 
-        Vector3f relative = widget.getWorldTranslation().subtract(cam.getLocation());
-        Vector3f dir = relative.normalize();
-        axisColors[0].a = dirAlpha(dir, Vector3f.UNIT_X);
-        axisColors[1].a = dirAlpha(dir, Vector3f.UNIT_Y);
-        axisColors[2].a = dirAlpha(dir, Vector3f.UNIT_Z);
+        //TODO This is an issue when the axis are not axis aligned, commenting for now
+        //Maybe apply the selection rotation to the axis.
+//        Vector3f relative = widget.getWorldTranslation().subtract(cam.getLocation());
+//        Vector3f dir = relative.normalize();
+//        axisColors[0].a = dirAlpha(dir, Vector3f.UNIT_X);
+//        axisColors[1].a = dirAlpha(dir, Vector3f.UNIT_Y);
+//        axisColors[2].a = dirAlpha(dir, Vector3f.UNIT_Z);
 
         // Need to figure out how much to scale the widget so that it stays
         // the same size on screen.  In our case, we want 1 unit to be
         // 100 pixels.
-        dir = cam.getDirection();
+        Vector3f dir = cam.getDirection();
         float distance = dir.dot(widget.getWorldTranslation().subtract(cam.getLocation()));
 
         // m11 of the projection matrix defines the distance at which 1 pixel
