@@ -53,6 +53,7 @@ import com.jme3.util.SafeArrayList;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import com.simsilica.lemur.input.*;
+import spix.app.properties.WorldScaleProperty;
 import spix.core.*;
 import spix.props.*;
 
@@ -324,7 +325,7 @@ public class ScaleWidgetState extends BaseAppState {
         // Calculate the selection center
         Vector3f pos = new Vector3f();
         selectedObjects.clear();
-        System.out.println("TranslationWidgetSelection: Selection:" + selection);
+        System.out.println("ScaleWidgetSelection: Selection:" + selection);
         for (Object o : selection) {
 
             PropertySet wrapper = spix.getPropertySet(o);
@@ -335,14 +336,16 @@ public class ScaleWidgetState extends BaseAppState {
             if (translation == null) {
                 continue;
             }
-            Property scale = wrapper.getProperty("worldScale");
+            WorldScaleProperty scale = (WorldScaleProperty)wrapper.getProperty("worldScale");
             if (scale == null) {
                 continue;
             }
+            enableNonUniformScale(scale.isAllowNonUniformScale());
 
             Property rotation = wrapper.getProperty("worldRotation");
             if (rotation == null) {
-                continue;
+                //we don't have rotation meaning that we can't support non uniform scale
+                enableNonUniformScale(false);
             }
 
             Vector3f v = (Vector3f) translation.getValue();
@@ -370,6 +373,18 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
     }
 
+    private void enableNonUniformScale(boolean enable){
+        if(enable){
+            for (Spatial axisSpatial : axisSpatials) {
+                widget.attachChild(axisSpatial);
+            }
+        } else {
+            for (Spatial axisSpatial : axisSpatials) {
+                axisSpatial.removeFromParent();
+            }
+        }
+    }
+
     private float dirAlpha(Vector3f dir, Vector3f axis) {
         float dot = FastMath.abs(dir.dot(axis));
         float alpha = 1f - ((FastMath.clamp(dot, 0.95f, 0.98f) - 0.95f) * (1f / 0.03f));
@@ -394,7 +409,10 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         //rotate the widget if a geometry is selected
         if(selectedObjects.size() == 1){
             SelectedObject selected = selectedObjects.get(0);
-            widget.setLocalRotation(selected.getWorldRotation());
+            Quaternion q = selected.getWorldRotation();
+            if(q != null) {
+                widget.setLocalRotation(selected.getWorldRotation());
+            }
         }
 
 
@@ -737,7 +755,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
 
         public Quaternion getWorldRotation() {
-            return (Quaternion) rotation.getValue();
+            return rotation != null?(Quaternion) rotation.getValue():null;
         }
 
         public void setWorldRotation(Quaternion q) {

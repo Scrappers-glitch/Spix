@@ -12,11 +12,13 @@ public class WorldScaleProperty extends AbstractProperty {
     private final Property localScale;
     private boolean updating = false;
     private final Vector3f lastWorld = new Vector3f();
+    private final boolean allowNonUniformScale;
 
-    public WorldScaleProperty(Spatial spatial, Property localScale ) {
+    public WorldScaleProperty(Spatial spatial, Property localScale, boolean allowNonUniformScale) {
         super("worldScale");
         this.spatial = spatial;
         this.localScale = localScale;
+        this.allowNonUniformScale = allowNonUniformScale;
         if( localScale != null ) {
             // Add a listener... we're pretty sure we won't have to release
             // this listener later because localScale is a sibling property.
@@ -25,6 +27,10 @@ public class WorldScaleProperty extends AbstractProperty {
             // a better idea for this.
             localScale.addPropertyChangeListener(new LocalScaleObserver());
         }
+    }
+
+    public WorldScaleProperty(Spatial spatial, Property localScale ) {
+        this(spatial,localScale,true);
     }
 
     public Type getType() {
@@ -89,5 +95,9 @@ public class WorldScaleProperty extends AbstractProperty {
         public void propertyChange( PropertyChangeEvent event ) {
             updateFromLocal((Vector3f)event.getOldValue(), (Vector3f)event.getNewValue());  
         }
+    }
+
+    public boolean isAllowNonUniformScale() {
+        return allowNonUniformScale;
     }
 }
