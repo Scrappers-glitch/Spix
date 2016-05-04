@@ -3,6 +3,8 @@ package spix.app.utils;
 import com.jme3.math.*;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
+import com.jme3.scene.shape.*;
+import com.jme3.scene.shape.Line;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.Axis;
 
@@ -13,6 +15,8 @@ import java.nio.*;
  */
 public class ShapeUtils {
 
+
+    public static final float NODE_ARMS_LENGTH = 1f;
 
     public static int makeCircle(int radialSamples, float radius, FloatBuffer posBuf, FloatBuffer texBuf, ShortBuffer idxBuf, int idx) {
         // generate geometry
@@ -53,9 +57,73 @@ public class ShapeUtils {
 
         m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
         m.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
-        m.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
+        m.setBuffer(VertexBuffer.Type.Index, 1, idxBuf);
 
         makeCircle(radialSamples, radius, posBuf, texBuf, idxBuf, 0);
+
+        m.updateBound();
+        m.setStatic();
+
+        Geometry geom = new Geometry(name, m);
+        geom.setQueueBucket(RenderQueue.Bucket.Transparent);
+
+        return geom;
+    }
+
+
+    public static Geometry makeNodeHintShape(String name, ColorRGBA color, float handleSize) {
+
+
+        Mesh m = new Mesh();
+        m.setMode(Mesh.Mode.Lines);
+
+        ColorRGBA colorTip = color.clone();
+        colorTip.a = 0;
+
+        FloatBuffer posBuf = BufferUtils.createFloatBuffer(
+                new Vector3f(-handleSize,0,0),new Vector3f(0,-handleSize,0),new Vector3f(0,0,-handleSize), Vector3f.UNIT_X.mult(-1), Vector3f.UNIT_Y.mult(-1), Vector3f.UNIT_Z.mult(-1)
+        );
+
+        short[] indices = {0,3,1,4,2,5};
+        ShortBuffer idxBuf = BufferUtils.createShortBuffer(indices);
+
+        FloatBuffer colBuf = BufferUtils.createFloatBuffer(color,color,color, colorTip,  colorTip,  colorTip);
+
+        m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
+        m.setBuffer(VertexBuffer.Type.Color,4, colBuf);
+        m.setBuffer(VertexBuffer.Type.Index, 1, idxBuf);
+
+        m.updateBound();
+        m.setStatic();
+
+        Geometry geom = new Geometry(name, m);
+        geom.setQueueBucket(RenderQueue.Bucket.Transparent);
+
+        return geom;
+    }
+
+    public static Geometry makeNodeHintShape2(String name, ColorRGBA color, float handleSize) {
+
+
+        Mesh m = new Mesh();
+        m.setMode(Mesh.Mode.Lines);
+
+        ColorRGBA colorTip = color.clone();
+        colorTip.a = 0;
+
+        FloatBuffer posBuf = BufferUtils.createFloatBuffer(
+                new Vector3f(-handleSize,0,0),new Vector3f(0,-handleSize,0),new Vector3f(0,0,-handleSize), new Vector3f(handleSize,0,0),new Vector3f(0,handleSize,0),new Vector3f(0,0,handleSize),
+                Vector3f.UNIT_X.mult(-NODE_ARMS_LENGTH), Vector3f.UNIT_Y.mult(-NODE_ARMS_LENGTH), Vector3f.UNIT_Z.mult(-NODE_ARMS_LENGTH),Vector3f.UNIT_X.mult(NODE_ARMS_LENGTH), Vector3f.UNIT_Y.mult(NODE_ARMS_LENGTH), Vector3f.UNIT_Z.mult(NODE_ARMS_LENGTH)
+        );
+
+        short[] indices = {0,6,1,7,2,8,3,9,4,10,5,11};
+        ShortBuffer idxBuf = BufferUtils.createShortBuffer(indices);
+
+        FloatBuffer colBuf = BufferUtils.createFloatBuffer(color,color,color,color,color,color, colorTip,  colorTip,  colorTip, colorTip,  colorTip,  colorTip);
+
+        m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
+        m.setBuffer(VertexBuffer.Type.Color,4, colBuf);
+        m.setBuffer(VertexBuffer.Type.Index, 1, idxBuf);
 
         m.updateBound();
         m.setStatic();

@@ -38,11 +38,13 @@ package spix.app;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
+import com.jme3.bounding.*;
 import com.jme3.material.*;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.*;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.*;
+import com.jme3.scene.debug.WireFrustum;
 import com.jme3.util.SafeArrayList;
 import com.simsilica.lemur.GuiGlobals;
 import spix.core.*;
@@ -67,6 +69,7 @@ public class SelectionHighlightState extends BaseAppState {
     private SafeArrayList<SelectionLink> links = new SafeArrayList<>(SelectionLink.class);
     private Map<Object, SelectionLink> linkIndex = new HashMap<>();
     private Material wireMaterial;
+    private Material nodeWireMaterial;
     private static final ColorRGBA DEFAULT_HIGHLIGHT_COLOR = new ColorRGBA(1, 1, 0, 0.7f);
     private ColorRGBA highlightColor = new ColorRGBA(DEFAULT_HIGHLIGHT_COLOR);
     private float alphaTime = 0;
@@ -92,7 +95,14 @@ public class SelectionHighlightState extends BaseAppState {
     @Override
     protected void initialize( Application app ) {
         wireMaterial = GuiGlobals.getInstance().createMaterial(highlightColor, false).getMaterial();
+
         resetHighlightMode();
+
+        nodeWireMaterial = GuiGlobals.getInstance().createMaterial(highlightColor, false).getMaterial();
+        nodeWireMaterial.getAdditionalRenderState().setWireframe(true);
+        nodeWireMaterial.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+
+
         getState(SpixState.class).getSpix().getBlackboard().bind(highlightColorProperty, this, "highlightColor");
     }
 
@@ -228,7 +238,48 @@ public class SelectionHighlightState extends BaseAppState {
 
         private void createWire( Node node ) {
             // Need to create a wire frame for the bounding shape
-            throw new UnsupportedOperationException("Not yet implemented.");
+
+
+            Vector3f points [] = new Vector3f[8];
+
+            //BoundingBox bb = (BoundingBox) node.getWorldBound();
+            BoundingBox bb2 = new BoundingBox(Vector3f.ZERO,0.1f,0.1f,0.1f);
+
+            for (Spatial spatial : node.getChildren()) {
+                BoundingVolume b = spatial.getWorldBound().clone();
+                b.setCenter(node.worldToLocal(b.getCenter(), null));
+                if( b instanceof BoundingBox){
+                    BoundingBox bb = (BoundingBox)b;
+                    bb.setXExtent(bb.getXExtent()/node.getWorldScale().getX());
+                    bb.setYExtent(bb.getYExtent()/node.getWorldScale().getY());
+                    bb.setZExtent(bb.getZExtent()/node.getWorldScale().getZ());
+                }
+                bb2.mergeLocal(b);
+            }
+            //bb2.mergeLocal(bb);
+
+            float xe = bb2.getXExtent() + 0.1f/node.getWorldScale().getX();
+            float ye = bb2.getYExtent() + 0.1f/node.getWorldScale().getY();
+            float ze = bb2.getZExtent() + 0.1f/node.getWorldScale().getZ();
+            float x = bb2.getCenter().x;
+            float y = bb2.getCenter().y;
+            float z = bb2.getCenter().z;
+
+            points[0] = new Vector3f(x - xe, y - ye, z - ze);
+            points[1] = new Vector3f(x - xe, y + ye, z - ze);
+            points[2] = new Vector3f(x + xe, y + ye, z - ze);
+            points[3] = new Vector3f(x + xe, y - ye, z - ze);
+
+            points[4] = new Vector3f(x - xe, y - ye, z + ze);
+            points[5] = new Vector3f(x - xe, y + ye, z + ze);
+            points[6] = new Vector3f(x + xe, y + ye, z + ze);
+            points[7] = new Vector3f(x + xe, y - ye, z + ze);
+
+            WireFrustum frustum = new WireFrustum(points);
+            wire = new Geometry(node.getName()+"Selection",frustum);
+            wire.setMaterial(nodeWireMaterial);
+            update();
+            getRoot().attachChild(wire);
         }
 
         public void update() {

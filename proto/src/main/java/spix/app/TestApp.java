@@ -91,7 +91,7 @@ public class TestApp extends SimpleApplication {
 
         AppSettings settings = new AppSettings(true);
         settings.setCustomRenderer(AwtPanelsContext.class);
-        settings.setFrameRate(60);
+        settings.setFrameRate(30);
         app.setSettings(settings);
         app.start();
     }
@@ -106,6 +106,7 @@ public class TestApp extends SimpleApplication {
               new ScaleWidgetState(false),
                 new RotationWidgetState(true),
                 new LightWidgetState(),
+                new NodeWidgetState(),
               new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
               new SpixState(new Spix()));
 
@@ -630,6 +631,7 @@ public class TestApp extends SimpleApplication {
         // Set an initial camera position
         cam.setLocation(new Vector3f(0, 1, 10));
 
+        Node intermediateNode = new Node("intermediate");
 
         Box b = new Box(Vector3f.ZERO, 1, 1, 1);
         Geometry geom = new Geometry("Box", b);
@@ -640,7 +642,8 @@ public class TestApp extends SimpleApplication {
         mat.setBoolean("UseMaterialColors", true);
         geom.setMaterial(mat);
         geom.setMaterial(mat);
-        rootNode.attachChild(geom);
+        intermediateNode.attachChild(geom);
+        rootNode.attachChild(intermediateNode);
 
         DirectionalLight light = new DirectionalLight();
         light.setDirection(new Vector3f(-0.2f, -1, -0.3f).normalizeLocal());
