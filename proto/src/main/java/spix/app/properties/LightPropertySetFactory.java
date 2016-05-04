@@ -83,23 +83,27 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
             //WorldTranslationProperty and have a central dispatcher.
             Property position = BeanProperty.create(wrapper.getLight(), "position", true);
             props.add(new WorldTranslationProperty(wrapper.getWidget(), position));
+            props.add(new WorldRotationProperty(wrapper.getWidget(), null));
+            props.add(new WorldScaleProperty(wrapper.getWidget(), null, false));
         } else if (type == Light.Type.Directional){
             props.add(BeanProperty.create(wrapper.getLight(), "direction"));
             props.add(new WorldTranslationProperty(wrapper.getWidget(), null));
         } else if (type == Light.Type.Point){
             props.add(BeanProperty.create(wrapper.getLight(), "radius", 
                                           new NumberRangeType(0f, null, 0.1f)));
+
+            //props.add(new WorldRotationProperty(wrapper.getWidget(), null));
             //HACK Alert: We create a property on the position attribute of the light and pass it as if it was the local translation of the widget
             //so that it's updated along with the worldTranslation of the widget,
             //That's probably utterly wrong and we should probably do as suggested in the
             //WorldTranslationProperty and have a central dispatcher.
             Property position = BeanProperty.create(wrapper.getLight(), "position", true);
             props.add(new WorldTranslationProperty(wrapper.getWidget(), position));
+            props.add(new WorldScaleProperty(wrapper.getWidget(), null, false));
+        } else {
+            //ambient light
+            props.add(new WorldTranslationProperty(wrapper.getWidget(), null));
         }
-
-        // For manipulators, create some special transform properties that work in world
-        // space.
-
 
         wrapper.setLightPropertySet(new DefaultPropertySet(wrapper, props));
 
