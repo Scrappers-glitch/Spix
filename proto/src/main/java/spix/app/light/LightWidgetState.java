@@ -43,6 +43,7 @@ import com.jme3.material.*;
 import com.jme3.math.*;
 import com.jme3.renderer.*;
 import com.jme3.scene.*;
+import com.jme3.shader.VarType;
 import com.jme3.util.*;
 //import javafx.scene.shape.Circle;
 import com.simsilica.lemur.event.*;
@@ -216,29 +217,15 @@ public class LightWidgetState extends BaseAppState {
 
                 if(event.getNewValue() instanceof LightWrapper) {
                     Node widget = ((LightWrapper) event.getNewValue()).getWidget();
-                    //TODO Perfect candidate for MPO, let's do it when we are on alpha 5
-                    //for now we recurse and set the color on every material.
-                    setColorRecurse(ColorRGBA.Orange, widget);
+                    widget.addMatParamOverride(new MatParamOverride(VarType.Vector4, "Color", ColorRGBA.Orange));
                 }
                 if(event.getOldValue() instanceof LightWrapper) {
                     Node oldWidget = ((LightWrapper) event.getOldValue()).getWidget();
-                    setColorRecurse(ColorRGBA.Black, oldWidget);
+                    oldWidget.addMatParamOverride(new MatParamOverride(VarType.Vector4, "Color", ColorRGBA.Black));
                 }
             }
 
         }
     }
 
-    private void setColorRecurse(ColorRGBA color, Node node){
-        for(Spatial s:node.getChildren()){
-            if(s instanceof Geometry){
-                Material m = ((Geometry)s).getMaterial();
-                if (m.getMaterialDef().getMaterialParam("Color") != null) {
-                    m.setColor("Color", color);
-                }
-            } else if(s instanceof  Node){
-                setColorRecurse(color,(Node)s);
-            }
-        }
-    }
 }
