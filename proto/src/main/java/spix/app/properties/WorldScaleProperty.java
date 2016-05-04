@@ -45,7 +45,7 @@ public class WorldScaleProperty extends AbstractProperty {
         //computing the delta from parent scale.
         Vector3f delta;
         if( spatial.getParent() != null ) {
-            Vector3f local = spatial.getParent().getWorldScale().mult(v);
+            Vector3f local = v.divide(spatial.getParent().getWorldScale());
             delta = local.divide(spatial.getLocalScale());
         } else {
             // It is the root... so everything is already in world space
