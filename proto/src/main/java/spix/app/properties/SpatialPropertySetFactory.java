@@ -39,7 +39,7 @@ package spix.app.properties;
 import java.util.*;
 
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Spatial;
+import com.jme3.scene.*;
 
 import spix.core.*;
 import spix.props.*;
@@ -75,7 +75,8 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
         // For manipulators, create some special transform properties that work in world
         // space.
         props.add(new WorldTranslationProperty(spatial, localTranslation));
-        props.add(new WorldScaleProperty(spatial, localScale));
+        //only allowing non uniform scaling for Geometries (leaves of the graph)
+        props.add(new WorldScaleProperty(spatial, localScale, spatial instanceof Geometry));
         props.add(new WorldRotationProperty(spatial, localRotation));
 
         // Configure the local translation property
