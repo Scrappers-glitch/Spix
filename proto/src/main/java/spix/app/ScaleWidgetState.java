@@ -101,6 +101,7 @@ public class ScaleWidgetState extends BaseAppState {
 
     //Axis move axis line visual cue.
     private Geometry axisLine;
+    private boolean isNonUniformScaleEnabled;
 
     private InputMapper inputMapper;
 
@@ -226,14 +227,16 @@ public class ScaleWidgetState extends BaseAppState {
         inputMapper.addStateListener(new StateFunctionListener() {
             @Override
             public void valueChanged(FunctionId func, InputState value, double tpf) {
-                //User typed one of the Axis keys to constrain the drag.
-                //We set the axis to the scaleManager.
-                if (func == F_X_CONSTRAIN) {
-                    scaleManager.setConstrainedAxis(0);
-                } else if (func == F_Y_CONSTRAIN) {
-                    scaleManager.setConstrainedAxis(1);
-                } else {
-                    scaleManager.setConstrainedAxis(2);
+                if(isNonUniformScaleEnabled) {
+                    //User typed one of the Axis keys to constrain the drag.
+                    //We set the axis to the scaleManager.
+                    if (func == F_X_CONSTRAIN) {
+                        scaleManager.setConstrainedAxis(0);
+                    } else if (func == F_Y_CONSTRAIN) {
+                        scaleManager.setConstrainedAxis(1);
+                    } else {
+                        scaleManager.setConstrainedAxis(2);
+                    }
                 }
             }
         }, F_X_CONSTRAIN, F_Y_CONSTRAIN, F_Z_CONSTRAIN);
@@ -373,7 +376,9 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
     }
 
+
     private void enableNonUniformScale(boolean enable){
+        isNonUniformScaleEnabled = enable;
         if(enable){
             for (Spatial axisSpatial : axisSpatials) {
                 widget.attachChild(axisSpatial);
