@@ -36,6 +36,7 @@
 
 package spix.app;
 
+import com.jme3.animation.AnimChannel;
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.input.*;
@@ -421,13 +422,13 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         }
 
 
-        //TODO This is an issue when the axis are not axis aligned, commenting for now
-        //Maybe apply the selection rotation to the axis.
-//        Vector3f relative = widget.getWorldTranslation().subtract(cam.getLocation());
-//        Vector3f dir = relative.normalize();
-//        axisColors[0].a = dirAlpha(dir, Vector3f.UNIT_X);
-//        axisColors[1].a = dirAlpha(dir, Vector3f.UNIT_Y);
-//        axisColors[2].a = dirAlpha(dir, Vector3f.UNIT_Z);
+        if(isNonUniformScaleEnabled) {
+            Vector3f relative = widget.getWorldTranslation().subtract(cam.getLocation());
+            Vector3f dir = relative.normalize();
+            axisColors[0].a = dirAlpha(dir, widget.getWorldRotation().getRotationColumn(0));
+            axisColors[1].a = dirAlpha(dir, widget.getWorldRotation().getRotationColumn(1));
+            axisColors[2].a = dirAlpha(dir, widget.getWorldRotation().getRotationColumn(2));
+        }
 
         // Need to figure out how much to scale the widget so that it stays
         // the same size on screen.  In our case, we want 1 unit to be
