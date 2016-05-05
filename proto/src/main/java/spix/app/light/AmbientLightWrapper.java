@@ -43,7 +43,7 @@ import com.jme3.scene.control.AbstractControl;
 import com.jme3.util.BufferUtils;
 import com.simsilica.lemur.Axis;
 import spix.app.utils.ShapeUtils;
-import spix.props.PropertySet;
+import spix.props.*;
 
 import java.nio.*;
 
@@ -64,12 +64,24 @@ public class AmbientLightWrapper extends LightWrapper<AmbientLight> {
     }
 
     @Override
-    protected void setPositionRelativeToTarget(Spatial target, Spatial widget, AmbientLight light) {
+    protected void initWidget(Spatial target, Spatial widget, AmbientLight light) {
+        Vector3f pos = computePosition(target);
+        widget.setLocalTranslation(pos);
+    }
+
+    private Vector3f computePosition(Spatial target) {
         Vector3f pos = Vector3f.UNIT_Y.clone();
         float scale = getGlobalScale();
         pos.multLocal(scale).addLocal(0,4,0);//get an arbitrary position for the light depending on the target bounding box
         pos.addLocal(target.getWorldTranslation());
-        widget.setLocalTranslation(pos);
+        return pos;
+    }
+
+    @Override
+    protected void setPositionRelativeToTarget(Spatial target,  Vector3f prevTargetPos, PropertySet lightPropertySet) {
+        Property widgetPosition = lightPropertySet.getProperty("worldTranslation");
+        Vector3f pos = ((Vector3f)widgetPosition.getValue()).subtract(prevTargetPos).addLocal(target.getWorldTranslation());
+        widgetPosition.setValue(pos);
     }
 
     @Override

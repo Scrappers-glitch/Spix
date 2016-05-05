@@ -71,15 +71,18 @@ public class SpotLightWrapper extends LightWrapper<SpotLight> {
     }
 
     @Override
-    protected void setPositionRelativeToTarget(Spatial target, Spatial widget, SpotLight light) {
-        //Not relative, we have a position for that light
+    protected void initWidget(Spatial target, Spatial widget, SpotLight light) {
         widget.setLocalTranslation(light.getPosition());
         updateWidgetRotationFromDirection(widget, light.getDirection());
         widget.setLocalScale(light.getSpotRange());
 
         updateCircleFromAngle((Node) widget, "innerCircle", light.getSpotInnerAngle());
         updateCircleFromAngle((Node) widget, "outerCircle", light.getSpotOuterAngle());
+    }
 
+    @Override
+    protected void setPositionRelativeToTarget(Spatial target,Vector3f prevTargetPos, PropertySet lightPropertySet) {
+        //nothing to do here.
     }
 
     private void updateWidgetRotationFromDirection(Spatial widget, Vector3f direction) {

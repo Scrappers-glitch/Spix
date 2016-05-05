@@ -41,21 +41,22 @@ public abstract class LightWrapper<L extends Light> {
         widget.attachChild(makeWidget());
     }
 
-    protected abstract void setPositionRelativeToTarget(Spatial target, Spatial widget, L light);
+    protected abstract void initWidget(Spatial target, Spatial widget, L light);
+    protected abstract void setPositionRelativeToTarget(Spatial target, Vector3f prevTargetPos, PropertySet lightPropertySet);
     protected abstract void widgetUpdate(Spatial target, Spatial widget, PropertySet lightPropertySet, float tpf);
     protected abstract Spatial makeWidget();
 
     public void update (float tpf, Camera cam){
-
-        if(!prevTargetPos.equals(target.getWorldTranslation())){
-            setPositionRelativeToTarget(target, widget, light);
-            prevTargetPos.set(target.getWorldTranslation());
-        }
-
         if(lightPropertySet != null) {
+            if(!prevTargetPos.equals(target.getWorldTranslation())){
+                setPositionRelativeToTarget(target, prevTargetPos, lightPropertySet);
+            }
             widgetUpdate(target, widget, lightPropertySet, tpf);
+        } else {
+            initWidget(target, widget, light);
         }
 
+        prevTargetPos.set(target.getWorldTranslation());
         updateCenter(cam);
 
     }

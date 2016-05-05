@@ -66,10 +66,14 @@ public class PointLightWrapper extends LightWrapper<PointLight> {
     }
 
     @Override
-    protected void setPositionRelativeToTarget(Spatial target, Spatial widget, PointLight light) {
-        //Not relative, we have a position for that light
+    protected void initWidget(Spatial target, Spatial widget, PointLight light) {
         widget.setLocalTranslation(light.getPosition());
         widget.setLocalScale(light.getRadius());
+    }
+
+    @Override
+    protected void setPositionRelativeToTarget(Spatial target, Vector3f prevTargetPos, PropertySet lightPropertySet) {
+        //nothing to do.
     }
 
     @Override
