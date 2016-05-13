@@ -42,7 +42,7 @@ import com.jme3.app.state.ScreenshotAppState;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.light.*;
-import com.jme3.material.Material;
+import com.jme3.material.*;
 import com.jme3.math.*;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
@@ -54,12 +54,14 @@ import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 
 import spix.app.form.*;
 import spix.app.light.*;
+import spix.app.material.MatDefPropertySetFactory;
 import spix.app.properties.*;
 import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.core.Action;
 import spix.swing.ActionUtils;
 import spix.swing.*;
+import spix.swing.materialEditor.MatDefEditorWindow;
 import spix.type.Type;
 import spix.ui.*;
 import spix.undo.*;
@@ -68,6 +70,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.prefs.Preferences;
+
+import static com.sun.glass.ui.Cursor.setVisible;
+import static javax.swing.WindowConstants.DISPOSE_ON_CLOSE;
 
 
 /**
@@ -127,6 +133,7 @@ public class TestApp extends SimpleApplication {
 
         spix.registerPropertySetFactory(Spatial.class, new SpatialPropertySetFactory());
         spix.registerPropertySetFactory(LightWrapper.class, new LightPropertySetFactory());
+        spix.registerPropertySetFactory(MaterialDef.class, new MatDefPropertySetFactory());
         
         spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());
 
@@ -187,6 +194,10 @@ public class TestApp extends SimpleApplication {
 
                 stateManager.attach(new AwtPanelState(rightSplit, JSplitPane.LEFT));
 
+
+
+
+
                 /*
                 // Register services to handle certain UI requests
                 spix.registerService(FileRequester.class, new SwingFileRequester(spix, mainFrame));
@@ -211,6 +222,16 @@ public class TestApp extends SimpleApplication {
                                                 new ToPropertySetFunction(spix)));*/
 
                 spix.getBlackboard().get("main.selection", SelectionModel.class).add("Test Selection");
+
+
+                final MatDefEditorWindow matDefEditorWindow = new MatDefEditorWindow(gui);
+                matDefEditorWindow.setVisible(true);
+                mainFrame.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        matDefEditorWindow.dispose();
+                    }
+                });
             }
         });
 
@@ -227,6 +248,8 @@ public class TestApp extends SimpleApplication {
         });
 
     }
+
+
 
     private JMenuBar createMainMenu() {
         return ActionUtils.createActionMenuBar(createMainActions(), spix);
