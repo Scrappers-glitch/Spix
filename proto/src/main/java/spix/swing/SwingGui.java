@@ -210,7 +210,7 @@ public class SwingGui {
      */
     public void runOnRender( Runnable run ) {
         // For the moment, we'll pretend that this is only ever called from
-        // the swing thread or the render thread.  We'll be more disciminating later
+        // the swing thread or the render thread.  We'll be more discriminating later
         // by keeping track of the render thread reference.
         if( SwingUtilities.isEventDispatchThread() ) {
             if( log.isTraceEnabled() ) {
