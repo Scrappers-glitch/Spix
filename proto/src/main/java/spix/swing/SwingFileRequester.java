@@ -65,7 +65,10 @@ public class SwingFileRequester implements FileRequester {
             public void run() {
                 File f = FileChooser.getFile(swingGui.getRootWindow(), title, typeDescription, extensions,
                                              initialValue, forOpen, JFileChooser.FILES_ONLY);
-                swingGui.getSpix().sendResponse(callback, f);                
+                //If the user did not cancel we load the file.
+                if (f != null) {
+                    swingGui.getSpix().sendResponse(callback, f);
+                }
             }
         });                             
     }
