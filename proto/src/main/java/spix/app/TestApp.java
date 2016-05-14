@@ -668,6 +668,15 @@ public class TestApp extends SimpleApplication {
         intermediateNode.attachChild(geom);
         rootNode.attachChild(intermediateNode);
 
+
+        geom = new Geometry("Box", b);
+        mat = new Material(assetManager, "MatDefs/default/default.j3md");
+        mat.setColor("Color", ColorRGBA.Yellow);
+        geom.setMaterial(mat);
+        geom.setLocalTranslation(3,0,0);
+        rootNode.attachChild(geom);
+
+
         DirectionalLight light = new DirectionalLight();
         light.setDirection(new Vector3f(-0.2f, -1, -0.3f).normalizeLocal());
         rootNode.addLight(light);
