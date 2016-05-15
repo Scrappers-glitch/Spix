@@ -2,6 +2,7 @@ package spix.swing.materialEditor.nodes.shadernodes;
 
 import com.jme3.shader.ShaderNode;
 import spix.swing.materialEditor.icons.Icons;
+import spix.swing.materialEditor.nodes.Editable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,8 +23,4 @@ public class FragmentNodePanel extends ShaderNodePanel {
         header.setIcon(Icons.frag);
     }
 
-
-    public void edit() {
-//       diagram.showEdit(NodePanel.this);
-    }
 }

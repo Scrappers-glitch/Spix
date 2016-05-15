@@ -34,31 +34,6 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     protected List<String> filePaths = new ArrayList<String>();
     protected Shader.ShaderType shaderType;
 
-    // /**
-//     * Creates new form NodePanel
-//     */
-//    @SuppressWarnings("LeakingThisInConstructor")
-//    public NodePanel(ShaderNodeBlock node, ShaderNodeDefinition def) {
-//        super();
-//        shaderType = def.getType();
-//        if (def.getType() == Shader.ShaderType.Vertex) {
-//            type = NodeType.Vertex;
-//        } else {
-//            type = NodeType.Fragment;
-//        }
-//        init(def.getInputs(), def.getOutputs());
-//
-////        node.addPropertyChangeListener(WeakListeners.propertyChange(this, node));
-////        this.addPropertyChangeListener(WeakListeners.propertyChange(node, this));
-//        refresh(node);
-//        addKeyListener(this);
-//        this.filePaths.addAll(def.getShadersPath());
-//        String defPath = ((DefinitionBlock) node.getContents().get(0)).getPath();
-//        this.filePaths.add(defPath);
-//        toolBar = new NodeToolBar(this);
-//    }
-
-
     public NodePanel(Color color) {
         super();
         this.color = color;
@@ -145,7 +120,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
         }
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, // Anti-alias!
                 RenderingHints.VALUE_ANTIALIAS_ON);
-        // Color[] colors = {new Color(0, 0, 0, 0.7f), new Color(0, 0, 0, 0.15f)};
+
         if (getDiagram().getSelectedItems().contains(this)) {
             Color[] colors = new Color[]{new Color(0.6f, 0.6f, 1.0f, 0.8f), new Color(0.6f, 0.6f, 1.0f, 0.5f)};
             float[] factors = {0f, 1f};
@@ -305,12 +280,12 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
         label.setForeground(Color.WHITE);
         label.setToolTipText(glslType + " " + txt);
         label.setOpaque(false);
-        //label.setPreferredSize(new Dimension(50, 15));        
+
         label.setHorizontalAlignment(type == Dot.ParamType.Output ? SwingConstants.RIGHT : SwingConstants.LEFT);
         label.setFont(new Font("Tahoma", 0, 10));
         label.addMouseListener(labelMouseMotionListener);
         label.addMouseMotionListener(labelMouseMotionListener);
-        // label.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
         return label;
     }
 

@@ -27,6 +27,7 @@ public class Dot extends JPanel implements MouseInputListener {
     private String text = "";
     private DraggablePanel node;
     private int index = 1;
+    private boolean connected;
 
     public String getText() {
         return text;
@@ -128,9 +129,15 @@ public class Dot extends JPanel implements MouseInputListener {
         repaint();
     }
 
-    public void disconnect() {
+    public void disconnect(Connection conn) {
         img = Icons.imgGrey;
+        getNode().removeComponentListener(conn);
+        connected = false;
         repaint();
+    }
+
+    public boolean isConnected() {
+        return connected;
     }
 
     @Override

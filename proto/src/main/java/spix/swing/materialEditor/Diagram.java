@@ -6,9 +6,13 @@ package spix.swing.materialEditor;
 
 import com.jme3.material.Material;
 import com.jme3.shader.Shader;
+import com.jme3.shader.ShaderNodeVariable;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.NodePanel;
+import spix.swing.materialEditor.nodes.inOut.FragmentColorPanel;
+import spix.swing.materialEditor.nodes.inOut.InOutPanel;
+import spix.swing.materialEditor.nodes.inOut.VertexPositionPanel;
 import spix.swing.materialEditor.nodes.shadernodes.*;
 
 import javax.swing.*;
@@ -38,6 +42,10 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     private final Cursor hndCursor = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
     private final Point pp = new Point();
     private SwingGui gui;
+
+    //storing the list of InOutPanels depending on the shaderType and by variable name
+    private Map<Shader.ShaderType, Map<String, List<InOutPanel>>> panels = new HashMap<>();
+
 
     @SuppressWarnings("LeakingThisInConstructor")
     public Diagram(SwingGui gui) {
@@ -146,7 +154,7 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         repaint();
     }
 
-    protected void showEdit(NodePanel node) {
+    public void showEdit(NodePanel node) {
       //  parent.showShaderEditor(node.getName(), node.getType(), node.filePaths);
     }
 
@@ -276,8 +284,8 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
             Connection conn = it.next();
             if (conn.start.getNode() == selectedNode || conn.end.getNode() == selectedNode) {
                 it.remove();
-                conn.end.disconnect();
-                conn.start.disconnect();
+                conn.end.disconnect(conn);
+                conn.start.disconnect(conn);
                 remove(conn);
             }
         }
@@ -548,8 +556,8 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
 
     private void removeConnection(Connection selectedConnection) {
         connections.remove(selectedConnection);
-        selectedConnection.end.disconnect();
-        selectedConnection.start.disconnect();
+        selectedConnection.end.disconnect(selectedConnection);
+        selectedConnection.start.disconnect(selectedConnection);
         remove(selectedConnection);
     }
 
@@ -672,4 +680,71 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     public String getCurrentTechniqueName() {
         return currentTechniqueName;
     }
+
+
+
+    public InOutPanel getPanelForInput(Shader.ShaderType type, ShaderNodeVariable var) {
+
+        List<InOutPanel> panelList = getPanelList(type, var);
+
+
+        for (InOutPanel inOutPanel : panelList) {
+            if(inOutPanel.isOutputAvailable()){
+                return inOutPanel;
+            }
+        }
+
+        InOutPanel panel = createInOutPanel(type, var);
+        panelList.add(panel);
+
+        return panel;
+
+    }
+
+
+    public InOutPanel getPanelForOutput(Shader.ShaderType type, ShaderNodeVariable var) {
+
+        List<InOutPanel> panelList = getPanelList(type, var);
+
+
+        for (InOutPanel inOutPanel : panelList) {
+            if(inOutPanel.isInputAvailable()){
+                return inOutPanel;
+            }
+        }
+
+        InOutPanel panel = createInOutPanel(type, var);
+        panelList.add(panel);
+
+        return panel;
+
+    }
+
+    private List<InOutPanel> getPanelList(Shader.ShaderType type, ShaderNodeVariable var) {
+        Map<String, List<InOutPanel>> map = panels.get(type);
+        if(map == null){
+            map = new HashMap<>();
+            panels.put(type, map);
+        }
+        List<InOutPanel> panelList = map.get(var.getName());
+        if(panelList == null){
+            panelList = new ArrayList<>();
+            map.put(var.getName(), panelList);
+        }
+        return panelList;
+    }
+
+
+    public InOutPanel createInOutPanel(Shader.ShaderType type, ShaderNodeVariable var) {
+        switch (type){
+            case Vertex:
+                return new VertexPositionPanel(var);
+            case Fragment:
+                return new FragmentColorPanel(var);
+            default:
+                throw new UnsupportedOperationException("Only Vertex and Fragment shaders are supported for now.");
+        }
+    }
+
+
 }

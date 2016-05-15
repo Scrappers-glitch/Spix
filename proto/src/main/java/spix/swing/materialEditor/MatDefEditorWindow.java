@@ -71,19 +71,8 @@ public class MatDefEditorWindow extends JFrame {
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(diagram);
         getContentPane().add(scrollPane);
-//        diagram.setPreferredSize(new Dimension(scrollPane.getWidth() - 2, scrollPane.getHeight() - 2));
-//        diagram.revalidate();
         scrollPane.addComponentListener(diagram);
-        //diagram.addOutBus(new OutBusPanel("Test", Shader.ShaderType.Fragment));
 
-//        diagram.addNode(new AttributePanel(new ShaderNodeVariable("vec2", "inTexCoord")));
-//        diagram.addNode(new WorldParamPanel(new ShaderNodeVariable("mat4", "WorldProjectionMatrix")));
-//        diagram.addNode(new MatParamPanel(new ShaderNodeVariable("vec4", "Color")));
-//
-//        diagram.addNode(new VertexPositionPanel());
-//        diagram.addNode(new FragmentColorPanel());
-//
-//        diagram.autoLayout();
         sceneSelection = gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         sceneSelection.addPropertyChangeListener(sceneSelectionChangeListener);
 
@@ -156,24 +145,32 @@ public class MatDefEditorWindow extends JFrame {
             List<ShaderNodeVariable> uniforms = new ArrayList<>();
             MaterialDefUtils.getAllUniforms(technique, matDef, uniforms);
 
+            ShaderNodeVariable inPosition = new ShaderNodeVariable("vec4", "Attr", "inPosition");
+            ShaderNodeVariable position = new ShaderNodeVariable("vec4", "Global", "position");
+            diagram.addNode(new AttributePanel(inPosition));
+            diagram.addNode(new VertexPositionPanel(position));
+            makeConnection(new VariableMapping(position,"", inPosition,"",""), technique);
+
+
             for (ShaderNode sn : technique.getShaderNodes()) {
                 NodePanel np = NodePanelFactory.createShaderNodePanel(sn);
                 diagram.addNode(np);
             }
 
             if (technique.getShaderGenerationInfo().getVertexGlobal() != null) {
-               // NodePanel np = new VertexPositionPanel();
-                OutBusPanel out = new OutBusPanel(technique.getShaderGenerationInfo().getVertexGlobal().getName(), Shader.ShaderType.Vertex);
-                diagram.addOutBus(out);
-               // diagram.addNode(np);
+
+//                OutBusPanel out = new OutBusPanel(technique.getShaderGenerationInfo().getVertexGlobal().getName(), Shader.ShaderType.Vertex);
+//                diagram.addOutBus(out);
+                 NodePanel np = new VertexPositionPanel(technique.getShaderGenerationInfo().getVertexGlobal());
+                diagram.addNode(np);
             }
 
 
             for (ShaderNodeVariable var : technique.getShaderGenerationInfo().getFragmentGlobals()) {
-                OutBusPanel out2 = new OutBusPanel(var.getName(), Shader.ShaderType.Fragment);
-                diagram.addOutBus(out2);
-//                NodePanel np = new FragmentColorPanel();
-//                diagram.addNode(np);
+//                OutBusPanel out2 = new OutBusPanel(var.getName(), Shader.ShaderType.Fragment);
+//                diagram.addOutBus(out2);
+                NodePanel np = new FragmentColorPanel(var);
+                diagram.addNode(np);
             }
             for (ShaderNodeVariable shaderNodeVariable : technique.getShaderGenerationInfo().getAttributes()) {
                 NodePanel np = diagram.getNodePanel(shaderNodeVariable.getNameSpace() + "." + shaderNodeVariable.getName());
@@ -240,13 +237,17 @@ public class MatDefEditorWindow extends JFrame {
 
         if (nameSpace.equals("MatParam")
                 || nameSpace.equals("WorldParam")
-                || nameSpace.equals("Attr")) {
+                || nameSpace.equals("Attr")
+                || nameSpace.equals("Global")) {
             NodePanel np = diagram.getNodePanel(nameSpace + "." + name);
             return isInput ? np.getInputConnectPoint(name) : np.getOutputConnectPoint(name);
-        } else if (nameSpace.equals("Global")) {
-            OutBusPanel outBus = diagram.getOutBusPanel(name);
-            return outBus.getConnectPoint();
-        } else {
+        }
+//        else if (nameSpace.equals("Global")) {
+////            OutBusPanel outBus = diagram.getOutBusPanel(name);
+////            return outBus.getConnectPoint();
+//
+//        }
+        else {
             NodePanel np = diagram.getNodePanel(diagram.getCurrentTechniqueName() + "/" + nameSpace);
             return isInput ? np.getInputConnectPoint(name) : np.getOutputConnectPoint(name);
         }

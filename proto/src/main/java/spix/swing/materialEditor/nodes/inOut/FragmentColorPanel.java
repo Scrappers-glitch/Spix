@@ -11,29 +11,11 @@ import java.util.ArrayList;
 /**
  * Created by Nehon on 13/05/2016.
  */
-public class FragmentColorPanel extends NodePanel {
+public class FragmentColorPanel extends InOutPanel {
 
-    public FragmentColorPanel() {
-        super(new Color(220, 150, 0));//orange
-        setNodeName("OutColor");
-        java.util.List<ShaderNodeVariable> outputs = new ArrayList<ShaderNodeVariable>();
-        outputs.add(new ShaderNodeVariable("vec4","out"));
-        java.util.List<ShaderNodeVariable> inputs = new ArrayList<ShaderNodeVariable>();
-        inputs.add(new ShaderNodeVariable("vec4","in"));
-
-        init(inputs, outputs);
+    public FragmentColorPanel(ShaderNodeVariable var) {
+        super(var, new Color(220, 150, 0));//orange
     }
 
-    @Override
-    public String getKey() {
-        return getNodeName();
-    }
 
-    @Override
-    protected void initHeader(JLabel header) {
-        header.setIcon(Icons.output);
-        header.setText("OutColor");
-        header.setToolTipText("outColor");
-        //setNodeName("Attr");
-    }
 }
