@@ -48,6 +48,9 @@ public class MaterialDefUtils {
                     } else if (var.getNameSpace().equals("Attr")) {
                         attributes.add(var);
                     } else if (var.getNameSpace().equals("MatParam") || var.getNameSpace().equals("WorldParam")){
+                        //Remove the g_ and the m_ form the uniform name
+                        //TODO tbh I don't know why it's here, IMO it shouldn't, they should be added during the shader generation phase not before
+                        var.setName(var.getName().replaceFirst("g_","").replaceAll("m_",""));
                         if(def.getType() == Shader.ShaderType.Fragment){
                             fragmentUniforms.add(var);
                         } else {
