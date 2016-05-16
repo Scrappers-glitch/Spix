@@ -5,15 +5,10 @@
 package spix.swing.materialEditor;
 
 import com.jme3.material.Material;
-import com.jme3.shader.Shader;
-import com.jme3.shader.ShaderNodeVariable;
+import com.jme3.shader.*;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
-import spix.swing.materialEditor.nodes.NodePanel;
-import spix.swing.materialEditor.nodes.inOut.FragmentColorPanel;
-import spix.swing.materialEditor.nodes.inOut.InOutPanel;
-import spix.swing.materialEditor.nodes.inOut.VertexPositionPanel;
-import spix.swing.materialEditor.nodes.shadernodes.*;
+import spix.swing.materialEditor.nodes.*;
 
 import javax.swing.*;
 import javax.swing.border.*;
@@ -23,7 +18,6 @@ import java.util.*;
 import java.util.List;
 
 /**
- *
  * @author Nehon
  */
 public class Diagram extends JPanel implements MouseListener, MouseMotionListener, ComponentListener {
@@ -33,7 +27,6 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     protected List<Selectable> selectedItems = new ArrayList<Selectable>();
     protected List<Connection> connections = new ArrayList<Connection>();
     protected List<NodePanel> nodes = new ArrayList<NodePanel>();
-    protected List<OutBusPanel> outBuses = new ArrayList<OutBusPanel>();
     private final MyMenu contextMenu = new MyMenu("Add");
     private MatDefEditorWindow parent;
     private String currentTechniqueName;
@@ -44,14 +37,14 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     private SwingGui gui;
 
     //storing the list of InOutPanels depending on the shaderType and by variable name
-    private Map<Shader.ShaderType, Map<String, List<InOutPanel>>> panels = new HashMap<>();
+    private Map<Shader.ShaderType, Map<String, List<InOutPanel>>> outPanels = new HashMap<>();
 
 
     @SuppressWarnings("LeakingThisInConstructor")
     public Diagram(SwingGui gui) {
         this.gui = gui;
         setLayout(null);
-        setBackground(new Color(40,40,40));
+        setBackground(new Color(40, 40, 40));
         addMouseListener(this);
         addMouseMotionListener(this);
         createPopupMenu();
@@ -65,16 +58,6 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     public void mousePressed(MouseEvent e) {
 
         if (e.getButton() == MouseEvent.BUTTON1) {
-            for (OutBusPanel outBusPanel : outBuses) {
-                Point p = SwingUtilities.convertPoint(this, e.getX(), e.getY(), outBusPanel);
-                if (outBusPanel.contains(p)) {
-                    MouseEvent me = SwingUtilities.convertMouseEvent(this, e, outBusPanel);
-                    outBusPanel.dispatchEvent(me);
-                    if (me.isConsumed()) {
-                        return;
-                    }
-                }
-            }
 
             for (Connection connection : connections) {
                 MouseEvent me = SwingUtilities.convertMouseEvent(this, e, connection);
@@ -94,9 +77,9 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     }
 
     public void refreshPreviews(Material mat, String technique) {
-        for (OutBusPanel outBusPanel : outBuses) {
-            outBusPanel.updatePreview(mat, technique);
-        }
+//        for (OutBusPanel outBusPanel : outBuses) {
+//            outBusPanel.updatePreview(mat, technique);
+//        }
 //        if (backDrop.isVisible()) {
 //            backDrop.showMaterial(mat, technique);
 //        }
@@ -118,17 +101,6 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     public void mouseReleased(MouseEvent e) {
 
         switch (e.getButton()) {
-            case MouseEvent.BUTTON1:
-                if (draggedFrom != null && draggedFrom.getNode() instanceof OutBusPanel) {
-                    MouseEvent me = SwingUtilities.convertMouseEvent(this, e, draggedFrom.getNode());
-                    draggedFrom.getNode().dispatchEvent(me);
-                    if (me.isConsumed()) {
-                        return;
-                    }
-                }
-
-                dispatchToOutBuses(e);
-                break;
             case MouseEvent.BUTTON2:
                 setCursor(defCursor);
                 ((JScrollPane) getParent().getParent()).setWheelScrollingEnabled(true);
@@ -148,18 +120,15 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     public void addConnection(Connection conn) {
         connections.add(conn);
         add(conn);
-        for (OutBusPanel bus : outBuses) {
-            setComponentZOrder(bus, getComponentCount() - 1);
-        }
         repaint();
     }
 
     public void showEdit(NodePanel node) {
-      //  parent.showShaderEditor(node.getName(), node.getType(), node.filePaths);
+        //  parent.showShaderEditor(node.getName(), node.getType(), node.filePaths);
     }
 
     public void notifyMappingCreation(Connection conn) {
-    //    parent.makeMapping(conn);
+        //    parent.makeMapping(conn);
     }
 
     public void addNode(NodePanel node) {
@@ -171,16 +140,6 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         node.addComponentListener(this);
     }
 
-    public void addOutBus(OutBusPanel bus) {
-        outBuses.add(bus);
-        bus.setDiagram(this);
-        add(bus);
-        setComponentZOrder(bus, getComponentCount() - 1);
-        addComponentListener(bus);
-        bus.componentResized(new ComponentEvent(this, ActionEvent.ACTION_PERFORMED));
-        bus.revalidate();
-    }
-
     @Override
     public void mouseEntered(MouseEvent e) {
     }
@@ -189,10 +148,10 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     public void mouseExited(MouseEvent e) {
     }
 
-    protected void removeSelectedConnection(Selectable selectedItem) {        
+    protected void removeSelectedConnection(Selectable selectedItem) {
         Connection selectedConnection = (Connection) selectedItem;
         removeConnection(selectedConnection);
-     //   parent.notifyRemoveConnection(selectedConnection);
+        //   parent.notifyRemoveConnection(selectedConnection);
     }
 
     private String fixNodeName(String name) {
@@ -207,7 +166,8 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         }
         return name + (count == 0 ? "" : count);
     }
-//
+
+    //
 //    public void addNodesFromDefs(List<ShaderNodeDefinition> defList, String path, Point clickPosition) {
 //        int i = 0;
 //        for (ShaderNodeDefinition def : defList) {
@@ -259,10 +219,10 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
 //        repaint();
 //    }
 //
-    public void removeSelected(){
-        
-        int result = JOptionPane.showConfirmDialog(null, "Delete all selected items, nodes and mappings?", "Delete Selected", JOptionPane.OK_CANCEL_OPTION);
-        
+    public void removeSelected() {
+
+        int result = JOptionPane.showConfirmDialog(this, "Delete all selected items, nodes and mappings?", "Delete Selected", JOptionPane.OK_CANCEL_OPTION);
+
         if (result == JOptionPane.OK_OPTION) {
             for (Selectable selectedItem : selectedItems) {
                 if (selectedItem instanceof NodePanel) {
@@ -279,8 +239,8 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     private void removeSelectedNode(Selectable selectedItem) {
 
         NodePanel selectedNode = (NodePanel) selectedItem;
-     //   nodes.remove(selectedNode);
-        for (Iterator<Connection> it = connections.iterator(); it.hasNext();) {
+        //   nodes.remove(selectedNode);
+        for (Iterator<Connection> it = connections.iterator(); it.hasNext(); ) {
             Connection conn = it.next();
             if (conn.start.getNode() == selectedNode || conn.end.getNode() == selectedNode) {
                 it.remove();
@@ -290,10 +250,14 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
             }
         }
 
+        nodes.remove(selectedNode);
+        if(selectedNode instanceof InOutPanel){
+            outPanels.get(selectedNode.getShaderType()).get(selectedNode.getNodeName()).remove(selectedNode);
+        }
         selectedNode.cleanup();
         remove(selectedNode);
         repaint();
-    //    parent.notifyRemoveNode(selectedNode);
+        //    parent.notifyRemoveNode(selectedNode);
     }
 
     public List<Selectable> getSelectedItems() {
@@ -303,15 +267,6 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     @Override
     public void mouseDragged(MouseEvent e) {
         if (SwingUtilities.isLeftMouseButton(e)) {
-            if (draggedFrom == null) {
-                for (Selectable selectedItem : selectedItems) {
-                    if (selectedItem instanceof OutBusPanel) {
-                        OutBusPanel bus = (OutBusPanel) selectedItem;
-                        MouseEvent me = SwingUtilities.convertMouseEvent(this, e, bus);
-                        bus.dispatchEvent(me);
-                    }
-                }
-            }
         } else if (SwingUtilities.isMiddleMouseButton(e)) {
             JViewport vport = (JViewport) getParent();
             Point cp = e.getPoint();
@@ -322,26 +277,16 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         }
     }
 
-    protected void draggingDot(MouseEvent e) {
-        for (OutBusPanel outBusPanel : outBuses) {
-            Point p = SwingUtilities.convertPoint(this, e.getX(), e.getY(), outBusPanel);
-            if (outBusPanel.contains(p)) {
-                MouseEvent me = SwingUtilities.convertMouseEvent(this, e, outBusPanel);
-                outBusPanel.draggingDot(me);
-                if (me.isConsumed()) {
-                    return;
-                }
-            }
-        }
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        //nothing to do
     }
 
     public Connection connect(Dot start, Dot end) {
         Connection conn = new Connection(start, end);
         start.connect(conn);
         end.connect(conn);
-
         addConnection(conn);
-
         return conn;
     }
 
@@ -349,15 +294,6 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         for (NodePanel nodePanel : nodes) {
             if (nodePanel.getKey().equals(key)) {
                 return nodePanel;
-            }
-        }
-        return null;
-    }
-
-    public OutBusPanel getOutBusPanel(String key) {
-        for (OutBusPanel out : outBuses) {
-            if (out.getKey().equals(key)) {
-                return out;
             }
         }
         return null;
@@ -371,28 +307,28 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     public void select(Selectable selectable, boolean multi) {
         doSelect(selectable, multi);
     }
-    
-    public void multiMove(DraggablePanel movedPanel ,int xOffset, int yOffset){
-        
+
+    public void multiMove(DraggablePanel movedPanel, int xOffset, int yOffset) {
+
         for (Selectable selectedItem : selectedItems) {
-            if(selectedItem != movedPanel){
-                if(selectedItem instanceof DraggablePanel){
-                    ((DraggablePanel)selectedItem).movePanel(xOffset, yOffset);
+            if (selectedItem != movedPanel) {
+                if (selectedItem instanceof DraggablePanel) {
+                    ((DraggablePanel) selectedItem).movePanel(xOffset, yOffset);
                 }
             }
         }
     }
 
-    public void multiStartDrag(DraggablePanel movedPanel){
+    public void multiStartDrag(DraggablePanel movedPanel) {
         for (Selectable selectedItem : selectedItems) {
-            if(selectedItem != movedPanel){
-                if(selectedItem instanceof DraggablePanel){
-                    ((DraggablePanel)selectedItem).saveLocation();
+            if (selectedItem != movedPanel) {
+                if (selectedItem instanceof DraggablePanel) {
+                    ((DraggablePanel) selectedItem).saveLocation();
                 }
             }
         }
     }
-    
+
     /**
      * do select the item and repaint the diagram
      *
@@ -400,7 +336,7 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
      * @return
      */
     private Selectable doSelect(Selectable selectable, boolean multi) {
-        
+
 
         if (!multi && !selectedItems.contains(selectable)) {
             selectedItems.clear();
@@ -439,18 +375,7 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
             }
         }
 
-        for (OutBusPanel outBusPanel : outBuses) {
-            if (outBusPanel.getKey().equals(key)) {
-                return doSelect(outBusPanel, false);
-            }
-        }
-
         return null;
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        dispatchToOutBuses(e);
     }
 
     private JMenuItem createMenuItem(String text, Icon icon) {
@@ -461,9 +386,9 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
 
     public void clear() {
         removeAll();
-        outBuses.clear();
         connections.clear();
-        //nodes.clear();
+        nodes.clear();
+        outPanels.clear();
     }
 
     private void createPopupMenu() {
@@ -526,10 +451,10 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         outputItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                OutBusPanel p2 = new OutBusPanel("color" + (outBuses.size() - 1), Shader.ShaderType.Fragment);
-                p2.setBounds(0, 350 + 50 * (outBuses.size() - 1), p2.getWidth(), p2.getHeight());
-
-                addOutBus(p2);
+//                OutBusPanel p2 = new OutBusPanel("color" + (outBuses.size() - 1), Shader.ShaderType.Fragment);
+//                p2.setBounds(0, 350 + 50 * (outBuses.size() - 1), p2.getWidth(), p2.getHeight());
+//
+//                addOutBus(p2);
 
             }
         });
@@ -539,19 +464,6 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         JSeparator jsep = new JSeparator(JSeparator.HORIZONTAL);
         jsep.setBackground(Color.BLACK);
         return jsep;
-    }
-
-    private void dispatchToOutBuses(MouseEvent e) {
-        for (OutBusPanel outBusPanel : outBuses) {
-            Point p = SwingUtilities.convertPoint(this, e.getX(), e.getY(), outBusPanel);
-            if (outBusPanel.contains(p)) {
-                MouseEvent me = SwingUtilities.convertMouseEvent(this, e, outBusPanel);
-                outBusPanel.dispatchEvent(me);
-                if (me.isConsumed()) {
-                    return;
-                }
-            }
-        }
     }
 
     private void removeConnection(Connection selectedConnection) {
@@ -583,15 +495,10 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
                 maxHeight = h;
             }
         }
-        for (OutBusPanel outBusPanel : outBuses) {
-            int h = outBusPanel.getLocation().y + outBusPanel.getHeight();
-            if (h > maxHeight) {
-                maxHeight = h;
-            }
-        }
         setPreferredSize(new Dimension(maxWidth, maxHeight));
         revalidate();
     }
+
     int minWidth = 0;
     int minHeight = 0;
 
@@ -604,57 +511,65 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     public void autoLayout() {
 
         int offset = 550;
-        for (OutBusPanel outBus : outBuses) {
-            if (outBus.getKey().equalsIgnoreCase("position")) {
-                outBus.setLocation(0, 100);
 
-            } else {
-                outBus.setLocation(0, offset);
-                offset += 260;
-            }
-        //    getEditorParent().savePositionToMetaData(outBus.getKey(), outBus.getLocation().x, outBus.getLocation().y);
-        }
         offset = 0;
         String keys = "";
         for (NodePanel node : nodes) {
 
             if (node instanceof ShaderNodePanel) {
                 node.setLocation(offset + 200, getNodeTop(node));
-              //  getEditorParent().savePositionToMetaData(node.getKey(), node.getLocation().x, node.getLocation().y);
+                //  getEditorParent().savePositionToMetaData(node.getKey(), node.getLocation().x, node.getLocation().y);
                 int pad = getNodeTop(node);
                 for (Connection connection : connections) {
                     if (connection.getEnd().getNode() == node) {
                         if (connection.getStart().getNode() instanceof NodePanel) {
                             NodePanel startP = (NodePanel) connection.getStart().getNode();
-                            if ( !(startP instanceof ShaderNodePanel) ) {
+                            if (!(startP instanceof ShaderNodePanel)) {
                                 startP.setLocation(offset + 30, pad);
-                         //       getEditorParent().savePositionToMetaData(startP.getKey(), startP.getLocation().x, startP.getLocation().y);
+                                //       getEditorParent().savePositionToMetaData(startP.getKey(), startP.getLocation().x, startP.getLocation().y);
                                 keys += startP.getKey() + "|";
                                 pad += 50;
                             }
                         }
                     }
+                    connection.revalidate();
                 }
+            } else if (node instanceof InOutPanel) {
+                InOutPanel out = (InOutPanel) node;
+                Dot input = out.getInputConnectPoint();
+                if (input.isConnected()) {
+                    for (Dot dot : input.getConnectedDots()) {
+                        if (dot.getNode() instanceof NodePanel) {
+                            out.setLocation(dot.getNode().getX() + 180, dot.getNode().getY());
+                            //       getEditorParent().savePositionToMetaData(startP.getKey(), startP.getLocation().x, startP.getLocation().y);
+                            keys += out.getKey() + "|";
+                        }
+                    }
+                }
+
             }
             offset += 320;
         }
         offset = 0;
         for (NodePanel node : nodes) {
-            if ( !(node instanceof ShaderNodePanel) && !(keys.contains(node.getKey()))) {
+            if (!(node instanceof ShaderNodePanel) && !(keys.contains(node.getKey()))) {
                 node.setLocation(offset + 10, 0);
-            //    getEditorParent().savePositionToMetaData(node.getKey(), node.getLocation().x, node.getLocation().y);
+                //    getEditorParent().savePositionToMetaData(node.getKey(), node.getLocation().x, node.getLocation().y);
                 offset += 130;
             }
         }
-
+        repaint();
     }
 
     private int getNodeTop(NodePanel node) {
-        if (node instanceof VertexNodePanel) {
-            return 150;
-        }
-        if (node instanceof FragmentNodePanel) {
-            return 400;
+        if (node instanceof ShaderNodePanel) {
+            ShaderNodePanel panel = (ShaderNodePanel) node;
+            if (panel.getShaderType() == Shader.ShaderType.Vertex) {
+                return 50;
+            }
+            if (panel.getShaderType() == Shader.ShaderType.Fragment) {
+                return 300;
+            }
         }
         return 0;
 
@@ -682,69 +597,42 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
     }
 
 
-
-    public InOutPanel getPanelForInput(Shader.ShaderType type, ShaderNodeVariable var) {
-
-        List<InOutPanel> panelList = getPanelList(type, var);
-
-
-        for (InOutPanel inOutPanel : panelList) {
-            if(inOutPanel.isOutputAvailable()){
-                return inOutPanel;
-            }
-        }
-
-        InOutPanel panel = createInOutPanel(type, var);
-        panelList.add(panel);
-
-        return panel;
-
-    }
-
-
-    public InOutPanel getPanelForOutput(Shader.ShaderType type, ShaderNodeVariable var) {
+    public InOutPanel getOutPanel(Shader.ShaderType type, ShaderNodeVariable var, NodePanel node, boolean forInput) {
 
         List<InOutPanel> panelList = getPanelList(type, var);
 
 
         for (InOutPanel inOutPanel : panelList) {
-            if(inOutPanel.isInputAvailable()){
-                return inOutPanel;
+            if (forInput) {
+                if (inOutPanel.isOutputAvailable() && !inOutPanel.getInputConnectPoint(var.getName()).isConnectedToNode(node)) {
+                    return inOutPanel;
+                }
+            } else {
+                if (inOutPanel.isInputAvailable() && !inOutPanel.getOutputConnectPoint(var.getName()).isConnectedToNode(node)) {
+                    return inOutPanel;
+                }
             }
         }
 
-        InOutPanel panel = createInOutPanel(type, var);
+        InOutPanel panel = InOutPanel.create(type, var);
         panelList.add(panel);
-
+        addNode(panel);
         return panel;
 
     }
 
     private List<InOutPanel> getPanelList(Shader.ShaderType type, ShaderNodeVariable var) {
-        Map<String, List<InOutPanel>> map = panels.get(type);
-        if(map == null){
+        Map<String, List<InOutPanel>> map = outPanels.get(type);
+        if (map == null) {
             map = new HashMap<>();
-            panels.put(type, map);
+            outPanels.put(type, map);
         }
         List<InOutPanel> panelList = map.get(var.getName());
-        if(panelList == null){
+        if (panelList == null) {
             panelList = new ArrayList<>();
             map.put(var.getName(), panelList);
         }
         return panelList;
     }
-
-
-    public InOutPanel createInOutPanel(Shader.ShaderType type, ShaderNodeVariable var) {
-        switch (type){
-            case Vertex:
-                return new VertexPositionPanel(var);
-            case Fragment:
-                return new FragmentColorPanel(var);
-            default:
-                throw new UnsupportedOperationException("Only Vertex and Fragment shaders are supported for now.");
-        }
-    }
-
 
 }

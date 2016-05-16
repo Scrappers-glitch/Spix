@@ -4,6 +4,9 @@
  */
 package spix.swing.materialEditor;
 
+import com.jme3.shader.VariableMapping;
+import spix.app.utils.MaterialDefUtils;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
@@ -54,9 +57,7 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
     @SuppressWarnings("LeakingThisInConstructor")
     public ConnectionCurve(Dot start, Dot end) {
 
-        if (start.getParamType() == Dot.ParamType.Output
-                || (start.getParamType() == Dot.ParamType.Both && end.getParamType() != Dot.ParamType.Output)
-                || (end.getParamType() == Dot.ParamType.Both && start.getParamType() != Dot.ParamType.Input)) {
+        if ( start.getParamType() == Dot.ParamType.Output ) {
             this.start = start;
             this.end = end;
         } else {
@@ -92,10 +93,10 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
         return key;
     }
 
-//    protected void makeKey(MappingBlock mapping, String techName) {
-//        this.mapping = mapping;
-//        key = MaterialUtils.makeKey(mapping, techName);
-//    }
+    protected void makeKey(VariableMapping mapping, String techName) {
+       // this.mapping = mapping;
+        key = MaterialDefUtils.makeKey(mapping, techName);
+    }
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -218,21 +219,7 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
         Point startLocation = start.getStartLocation();
         Point endLocation = end.getEndLocation();
 
-        if (start.getParamType() == Dot.ParamType.Both) {
-            startLocation.x = endLocation.x - MARGIN * 2;
-            pointsSize = 3;
-            points[0].setLocation(startLocation);
-            points[1].x = startLocation.x;
-            points[1].y = endLocation.y;
-            points[2].setLocation(endLocation);
-        } else if (end.getParamType() == Dot.ParamType.Both) {
-            endLocation.x = startLocation.x + MARGIN * 2;
-            pointsSize = 3;
-            points[0].setLocation(startLocation);
-            points[1].x = endLocation.x;
-            points[1].y = startLocation.y;
-            points[2].setLocation(endLocation);
-        } else if (startLocation.x + MARGIN <= endLocation.x - MARGIN) {
+        if (startLocation.x + MARGIN <= endLocation.x - MARGIN) {
             pointsSize = 4;
             points[0].setLocation(startLocation);
             points[1].x = getVMiddleStart();

@@ -6,17 +6,19 @@ package spix.swing.materialEditor;
 
 import com.jme3.shader.*;
 import spix.swing.materialEditor.icons.Icons;
+import spix.swing.materialEditor.nodes.*;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputListener;
 import java.awt.*;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
+import java.util.*;
 
 /**
  *
  * @author Nehon
  */
-public class Dot extends JPanel implements MouseInputListener {
+public class Dot extends JPanel implements MouseListener {
 
     public static boolean pressed = false;
     protected ImageIcon img;
@@ -27,7 +29,7 @@ public class Dot extends JPanel implements MouseInputListener {
     private String text = "";
     private DraggablePanel node;
     private int index = 1;
-    private boolean connected;
+    private Set<Dot> pairs = new HashSet<>();
 
     public String getText() {
         return text;
@@ -38,10 +40,8 @@ public class Dot extends JPanel implements MouseInputListener {
     }
 
     public enum ParamType {
-
         Input,
-        Output,
-        Both
+        Output
     }
 
     @SuppressWarnings("LeakingThisInConstructor")
@@ -51,7 +51,6 @@ public class Dot extends JPanel implements MouseInputListener {
         setMinimumSize(new Dimension(10, 10));
         setPreferredSize(new Dimension(10, 10));
         setSize(10, 10);
-        addMouseMotionListener(this);
         addMouseListener(this);
        
     }
@@ -110,7 +109,6 @@ public class Dot extends JPanel implements MouseInputListener {
         if (diag.draggedFrom == this && diag.draggedTo != null) {
             if (this.canConnect(diag.draggedTo)) {
                 diag.notifyMappingCreation(diag.connect(this, diag.draggedTo));
-
             } else {
                 diag.draggedTo.reset();
                 this.reset();
@@ -130,14 +128,25 @@ public class Dot extends JPanel implements MouseInputListener {
     }
 
     public void disconnect(Connection conn) {
-        img = Icons.imgGrey;
+
         getNode().removeComponentListener(conn);
-        connected = false;
+        if(this == conn.getStart()) {
+            pairs.remove(conn.getEnd());
+        } else {
+            pairs.remove(conn.getStart());
+        }
+        if(pairs.isEmpty()){
+            img = Icons.imgGrey;
+        }
         repaint();
     }
 
     public boolean isConnected() {
-        return connected;
+        return !pairs.isEmpty();
+    }
+
+    public Set<Dot> getConnectedDots(){
+        return Collections.unmodifiableSet(pairs);
     }
 
     @Override
@@ -155,16 +164,14 @@ public class Dot extends JPanel implements MouseInputListener {
     public boolean canConnect(Dot pair) {
         
         if (pair == null || paramType == ParamType.Input || 
-                 ((pair.getNode() instanceof OutBusPanel || node instanceof OutBusPanel) && shaderType != pair.shaderType)) {
+                 ((pair.getNode() instanceof InOutPanel || node instanceof InOutPanel) && shaderType != pair.shaderType)) {
             img = Icons.imgOrange;
             repaint();
             return false;
         }
 
         
-        if (matches(pair.getType(), type) && (pair.getParamType() != paramType
-                || pair.getParamType() == ParamType.Both
-                || paramType == ParamType.Both)
+        if (matches(pair.getType(), type) && (pair.getParamType() != paramType)
                 || ShaderUtils.isSwizzlable(pair.getType()) && ShaderUtils.isSwizzlable(type)) {
             img = Icons.imgGreen;
             repaint();
@@ -191,10 +198,24 @@ public class Dot extends JPanel implements MouseInputListener {
 
     }
 
-    protected void connect(Connection connection) {
+    protected void connect(Connection conn) {
         img = Icons.imgGreen;
-        getNode().addComponentListener(connection);
+        if(this == conn.getStart()) {
+            pairs.add(conn.getEnd());
+        } else {
+            pairs.add(conn.getStart());
+        }
+        getNode().addComponentListener(conn);
         repaint();
+    }
+
+    public boolean isConnectedToNode(NodePanel nodePanel){
+        for (Dot pair : pairs) {
+            if(pair.getNode() == nodePanel){
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -235,16 +256,6 @@ public class Dot extends JPanel implements MouseInputListener {
         p.x += getNode().getLocation().x + 2;
         p.y += 5 + getNode().getLocation().y;
         return p;
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        MouseEvent me = SwingUtilities.convertMouseEvent(this, e, getDiagram());
-        getDiagram().draggingDot(me);
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
     }
 
     public String getType() {

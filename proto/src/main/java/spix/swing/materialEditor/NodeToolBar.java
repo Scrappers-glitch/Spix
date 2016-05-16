@@ -8,7 +8,6 @@ package spix.swing.materialEditor;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.Editable;
 import spix.swing.materialEditor.nodes.NodePanel;
-import spix.swing.materialEditor.nodes.shadernodes.ShaderNodePanel;
 
 import java.awt.event.*;
 import java.util.*;

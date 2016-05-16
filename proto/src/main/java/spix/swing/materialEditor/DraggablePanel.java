@@ -17,13 +17,7 @@ import javax.swing.SwingUtilities;
 public class DraggablePanel extends JPanel implements MouseListener, MouseMotionListener {
 
     protected int svdx, svdy, svdex, svdey;
-    private boolean vertical = false;
     protected Diagram diagram;
-
-    public DraggablePanel(boolean vertical) {
-        this();
-        this.vertical = vertical;
-    }
 
     public DraggablePanel() {
         addMouseListener(this);
@@ -37,10 +31,7 @@ public class DraggablePanel extends JPanel implements MouseListener, MouseMotion
     @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() != MouseEvent.BUTTON2) {
-            
-            if (!vertical) {
-                svdex = e.getXOnScreen();
-            }
+            svdex = e.getXOnScreen();
             svdey = e.getYOnScreen();
             saveLocation();
             diagram.multiStartDrag(this);
@@ -72,10 +63,7 @@ public class DraggablePanel extends JPanel implements MouseListener, MouseMotion
     @Override
     public void mouseDragged(MouseEvent e) {
         if (!SwingUtilities.isMiddleMouseButton(e)) {
-            int xoffset = 0;
-            if (!vertical) {
-                xoffset = e.getLocationOnScreen().x - svdex;
-            }
+            int xoffset = e.getLocationOnScreen().x - svdex;
             int yoffset = e.getLocationOnScreen().y - svdey;
             movePanel(xoffset, yoffset);
             diagram.multiMove(this, xoffset, yoffset);
@@ -84,9 +72,6 @@ public class DraggablePanel extends JPanel implements MouseListener, MouseMotion
     }
 
     protected void movePanel(int xoffset, int yoffset) {
-        if (vertical) {
-            xoffset = 0;
-        }
         setLocation(Math.max(0, svdx + xoffset), Math.max(0, svdy + yoffset));
     }
 

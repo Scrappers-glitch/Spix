@@ -147,4 +147,13 @@ public class MaterialDefUtils {
         }
         return false;
     }
+
+    public static String makeKey(VariableMapping mapping, String techName) {
+
+        String rightName = mapping.getRightVariable().getName();
+        String leftName = mapping.getLeftVariable().getName();
+        String leftSwizzle = mapping.getLeftSwizzling() != null ? "." + mapping.getLeftSwizzling() : "";
+        String rightSwizzle = mapping.getRightSwizzling() != null ? "." + mapping.getRightSwizzling() : "";
+        return techName + "/" + mapping.getLeftVariable().getNameSpace() + "." + leftName + leftSwizzle + "=" + mapping.getRightVariable().getNameSpace() + "." + rightName + rightSwizzle;
+    }
 }
