@@ -142,21 +142,6 @@ public class MatDefEditorWindow extends JFrame {
                 diagram.addNode(np);
             }
 
-//            if (technique.getShaderGenerationInfo().getVertexGlobal() != null) {
-//
-////                OutBusPanel out = new OutBusPanel(technique.getShaderGenerationInfo().getVertexGlobal().getName(), Shader.ShaderType.Vertex);
-////                diagram.addOutBus(out);
-//                 NodePanel np = new VertexPositionPanel(technique.getShaderGenerationInfo().getVertexGlobal());
-//                diagram.addNode(np);
-//            }
-//
-//
-//            for (ShaderNodeVariable var : technique.getShaderGenerationInfo().getFragmentGlobals()) {
-////                OutBusPanel out2 = new OutBusPanel(var.getName(), Shader.ShaderType.Fragment);
-////                diagram.addOutBus(out2);
-//                NodePanel np = new FragmentColorPanel(var);
-//                diagram.addNode(np);
-//            }
             for (ShaderNodeVariable shaderNodeVariable : technique.getShaderGenerationInfo().getAttributes()) {
                 NodePanel np = diagram.getNodePanel(shaderNodeVariable.getNameSpace() + "." + shaderNodeVariable.getName());
                 if (np == null) {
@@ -178,28 +163,16 @@ public class MatDefEditorWindow extends JFrame {
             }
 
             for (ShaderNode sn : technique.getShaderNodes()) {
-                //NodePanel np = diagram1.getNodePanel(sn.getName());
                 List<VariableMapping> ins = sn.getInputMapping();
                 if (ins != null) {
                     for (VariableMapping mapping : ins) {
                         makeConnection(mapping, technique, sn.getName());
-//                        if (!mapping.getRightNameSpace().equals("Global")
-//                                && !mapping.getRightNameSpace().equals("MatParam")
-//                                && !mapping.getRightNameSpace().equals("Attribute")
-//                                && !mapping.getRightNameSpace().equals("WorldParam")) {
-//                            sn.addInputNode(mapping.getRightNameSpace());
-//                        } else if (mapping.getRightNameSpace().equals("Global")) {
-//                            sn.setGlobalInput(true);
-//                        }
                     }
                 }
                 List<VariableMapping> outs = sn.getOutputMapping();
                 if (outs != null) {
                     for (VariableMapping mapping : outs) {
                         makeConnection(mapping, technique, sn.getName());
-//                        if (mapping.getLeftNameSpace().equals("Global")) {
-//                            sn.setGlobalOutput(true);
-//                        }
                     }
                 }
 
