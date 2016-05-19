@@ -6,6 +6,7 @@ package spix.swing.materialEditor;
 
 import com.jme3.shader.VariableMapping;
 import spix.app.utils.MaterialDefUtils;
+import spix.swing.materialEditor.controller.MaterialDefController;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -27,6 +28,7 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
     private int nbCurve = 2;
     private final CubicCurve2D[] curves = new CubicCurve2D[2];    
     private String key = "";
+    private MaterialDefController controller;
 //    protected MappingBlock mapping;
 
     private MouseEvent convertEvent(MouseEvent e) {
@@ -55,8 +57,8 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
     }
     
     @SuppressWarnings("LeakingThisInConstructor")
-    public ConnectionCurve(Dot start, Dot end) {
-
+    public ConnectionCurve(MaterialDefController controller, Dot start, Dot end) {
+        this.controller = controller;
         if ( start.getParamType() == Dot.ParamType.Output ) {
             this.start = start;
             this.end = end;
@@ -312,7 +314,7 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
     }
 
     private Diagram getDiagram() {
-        return (Diagram) start.getDiagram();
+        return controller.getEditor().getDiagram();
     }
 
     @Override

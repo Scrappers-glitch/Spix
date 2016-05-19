@@ -5,32 +5,38 @@
 package spix.swing.materialEditor;
 
 import com.jme3.shader.*;
+import spix.swing.materialEditor.controller.*;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.*;
 
 import javax.swing.*;
-import javax.swing.event.MouseInputListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
 /**
- *
  * @author Nehon
  */
-public class Dot extends JPanel implements MouseListener {
+public class Dot extends JPanel {
 
-    public static boolean pressed = false;
-    protected ImageIcon img;
-    protected ImageIcon prevImg;
+    private ImageIcon img;
+    private ImageIcon prevImg;
     private String type;
     private ParamType paramType;
-    protected Shader.ShaderType shaderType;
+    private Shader.ShaderType shaderType;
     private String text = "";
-    private DraggablePanel node;
+    private NodePanel node;
     private int index = 1;
     private Set<Dot> pairs = new HashSet<>();
 
+    private MaterialDefController controller;
+
+    public enum ParamType {
+        Input,
+        Output
+    }
+
+    //todo investigate this... seems to never be  used.
     public String getText() {
         return text;
     }
@@ -39,24 +45,18 @@ public class Dot extends JPanel implements MouseListener {
         this.text = text;
     }
 
-    public enum ParamType {
-        Input,
-        Output
-    }
-
-    @SuppressWarnings("LeakingThisInConstructor")
-    public Dot() {
+    public Dot(MaterialDefController controller) {
         super();
+        this.controller = controller;
         setMaximumSize(new Dimension(10, 10));
         setMinimumSize(new Dimension(10, 10));
         setPreferredSize(new Dimension(10, 10));
         setSize(10, 10);
-        addMouseListener(this);
-       
+        addMouseListener(new DotMouseListener());
     }
-    
-    public void setShaderType(Shader.ShaderType shaderType){
-         this.shaderType = shaderType;
+
+    public void setShaderType(Shader.ShaderType shaderType) {
+        this.shaderType = shaderType;
     }
 
     @Override
@@ -69,60 +69,23 @@ public class Dot extends JPanel implements MouseListener {
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) {
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        prevImg = img;
-        img = Icons.imgOrange;
-        Diagram diag = getDiagram();
-        diag.draggedFrom = this;
-        repaint();
-        e.consume();
-    }
-
-    @Override
     public void repaint() {
         if (getNode() != null) {
-            getDiagram().repaint();
+            getNode().repaint();
         } else {
             super.repaint();
         }
     }
 
-    public Diagram getDiagram() {
-        return node.getDiagram();
-    }
-
-    public DraggablePanel getNode() {
+    public NodePanel getNode() {
         return node;
     }
 
-    public void setNode(DraggablePanel node) {
+    public void setNode(NodePanel node) {
         this.node = node;
     }
 
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        Diagram diag = getDiagram();
-        if (diag.draggedFrom == this && diag.draggedTo != null) {
-            if (this.canConnect(diag.draggedTo)) {
-                diag.notifyMappingCreation(diag.connect(this, diag.draggedTo));
-            } else {
-                diag.draggedTo.reset();
-                this.reset();
-            }
-            diag.draggedFrom = null;
-            diag.draggedTo = null;
-        } else {
-            reset();
-            diag.draggedFrom = null;
-        }
-        e.consume();
-    }
-
-    public void reset() {
+    private void reset() {
         img = prevImg;
         repaint();
     }
@@ -130,12 +93,12 @@ public class Dot extends JPanel implements MouseListener {
     public void disconnect(Connection conn) {
 
         getNode().removeComponentListener(conn);
-        if(this == conn.getStart()) {
+        if (this == conn.getStart()) {
             pairs.remove(conn.getEnd());
         } else {
             pairs.remove(conn.getStart());
         }
-        if(pairs.isEmpty()){
+        if (pairs.isEmpty()) {
             img = Icons.imgGrey;
         }
         repaint();
@@ -145,32 +108,20 @@ public class Dot extends JPanel implements MouseListener {
         return !pairs.isEmpty();
     }
 
-    public Set<Dot> getConnectedDots(){
+    public Set<Dot> getConnectedDots() {
         return Collections.unmodifiableSet(pairs);
     }
 
-    @Override
-    public void mouseEntered(MouseEvent e) {
-        Diagram diag = getDiagram();
-        if (diag.draggedFrom != null && diag.draggedFrom != this) {
-            prevImg = img;
-            canConnect(diag.draggedFrom);
-            diag.draggedTo = this;
-            diag.draggedFrom.canConnect(this);
-        }
+    private boolean canConnect(Dot pair) {
 
-    }
-
-    public boolean canConnect(Dot pair) {
-        
-        if (pair == null || paramType == ParamType.Input || 
-                 ((pair.getNode() instanceof InOutPanel || node instanceof InOutPanel) && shaderType != pair.shaderType)) {
+        if (pair == null || paramType == ParamType.Input ||
+                ((pair.getNode() instanceof InOutPanel || node instanceof InOutPanel) && shaderType != pair.shaderType)) {
             img = Icons.imgOrange;
             repaint();
             return false;
         }
 
-        
+
         if (matches(pair.getType(), type) && (pair.getParamType() != paramType)
                 || ShaderUtils.isSwizzlable(pair.getType()) && ShaderUtils.isSwizzlable(type)) {
             img = Icons.imgGreen;
@@ -198,9 +149,9 @@ public class Dot extends JPanel implements MouseListener {
 
     }
 
-    protected void connect(Connection conn) {
+    public void connect(Connection conn) {
         img = Icons.imgGreen;
-        if(this == conn.getStart()) {
+        if (this == conn.getStart()) {
             pairs.add(conn.getEnd());
         } else {
             pairs.add(conn.getStart());
@@ -209,27 +160,13 @@ public class Dot extends JPanel implements MouseListener {
         repaint();
     }
 
-    public boolean isConnectedToNode(NodePanel nodePanel){
+    public boolean isConnectedToNode(NodePanel nodePanel) {
         for (Dot pair : pairs) {
-            if(pair.getNode() == nodePanel){
+            if (pair.getNode() == nodePanel) {
                 return true;
             }
         }
         return false;
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-        Diagram diag = getDiagram();
-        if (diag.draggedFrom != null) {
-            diag.draggedFrom.canConnect(null);
-            if (diag.draggedFrom != this) {
-                reset();
-            }
-            if (diag.draggedTo == this) {
-                diag.draggedTo = null;
-            }
-        }
     }
 
     public Point getStartLocation() {
@@ -280,5 +217,68 @@ public class Dot extends JPanel implements MouseListener {
 
     public void setIndex(int index) {
         this.index = index;
+    }
+
+
+    private class DotMouseListener extends MouseAdapter {
+
+        private DragController dragCtrl = controller.getDragController();
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            prevImg = img;
+            img = Icons.imgOrange;
+            dragCtrl.setDraggedFrom(Dot.this);
+            repaint();
+            e.consume();
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            Dot from = dragCtrl.getDraggedFrom();
+            Dot to = dragCtrl.getDraggedTo();
+            if ( from == Dot.this && to != null) {
+                if (Dot.this.canConnect(to)) {
+                    controller.connect(Dot.this, to);
+                } else {
+                    to.reset();
+                    Dot.this.reset();
+                }
+                dragCtrl.setDraggedFrom(null);
+                dragCtrl.setDraggedTo(null);
+            } else {
+                reset();
+                dragCtrl.setDraggedFrom(null);
+            }
+            e.consume();
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            Dot from = dragCtrl.getDraggedFrom();
+            if (from != null && from != Dot.this) {
+                prevImg = img;
+                canConnect(from);
+                dragCtrl.setDraggedTo(Dot.this);
+                from.canConnect(Dot.this);
+            }
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            Dot from = dragCtrl.getDraggedFrom();
+            Dot to = dragCtrl.getDraggedTo();
+            if (from != null) {
+                from.canConnect(null);
+                if (from != Dot.this) {
+                    reset();
+                }
+                if (to == Dot.this) {
+                    dragCtrl.setDraggedTo(null);
+                }
+            }
+        }
+
     }
 }

@@ -6,7 +6,7 @@ package spix.swing.materialEditor.nodes;
 
 import com.jme3.shader.*;
 import spix.swing.materialEditor.*;
-import spix.swing.materialEditor.icons.Icons;
+import spix.swing.materialEditor.controller.MaterialDefController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -34,8 +34,11 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     private NodeToolBar toolBar;
     protected List<String> filePaths = new ArrayList<String>();
 
-    public NodePanel(Color color, Icon icon) {
+    private MaterialDefController controller;
+
+    public NodePanel(MaterialDefController controller, Color color, Icon icon) {
         super();
+        this.controller = controller;
         this.color = color;
         this.icon = icon;
         toolBar = new NodeToolBar(this);
@@ -170,7 +173,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        diagram.fixSize();
+        diagram.fitContent();
         if (svdx != getLocation().x) {
 //            firePropertyChange(ShaderNodeBlock.POSITION, svdx, getLocation().x);
 //            getDiagram().getEditorParent().savePositionToMetaData(getKey(), getLocation().x, getLocation().y);
@@ -290,7 +293,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     }
 
     public Dot createDot(String type, Dot.ParamType paramType, String paramName) {
-        Dot dot1 = new Dot();
+        Dot dot1 = new Dot(controller);
         dot1.setShaderType(getShaderType());
         dot1.setNode(this);
         dot1.setText(paramName);

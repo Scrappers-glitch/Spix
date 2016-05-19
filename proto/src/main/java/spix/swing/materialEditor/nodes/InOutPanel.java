@@ -1,7 +1,8 @@
 package spix.swing.materialEditor.nodes;
 
 import com.jme3.shader.*;
-import spix.swing.materialEditor.Dot;
+import spix.swing.materialEditor.*;
+import spix.swing.materialEditor.controller.MaterialDefController;
 import spix.swing.materialEditor.icons.Icons;
 
 import javax.swing.*;
@@ -16,8 +17,8 @@ public abstract class InOutPanel extends NodePanel {
 
     private String index;
 
-    private InOutPanel(ShaderNodeVariable var, Color color, Icon icon){
-        super(color, icon);
+    private InOutPanel(MaterialDefController controller, ShaderNodeVariable var, Color color, Icon icon){
+        super(controller, color, icon);
         this.index = UUID.randomUUID().toString();
         setNodeName(var.getName());
         List<ShaderNodeVariable> outputs = new ArrayList<ShaderNodeVariable>();
@@ -49,7 +50,7 @@ public abstract class InOutPanel extends NodePanel {
         return "Global." + getNodeName() + "/" + index;
     }
 
-    public static InOutPanel create(Shader.ShaderType type, ShaderNodeVariable var){
+    public static InOutPanel create(MaterialDefController controller, Shader.ShaderType type, ShaderNodeVariable var){
         Color color = new Color(0,0,0);
         switch (type){
             case Vertex:
@@ -69,7 +70,7 @@ public abstract class InOutPanel extends NodePanel {
                 break;
         }
 
-        return new InOutPanel(var, color, Icons.output) {
+        return new InOutPanel(controller, var, color, Icons.output) {
             @Override
             public Shader.ShaderType getShaderType() {
                 return type;

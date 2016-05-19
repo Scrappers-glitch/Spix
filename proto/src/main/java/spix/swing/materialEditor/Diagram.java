@@ -4,9 +4,8 @@
  */
 package spix.swing.materialEditor;
 
-import com.jme3.material.Material;
 import com.jme3.shader.*;
-import spix.swing.SwingGui;
+import spix.swing.materialEditor.controller.MaterialDefController;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.*;
 
@@ -20,70 +19,39 @@ import java.util.List;
 /**
  * @author Nehon
  */
-public class Diagram extends JPanel implements MouseListener, MouseMotionListener, ComponentListener {
+public class Diagram extends JPanel {
 
-    protected Dot draggedFrom;
-    protected Dot draggedTo;
-    protected List<Selectable> selectedItems = new ArrayList<Selectable>();
-    protected List<Connection> connections = new ArrayList<Connection>();
-    protected List<NodePanel> nodes = new ArrayList<NodePanel>();
+    private final static Cursor defCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
+    private final static Cursor mvCursor = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
+
+    protected List<Selectable> selectedItems = new ArrayList<>();
+    protected List<Connection> connections = new ArrayList<>();
+    protected List<NodePanel> nodes = new ArrayList<>();
     private final MyMenu contextMenu = new MyMenu("Add");
-    private MatDefEditorWindow parent;
-    private String currentTechniqueName;
     //private final BackdropPanel backDrop = new BackdropPanel();
-    private final Cursor defCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
-    private final Cursor hndCursor = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
-    private final Point pp = new Point();
-    private SwingGui gui;
+    private MaterialDefController controller;
 
     //storing the list of InOutPanels depending on the shaderType and by variable name
+    //todo should be in controller
     private Map<Shader.ShaderType, Map<String, List<InOutPanel>>> outPanels = new HashMap<>();
 
-
-    @SuppressWarnings("LeakingThisInConstructor")
-    public Diagram(SwingGui gui) {
-        this.gui = gui;
+    public Diagram(MaterialDefController controller) {
+        this.controller = controller;
         setLayout(null);
         setBackground(new Color(40, 40, 40));
-        addMouseListener(this);
-        addMouseMotionListener(this);
+        addMouseListener(new DiagramMouseListener());
+        addMouseMotionListener(new DiagramMouseMotionListener());
         createPopupMenu();
     }
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-
-        if (e.getButton() == MouseEvent.BUTTON1) {
-
-            for (Connection connection : connections) {
-                MouseEvent me = SwingUtilities.convertMouseEvent(this, e, connection);
-                connection.select(me);
-                if (me.isConsumed()) {
-                    return;
-                }
-            }
-
-            selectedItems.clear();
-            repaint();
-        } else if (e.getButton() == MouseEvent.BUTTON2) {
-            setCursor(hndCursor);
-            pp.setLocation(e.getPoint());
-            ((JScrollPane) getParent().getParent()).setWheelScrollingEnabled(false);
-        }
-    }
-
-    public void refreshPreviews(Material mat, String technique) {
+//    public void refreshPreviews(Material mat, String technique) {
 //        for (OutBusPanel outBusPanel : outBuses) {
 //            outBusPanel.updatePreview(mat, technique);
 //        }
 //        if (backDrop.isVisible()) {
 //            backDrop.showMaterial(mat, technique);
 //        }
-    }
+//    }
 
 //    public void displayBackdrop() {
 //        if (backDrop.getParent() == null) {
@@ -95,27 +63,10 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
 //        backDrop.update(((JViewport) getParent()));
 //    }
 
-    Point clickLoc = new Point(0, 0);
 
-    @Override
-    public void mouseReleased(MouseEvent e) {
-
-        switch (e.getButton()) {
-            case MouseEvent.BUTTON2:
-                setCursor(defCursor);
-                ((JScrollPane) getParent().getParent()).setWheelScrollingEnabled(true);
-                break;
-            case MouseEvent.BUTTON3:
-                contextMenu.show(this, e.getX(), e.getY());
-                clickLoc.setLocation(e.getX(), e.getY());
-                break;
-        }
-
-    }
-
-    public MatDefEditorWindow getEditorParent() {
-        return parent;
-    }
+//    public MatDefEditorWindow getEditorParent() {
+//        return parent;
+//    }
 
     public void addConnection(Connection conn) {
         connections.add(conn);
@@ -127,25 +78,13 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         //  parent.showShaderEditor(node.getName(), node.getType(), node.filePaths);
     }
 
-    public void notifyMappingCreation(Connection conn) {
-        //    parent.makeMapping(conn);
-    }
-
     public void addNode(NodePanel node) {
         add(node);
-        node.setTechName(currentTechniqueName);
+        node.setTechName(controller.getCurrentTechnique().getName());
         node.setDiagram(this);
         nodes.add(node);
         setComponentZOrder(node, 0);
-        node.addComponentListener(this);
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
+//        node.addComponentListener(diagramComponentListener);
     }
 
     protected void removeSelectedConnection(Selectable selectedItem) {
@@ -251,12 +190,14 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         }
 
         nodes.remove(selectedNode);
-        if(selectedNode instanceof InOutPanel){
+        if (selectedNode instanceof InOutPanel) {
             outPanels.get(selectedNode.getShaderType()).get(selectedNode.getNodeName()).remove(selectedNode);
         }
         selectedNode.cleanup();
         remove(selectedNode);
+//        ((NodePanel) selectedItem).removeComponentListener(diagramComponentListener);
         repaint();
+
         //    parent.notifyRemoveNode(selectedNode);
     }
 
@@ -264,31 +205,6 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         return selectedItems;
     }
 
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        if (SwingUtilities.isLeftMouseButton(e)) {
-        } else if (SwingUtilities.isMiddleMouseButton(e)) {
-            JViewport vport = (JViewport) getParent();
-            Point cp = e.getPoint();
-            Point vp = vport.getViewPosition();
-            vp.translate(pp.x - cp.x, pp.y - cp.y);
-            scrollRectToVisible(new Rectangle(vp, vport.getSize()));
-
-        }
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        //nothing to do
-    }
-
-    public Connection connect(Dot start, Dot end) {
-        Connection conn = new Connection(start, end);
-        start.connect(conn);
-        end.connect(conn);
-        addConnection(conn);
-        return conn;
-    }
 
     public NodePanel getNodePanel(String key) {
         for (NodePanel nodePanel : nodes) {
@@ -473,41 +389,6 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         remove(selectedConnection);
     }
 
-    private class MyMenu extends JPopupMenu {
-
-        public MyMenu(String label) {
-            super(label);
-        }
-
-    }
-
-    public void fixSize() {
-        int maxWidth = minWidth;
-        int maxHeight = minHeight;
-
-        for (NodePanel nodePanel : nodes) {
-            int w = nodePanel.getLocation().x + nodePanel.getWidth() + 150;
-            if (w > maxWidth) {
-                maxWidth = w;
-            }
-            int h = nodePanel.getLocation().y + nodePanel.getHeight();
-            if (h > maxHeight) {
-                maxHeight = h;
-            }
-        }
-        setPreferredSize(new Dimension(maxWidth, maxHeight));
-        revalidate();
-    }
-
-    int minWidth = 0;
-    int minHeight = 0;
-
-    public void componentResized(ComponentEvent e) {
-        minWidth = e.getComponent().getWidth() - 2;
-        minHeight = e.getComponent().getHeight() - 2;
-        fixSize();
-    }
-
     public void autoLayout() {
 
         int offset = 550;
@@ -575,31 +456,9 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
 
     }
 
-    public void componentMoved(ComponentEvent e) {
-    }
-
-    public void componentShown(ComponentEvent e) {
-    }
-
-    public void componentHidden(ComponentEvent e) {
-    }
-
-    public void setParent(MatDefEditorWindow parent) {
-        this.parent = parent;
-    }
-
-    public void setCurrentTechniqueName(String currentTechniqueName) {
-        this.currentTechniqueName = currentTechniqueName;
-    }
-
-    public String getCurrentTechniqueName() {
-        return currentTechniqueName;
-    }
-
-
     public InOutPanel getOutPanel(Shader.ShaderType type, ShaderNodeVariable var, NodePanel node, boolean forInput) {
 
-        List<InOutPanel> panelList = getPanelList(type, var);
+        List<InOutPanel> panelList = getOutPanelList(type, var);
 
 
         for (InOutPanel inOutPanel : panelList) {
@@ -614,14 +473,14 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
             }
         }
 
-        InOutPanel panel = InOutPanel.create(type, var);
+        InOutPanel panel = InOutPanel.create(controller, type, var);
         panelList.add(panel);
         addNode(panel);
         return panel;
 
     }
 
-    private List<InOutPanel> getPanelList(Shader.ShaderType type, ShaderNodeVariable var) {
+    private List<InOutPanel> getOutPanelList(Shader.ShaderType type, ShaderNodeVariable var) {
         Map<String, List<InOutPanel>> map = outPanels.get(type);
         if (map == null) {
             map = new HashMap<>();
@@ -635,4 +494,91 @@ public class Diagram extends JPanel implements MouseListener, MouseMotionListene
         return panelList;
     }
 
+    public void fitContent() {
+
+        int maxWidth = getParent().getParent().getWidth() - 2;
+        int maxHeight = getParent().getParent().getHeight() - 2;
+
+        for (NodePanel nodePanel : nodes) {
+            int w = nodePanel.getLocation().x + nodePanel.getWidth() + 150;
+            if (w > maxWidth) {
+                maxWidth = w;
+            }
+            int h = nodePanel.getLocation().y + nodePanel.getHeight();
+            if (h > maxHeight) {
+                maxHeight = h;
+            }
+        }
+        setPreferredSize(new Dimension(maxWidth, maxHeight));
+        revalidate();
+    }
+
+    private class DiagramMouseListener extends MouseAdapter {
+        private final Point pp = new Point();
+        private final Point clickLoc = new Point(0, 0);
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+
+            if (e.getButton() == MouseEvent.BUTTON1) {
+
+                for (Connection connection : connections) {
+                    MouseEvent me = SwingUtilities.convertMouseEvent(Diagram.this, e, connection);
+                    connection.select(me);
+                    if (me.isConsumed()) {
+                        return;
+                    }
+                }
+
+                selectedItems.clear();
+                repaint();
+            } else if (e.getButton() == MouseEvent.BUTTON2) {
+                setCursor(mvCursor);
+                pp.setLocation(e.getPoint());
+                ((JScrollPane) getParent().getParent()).setWheelScrollingEnabled(false);
+            }
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+
+            switch (e.getButton()) {
+                case MouseEvent.BUTTON2:
+                    setCursor(defCursor);
+                    ((JScrollPane) getParent().getParent()).setWheelScrollingEnabled(true);
+                    break;
+                case MouseEvent.BUTTON3:
+                    contextMenu.show(Diagram.this, e.getX(), e.getY());
+                    clickLoc.setLocation(e.getX(), e.getY());
+                    break;
+            }
+
+        }
+
+    }
+
+    private class DiagramMouseMotionListener extends MouseMotionAdapter {
+        private final Point pp = new Point();
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if (SwingUtilities.isLeftMouseButton(e)) {
+            } else if (SwingUtilities.isMiddleMouseButton(e)) {
+                JViewport vport = (JViewport) getParent();
+                Point cp = e.getPoint();
+                Point vp = vport.getViewPosition();
+                vp.translate(pp.x - cp.x, pp.y - cp.y);
+                scrollRectToVisible(new Rectangle(vp, vport.getSize()));
+
+            }
+        }
+    }
+
+    private class MyMenu extends JPopupMenu {
+
+        public MyMenu(String label) {
+            super(label);
+        }
+
+    }
 }
