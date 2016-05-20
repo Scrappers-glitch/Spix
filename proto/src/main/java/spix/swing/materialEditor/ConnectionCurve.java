@@ -16,50 +16,37 @@ import java.awt.geom.*;
 import java.beans.*;
 
 /**
- *
  * @author Nehon
  */
-public class ConnectionCurve extends JPanel implements ComponentListener, MouseInputListener, KeyListener, Selectable, PropertyChangeListener {
+public class ConnectionCurve extends JPanel implements Selectable, PropertyChangeListener {
 
     protected Dot start;
     protected Dot end;
     private final Point[] points = new Point[7];
     private int pointsSize = 7;
     private int nbCurve = 2;
-    private final CubicCurve2D[] curves = new CubicCurve2D[2];    
+    private final CubicCurve2D[] curves = new CubicCurve2D[2];
     private String key = "";
     private MaterialDefController controller;
+
+    private final static Color LIGHT_GREY = new Color(190, 190, 190);
+    private final static Color VERY_DARK_GREY = new Color(5, 5, 5);
+    private final static Color SELECTED_COLOR = new Color(0.8f, 0.8f, 1.0f, 1.0f);
+    public final static int MARGIN = 15;
+
+    private final Point p1 = new Point();
+    private final Point p2 = new Point();
+    private final Point p3 = new Point();
+    private final Point p4 = new Point();
+
+    private ComponentManager componentListener = new ComponentManager();
+
 //    protected MappingBlock mapping;
 
-    private MouseEvent convertEvent(MouseEvent e) {
-        MouseEvent me = null;
-        //workaround for swing utilities removing mouse button when converting events.
-        if (e instanceof MouseWheelEvent || e instanceof MenuDragMouseEvent) {
-            SwingUtilities.convertMouseEvent(this, e, getDiagram());
-        } else {
-            Point p = SwingUtilities.convertPoint(this, new Point(e.getX(),
-                    e.getY()),
-                    getDiagram());
 
-            me = new MouseEvent(getDiagram(),
-                    e.getID(),
-                    e.getWhen(),
-                    e.getModifiers()
-                    | e.getModifiersEx(),
-                    p.x, p.y,
-                    e.getXOnScreen(),
-                    e.getYOnScreen(),
-                    e.getClickCount(),
-                    e.isPopupTrigger(),
-                    e.getButton());
-        }
-        return me;
-    }
-    
-    @SuppressWarnings("LeakingThisInConstructor")
     public ConnectionCurve(MaterialDefController controller, Dot start, Dot end) {
         this.controller = controller;
-        if ( start.getParamType() == Dot.ParamType.Output ) {
+        if (start.getParamType() == Dot.ParamType.Output) {
             this.start = start;
             this.end = end;
         } else {
@@ -74,29 +61,57 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
             curves[i] = new CubicCurve2D.Double();
         }
         resize(this.start, this.end);
-        addMouseMotionListener(this);
-        addMouseListener(this);
-        addKeyListener(this);
+        MouseManagerListener mouseListener = new MouseManagerListener();
+        addMouseMotionListener(mouseListener);
+        addMouseListener(mouseListener);
+        addKeyListener(new KeyManagerListener());
         setFocusable(true);
         setOpaque(false);
 
     }
 
+    // TODO: 20/05/2016 maybe put this in a utility class
+    private MouseEvent convertEvent(MouseEvent e) {
+        MouseEvent me = null;
+        //workaround for swing utilities removing mouse button when converting events.
+        if (e instanceof MouseWheelEvent || e instanceof MenuDragMouseEvent) {
+            SwingUtilities.convertMouseEvent(this, e, getDiagram());
+        } else {
+            Point p = SwingUtilities.convertPoint(this, new Point(e.getX(),
+                            e.getY()),
+                    getDiagram());
+
+            me = new MouseEvent(getDiagram(),
+                    e.getID(),
+                    e.getWhen(),
+                    e.getModifiers()
+                            | e.getModifiersEx(),
+                    p.x, p.y,
+                    e.getXOnScreen(),
+                    e.getYOnScreen(),
+                    e.getClickCount(),
+                    e.isPopupTrigger(),
+                    e.getButton());
+        }
+        return me;
+    }
+
+    // TODO: 20/05/2016 this too...
     private void translate(Point p, Point store) {
         store.x = p.x - getLocation().x - 1;
         store.y = p.y - getLocation().y - 1;
     }
-    private final Point p1 = new Point();
-    private final Point p2 = new Point();
-    private final Point p3 = new Point();
-    private final Point p4 = new Point();
+
+    public ComponentListener getComponentListener() {
+        return componentListener;
+    }
 
     public String getKey() {
         return key;
     }
 
     protected void makeKey(VariableMapping mapping, String techName) {
-       // this.mapping = mapping;
+        // this.mapping = mapping;
         key = MaterialDefUtils.makeKey(mapping, techName);
     }
 
@@ -115,7 +130,7 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
         } else {
             g.setColor(VERY_DARK_GREY);
         }
-       
+
 
         if (pointsSize < 4) {
             translate(points[0], p1);
@@ -148,20 +163,16 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
 
         ((Graphics2D) g).draw(path1);
         g2.setStroke(new BasicStroke(2));
-       
+
         if (getDiagram().getSelectedItems().contains(this)) {
             g.setColor(Color.WHITE);
         } else {
             g.setColor(LIGHT_GREY);
         }
-        
+
         ((Graphics2D) g).draw(path1);
     }
-    private final static Color LIGHT_GREY = new Color(190, 190, 190);
-    private final static Color VERY_DARK_GREY = new Color(5, 5, 5);
-    private final static Color SELECTED_COLOR = new Color(0.8f, 0.8f, 1.0f, 1.0f);
-    
-    public final static int MARGIN = 15;
+
 
     private int getOffset() {
         return 5 * start.getIndex();
@@ -317,35 +328,12 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
         return controller.getEditor().getDiagram();
     }
 
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        dispatchEventToDiagram(e);
-    }
 
     private void dispatchEventToDiagram(MouseEvent e) {
         MouseEvent me = convertEvent(e);
         getDiagram().dispatchEvent(me);
     }
 
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        dispatchEventToDiagram(e);
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        dispatchEventToDiagram(e);
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        dispatchEventToDiagram(e);
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        dispatchEventToDiagram(e);
-    }
 
     public void select(MouseEvent e) {
 
@@ -363,44 +351,6 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
         }
     }
 
-    @Override
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-
-        if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-            Diagram diag = getDiagram();
-            diag.removeSelected();
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-    }
-
-    public void componentResized(ComponentEvent e) {
-    }
-
-    public void componentMoved(ComponentEvent e) {
-        resize(start, end);
-    }
-
-    public void componentShown(ComponentEvent e) {
-    }
-
-    public void componentHidden(ComponentEvent e) {
-    }
-
     public void propertyChange(PropertyChangeEvent evt) {
 //        MappingBlock map = (MappingBlock) evt.getSource();
 //        key = MaterialUtils.makeKey(map, getDiagram().getCurrentTechniqueName());
@@ -413,6 +363,49 @@ public class ConnectionCurve extends JPanel implements ComponentListener, MouseI
     public Dot getEnd() {
         return end;
     }
-    
-    
+
+    private class MouseManagerListener extends MouseAdapter implements MouseMotionListener {
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            dispatchEventToDiagram(e);
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            dispatchEventToDiagram(e);
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            dispatchEventToDiagram(e);
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            dispatchEventToDiagram(e);
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            dispatchEventToDiagram(e);
+        }
+    }
+
+    private class KeyManagerListener extends KeyAdapter {
+        @Override
+        public void keyPressed(KeyEvent e) {
+
+            if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                Diagram diag = getDiagram();
+                diag.removeSelected();
+            }
+        }
+    }
+
+    private class ComponentManager extends ComponentAdapter{
+        public void componentMoved(ComponentEvent e) {
+            resize(start, end);
+        }
+    }
 }

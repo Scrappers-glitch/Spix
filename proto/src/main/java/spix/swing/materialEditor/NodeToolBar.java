@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * @author Nehon
  */
-public class NodeToolBar extends javax.swing.JPanel implements ComponentListener, MouseListener {
+public class NodeToolBar extends javax.swing.JPanel implements ComponentListener {
 
     private final NodePanel node;
     private ResourceBundle labels = ResourceBundle.getBundle("Bundle", Locale.ROOT);
@@ -108,7 +108,10 @@ public class NodeToolBar extends javax.swing.JPanel implements ComponentListener
         setBounds(node.getLocation().x + 5, node.getLocation().y - 18, node.getWidth() - 10, 16);
         node.getParent().setComponentZOrder(this, 0);
         setVisible(true);
+    }
 
+    public void cleanup(){
+        node.removeComponentListener(this);
     }
 
     public void componentResized(ComponentEvent e) {

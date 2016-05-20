@@ -195,9 +195,7 @@ public class Diagram extends JPanel {
         }
         selectedNode.cleanup();
         remove(selectedNode);
-//        ((NodePanel) selectedItem).removeComponentListener(diagramComponentListener);
         repaint();
-
         //    parent.notifyRemoveNode(selectedNode);
     }
 

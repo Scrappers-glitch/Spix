@@ -90,20 +90,6 @@ public class Dot extends JPanel {
         repaint();
     }
 
-    public void disconnect(Connection conn) {
-
-        getNode().removeComponentListener(conn);
-        if (this == conn.getStart()) {
-            pairs.remove(conn.getEnd());
-        } else {
-            pairs.remove(conn.getStart());
-        }
-        if (pairs.isEmpty()) {
-            img = Icons.imgGrey;
-        }
-        repaint();
-    }
-
     public boolean isConnected() {
         return !pairs.isEmpty();
     }
@@ -156,7 +142,21 @@ public class Dot extends JPanel {
         } else {
             pairs.add(conn.getStart());
         }
-        getNode().addComponentListener(conn);
+        getNode().addComponentListener(conn.getComponentListener());
+        repaint();
+    }
+
+    public void disconnect(Connection conn) {
+
+        getNode().removeComponentListener(conn.getComponentListener());
+        if (this == conn.getStart()) {
+            pairs.remove(conn.getEnd());
+        } else {
+            pairs.remove(conn.getStart());
+        }
+        if (pairs.isEmpty()) {
+            img = Icons.imgGrey;
+        }
         repaint();
     }
 

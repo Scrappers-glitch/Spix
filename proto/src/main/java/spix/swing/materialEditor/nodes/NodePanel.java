@@ -19,7 +19,7 @@ import java.util.List;
  *
  * @author Nehon
  */
-public abstract class NodePanel extends DraggablePanel implements Selectable, PropertyChangeListener, KeyListener {//InOut
+public abstract class NodePanel extends DraggablePanel implements Selectable, PropertyChangeListener {//InOut
 
     protected List<JLabel> inputLabels = new ArrayList<>();
     protected List<JLabel> outputLabels = new ArrayList<>();
@@ -42,10 +42,18 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
         this.color = color;
         this.icon = icon;
         toolBar = new NodeToolBar(this);
-        addKeyListener(this);
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    delete();
+                }
+            }
+        });
     }
 
     public abstract Shader.ShaderType getShaderType();
+    protected abstract void initHeader(JLabel header);
 
 //    public final void refresh(ShaderNodeBlock node) {
 //        nodeName = node.getName();
@@ -161,18 +169,14 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {
-        super.mousePressed(e);        
+    public void onMousePressed(MouseEvent e) {
+        super.onMousePressed(e);
         diagram.select(this, e.isShiftDown() || e.isControlDown());
         showToolBar();
     }
-    
-    private void showToolBar(){
-        toolBar.display();
-    }
 
     @Override
-    public void mouseReleased(MouseEvent e) {
+    public void onMouseReleased(MouseEvent e) {
         diagram.fitContent();
         if (svdx != getLocation().x) {
 //            firePropertyChange(ShaderNodeBlock.POSITION, svdx, getLocation().x);
@@ -180,7 +184,9 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
         }
     }
 
-    protected abstract void initHeader(JLabel header);
+    private void showToolBar(){
+        toolBar.display();
+    }
 
     /**
      * override to do edit this node content.
@@ -190,6 +196,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     };
 
     public void cleanup(){
+        toolBar.cleanup();
         toolBar.getParent().remove(toolBar);
     }
 
@@ -302,25 +309,13 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
         return dot1;
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-
-        if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-            delete();
-        }
-    }
 
     public void delete() {
         Diagram diag = getDiagram();
         diag.removeSelected();
     }
 
-    public void keyReleased(KeyEvent e) {
-    }
+
     // used to pass press and drag events to the NodePanel when they occur on the label
     private LabelMouseMotionListener labelMouseMotionListener = new LabelMouseMotionListener();
 

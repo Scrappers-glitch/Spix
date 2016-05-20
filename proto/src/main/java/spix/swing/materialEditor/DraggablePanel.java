@@ -4,9 +4,7 @@
  */
 package spix.swing.materialEditor;
 
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -14,22 +12,32 @@ import javax.swing.SwingUtilities;
  *
  * @author Nehon
  */
-public class DraggablePanel extends JPanel implements MouseListener, MouseMotionListener {
+public class DraggablePanel extends JPanel {
 
     protected int svdx, svdy, svdex, svdey;
     protected Diagram diagram;
 
     public DraggablePanel() {
-        addMouseListener(this);
-        addMouseMotionListener(this);
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                DraggablePanel.this.onMousePressed(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                DraggablePanel.this.onMouseReleased(e);
+            }
+        });
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                DraggablePanel.this.onMouseDragged(e);
+            }
+        });
     }
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
+    public void onMousePressed(MouseEvent e) {
         if (e.getButton() != MouseEvent.BUTTON2) {
             svdex = e.getXOnScreen();
             svdey = e.getYOnScreen();
@@ -39,29 +47,7 @@ public class DraggablePanel extends JPanel implements MouseListener, MouseMotion
         }
     }
 
-    protected void saveLocation() {
-        svdy = getLocation().y;
-        svdx = getLocation().x;
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
+    public void onMouseDragged(MouseEvent e) {
         if (!SwingUtilities.isMiddleMouseButton(e)) {
             int xoffset = e.getLocationOnScreen().x - svdex;
             int yoffset = e.getLocationOnScreen().y - svdey;
@@ -69,6 +55,14 @@ public class DraggablePanel extends JPanel implements MouseListener, MouseMotion
             diagram.multiMove(this, xoffset, yoffset);
             e.consume();
         }
+    }
+
+    public void onMouseReleased(MouseEvent e) {
+    }
+
+    protected void saveLocation() {
+        svdy = getLocation().y;
+        svdx = getLocation().x;
     }
 
     protected void movePanel(int xoffset, int yoffset) {
