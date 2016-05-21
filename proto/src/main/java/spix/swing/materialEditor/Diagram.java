@@ -81,7 +81,6 @@ public class Diagram extends JPanel {
 
     public void addNode(NodePanel node) {
         add(node);
-        node.setTechName(controller.getCurrentTechnique().getName());
         node.setDiagram(this);
         nodes.add(node);
         setComponentZOrder(node, 0);
