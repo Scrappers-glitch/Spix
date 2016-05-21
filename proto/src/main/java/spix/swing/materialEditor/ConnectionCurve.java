@@ -7,9 +7,9 @@ package spix.swing.materialEditor;
 import com.jme3.shader.VariableMapping;
 import spix.app.utils.MaterialDefUtils;
 import spix.swing.materialEditor.controller.MaterialDefController;
+import spix.util.SwingUtils;
 
 import javax.swing.*;
-import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
@@ -68,38 +68,6 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
         setFocusable(true);
         setOpaque(false);
 
-    }
-
-    // TODO: 20/05/2016 maybe put this in a utility class
-    private MouseEvent convertEvent(MouseEvent e) {
-        MouseEvent me = null;
-        //workaround for swing utilities removing mouse button when converting events.
-        if (e instanceof MouseWheelEvent || e instanceof MenuDragMouseEvent) {
-            SwingUtilities.convertMouseEvent(this, e, getDiagram());
-        } else {
-            Point p = SwingUtilities.convertPoint(this, new Point(e.getX(),
-                            e.getY()),
-                    getDiagram());
-
-            me = new MouseEvent(getDiagram(),
-                    e.getID(),
-                    e.getWhen(),
-                    e.getModifiers()
-                            | e.getModifiersEx(),
-                    p.x, p.y,
-                    e.getXOnScreen(),
-                    e.getYOnScreen(),
-                    e.getClickCount(),
-                    e.isPopupTrigger(),
-                    e.getButton());
-        }
-        return me;
-    }
-
-    // TODO: 20/05/2016 this too...
-    private void translate(Point p, Point store) {
-        store.x = p.x - getLocation().x - 1;
-        store.y = p.y - getLocation().y - 1;
     }
 
     public ComponentListener getComponentListener() {
@@ -173,6 +141,10 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
         ((Graphics2D) g).draw(path1);
     }
 
+    private void translate(Point p, Point store) {
+        store.x = p.x - getLocation().x - 1;
+        store.y = p.y - getLocation().y - 1;
+    }
 
     private int getOffset() {
         return 5 * start.getIndex();
@@ -324,31 +296,29 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
         setSize(maxX - minX, maxY - minY);
     }
 
+
+    // TODO: 21/05/2016 This can be moved to the controller as it's only used for selection.
+    // Selection should be handled globally and components should only have a selected flag to properly render when selected.
     private Diagram getDiagram() {
         return controller.getEditor().getDiagram();
     }
 
 
+    // TODO: 21/05/2016 maybe put this as a controller method, this would avoid having a reference to the diagram in here.
     private void dispatchEventToDiagram(MouseEvent e) {
-        MouseEvent me = convertEvent(e);
+        MouseEvent me = SwingUtils.convertEvent(this, e, getDiagram());
         getDiagram().dispatchEvent(me);
     }
 
-
-    public void select(MouseEvent e) {
+    public boolean pick(MouseEvent e) {
 
         requestFocusInWindow(true);
         int margin = MARGIN / 2;
-        boolean selected = false;
 
-        for (int i = 0; i < nbCurve && !selected; i++) {
-            selected = curves[i].intersects(e.getX() - margin, e.getY() - margin, e.getX() + margin, e.getY() + margin);
+        for (int i = 0; i < nbCurve; i++) {
+            return curves[i].intersects(e.getX() - margin, e.getY() - margin, e.getX() + margin, e.getY() + margin);
         }
-
-        if (selected) {
-            getDiagram().select(this, e.isShiftDown() || e.isControlDown());
-            e.consume();
-        }
+        return false;
     }
 
     public void propertyChange(PropertyChangeEvent evt) {

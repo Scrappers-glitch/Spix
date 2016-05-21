@@ -522,8 +522,10 @@ public class Diagram extends JPanel {
 
                 for (Connection connection : connections) {
                     MouseEvent me = SwingUtilities.convertMouseEvent(Diagram.this, e, connection);
-                    connection.select(me);
-                    if (me.isConsumed()) {
+
+                    if (connection.pick(me)) {
+                        select(connection, e.isShiftDown() || e.isControlDown());
+                        e.consume();
                         return;
                     }
                 }
