@@ -16,6 +16,8 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
+import static spix.swing.materialEditor.icons.Icons.node;
+
 /**
  * @author Nehon
  */
@@ -26,7 +28,6 @@ public class Diagram extends JPanel {
 
     protected List<Selectable> selectedItems = new ArrayList<>();
     protected List<Connection> connections = new ArrayList<>();
-    protected List<NodePanel> nodes = new ArrayList<>();
     private final MyMenu contextMenu = new MyMenu("Add");
     //private final BackdropPanel backDrop = new BackdropPanel();
     private MaterialDefController controller;
@@ -79,31 +80,10 @@ public class Diagram extends JPanel {
         //  parent.showShaderEditor(node.getName(), node.getType(), node.filePaths);
     }
 
-    public void addNode(NodePanel node) {
-        add(node);
-        node.setDiagram(this);
-        nodes.add(node);
-        setComponentZOrder(node, 0);
-//        node.addComponentListener(diagramComponentListener);
-    }
-
     protected void removeSelectedConnection(Selectable selectedItem) {
         Connection selectedConnection = (Connection) selectedItem;
         removeConnection(selectedConnection);
         //   parent.notifyRemoveConnection(selectedConnection);
-    }
-
-    private String fixNodeName(String name) {
-        return fixNodeName(name, 0);
-    }
-
-    private String fixNodeName(String name, int count) {
-        for (NodePanel nodePanel : nodes) {
-            if ((name + (count == 0 ? "" : count)).equals(nodePanel.getNodeName())) {
-                return fixNodeName(name, count + 1);
-            }
-        }
-        return name + (count == 0 ? "" : count);
     }
 
     //
@@ -160,7 +140,7 @@ public class Diagram extends JPanel {
 //
     public void removeSelected() {
 
-        int result = JOptionPane.showConfirmDialog(this, "Delete all selected items, nodes and mappings?", "Delete Selected", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(controller.getEditor(), "Delete all selected items, nodes and mappings?", "Delete Selected", JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION) {
             for (Selectable selectedItem : selectedItems) {
@@ -189,7 +169,7 @@ public class Diagram extends JPanel {
             }
         }
 
-        nodes.remove(selectedNode);
+        controller.removeNode(selectedNode.getKey());
         if (selectedNode instanceof InOutPanel) {
             outPanels.get(selectedNode.getShaderType()).get(selectedNode.getNodeName()).remove(selectedNode);
         }
@@ -201,16 +181,6 @@ public class Diagram extends JPanel {
 
     public List<Selectable> getSelectedItems() {
         return selectedItems;
-    }
-
-
-    public NodePanel getNodePanel(String key) {
-        for (NodePanel nodePanel : nodes) {
-            if (nodePanel.getKey().equals(key)) {
-                return nodePanel;
-            }
-        }
-        return null;
     }
 
     /**
@@ -268,30 +238,6 @@ public class Diagram extends JPanel {
         return selectable;
     }
 
-    /**
-     * find the item with the given key and select it without notifying the
-     * topComponent
-     *
-     * @param key
-     * @return
-     */
-    public Selectable select(String key) {
-
-        for (NodePanel nodePanel : nodes) {
-            if (nodePanel.getKey().equals(key)) {
-                return doSelect(nodePanel, false);
-            }
-        }
-
-        for (Connection connection : connections) {
-            if (connection.getKey().equals(key)) {
-                return doSelect(connection, false);
-            }
-        }
-
-        return null;
-    }
-
     private JMenuItem createMenuItem(String text, Icon icon) {
         JMenuItem item = new JMenuItem(text, icon);
         item.setFont(new Font("Tahoma", 1, 10)); // NOI18N
@@ -301,7 +247,6 @@ public class Diagram extends JPanel {
     public void clear() {
         removeAll();
         connections.clear();
-        nodes.clear();
         outPanels.clear();
     }
 
@@ -317,7 +262,7 @@ public class Diagram extends JPanel {
         contextMenu.setBorder(BorderFactory.createCompoundBorder(contextMenu.getBorder(),
                 labelBorder));
 
-        JMenuItem nodeItem = createMenuItem("Node", Icons.node);
+        JMenuItem nodeItem = createMenuItem("Node", node);
         nodeItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -387,13 +332,13 @@ public class Diagram extends JPanel {
         remove(selectedConnection);
     }
 
+
+    // TODO: 21/05/2016 Should be completely reworked as it sucks big time
     public void autoLayout() {
 
-        int offset = 550;
-
-        offset = 0;
+        int offset = 0;
         String keys = "";
-        for (NodePanel node : nodes) {
+        for (Component node : getComponents()) {
 
             if (node instanceof ShaderNodePanel) {
                 node.setLocation(offset + 200, getNodeTop(node));
@@ -413,7 +358,12 @@ public class Diagram extends JPanel {
                     }
                     connection.revalidate();
                 }
-            } else if (node instanceof InOutPanel) {
+                offset += 320;
+            }
+
+        }
+        for (Component node : getComponents()) {
+            if (node instanceof InOutPanel) {
                 InOutPanel out = (InOutPanel) node;
                 Dot input = out.getInputConnectPoint();
                 if (input.isConnected()) {
@@ -427,20 +377,22 @@ public class Diagram extends JPanel {
                 }
 
             }
-            offset += 320;
         }
         offset = 0;
-        for (NodePanel node : nodes) {
-            if (!(node instanceof ShaderNodePanel) && !(keys.contains(node.getKey()))) {
-                node.setLocation(offset + 10, 0);
-                //    getEditorParent().savePositionToMetaData(node.getKey(), node.getLocation().x, node.getLocation().y);
-                offset += 130;
+        for (Component node : getComponents()) {
+            if(node instanceof Selectable) {
+                String key= ((Selectable)node).getKey();
+                if (!(node instanceof ShaderNodePanel) && !(keys.contains(key))) {
+                    node.setLocation(offset + 10, 0);
+                    //    getEditorParent().savePositionToMetaData(node.getKey(), node.getLocation().x, node.getLocation().y);
+                    offset += 130;
+                }
             }
         }
         repaint();
     }
 
-    private int getNodeTop(NodePanel node) {
+    private int getNodeTop(Component node) {
         if (node instanceof ShaderNodePanel) {
             ShaderNodePanel panel = (ShaderNodePanel) node;
             if (panel.getShaderType() == Shader.ShaderType.Vertex) {
@@ -473,7 +425,7 @@ public class Diagram extends JPanel {
 
         InOutPanel panel = InOutPanel.create(controller, type, var);
         panelList.add(panel);
-        addNode(panel);
+        controller.addNode(panel);
         return panel;
 
     }

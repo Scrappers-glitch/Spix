@@ -14,7 +14,7 @@ import java.util.*;
 public class TechniqueController {
 
     private TechniqueDef currentTechnique;
-
+    private Map<String, NodePanel> nodes = new HashMap<>();
 
     public TechniqueDef getCurrentTechnique() {
         return currentTechnique;
@@ -26,6 +26,8 @@ public class TechniqueController {
 
     protected void initDiagram(MaterialDefController controller, TechniqueDef technique, MaterialDef matDef, Diagram diagram ) {
         diagram.clear();
+        nodes.clear();
+
         setCurrentTechnique(technique);
 
         if (technique.isUsingShaderNodes()) {
@@ -41,28 +43,26 @@ public class TechniqueController {
             for (ShaderNode sn : technique.getShaderNodes()) {
                 NodePanel np = ShaderNodePanel.create(controller, sn);
                 np.setTechName(currentTechnique.getName());
-                diagram.addNode(np);
+                addNode(np, diagram);
             }
 
             for (ShaderNodeVariable shaderNodeVariable : technique.getShaderGenerationInfo().getAttributes()) {
-                NodePanel np = diagram.getNodePanel(shaderNodeVariable.getNameSpace() + "." + shaderNodeVariable.getName());
+                NodePanel np = nodes.get(shaderNodeVariable.getNameSpace() + "." + shaderNodeVariable.getName());
                 if (np == null) {
                     np = InputPanel.create(controller, InputPanel.ShaderInputType.Attribute, shaderNodeVariable);
-                    np.setTechName(currentTechnique.getName());
-                    diagram.addNode(np);
+                    addNode(np, diagram);
                 }
             }
 
             for (ShaderNodeVariable shaderNodeVariable : uniforms) {
-                NodePanel np = diagram.getNodePanel(shaderNodeVariable.getNameSpace() + "." + shaderNodeVariable.getName());
+                NodePanel np = nodes.get(shaderNodeVariable.getNameSpace() + "." + shaderNodeVariable.getName());
                 if (np == null) {
                     if (shaderNodeVariable.getNameSpace().equals("MatParam")) {
                         np = InputPanel.create(controller, InputPanel.ShaderInputType.MatParam, shaderNodeVariable);
                     } else {
                         np = InputPanel.create(controller, InputPanel.ShaderInputType.WorldParam, shaderNodeVariable);
                     }
-                    np.setTechName(currentTechnique.getName());
-                    diagram.addNode(np);
+                    addNode(np, diagram);
                 }
             }
 
@@ -87,7 +87,7 @@ public class TechniqueController {
     }
 
     private void makeConnection(MaterialDefController controller, VariableMapping mapping, TechniqueDef technique, String nodeName, Diagram diagram) {
-        NodePanel forNode = diagram.getNodePanel(currentTechnique.getName() + "/" + nodeName);
+        NodePanel forNode = nodes.get(currentTechnique.getName() + "/" + nodeName);
 
         Dot leftDot = findConnectPointForInput(mapping, forNode, diagram);
         Dot rightDot = findConnectPointForOutput(mapping, forNode, diagram);
@@ -119,11 +119,11 @@ public class TechniqueController {
     private NodePanel getNodePanelForConnection(NodePanel forNode, String nameSpace, String name, boolean forInput, Diagram diagram) {
         NodePanel np = null;
         if (isShaderInput(nameSpace)) {
-            np = diagram.getNodePanel(nameSpace + "." + name);
+            np = nodes.get(nameSpace + "." + name);
         } else if (isGlobal(nameSpace)) {
             np = diagram.getOutPanel(forNode.getShaderType(), new ShaderNodeVariable("vec4", "Global", name), forNode, forInput);
         } else {
-            np = diagram.getNodePanel(currentTechnique.getName() + "/" + nameSpace);
+            np = nodes.get(currentTechnique.getName() + "/" + nameSpace);
         }
         return np;
     }
@@ -138,5 +138,34 @@ public class TechniqueController {
         return nameSpace.equals("Global");
     }
 
+    public void removeNode(String key){
+        NodePanel n = nodes.remove(key);
 
+        //just to be sure... but it should never happen.
+        assert n != null;
+    }
+
+    public void addNode(NodePanel node, Diagram diagram){
+        node.setTechName(currentTechnique.getName());
+        nodes.put(node.getKey(), node);
+        diagram.add(node);
+        diagram.setComponentZOrder(node, 0);
+        // TODO: 21/05/2016 check if this is needed
+        node.setDiagram(diagram);
+
+    }
+
+    // TODO: 21/05/2016 See if we really need this. It was use in the sdk if the user was naming a node with the same name as another.
+    private String fixNodeName(String name) {
+        return fixNodeName(name, 0);
+    }
+
+    private String fixNodeName(String name, int count) {
+        for (NodePanel nodePanel : nodes.values()) {
+            if ((name + (count == 0 ? "" : count)).equals(nodePanel.getNodeName())) {
+                return fixNodeName(name, count + 1);
+            }
+        }
+        return name + (count == 0 ? "" : count);
+    }
 }

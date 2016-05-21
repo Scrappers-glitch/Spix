@@ -16,7 +16,6 @@ import java.util.*;
 import java.util.List;
 
 /**
- *
  * @author Nehon
  */
 public abstract class NodePanel extends DraggablePanel implements Selectable, PropertyChangeListener {//InOut
@@ -53,6 +52,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     }
 
     public abstract Shader.ShaderType getShaderType();
+
     protected abstract void initHeader(JLabel header);
 
 //    public final void refresh(ShaderNodeBlock node) {
@@ -64,7 +64,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
 
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals("nodeName")) {
-     //       refresh((ShaderNodeBlock) evt.getSource());
+            //       refresh((ShaderNodeBlock) evt.getSource());
         }
     }
 
@@ -131,8 +131,8 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
             float[] factors = {0f, 1f};
             g.setPaint(new RadialGradientPaint(getWidth() / 2, getHeight() / 2, getWidth() / 2, factors, colors));
             g.fillRoundRect(8, 3, getWidth() - 10, getHeight() - 6, 15, 15);
-        }else{
-            if(toolBar.isVisible()){
+        } else {
+            if (toolBar.isVisible()) {
                 toolBar.setVisible(false);
             }
         }
@@ -160,7 +160,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     }
 
     public String getKey() {
-       return techName + "/" + nodeName;
+        return techName + "/" + nodeName;
     }
 
     @Override
@@ -184,20 +184,24 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
         }
     }
 
-    private void showToolBar(){
+    private void showToolBar() {
         toolBar.display();
     }
 
     /**
      * override to do edit this node content.
      */
-    public void edit(){
+    public void edit() {
 
-    };
+    }
 
-    public void cleanup(){
+    public void cleanup() {
         toolBar.cleanup();
-        toolBar.getParent().remove(toolBar);
+
+        // TODO: 21/05/2016 For some unknown reason the toolBar parent is sometimes null... it should not happen yet it does.
+        if (toolBar.getParent() != null) {
+            toolBar.getParent().remove(toolBar);
+        }
     }
 
     /**
@@ -270,19 +274,19 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
         this.setLayout(layout);
         layout.setHorizontalGroup(
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addGroup(GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addComponent(header, 100, 100, 100))
-                .addGroup(GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addGap(6, 6, 6))
-                .addComponent(content, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
+                        .addGroup(GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addGap(6, 6, 6)
+                                .addComponent(header, 100, 100, 100))
+                        .addGroup(GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addGap(6, 6, 6))
+                        .addComponent(content, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
         layout.setVerticalGroup(
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                        .addComponent(header, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addGap(10, 10, 10)
-                        .addComponent(content, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                .addGap(10, 10, 10));
+                        .addGroup(layout.createSequentialGroup()
+                                .addComponent(header, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(content, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                        .addGap(10, 10, 10));
     }
 
     public JLabel createLabel(String glslType, String txt, Dot.ParamType type) {

@@ -8,6 +8,7 @@ import spix.app.utils.CloneUtils;
 import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
+import spix.swing.materialEditor.nodes.NodePanel;
 
 import java.beans.*;
 import java.util.*;
@@ -83,6 +84,14 @@ public class MaterialDefController {
 
     public Connection connect(Dot start, Dot end) {
         return techniqueController.connect(this, start, end, editor.getDiagram());
+    }
+
+    public void removeNode(String key){
+        techniqueController.removeNode(key);
+    }
+
+    public void addNode(NodePanel node){
+        techniqueController.addNode(node, editor.getDiagram());
     }
 
 
