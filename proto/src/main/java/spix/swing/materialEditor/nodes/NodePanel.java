@@ -33,11 +33,8 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     private NodeToolBar toolBar;
     protected List<String> filePaths = new ArrayList<String>();
 
-    private MaterialDefController controller;
-
     public NodePanel(MaterialDefController controller, Color color, Icon icon) {
-        super();
-        this.controller = controller;
+        super(controller);
         this.color = color;
         this.icon = icon;
         toolBar = new NodeToolBar(this);
@@ -120,13 +117,13 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     protected void paintComponent(Graphics g1) {
         Graphics2D g = (Graphics2D) g1;
         Color borderColor = Color.BLACK;
-        if (getDiagram().getSelectedItems().contains(this)) {
+        if (controller.getEditor().getDiagram().getSelectedItems().contains(this)) {
             borderColor = Color.WHITE;
         }
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, // Anti-alias!
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        if (getDiagram().getSelectedItems().contains(this)) {
+        if (controller.getEditor().getDiagram().getSelectedItems().contains(this)) {
             Color[] colors = new Color[]{new Color(0.6f, 0.6f, 1.0f, 0.8f), new Color(0.6f, 0.6f, 1.0f, 0.5f)};
             float[] factors = {0f, 1f};
             g.setPaint(new RadialGradientPaint(getWidth() / 2, getHeight() / 2, getWidth() / 2, factors, colors));
@@ -171,13 +168,13 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     @Override
     public void onMousePressed(MouseEvent e) {
         super.onMousePressed(e);
-        diagram.select(this, e.isShiftDown() || e.isControlDown());
+        controller.getEditor().getDiagram().select(this, e.isShiftDown() || e.isControlDown());
         showToolBar();
     }
 
     @Override
     public void onMouseReleased(MouseEvent e) {
-        diagram.fitContent();
+        controller.getEditor().getDiagram().fitContent();
         if (svdx != getLocation().x) {
 //            firePropertyChange(ShaderNodeBlock.POSITION, svdx, getLocation().x);
 //            getDiagram().getEditorParent().savePositionToMetaData(getKey(), getLocation().x, getLocation().y);
@@ -315,7 +312,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
 
 
     public void delete() {
-        Diagram diag = getDiagram();
+        Diagram diag = controller.getEditor().getDiagram();
         diag.removeSelected();
     }
 

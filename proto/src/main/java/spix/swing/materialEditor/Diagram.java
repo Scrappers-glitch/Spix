@@ -32,10 +32,6 @@ public class Diagram extends JPanel {
     //private final BackdropPanel backDrop = new BackdropPanel();
     private MaterialDefController controller;
 
-    //storing the list of InOutPanels depending on the shaderType and by variable name
-    //todo should be in controller
-    private Map<Shader.ShaderType, Map<String, List<InOutPanel>>> outPanels = new HashMap<>();
-
     public Diagram(MaterialDefController controller) {
         this.controller = controller;
         setLayout(null);
@@ -170,13 +166,9 @@ public class Diagram extends JPanel {
         }
 
         controller.removeNode(selectedNode.getKey());
-        if (selectedNode instanceof InOutPanel) {
-            outPanels.get(selectedNode.getShaderType()).get(selectedNode.getNodeName()).remove(selectedNode);
-        }
-        selectedNode.cleanup();
+
         remove(selectedNode);
         repaint();
-        //    parent.notifyRemoveNode(selectedNode);
     }
 
     public List<Selectable> getSelectedItems() {
@@ -247,7 +239,6 @@ public class Diagram extends JPanel {
     public void clear() {
         removeAll();
         connections.clear();
-        outPanels.clear();
     }
 
     private void createPopupMenu() {
@@ -406,43 +397,6 @@ public class Diagram extends JPanel {
 
     }
 
-    public InOutPanel getOutPanel(Shader.ShaderType type, ShaderNodeVariable var, NodePanel node, boolean forInput) {
-
-        List<InOutPanel> panelList = getOutPanelList(type, var);
-
-
-        for (InOutPanel inOutPanel : panelList) {
-            if (forInput) {
-                if (inOutPanel.isOutputAvailable() && !inOutPanel.getInputConnectPoint(var.getName()).isConnectedToNode(node)) {
-                    return inOutPanel;
-                }
-            } else {
-                if (inOutPanel.isInputAvailable() && !inOutPanel.getOutputConnectPoint(var.getName()).isConnectedToNode(node)) {
-                    return inOutPanel;
-                }
-            }
-        }
-
-        InOutPanel panel = InOutPanel.create(controller, type, var);
-        panelList.add(panel);
-        controller.addNode(panel);
-        return panel;
-
-    }
-
-    private List<InOutPanel> getOutPanelList(Shader.ShaderType type, ShaderNodeVariable var) {
-        Map<String, List<InOutPanel>> map = outPanels.get(type);
-        if (map == null) {
-            map = new HashMap<>();
-            outPanels.put(type, map);
-        }
-        List<InOutPanel> panelList = map.get(var.getName());
-        if (panelList == null) {
-            panelList = new ArrayList<>();
-            map.put(var.getName(), panelList);
-        }
-        return panelList;
-    }
 
     public void fitContent() {
 

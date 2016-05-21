@@ -15,6 +15,8 @@ public class TechniqueController {
 
     private TechniqueDef currentTechnique;
     private Map<String, NodePanel> nodes = new HashMap<>();
+    //A convenience map to easy access to the output nodes;
+    private Map<Shader.ShaderType, Map<String, List<InOutPanel>>> outPanels = new HashMap<>();
 
     public TechniqueDef getCurrentTechnique() {
         return currentTechnique;
@@ -27,6 +29,7 @@ public class TechniqueController {
     protected void initDiagram(MaterialDefController controller, TechniqueDef technique, MaterialDef matDef, Diagram diagram ) {
         diagram.clear();
         nodes.clear();
+        outPanels.clear();
 
         setCurrentTechnique(technique);
 
@@ -89,8 +92,8 @@ public class TechniqueController {
     private void makeConnection(MaterialDefController controller, VariableMapping mapping, TechniqueDef technique, String nodeName, Diagram diagram) {
         NodePanel forNode = nodes.get(currentTechnique.getName() + "/" + nodeName);
 
-        Dot leftDot = findConnectPointForInput(mapping, forNode, diagram);
-        Dot rightDot = findConnectPointForOutput(mapping, forNode, diagram);
+        Dot leftDot = findConnectPointForInput(controller, mapping, forNode);
+        Dot rightDot = findConnectPointForOutput(controller, mapping, forNode);
         Connection conn = connect(controller, leftDot, rightDot, diagram);
         //  mapping.addPropertyChangeListener(WeakListeners.propertyChange(conn, mapping));
         //  conn.makeKey(mapping, technique.getName());
@@ -104,24 +107,24 @@ public class TechniqueController {
         return conn;
     }
 
-    private Dot findConnectPointForInput(VariableMapping mapping, NodePanel forNode, Diagram diagram) {
+    private Dot findConnectPointForInput(MaterialDefController controller, VariableMapping mapping, NodePanel forNode) {
         String nameSpace = mapping.getLeftVariable().getNameSpace();
         String name = mapping.getLeftVariable().getName();
-        return getNodePanelForConnection(forNode, nameSpace, name, true, diagram).getInputConnectPoint(name);
+        return getNodePanelForConnection(controller, forNode, nameSpace, name, true).getInputConnectPoint(name);
     }
 
-    private Dot findConnectPointForOutput(VariableMapping mapping, NodePanel forNode, Diagram diagram) {
+    private Dot findConnectPointForOutput(MaterialDefController controller, VariableMapping mapping, NodePanel forNode) {
         String nameSpace = mapping.getRightVariable().getNameSpace();
         String name = mapping.getRightVariable().getName();
-        return getNodePanelForConnection(forNode, nameSpace, name, false, diagram).getOutputConnectPoint(name);
+        return getNodePanelForConnection(controller, forNode, nameSpace, name, false).getOutputConnectPoint(name);
     }
 
-    private NodePanel getNodePanelForConnection(NodePanel forNode, String nameSpace, String name, boolean forInput, Diagram diagram) {
+    private NodePanel getNodePanelForConnection(MaterialDefController controller, NodePanel forNode, String nameSpace, String name, boolean forInput) {
         NodePanel np = null;
         if (isShaderInput(nameSpace)) {
             np = nodes.get(nameSpace + "." + name);
         } else if (isGlobal(nameSpace)) {
-            np = diagram.getOutPanel(forNode.getShaderType(), new ShaderNodeVariable("vec4", "Global", name), forNode, forInput);
+            np = getOutPanel(controller, forNode.getShaderType(), new ShaderNodeVariable("vec4", "Global", name), forNode, forInput);
         } else {
             np = nodes.get(currentTechnique.getName() + "/" + nameSpace);
         }
@@ -138,11 +141,54 @@ public class TechniqueController {
         return nameSpace.equals("Global");
     }
 
+    public InOutPanel getOutPanel(MaterialDefController controller, Shader.ShaderType type, ShaderNodeVariable var, NodePanel node, boolean forInput) {
+
+        List<InOutPanel> panelList = getOutPanelList(type, var);
+
+
+        for (InOutPanel inOutPanel : panelList) {
+            if (forInput) {
+                if (inOutPanel.isOutputAvailable() && !inOutPanel.getInputConnectPoint(var.getName()).isConnectedToNode(node)) {
+                    return inOutPanel;
+                }
+            } else {
+                if (inOutPanel.isInputAvailable() && !inOutPanel.getOutputConnectPoint(var.getName()).isConnectedToNode(node)) {
+                    return inOutPanel;
+                }
+            }
+        }
+
+        InOutPanel panel = InOutPanel.create(controller, type, var);
+        panelList.add(panel);
+        controller.addNode(panel);
+        return panel;
+
+    }
+
+    private List<InOutPanel> getOutPanelList(Shader.ShaderType type, ShaderNodeVariable var) {
+        Map<String, List<InOutPanel>> map = outPanels.get(type);
+        if (map == null) {
+            map = new HashMap<>();
+            outPanels.put(type, map);
+        }
+        List<InOutPanel> panelList = map.get(var.getName());
+        if (panelList == null) {
+            panelList = new ArrayList<>();
+            map.put(var.getName(), panelList);
+        }
+        return panelList;
+    }
+
     public void removeNode(String key){
         NodePanel n = nodes.remove(key);
-
         //just to be sure... but it should never happen.
         assert n != null;
+
+        if (n instanceof InOutPanel) {
+            outPanels.get(n.getShaderType()).get(n.getNodeName()).remove(n);
+        }
+        n.cleanup();
+
     }
 
     public void addNode(NodePanel node, Diagram diagram){
@@ -150,9 +196,6 @@ public class TechniqueController {
         nodes.put(node.getKey(), node);
         diagram.add(node);
         diagram.setComponentZOrder(node, 0);
-        // TODO: 21/05/2016 check if this is needed
-        node.setDiagram(diagram);
-
     }
 
     // TODO: 21/05/2016 See if we really need this. It was use in the sdk if the user was naming a node with the same name as another.
