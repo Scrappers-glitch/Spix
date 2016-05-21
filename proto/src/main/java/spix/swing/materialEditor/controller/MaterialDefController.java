@@ -86,8 +86,12 @@ public class MaterialDefController {
         return techniqueController.connect(this, start, end, editor.getDiagram());
     }
 
+    public void removeConnection(Connection conn) {
+        techniqueController.removeConnection(conn, editor.getDiagram());
+    }
+
     public void removeNode(String key){
-        techniqueController.removeNode(key);
+        techniqueController.removeNode(key, editor.getDiagram());
     }
 
     public void addNode(NodePanel node){

@@ -17,31 +17,20 @@ public class TechniqueController {
     private Map<String, NodePanel> nodes = new HashMap<>();
     //A convenience map to easy access to the output nodes;
     private Map<Shader.ShaderType, Map<String, List<InOutPanel>>> outPanels = new HashMap<>();
+    protected List<Connection> connections = new ArrayList<>();
 
-    public TechniqueDef getCurrentTechnique() {
-        return currentTechnique;
-    }
-
-    public void setCurrentTechnique(TechniqueDef currentTechnique) {
-        this.currentTechnique = currentTechnique;
-    }
-
-    protected void initDiagram(MaterialDefController controller, TechniqueDef technique, MaterialDef matDef, Diagram diagram ) {
-        diagram.clear();
+    void initDiagram(MaterialDefController controller, TechniqueDef technique, MaterialDef matDef, Diagram diagram ) {
+        diagram.removeAll();
         nodes.clear();
         outPanels.clear();
+        connections.clear();
 
-        setCurrentTechnique(technique);
+        this.currentTechnique = technique;
 
         if (technique.isUsingShaderNodes()) {
             MaterialDefUtils.computeShaderNodeGenerationInfo(technique);
             List<ShaderNodeVariable> uniforms = new ArrayList<>();
             MaterialDefUtils.getAllUniforms(technique, matDef, uniforms);
-
-//            ShaderNodeVariable inPosition = new ShaderNodeVariable("vec4", "Attr", "inPosition");
-//            ShaderNodeVariable position = new ShaderNodeVariable("vec4", "Global", "position");
-//            diagram.addNode(new AttributePanel(inPosition));
-            //makeConnection(new VariableMapping(position,"", inPosition,"",""), technique);
 
             for (ShaderNode sn : technique.getShaderNodes()) {
                 NodePanel np = ShaderNodePanel.create(controller, sn);
@@ -86,6 +75,7 @@ public class TechniqueController {
             }
         }
 
+        //this will change when we have meta data
         diagram.autoLayout();
     }
 
@@ -95,15 +85,16 @@ public class TechniqueController {
         Dot leftDot = findConnectPointForInput(controller, mapping, forNode);
         Dot rightDot = findConnectPointForOutput(controller, mapping, forNode);
         Connection conn = connect(controller, leftDot, rightDot, diagram);
-        //  mapping.addPropertyChangeListener(WeakListeners.propertyChange(conn, mapping));
-        //  conn.makeKey(mapping, technique.getName());
+        conn.makeKey(mapping, technique.getName());
     }
 
-    public Connection connect(MaterialDefController controller, Dot start, Dot end, Diagram diagram) {
+    Connection connect(MaterialDefController controller, Dot start, Dot end, Diagram diagram) {
         Connection conn = new Connection(controller, start, end);
         start.connect(conn);
         end.connect(conn);
-        diagram.addConnection(conn);
+        connections.add(conn);
+        diagram.add(conn);
+        diagram.repaint();
         return conn;
     }
 
@@ -141,7 +132,7 @@ public class TechniqueController {
         return nameSpace.equals("Global");
     }
 
-    public InOutPanel getOutPanel(MaterialDefController controller, Shader.ShaderType type, ShaderNodeVariable var, NodePanel node, boolean forInput) {
+    private InOutPanel getOutPanel(MaterialDefController controller, Shader.ShaderType type, ShaderNodeVariable var, NodePanel node, boolean forInput) {
 
         List<InOutPanel> panelList = getOutPanelList(type, var);
 
@@ -179,7 +170,7 @@ public class TechniqueController {
         return panelList;
     }
 
-    public void removeNode(String key){
+    void removeNode(String key, Diagram diagram){
         NodePanel n = nodes.remove(key);
         //just to be sure... but it should never happen.
         assert n != null;
@@ -189,9 +180,27 @@ public class TechniqueController {
         }
         n.cleanup();
 
+        for (Iterator<Connection> it = connections.iterator(); it.hasNext(); ) {
+            Connection conn = it.next();
+            if (conn.getStart().getNode() == n || conn.getEnd().getNode() == n) {
+                it.remove();
+                removeConnection(conn, diagram);
+            }
+        }
+
+        diagram.remove(n);
+        diagram.repaint();
+    }
+    public void removeConnection(Connection conn, Diagram diagram) {
+        connections.remove(conn);
+        conn.getEnd().disconnect(conn);
+        conn.getStart().disconnect(conn);
+        diagram.remove(conn);
+        diagram.repaint();
     }
 
-    public void addNode(NodePanel node, Diagram diagram){
+
+    void addNode(NodePanel node, Diagram diagram){
         node.setTechName(currentTechnique.getName());
         nodes.put(node.getKey(), node);
         diagram.add(node);

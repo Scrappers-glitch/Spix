@@ -75,8 +75,7 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
         return key;
     }
 
-    protected void makeKey(VariableMapping mapping, String techName) {
-        // this.mapping = mapping;
+    public void makeKey(VariableMapping mapping, String techName) {
         key = MaterialDefUtils.makeKey(mapping, techName);
     }
 

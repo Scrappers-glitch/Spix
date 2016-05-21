@@ -4,7 +4,7 @@
  */
 package spix.swing.materialEditor;
 
-import com.jme3.shader.*;
+import com.jme3.shader.Shader;
 import spix.swing.materialEditor.controller.MaterialDefController;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.*;
@@ -27,7 +27,6 @@ public class Diagram extends JPanel {
     private final static Cursor mvCursor = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
 
     protected List<Selectable> selectedItems = new ArrayList<>();
-    protected List<Connection> connections = new ArrayList<>();
     private final MyMenu contextMenu = new MyMenu("Add");
     //private final BackdropPanel backDrop = new BackdropPanel();
     private MaterialDefController controller;
@@ -66,11 +65,6 @@ public class Diagram extends JPanel {
 //        return parent;
 //    }
 
-    public void addConnection(Connection conn) {
-        connections.add(conn);
-        add(conn);
-        repaint();
-    }
 
     public void showEdit(NodePanel node) {
         //  parent.showShaderEditor(node.getName(), node.getType(), node.filePaths);
@@ -78,7 +72,7 @@ public class Diagram extends JPanel {
 
     protected void removeSelectedConnection(Selectable selectedItem) {
         Connection selectedConnection = (Connection) selectedItem;
-        removeConnection(selectedConnection);
+        controller.removeConnection(selectedConnection);
         //   parent.notifyRemoveConnection(selectedConnection);
     }
 
@@ -152,23 +146,7 @@ public class Diagram extends JPanel {
     }
 
     private void removeSelectedNode(Selectable selectedItem) {
-
-        NodePanel selectedNode = (NodePanel) selectedItem;
-        //   nodes.remove(selectedNode);
-        for (Iterator<Connection> it = connections.iterator(); it.hasNext(); ) {
-            Connection conn = it.next();
-            if (conn.start.getNode() == selectedNode || conn.end.getNode() == selectedNode) {
-                it.remove();
-                conn.end.disconnect(conn);
-                conn.start.disconnect(conn);
-                remove(conn);
-            }
-        }
-
-        controller.removeNode(selectedNode.getKey());
-
-        remove(selectedNode);
-        repaint();
+        controller.removeNode(selectedItem.getKey());
     }
 
     public List<Selectable> getSelectedItems() {
@@ -234,11 +212,6 @@ public class Diagram extends JPanel {
         JMenuItem item = new JMenuItem(text, icon);
         item.setFont(new Font("Tahoma", 1, 10)); // NOI18N
         return item;
-    }
-
-    public void clear() {
-        removeAll();
-        connections.clear();
     }
 
     private void createPopupMenu() {
@@ -316,14 +289,6 @@ public class Diagram extends JPanel {
         return jsep;
     }
 
-    private void removeConnection(Connection selectedConnection) {
-        connections.remove(selectedConnection);
-        selectedConnection.end.disconnect(selectedConnection);
-        selectedConnection.start.disconnect(selectedConnection);
-        remove(selectedConnection);
-    }
-
-
     // TODO: 21/05/2016 Should be completely reworked as it sucks big time
     public void autoLayout() {
 
@@ -335,19 +300,22 @@ public class Diagram extends JPanel {
                 node.setLocation(offset + 200, getNodeTop(node));
                 //  getEditorParent().savePositionToMetaData(node.getKey(), node.getLocation().x, node.getLocation().y);
                 int pad = getNodeTop(node);
-                for (Connection connection : connections) {
-                    if (connection.getEnd().getNode() == node) {
-                        if (connection.getStart().getNode() instanceof NodePanel) {
-                            NodePanel startP = (NodePanel) connection.getStart().getNode();
-                            if (!(startP instanceof ShaderNodePanel)) {
-                                startP.setLocation(offset + 30, pad);
-                                //       getEditorParent().savePositionToMetaData(startP.getKey(), startP.getLocation().x, startP.getLocation().y);
-                                keys += startP.getKey() + "|";
-                                pad += 50;
+                for (Component comp : getComponents()) {
+                    if(comp instanceof Connection) {
+                        Connection connection = (Connection) comp;
+                        if (connection.getEnd().getNode() == node) {
+                            if (connection.getStart().getNode() instanceof NodePanel) {
+                                NodePanel startP = (NodePanel) connection.getStart().getNode();
+                                if (!(startP instanceof ShaderNodePanel)) {
+                                    startP.setLocation(offset + 30, pad);
+                                    //       getEditorParent().savePositionToMetaData(startP.getKey(), startP.getLocation().x, startP.getLocation().y);
+                                    keys += startP.getKey() + "|";
+                                    pad += 50;
+                                }
                             }
                         }
+                        connection.revalidate();
                     }
-                    connection.revalidate();
                 }
                 offset += 320;
             }
@@ -427,13 +395,16 @@ public class Diagram extends JPanel {
             if (SwingUtilities.isLeftMouseButton(e)) {
 
                 //Click on the diagram, we are trying to find if we clicked in a connection area and select it
-                for (Connection connection : connections) {
-                    MouseEvent me = SwingUtilities.convertMouseEvent(Diagram.this, e, connection);
+                for (Component comp: getComponents()) {
+                    if(comp instanceof Connection) {
+                        Connection connection = (Connection) comp;
+                        MouseEvent me = SwingUtilities.convertMouseEvent(Diagram.this, e, connection);
 
-                    if (connection.pick(me)) {
-                        select(connection, e.isShiftDown() || e.isControlDown());
-                        e.consume();
-                        return;
+                        if (connection.pick(me)) {
+                            select(connection, e.isShiftDown() || e.isControlDown());
+                            e.consume();
+                            return;
+                        }
                     }
                 }
                 //we didn't find anything, let's unselect
