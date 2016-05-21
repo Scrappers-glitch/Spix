@@ -39,8 +39,9 @@ public class Diagram extends JPanel {
         this.controller = controller;
         setLayout(null);
         setBackground(new Color(40, 40, 40));
-        addMouseListener(new DiagramMouseListener());
-        addMouseMotionListener(new DiagramMouseMotionListener());
+        DiagramMouseListener mouseListener = new DiagramMouseListener();
+        addMouseListener(mouseListener);
+        addMouseMotionListener(mouseListener);
         createPopupMenu();
     }
 
@@ -497,7 +498,7 @@ public class Diagram extends JPanel {
         int maxWidth = getParent().getParent().getWidth() - 2;
         int maxHeight = getParent().getParent().getHeight() - 2;
 
-        for (NodePanel nodePanel : nodes) {
+        for (Component nodePanel : getComponents()) {
             int w = nodePanel.getLocation().x + nodePanel.getWidth() + 150;
             if (w > maxWidth) {
                 maxWidth = w;
@@ -518,8 +519,9 @@ public class Diagram extends JPanel {
         @Override
         public void mousePressed(MouseEvent e) {
 
-            if (e.getButton() == MouseEvent.BUTTON1) {
+            if (SwingUtilities.isLeftMouseButton(e)) {
 
+                //Click on the diagram, we are trying to find if we clicked in a connection area and select it
                 for (Connection connection : connections) {
                     MouseEvent me = SwingUtilities.convertMouseEvent(Diagram.this, e, connection);
 
@@ -529,10 +531,10 @@ public class Diagram extends JPanel {
                         return;
                     }
                 }
-
+                //we didn't find anything, let's unselect
                 selectedItems.clear();
                 repaint();
-            } else if (e.getButton() == MouseEvent.BUTTON2) {
+            } else if (SwingUtilities.isMiddleMouseButton(e)) {
                 setCursor(mvCursor);
                 pp.setLocation(e.getPoint());
                 ((JScrollPane) getParent().getParent()).setWheelScrollingEnabled(false);
@@ -555,15 +557,9 @@ public class Diagram extends JPanel {
 
         }
 
-    }
-
-    private class DiagramMouseMotionListener extends MouseMotionAdapter {
-        private final Point pp = new Point();
-
         @Override
         public void mouseDragged(MouseEvent e) {
-            if (SwingUtilities.isLeftMouseButton(e)) {
-            } else if (SwingUtilities.isMiddleMouseButton(e)) {
+            if (SwingUtilities.isMiddleMouseButton(e)) {
                 JViewport vport = (JViewport) getParent();
                 Point cp = e.getPoint();
                 Point vp = vport.getViewPosition();
@@ -572,6 +568,7 @@ public class Diagram extends JPanel {
 
             }
         }
+
     }
 
     private class MyMenu extends JPopupMenu {

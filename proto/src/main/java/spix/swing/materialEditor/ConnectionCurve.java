@@ -41,9 +41,6 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
 
     private ComponentManager componentListener = new ComponentManager();
 
-//    protected MappingBlock mapping;
-
-
     public ConnectionCurve(MaterialDefController controller, Dot start, Dot end) {
         this.controller = controller;
         if (start.getParamType() == Dot.ParamType.Output) {
@@ -334,7 +331,7 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
         return end;
     }
 
-    private class MouseManagerListener extends MouseAdapter implements MouseMotionListener {
+    private class MouseManagerListener extends MouseAdapter {
 
         @Override
         public void mouseDragged(MouseEvent e) {
