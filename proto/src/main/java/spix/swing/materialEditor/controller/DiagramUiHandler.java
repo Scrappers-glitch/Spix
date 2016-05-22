@@ -66,6 +66,7 @@ public class DiagramUiHandler {
     }
 
     void setCurrentTechniqueName(String currentTechniqueName) {
+        clear();
         this.currentTechniqueName = currentTechniqueName;
     }
 

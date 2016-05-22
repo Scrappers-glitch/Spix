@@ -84,12 +84,13 @@ public class DataHandler {
         return nodes.get(key);
     }
 
-
-    public TechniqueDef getCurrentTechnique() {
-        return currentTechnique;
+    public void clear(){
+        nodes.clear();
+        mappings.clear();
     }
 
     public void setCurrentTechnique(TechniqueDef currentTechnique) {
+        clear();
         this.currentTechnique = currentTechnique;
     }
 }

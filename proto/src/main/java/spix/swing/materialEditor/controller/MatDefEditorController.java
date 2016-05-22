@@ -92,7 +92,6 @@ public class MatDefEditorController {
     }
 
     void initTechnique(TechniqueDef technique, MaterialDef matDef) {
-        diagramUiHandler.clear();
         diagramUiHandler.setCurrentTechniqueName(technique.getName());
         dataHandler.setCurrentTechnique(technique);
 
