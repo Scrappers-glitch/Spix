@@ -94,6 +94,7 @@ public class MatDefEditorController {
     void initTechnique(TechniqueDef technique, MaterialDef matDef) {
         diagramUiHandler.clear();
         diagramUiHandler.setCurrentTechniqueName(technique.getName());
+        dataHandler.setCurrentTechnique(technique);
 
         if (technique.isUsingShaderNodes()) {
             MaterialDefUtils.computeShaderNodeGenerationInfo(technique);
@@ -102,6 +103,7 @@ public class MatDefEditorController {
 
             for (ShaderNode sn : technique.getShaderNodes()) {
                 diagramUiHandler.addShaderNodePanel(this, sn);
+                dataHandler.registerShaderNode(sn);
             }
 
             for (ShaderNodeVariable shaderNodeVariable : technique.getShaderGenerationInfo().getAttributes()) {
@@ -117,12 +119,14 @@ public class MatDefEditorController {
                 if (ins != null) {
                     for (VariableMapping mapping : ins) {
                         diagramUiHandler.makeConnection(this, mapping, technique, sn.getName());
+                        dataHandler.registerMapping(mapping);
                     }
                 }
                 List<VariableMapping> outs = sn.getOutputMapping();
                 if (outs != null) {
                     for (VariableMapping mapping : outs) {
                         diagramUiHandler.makeConnection(this, mapping, technique, sn.getName());
+                        dataHandler.registerMapping(mapping);
                     }
                 }
             }
@@ -133,18 +137,29 @@ public class MatDefEditorController {
     }
 
     public Connection connect(Dot start, Dot end) {
-        // TODO: 22/05/2016 actually do the connection in the data model
-        return diagramUiHandler.connect(this, start, end);
+        Connection conn = diagramUiHandler.connect(this, start, end);
+        dataHandler.addMapping(MaterialDefUtils.createVariableMapping(start, end));
+        return conn;
     }
 
     public void removeConnection(Connection conn) {
-        // TODO: 22/05/2016 actually remove the connection in the data model
+
         diagramUiHandler.removeConnection(conn);
+        dataHandler.removeMappingForKey(conn.getKey());
     }
 
     public void removeNode(String key){
-        // TODO: 22/05/2016 actually remove the node in the data model
-        diagramUiHandler.removeNode(key);
+
+        /*the order in those calls is very important.
+            1. the node deletion in the ui
+                we also iterate over the connections and delete them from the UI AND from the data model
+            2. the node deletion in the data model.
+
+            This allow to avoid iterating in all the shader in the data model to find inputs of other nodes that were
+            coming from this node
+        */
+        diagramUiHandler.removeNode(this, key);
+        dataHandler.removeShaderNodeForKey(key);
     }
 
 
@@ -169,7 +184,7 @@ public class MatDefEditorController {
 
     public void select(Selectable selectable, boolean multi ){
         selectionHandler.select(selectable, multi);
-        diagramUiHandler.repaintDiagram();
+        diagramUiHandler.refreshDiagram();
     }
 
     public void findSelection(MouseEvent me, boolean multi){
@@ -184,7 +199,7 @@ public class MatDefEditorController {
 
         //we didn't find anything, let's unselect
         selectionHandler.clearSelection();
-        diagramUiHandler.repaintDiagram();
+        diagramUiHandler.refreshDiagram();
     }
 
     public void removeSelected(){

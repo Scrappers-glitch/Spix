@@ -45,13 +45,9 @@ public class DiagramUiHandler {
         diagram.removeAll();
     }
 
-    void repaintDiagram() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                diagram.repaint();
-            }
-        });
+    void refreshDiagram() {
+        diagram.revalidate();
+        diagram.repaint();
     }
 
 
@@ -76,9 +72,9 @@ public class DiagramUiHandler {
     void makeConnection(MatDefEditorController controller, VariableMapping mapping, TechniqueDef technique, String nodeName) {
         NodePanel forNode = nodes.get(MaterialDefUtils.makeShaderNodeKey(technique.getName(), nodeName));
 
-        Dot leftDot = findConnectPointForInput(controller, mapping, forNode);
-        Dot rightDot = findConnectPointForOutput(controller, mapping, forNode);
-        controller.connect(leftDot, rightDot);
+        Dot rightDot = findConnectPointForInput(controller, mapping, forNode);
+        Dot leftDot = findConnectPointForOutput(controller, mapping, forNode);
+        connect(controller, leftDot, rightDot);
     }
 
     Connection connect(MatDefEditorController controller, Dot start, Dot end) {
@@ -88,7 +84,7 @@ public class DiagramUiHandler {
         end.connect(conn);
         connections.add(conn);
         diagram.add(conn);
-        repaintDiagram();
+        refreshDiagram();
         return conn;
     }
 
@@ -161,10 +157,15 @@ public class DiagramUiHandler {
         return panelList;
     }
 
-    void removeNode(String key) {
+    void removeNode(MatDefEditorController controller, String key) {
         NodePanel n = nodes.remove(key);
-        //just to be sure... but it should never happen.
-        assert n != null;
+        if (n == null){
+            //todo Somtimes, for some unknown reason the node is null.
+            //It smells like a race condition between several threads, but I should always be on the swing thread...
+            //in case it happens again I display all I can here and crash the app.
+            System.err.println("Is event dispatch thread: " + SwingUtilities.isEventDispatchThread());
+            throw new IllegalArgumentException("Cannot delete node for key: " + key);
+        }
 
         if (n instanceof InOutPanel) {
             outPanels.get(n.getShaderType()).get(n.getNodeName()).remove(n);
@@ -175,12 +176,13 @@ public class DiagramUiHandler {
             Connection conn = it.next();
             if (conn.getStart().getNode() == n || conn.getEnd().getNode() == n) {
                 it.remove();
-                removeConnection(conn);
+                //it's important to call this from the controller so the connections are not just removed from the UI
+                controller.removeConnection(conn);
             }
         }
 
         diagram.remove(n);
-        repaintDiagram();
+        refreshDiagram();
     }
 
     public void removeConnection(Connection conn) {
@@ -188,7 +190,7 @@ public class DiagramUiHandler {
         conn.getEnd().disconnect(conn);
         conn.getStart().disconnect(conn);
         diagram.remove(conn);
-        repaintDiagram();
+        refreshDiagram();
     }
 
     NodePanel makeOutPanel(MatDefEditorController controller, Shader.ShaderType type, ShaderNodeVariable var) {
@@ -255,7 +257,7 @@ public class DiagramUiHandler {
 
     public void autoLayout(){
         diagram.autoLayout();
-        repaintDiagram();
+        refreshDiagram();
     }
 
     public void fitContent(){

@@ -19,7 +19,7 @@ public abstract class InOutPanel extends NodePanel {
 
     private InOutPanel(MatDefEditorController controller, String key, ShaderNodeVariable var, Color color, Icon icon){
         super(controller, key, color, icon);
-        setNodeName(var.getName());
+        setNodeName(var.getNameSpace());
         List<ShaderNodeVariable> outputs = new ArrayList<ShaderNodeVariable>();
         outputs.add(new ShaderNodeVariable(var.getType(),var.getName()));
         List<ShaderNodeVariable> inputs = new ArrayList<ShaderNodeVariable>();

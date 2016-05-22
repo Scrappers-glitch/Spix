@@ -164,4 +164,22 @@ public class MaterialDefUtils {
     public static String makeInputKey(String techName, String nameSpace, String variableName) {
         return techName + "." + nameSpace + "." + variableName;
     }
+
+    public static VariableMapping createVariableMapping(Dot start, Dot end){
+        ShaderNodeVariable leftVariable = new ShaderNodeVariable(end.getType(), end.getNode().getName(), end.getText());
+        ShaderNodeVariable rightVariable = new ShaderNodeVariable(start.getType(), start.getNode().getName(), start.getText());
+
+        int endCard = ShaderUtils.getCardinality(end.getType(), "");
+        int startCard = ShaderUtils.getCardinality(start.getType(), "");
+        String swizzle = "xyzw";
+        String rightVarSwizzle = "";
+        String leftVarSwizzle ="";
+        if (startCard > endCard) {
+            rightVarSwizzle = swizzle.substring(0, endCard);
+        } else if (endCard > startCard) {
+            leftVarSwizzle = swizzle.substring(0, startCard);
+        }
+
+        return new VariableMapping(leftVariable, leftVarSwizzle, rightVariable, rightVarSwizzle, null);
+    }
 }
