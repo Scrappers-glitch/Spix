@@ -18,7 +18,6 @@ public class MatDefEditorWindow extends JFrame {
     public static final String MAT_DEF_EDITOR_X = "MatDefEditor.x";
     public static final String MAT_DEF_EDITOR_Y = "MatDefEditor.y";
     private Preferences prefs = Preferences.userNodeForPackage(MatDefEditorWindow.class);
-    private Diagram diagram;
     private MatDefEditorController controller;
 
 
@@ -40,18 +39,6 @@ public class MatDefEditorWindow extends JFrame {
                 prefs.putInt(MAT_DEF_EDITOR_Y, e.getComponent().getY());
             }
         });
-
-        diagram = new Diagram(controller);
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setViewportView(diagram);
-        getContentPane().add(scrollPane);
-        scrollPane.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                diagram.fitContent();
-            }
-        });
-
 
     }
 
@@ -76,8 +63,5 @@ public class MatDefEditorWindow extends JFrame {
         super.dispose();
     }
 
-    public Diagram getDiagram() {
-        return diagram;
-    }
 
 }

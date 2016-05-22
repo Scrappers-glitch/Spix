@@ -78,7 +78,7 @@ public class Diagram extends JPanel {
 //            sn.setName(fixNodeName(sn.getName()));
 //
 //            NodePanel np = new NodePanel(sn, def);
-//            addNode(np);
+//            addShaderNode(np);
 //            np.setLocation(clickPosition.x + i * 150, clickPosition.y);
 //            sn.setSpatialOrder(np.getLocation().x);
 //            i++;
@@ -95,7 +95,7 @@ public class Diagram extends JPanel {
 //        }
 //        ShaderNodeVariable param = new ShaderNodeVariable(VarType.valueOf(fixedType).getGlslType(), name);
 //        NodePanel np = new NodePanel(param, NodePanel.NodeType.MatParam);
-//        addNode(np);
+//        addShaderNode(np);
 //        np.setLocation(point.x, point.y);
 //        np.revalidate();
 //        repaint();
@@ -106,7 +106,7 @@ public class Diagram extends JPanel {
 //
 //        ShaderNodeVariable param = new ShaderNodeVariable(binding.getGlslType(), binding.name());
 //        NodePanel np = new NodePanel(param, NodePanel.NodeType.WorldParam);
-//        addNode(np);
+//        addShaderNode(np);
 //        np.setLocation(point.x, point.y);
 //        np.revalidate();
 //        repaint();
@@ -116,7 +116,7 @@ public class Diagram extends JPanel {
 //    public void addAttribute(String name, String type, Point point) {
 //        ShaderNodeVariable param = new ShaderNodeVariable(type, "Attr", name);
 //        NodePanel np = new NodePanel(param, NodePanel.NodeType.Attribute);
-//        addNode(np);
+//        addShaderNode(np);
 //        np.setLocation(point.x, point.y);
 //        np.revalidate();
 //        repaint();
@@ -264,7 +264,6 @@ public class Diagram extends JPanel {
                 }
             }
         }
-        repaint();
     }
 
     private int getNodeTop(Component node) {

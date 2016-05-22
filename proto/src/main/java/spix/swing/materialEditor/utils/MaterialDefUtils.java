@@ -1,9 +1,10 @@
-package spix.app.utils;
+package spix.swing.materialEditor.utils;
 
 import com.jme3.material.MatParam;
 import com.jme3.material.MaterialDef;
 import com.jme3.material.TechniqueDef;
 import com.jme3.shader.*;
+import spix.swing.materialEditor.Dot;
 
 import java.util.List;
 import java.util.Set;
@@ -148,12 +149,19 @@ public class MaterialDefUtils {
         return false;
     }
 
-    public static String makeKey(VariableMapping mapping, String techName) {
+    public static String makeConnectionKey(String rightNameSpace, String rightName, String leftNameSpace, String leftName, String techName) {
+        return techName + "." + leftNameSpace + "." + leftName + "|" + rightNameSpace + "." + rightName;
+    }
 
-        String rightName = mapping.getRightVariable().getName();
-        String leftName = mapping.getLeftVariable().getName();
-        String leftSwizzle = mapping.getLeftSwizzling() != null ? "." + mapping.getLeftSwizzling() : "";
-        String rightSwizzle = mapping.getRightSwizzling() != null ? "." + mapping.getRightSwizzling() : "";
-        return techName + "/" + mapping.getLeftVariable().getNameSpace() + "." + leftName + leftSwizzle + "=" + mapping.getRightVariable().getNameSpace() + "." + rightName + rightSwizzle;
+    public static String makeShaderNodeKey(String techName, String nodeName ){
+        return techName + "." + nodeName;
+    }
+
+    public static String makeGlobalOutKey(String techName, String variableName, String index) {
+        return techName + ".Global." + variableName + "." + index;
+    }
+
+    public static String makeInputKey(String techName, String nameSpace, String variableName) {
+        return techName + "." + nameSpace + "." + variableName;
     }
 }

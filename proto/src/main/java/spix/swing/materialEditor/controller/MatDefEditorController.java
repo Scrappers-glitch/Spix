@@ -2,6 +2,7 @@ package spix.swing.materialEditor.controller;
 
 import com.jme3.material.*;
 import com.jme3.scene.Geometry;
+import com.jme3.shader.*;
 import groovy.util.ObservableList;
 import spix.app.DefaultConstants;
 import spix.app.utils.CloneUtils;
@@ -9,7 +10,7 @@ import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.nodes.NodePanel;
-import spix.util.SwingUtils;
+import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,8 +31,9 @@ public class MatDefEditorController {
     private SelectionModel sceneSelection;
     private SceneSelectionChangeListener sceneSelectionChangeListener = new SceneSelectionChangeListener();
     private List<TechniqueDef> techniques = new ArrayList<>();
-    private DataHandler dataHandler = new DataHandler();
+    private DiagramUiHandler diagramUiHandler;
     private SelectionHandler selectionHandler = new SelectionHandler();
+    private DataHandler dataHandler = new DataHandler();
 
 
     public MatDefEditorController(SwingGui gui, MatDefEditorWindow editor) {
@@ -39,6 +41,7 @@ public class MatDefEditorController {
         this.editor = editor;
         sceneSelection = gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         sceneSelection.addPropertyChangeListener(sceneSelectionChangeListener);
+        diagramUiHandler = new DiagramUiHandler(this);
     }
 
     public void cleanup() {
@@ -80,7 +83,7 @@ public class MatDefEditorController {
                     @Override
                     public void run() {
                         editor.setTitle(matDef.getName());
-                        dataHandler.initDiagram(MatDefEditorController.this, techniques.get(0), matDef, editor.getDiagram());
+                        initTechnique(techniques.get(0), matDef);
                     }
                 });
 
@@ -88,25 +91,71 @@ public class MatDefEditorController {
         }
     }
 
-    public Connection connect(Dot start, Dot end) {
-        Connection conn = dataHandler.connect(this, start, end, editor.getDiagram());
-        repaintDiagram();
+    void initTechnique(TechniqueDef technique, MaterialDef matDef) {
+        diagramUiHandler.clear();
+        diagramUiHandler.setCurrentTechniqueName(technique.getName());
 
-        return conn;
+        if (technique.isUsingShaderNodes()) {
+            MaterialDefUtils.computeShaderNodeGenerationInfo(technique);
+            List<ShaderNodeVariable> uniforms = new ArrayList<>();
+            MaterialDefUtils.getAllUniforms(technique, matDef, uniforms);
+
+            for (ShaderNode sn : technique.getShaderNodes()) {
+                diagramUiHandler.addShaderNodePanel(this, sn);
+            }
+
+            for (ShaderNodeVariable shaderNodeVariable : technique.getShaderGenerationInfo().getAttributes()) {
+                diagramUiHandler.addInputPanel(this, shaderNodeVariable);
+            }
+
+            for (ShaderNodeVariable shaderNodeVariable : uniforms) {
+                diagramUiHandler.addInputPanel(this, shaderNodeVariable);
+            }
+
+            for (ShaderNode sn : technique.getShaderNodes()) {
+                List<VariableMapping> ins = sn.getInputMapping();
+                if (ins != null) {
+                    for (VariableMapping mapping : ins) {
+                        diagramUiHandler.makeConnection(this, mapping, technique, sn.getName());
+                    }
+                }
+                List<VariableMapping> outs = sn.getOutputMapping();
+                if (outs != null) {
+                    for (VariableMapping mapping : outs) {
+                        diagramUiHandler.makeConnection(this, mapping, technique, sn.getName());
+                    }
+                }
+            }
+        }
+
+        //this will change when we have meta data
+        diagramUiHandler.autoLayout();
+    }
+
+    public Connection connect(Dot start, Dot end) {
+        // TODO: 22/05/2016 actually do the connection in the data model
+        return diagramUiHandler.connect(this, start, end);
     }
 
     public void removeConnection(Connection conn) {
-        dataHandler.removeConnection(conn, editor.getDiagram());
-        repaintDiagram();
+        // TODO: 22/05/2016 actually remove the connection in the data model
+        diagramUiHandler.removeConnection(conn);
     }
 
     public void removeNode(String key){
-        dataHandler.removeNode(key, editor.getDiagram());
-        repaintDiagram();
+        // TODO: 22/05/2016 actually remove the node in the data model
+        diagramUiHandler.removeNode(key);
     }
 
-    public void addNode(NodePanel node){
-        dataHandler.addNode(node, editor.getDiagram());
+
+    public void addShaderNode(ShaderNode sn){
+        diagramUiHandler.addShaderNodePanel(this, sn);
+        // TODO: 22/05/2016 actually add the node to the techniqueDef
+    }
+
+    public NodePanel addOutPanel( Shader.ShaderType type, ShaderNodeVariable var){
+        NodePanel node = diagramUiHandler.makeOutPanel(this, type, var);
+        return node;
     }
 
     public void multiMove(DraggablePanel movedPanel, int xOffset, int yOffset) {
@@ -120,12 +169,12 @@ public class MatDefEditorController {
 
     public void select(Selectable selectable, boolean multi ){
         selectionHandler.select(selectable, multi);
-        repaintDiagram();
+        diagramUiHandler.repaintDiagram();
     }
 
     public void findSelection(MouseEvent me, boolean multi){
         //Click on the diagram, we are trying to find if we clicked in a connection area and select it
-        Connection conn = dataHandler.pickForConnection(me, editor.getDiagram());
+        Connection conn = diagramUiHandler.pickForConnection(me);
 
         if( conn != null) {
             select(conn, multi);
@@ -135,7 +184,7 @@ public class MatDefEditorController {
 
         //we didn't find anything, let's unselect
         selectionHandler.clearSelection();
-        repaintDiagram();
+        diagramUiHandler.repaintDiagram();
     }
 
     public void removeSelected(){
@@ -148,18 +197,12 @@ public class MatDefEditorController {
     }
 
     public void dispatchEventToDiagram(MouseEvent e, Component source) {
-        MouseEvent me = SwingUtils.convertEvent(source, e, editor.getDiagram());
-        editor.getDiagram().dispatchEvent(me);
+        diagramUiHandler.dispatchEventToDiagram(e, source);
     }
 
-    void repaintDiagram() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                editor.getDiagram().repaint();
-            }
-        });
-
+    public void onNodeMoved(NodePanel node){
+        diagramUiHandler.fitContent();
+        // TODO: 22/05/2016 save the location of the node in the metadata
     }
 
 }

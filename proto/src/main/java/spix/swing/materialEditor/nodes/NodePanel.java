@@ -15,10 +15,12 @@ import java.beans.*;
 import java.util.*;
 import java.util.List;
 
+import static org.codehaus.groovy.tools.shell.util.Preferences.getEditor;
+
 /**
  * @author Nehon
  */
-public abstract class NodePanel extends DraggablePanel implements Selectable, PropertyChangeListener {
+public abstract class NodePanel extends DraggablePanel implements Selectable {
 
     protected List<JLabel> inputLabels = new ArrayList<>();
     protected List<JLabel> outputLabels = new ArrayList<>();
@@ -29,14 +31,15 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     private Color color;
     private Icon icon;
     private String nodeName;
-    private String techName;
+    private String key;
     private NodeToolBar toolBar;
     private boolean selected = false;
 
-    public NodePanel(MatDefEditorController controller, Color color, Icon icon) {
+    public NodePanel(MatDefEditorController controller, String key, Color color, Icon icon) {
         super(controller);
         this.color = color;
         this.icon = icon;
+        this.key = key;
         toolBar = new NodeToolBar(this);
         addKeyListener(new KeyAdapter() {
             @Override
@@ -59,11 +62,6 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
 //
 //    }
 
-    public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getPropertyName().equals("nodeName")) {
-            //       refresh((ShaderNodeBlock) evt.getSource());
-        }
-    }
 
     protected void init(List<ShaderNodeVariable> inputs, List<ShaderNodeVariable> outputs) {
 
@@ -169,7 +167,11 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     }
 
     public String getKey() {
-        return techName + "/" + nodeName;
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     @Override
@@ -186,7 +188,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
 
     @Override
     public void onMouseReleased(MouseEvent e) {
-        controller.getEditor().getDiagram().fitContent();
+        controller.onNodeMoved(this);
         if (svdx != getLocation().x) {
 //            firePropertyChange(ShaderNodeBlock.POSITION, svdx, getLocation().x);
 //            getDiagram().getEditorParent().savePositionToMetaData(getKey(), getLocation().x, getLocation().y);
@@ -350,10 +352,6 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
             MouseEvent me = SwingUtilities.convertMouseEvent(e.getComponent(), e, NodePanel.this);
             NodePanel.this.dispatchEvent(me);
         }
-    }
-
-    public void setTechName(String techName) {
-        this.techName = techName;
     }
 
 //    public void addInputMapping(InputMappingBlock block) {

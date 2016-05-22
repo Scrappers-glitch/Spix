@@ -36,7 +36,6 @@ public class Dot extends JPanel {
         Output
     }
 
-    //todo investigate this... seems to never be  used.
     public String getText() {
         return text;
     }

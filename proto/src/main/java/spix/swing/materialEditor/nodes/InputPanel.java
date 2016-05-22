@@ -23,8 +23,8 @@ public abstract class InputPanel extends NodePanel {
         WorldParam
     }
 
-    private InputPanel(MatDefEditorController controller, ShaderNodeVariable variable, Color color, Icon icon, Shader.ShaderType shaderType ){
-        super(controller, color, icon);
+    private InputPanel(MatDefEditorController controller, String key, ShaderNodeVariable variable, Color color, Icon icon, Shader.ShaderType shaderType ){
+        super(controller, key, color, icon);
         this.shaderType = shaderType;
         java.util.List<ShaderNodeVariable> outputs = new ArrayList<ShaderNodeVariable>();
         outputs.add(variable);
@@ -32,7 +32,7 @@ public abstract class InputPanel extends NodePanel {
 
     }
 
-    public static InputPanel create(MatDefEditorController controller, ShaderInputType type, ShaderNodeVariable var){
+    public static InputPanel create(MatDefEditorController controller, String key, ShaderInputType type, ShaderNodeVariable var){
         Color color = new Color(0,0,0);
         Shader.ShaderType sType = null;
         Icon icon = Icons.node;
@@ -52,15 +52,10 @@ public abstract class InputPanel extends NodePanel {
                 break;
         }
 
-        return new InputPanel(controller, var, color, icon, sType) {
+        return new InputPanel(controller, key, var, color, icon, sType) {
             @Override
             public Shader.ShaderType getShaderType() {
                 return shaderType;
-            }
-
-            @Override
-            public String getKey() {
-                return var.getNameSpace() + "." + var.getName();
             }
 
             @Override

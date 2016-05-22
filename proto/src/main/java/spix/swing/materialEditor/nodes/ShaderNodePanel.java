@@ -17,8 +17,8 @@ public abstract class ShaderNodePanel extends NodePanel implements Editable {
     private boolean editionAllowed = true;
     private List<String> filePaths = new ArrayList<>();
 
-    private ShaderNodePanel(MatDefEditorController controller, ShaderNode shaderNode, Color color, Icon icon){
-        super(controller, color, icon);
+    private ShaderNodePanel(MatDefEditorController controller, String key, ShaderNode shaderNode, Color color, Icon icon){
+        super(controller, key, color, icon);
         ShaderNodeDefinition def = shaderNode.getDefinition();
 
 //        node.addPropertyChangeListener(WeakListeners.propertyChange(this, node));
@@ -60,7 +60,7 @@ public abstract class ShaderNodePanel extends NodePanel implements Editable {
 //
 //    }
 
-    public static ShaderNodePanel create(MatDefEditorController controller, ShaderNode shaderNode){
+    public static ShaderNodePanel create(MatDefEditorController controller, String key,  ShaderNode shaderNode){
         Color color = new Color(0,0,0);
         Icon icon = Icons.node;
         Shader.ShaderType type = shaderNode.getDefinition().getType();
@@ -84,7 +84,7 @@ public abstract class ShaderNodePanel extends NodePanel implements Editable {
                 break;
         }
 
-        return new ShaderNodePanel(controller, shaderNode, color, icon) {
+        return new ShaderNodePanel(controller, key, shaderNode, color, icon) {
             @Override
             public Shader.ShaderType getShaderType() {
                 return type;
