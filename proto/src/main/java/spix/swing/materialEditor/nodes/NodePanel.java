@@ -6,7 +6,7 @@ package spix.swing.materialEditor.nodes;
 
 import com.jme3.shader.*;
 import spix.swing.materialEditor.*;
-import spix.swing.materialEditor.controller.MaterialDefController;
+import spix.swing.materialEditor.controller.MatDefEditorController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * @author Nehon
  */
-public abstract class NodePanel extends DraggablePanel implements Selectable, PropertyChangeListener {//InOut
+public abstract class NodePanel extends DraggablePanel implements Selectable, PropertyChangeListener {
 
     protected List<JLabel> inputLabels = new ArrayList<>();
     protected List<JLabel> outputLabels = new ArrayList<>();
@@ -31,9 +31,9 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     private String nodeName;
     private String techName;
     private NodeToolBar toolBar;
-    protected List<String> filePaths = new ArrayList<String>();
+    private boolean selected = false;
 
-    public NodePanel(MaterialDefController controller, Color color, Icon icon) {
+    public NodePanel(MatDefEditorController controller, Color color, Icon icon) {
         super(controller);
         this.color = color;
         this.icon = icon;
@@ -42,7 +42,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-                    delete();
+                    controller.removeSelected();
                 }
             }
         });
@@ -112,18 +112,30 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
         return outputDots.get(varName);
     }
 
+    public Map<String, Dot> getInputConnectPoints() {
+        return Collections.unmodifiableMap(inputDots);
+    }
+
+    public Map<String, Dot> getOutputConnectPoints(String varName) {
+        return Collections.unmodifiableMap(outputDots);
+    }
+
+    @Override
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
 
     @Override
     protected void paintComponent(Graphics g1) {
         Graphics2D g = (Graphics2D) g1;
         Color borderColor = Color.BLACK;
-        if (controller.getEditor().getDiagram().getSelectedItems().contains(this)) {
+        if (selected) {
             borderColor = Color.WHITE;
         }
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, // Anti-alias!
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-        if (controller.getEditor().getDiagram().getSelectedItems().contains(this)) {
+        if (selected) {
             Color[] colors = new Color[]{new Color(0.6f, 0.6f, 1.0f, 0.8f), new Color(0.6f, 0.6f, 1.0f, 0.5f)};
             float[] factors = {0f, 1f};
             g.setPaint(new RadialGradientPaint(getWidth() / 2, getHeight() / 2, getWidth() / 2, factors, colors));
@@ -168,7 +180,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
     @Override
     public void onMousePressed(MouseEvent e) {
         super.onMousePressed(e);
-        controller.getEditor().getDiagram().select(this, e.isShiftDown() || e.isControlDown());
+        controller.select(this, e.isShiftDown() || e.isControlDown());
         showToolBar();
     }
 
@@ -312,8 +324,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable, Pr
 
 
     public void delete() {
-        Diagram diag = controller.getEditor().getDiagram();
-        diag.removeSelected();
+        controller.removeSelected();
     }
 
 

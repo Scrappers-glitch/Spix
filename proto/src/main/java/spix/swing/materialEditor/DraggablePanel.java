@@ -4,7 +4,7 @@
  */
 package spix.swing.materialEditor;
 
-import spix.swing.materialEditor.controller.MaterialDefController;
+import spix.swing.materialEditor.controller.MatDefEditorController;
 
 import java.awt.event.*;
 import javax.swing.JPanel;
@@ -17,9 +17,9 @@ import javax.swing.SwingUtilities;
 public class DraggablePanel extends JPanel {
 
     protected int svdx, svdy, svdex, svdey;
-    protected MaterialDefController controller;
+    protected MatDefEditorController controller;
 
-    public DraggablePanel(MaterialDefController controller) {
+    public DraggablePanel(MatDefEditorController controller) {
         this.controller = controller;
         addMouseListener(new MouseAdapter() {
             @Override
@@ -45,7 +45,7 @@ public class DraggablePanel extends JPanel {
             svdex = e.getXOnScreen();
             svdey = e.getYOnScreen();
             saveLocation();
-            controller.getEditor().getDiagram().multiStartDrag(this);
+            controller.multiStartDrag(this);
             e.consume();
         }
     }
@@ -55,7 +55,7 @@ public class DraggablePanel extends JPanel {
             int xoffset = e.getLocationOnScreen().x - svdex;
             int yoffset = e.getLocationOnScreen().y - svdey;
             movePanel(xoffset, yoffset);
-            controller.getEditor().getDiagram().multiMove(this, xoffset, yoffset);
+            controller.multiMove(this, xoffset, yoffset);
             e.consume();
         }
     }
@@ -63,12 +63,12 @@ public class DraggablePanel extends JPanel {
     public void onMouseReleased(MouseEvent e) {
     }
 
-    protected void saveLocation() {
+    public void saveLocation() {
         svdy = getLocation().y;
         svdx = getLocation().x;
     }
 
-    protected void movePanel(int xoffset, int yoffset) {
+    public void movePanel(int xoffset, int yoffset) {
         setLocation(Math.max(0, svdx + xoffset), Math.max(0, svdy + yoffset));
     }
 

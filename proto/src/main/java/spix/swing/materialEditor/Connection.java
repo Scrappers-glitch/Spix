@@ -5,7 +5,7 @@
  */
 package spix.swing.materialEditor;
 
-import spix.swing.materialEditor.controller.MaterialDefController;
+import spix.swing.materialEditor.controller.MatDefEditorController;
 
 /**
  *
@@ -13,7 +13,7 @@ import spix.swing.materialEditor.controller.MaterialDefController;
  */
 public class Connection extends ConnectionCurve{
 
-    public Connection(MaterialDefController controller, Dot start, Dot end) {
+    public Connection(MatDefEditorController controller, Dot start, Dot end) {
         super(controller, start, end);
     }
     

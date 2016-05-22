@@ -1,11 +1,13 @@
 package spix.swing.materialEditor.nodes;
 
 import com.jme3.shader.*;
-import spix.swing.materialEditor.controller.MaterialDefController;
+import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by Nehon on 13/05/2016.
@@ -13,8 +15,9 @@ import java.awt.*;
 public abstract class ShaderNodePanel extends NodePanel implements Editable {
 
     private boolean editionAllowed = true;
+    private List<String> filePaths = new ArrayList<>();
 
-    private ShaderNodePanel(MaterialDefController controller, ShaderNode shaderNode, Color color, Icon icon){
+    private ShaderNodePanel(MatDefEditorController controller, ShaderNode shaderNode, Color color, Icon icon){
         super(controller, color, icon);
         ShaderNodeDefinition def = shaderNode.getDefinition();
 
@@ -57,7 +60,7 @@ public abstract class ShaderNodePanel extends NodePanel implements Editable {
 //
 //    }
 
-    public static ShaderNodePanel create(MaterialDefController controller, ShaderNode shaderNode){
+    public static ShaderNodePanel create(MatDefEditorController controller, ShaderNode shaderNode){
         Color color = new Color(0,0,0);
         Icon icon = Icons.node;
         Shader.ShaderType type = shaderNode.getDefinition().getType();

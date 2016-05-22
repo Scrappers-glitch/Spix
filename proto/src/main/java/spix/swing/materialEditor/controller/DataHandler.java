@@ -6,12 +6,15 @@ import spix.app.utils.MaterialDefUtils;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.nodes.*;
 
+import javax.swing.*;
+import java.awt.event.MouseEvent;
 import java.util.*;
+import java.util.List;
 
 /**
  * Created by Nehon on 21/05/2016.
  */
-public class TechniqueController {
+public class DataHandler {
 
     private TechniqueDef currentTechnique;
     private Map<String, NodePanel> nodes = new HashMap<>();
@@ -19,7 +22,7 @@ public class TechniqueController {
     private Map<Shader.ShaderType, Map<String, List<InOutPanel>>> outPanels = new HashMap<>();
     protected List<Connection> connections = new ArrayList<>();
 
-    void initDiagram(MaterialDefController controller, TechniqueDef technique, MaterialDef matDef, Diagram diagram ) {
+    void initDiagram(MatDefEditorController controller, TechniqueDef technique, MaterialDef matDef, Diagram diagram) {
         diagram.removeAll();
         nodes.clear();
         outPanels.clear();
@@ -79,7 +82,7 @@ public class TechniqueController {
         diagram.autoLayout();
     }
 
-    private void makeConnection(MaterialDefController controller, VariableMapping mapping, TechniqueDef technique, String nodeName, Diagram diagram) {
+    private void makeConnection(MatDefEditorController controller, VariableMapping mapping, TechniqueDef technique, String nodeName, Diagram diagram) {
         NodePanel forNode = nodes.get(currentTechnique.getName() + "/" + nodeName);
 
         Dot leftDot = findConnectPointForInput(controller, mapping, forNode);
@@ -88,29 +91,28 @@ public class TechniqueController {
         conn.makeKey(mapping, technique.getName());
     }
 
-    Connection connect(MaterialDefController controller, Dot start, Dot end, Diagram diagram) {
+    Connection connect(MatDefEditorController controller, Dot start, Dot end, Diagram diagram) {
         Connection conn = new Connection(controller, start, end);
         start.connect(conn);
         end.connect(conn);
         connections.add(conn);
         diagram.add(conn);
-        diagram.repaint();
         return conn;
     }
 
-    private Dot findConnectPointForInput(MaterialDefController controller, VariableMapping mapping, NodePanel forNode) {
+    private Dot findConnectPointForInput(MatDefEditorController controller, VariableMapping mapping, NodePanel forNode) {
         String nameSpace = mapping.getLeftVariable().getNameSpace();
         String name = mapping.getLeftVariable().getName();
         return getNodePanelForConnection(controller, forNode, nameSpace, name, true).getInputConnectPoint(name);
     }
 
-    private Dot findConnectPointForOutput(MaterialDefController controller, VariableMapping mapping, NodePanel forNode) {
+    private Dot findConnectPointForOutput(MatDefEditorController controller, VariableMapping mapping, NodePanel forNode) {
         String nameSpace = mapping.getRightVariable().getNameSpace();
         String name = mapping.getRightVariable().getName();
         return getNodePanelForConnection(controller, forNode, nameSpace, name, false).getOutputConnectPoint(name);
     }
 
-    private NodePanel getNodePanelForConnection(MaterialDefController controller, NodePanel forNode, String nameSpace, String name, boolean forInput) {
+    private NodePanel getNodePanelForConnection(MatDefEditorController controller, NodePanel forNode, String nameSpace, String name, boolean forInput) {
         NodePanel np = null;
         if (isShaderInput(nameSpace)) {
             np = nodes.get(nameSpace + "." + name);
@@ -132,7 +134,7 @@ public class TechniqueController {
         return nameSpace.equals("Global");
     }
 
-    private InOutPanel getOutPanel(MaterialDefController controller, Shader.ShaderType type, ShaderNodeVariable var, NodePanel node, boolean forInput) {
+    private InOutPanel getOutPanel(MatDefEditorController controller, Shader.ShaderType type, ShaderNodeVariable var, NodePanel node, boolean forInput) {
 
         List<InOutPanel> panelList = getOutPanelList(type, var);
 
@@ -170,7 +172,7 @@ public class TechniqueController {
         return panelList;
     }
 
-    void removeNode(String key, Diagram diagram){
+    void removeNode(String key, Diagram diagram) {
         NodePanel n = nodes.remove(key);
         //just to be sure... but it should never happen.
         assert n != null;
@@ -189,18 +191,17 @@ public class TechniqueController {
         }
 
         diagram.remove(n);
-        diagram.repaint();
     }
+
     public void removeConnection(Connection conn, Diagram diagram) {
         connections.remove(conn);
         conn.getEnd().disconnect(conn);
         conn.getStart().disconnect(conn);
         diagram.remove(conn);
-        diagram.repaint();
     }
 
 
-    void addNode(NodePanel node, Diagram diagram){
+    void addNode(NodePanel node, Diagram diagram) {
         node.setTechName(currentTechnique.getName());
         nodes.put(node.getKey(), node);
         diagram.add(node);
@@ -219,5 +220,15 @@ public class TechniqueController {
             }
         }
         return name + (count == 0 ? "" : count);
+    }
+
+    Connection pickForConnection(MouseEvent e, Diagram diagram) {
+        for (Connection connection : connections) {
+            MouseEvent me = SwingUtilities.convertMouseEvent(diagram, e, connection);
+            if (connection.pick(me)) {
+                return connection;
+            }
+        }
+        return null;
     }
 }

@@ -10,7 +10,8 @@ package spix.swing.materialEditor;
  */
 public interface Selectable {
     
-    public String getKey();    
+    String getKey();
+    void setSelected(boolean selected);
    
     
 }

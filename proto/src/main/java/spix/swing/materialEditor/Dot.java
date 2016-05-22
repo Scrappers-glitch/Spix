@@ -29,7 +29,7 @@ public class Dot extends JPanel {
     private int index = 1;
     private Set<Dot> pairs = new HashSet<>();
 
-    private MaterialDefController controller;
+    private MatDefEditorController controller;
 
     public enum ParamType {
         Input,
@@ -45,7 +45,7 @@ public class Dot extends JPanel {
         this.text = text;
     }
 
-    public Dot(MaterialDefController controller) {
+    public Dot(MatDefEditorController controller) {
         super();
         this.controller = controller;
         setMaximumSize(new Dimension(10, 10));
@@ -222,21 +222,21 @@ public class Dot extends JPanel {
 
     private class DotMouseListener extends MouseAdapter {
 
-        private DragController dragCtrl = controller.getDragController();
+        private DragHandler dragHandler = controller.getDragHandler();
 
         @Override
         public void mousePressed(MouseEvent e) {
             prevImg = img;
             img = Icons.imgOrange;
-            dragCtrl.setDraggedFrom(Dot.this);
+            dragHandler.setDraggedFrom(Dot.this);
             repaint();
             e.consume();
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            Dot from = dragCtrl.getDraggedFrom();
-            Dot to = dragCtrl.getDraggedTo();
+            Dot from = dragHandler.getDraggedFrom();
+            Dot to = dragHandler.getDraggedTo();
             if ( from == Dot.this && to != null) {
                 if (Dot.this.canConnect(to)) {
                     controller.connect(Dot.this, to);
@@ -244,22 +244,22 @@ public class Dot extends JPanel {
                     to.reset();
                     Dot.this.reset();
                 }
-                dragCtrl.setDraggedFrom(null);
-                dragCtrl.setDraggedTo(null);
+                dragHandler.setDraggedFrom(null);
+                dragHandler.setDraggedTo(null);
             } else {
                 reset();
-                dragCtrl.setDraggedFrom(null);
+                dragHandler.setDraggedFrom(null);
             }
             e.consume();
         }
 
         @Override
         public void mouseEntered(MouseEvent e) {
-            Dot from = dragCtrl.getDraggedFrom();
+            Dot from = dragHandler.getDraggedFrom();
             if (from != null && from != Dot.this) {
                 prevImg = img;
                 canConnect(from);
-                dragCtrl.setDraggedTo(Dot.this);
+                dragHandler.setDraggedTo(Dot.this);
                 from.canConnect(Dot.this);
             }
 
@@ -267,15 +267,15 @@ public class Dot extends JPanel {
 
         @Override
         public void mouseExited(MouseEvent e) {
-            Dot from = dragCtrl.getDraggedFrom();
-            Dot to = dragCtrl.getDraggedTo();
+            Dot from = dragHandler.getDraggedFrom();
+            Dot to = dragHandler.getDraggedTo();
             if (from != null) {
                 from.canConnect(null);
                 if (from != Dot.this) {
                     reset();
                 }
                 if (to == Dot.this) {
-                    dragCtrl.setDraggedTo(null);
+                    dragHandler.setDraggedTo(null);
                 }
             }
         }

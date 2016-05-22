@@ -1,7 +1,7 @@
 package spix.swing.materialEditor;
 
 import spix.swing.SwingGui;
-import spix.swing.materialEditor.controller.MaterialDefController;
+import spix.swing.materialEditor.controller.MatDefEditorController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,13 +19,13 @@ public class MatDefEditorWindow extends JFrame {
     public static final String MAT_DEF_EDITOR_Y = "MatDefEditor.y";
     private Preferences prefs = Preferences.userNodeForPackage(MatDefEditorWindow.class);
     private Diagram diagram;
-    private MaterialDefController controller;
+    private MatDefEditorController controller;
 
 
     public MatDefEditorWindow(SwingGui gui) {
         super("Material definition editor");
         setDefaultCloseOperation(HIDE_ON_CLOSE);
-        controller = new MaterialDefController(gui, this);
+        controller = new MatDefEditorController(gui, this);
 
         addComponentListener(new ComponentAdapter() {
             @Override

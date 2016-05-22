@@ -1,7 +1,7 @@
 package spix.swing.materialEditor.nodes;
 
 import com.jme3.shader.*;
-import spix.swing.materialEditor.controller.MaterialDefController;
+import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
 
 import javax.swing.*;
@@ -23,7 +23,7 @@ public abstract class InputPanel extends NodePanel {
         WorldParam
     }
 
-    private InputPanel(MaterialDefController controller, ShaderNodeVariable variable, Color color, Icon icon, Shader.ShaderType shaderType ){
+    private InputPanel(MatDefEditorController controller, ShaderNodeVariable variable, Color color, Icon icon, Shader.ShaderType shaderType ){
         super(controller, color, icon);
         this.shaderType = shaderType;
         java.util.List<ShaderNodeVariable> outputs = new ArrayList<ShaderNodeVariable>();
@@ -32,7 +32,7 @@ public abstract class InputPanel extends NodePanel {
 
     }
 
-    public static InputPanel create(MaterialDefController controller, ShaderInputType type, ShaderNodeVariable var){
+    public static InputPanel create(MatDefEditorController controller, ShaderInputType type, ShaderNodeVariable var){
         Color color = new Color(0,0,0);
         Shader.ShaderType sType = null;
         Icon icon = Icons.node;

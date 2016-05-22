@@ -5,7 +5,7 @@
 package spix.swing.materialEditor;
 
 import com.jme3.shader.Shader;
-import spix.swing.materialEditor.controller.MaterialDefController;
+import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.*;
 
@@ -13,8 +13,6 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
-import java.util.List;
 
 import static spix.swing.materialEditor.icons.Icons.node;
 
@@ -26,12 +24,12 @@ public class Diagram extends JPanel {
     private final static Cursor defCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
     private final static Cursor mvCursor = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
 
-    protected List<Selectable> selectedItems = new ArrayList<>();
+
     private final MyMenu contextMenu = new MyMenu("Add");
     //private final BackdropPanel backDrop = new BackdropPanel();
-    private MaterialDefController controller;
+    private MatDefEditorController controller;
 
-    public Diagram(MaterialDefController controller) {
+    public Diagram(MatDefEditorController controller) {
         this.controller = controller;
         setLayout(null);
         setBackground(new Color(40, 40, 40));
@@ -70,11 +68,7 @@ public class Diagram extends JPanel {
         //  parent.showShaderEditor(node.getName(), node.getType(), node.filePaths);
     }
 
-    protected void removeSelectedConnection(Selectable selectedItem) {
-        Connection selectedConnection = (Connection) selectedItem;
-        controller.removeConnection(selectedConnection);
-        //   parent.notifyRemoveConnection(selectedConnection);
-    }
+
 
     //
 //    public void addNodesFromDefs(List<ShaderNodeDefinition> defList, String path, Point clickPosition) {
@@ -128,85 +122,7 @@ public class Diagram extends JPanel {
 //        repaint();
 //    }
 //
-    public void removeSelected() {
 
-        int result = JOptionPane.showConfirmDialog(controller.getEditor(), "Delete all selected items, nodes and mappings?", "Delete Selected", JOptionPane.OK_CANCEL_OPTION);
-
-        if (result == JOptionPane.OK_OPTION) {
-            for (Selectable selectedItem : selectedItems) {
-                if (selectedItem instanceof NodePanel) {
-                    removeSelectedNode(selectedItem);
-                }
-                if (selectedItem instanceof Connection) {
-                    removeSelectedConnection(selectedItem);
-                }
-            }
-            selectedItems.clear();
-        }
-    }
-
-    private void removeSelectedNode(Selectable selectedItem) {
-        controller.removeNode(selectedItem.getKey());
-    }
-
-    public List<Selectable> getSelectedItems() {
-        return selectedItems;
-    }
-
-    /**
-     * selection from the editor. Select the item and notify the topComponent
-     *
-     * @param selectable
-     */
-    public void select(Selectable selectable, boolean multi) {
-        doSelect(selectable, multi);
-    }
-
-    public void multiMove(DraggablePanel movedPanel, int xOffset, int yOffset) {
-
-        for (Selectable selectedItem : selectedItems) {
-            if (selectedItem != movedPanel) {
-                if (selectedItem instanceof DraggablePanel) {
-                    ((DraggablePanel) selectedItem).movePanel(xOffset, yOffset);
-                }
-            }
-        }
-    }
-
-    public void multiStartDrag(DraggablePanel movedPanel) {
-        for (Selectable selectedItem : selectedItems) {
-            if (selectedItem != movedPanel) {
-                if (selectedItem instanceof DraggablePanel) {
-                    ((DraggablePanel) selectedItem).saveLocation();
-                }
-            }
-        }
-    }
-
-    /**
-     * do select the item and repaint the diagram
-     *
-     * @param selectable
-     * @return
-     */
-    private Selectable doSelect(Selectable selectable, boolean multi) {
-
-
-        if (!multi && !selectedItems.contains(selectable)) {
-            selectedItems.clear();
-        }
-
-        if (selectable != null) {
-            selectedItems.add(selectable);
-        }
-
-        if (selectable instanceof Component) {
-            ((Component) selectable).requestFocusInWindow();
-        }
-        repaint();
-
-        return selectable;
-    }
 
     private JMenuItem createMenuItem(String text, Icon icon) {
         JMenuItem item = new JMenuItem(text, icon);
@@ -393,23 +309,7 @@ public class Diagram extends JPanel {
         public void mousePressed(MouseEvent e) {
 
             if (SwingUtilities.isLeftMouseButton(e)) {
-
-                //Click on the diagram, we are trying to find if we clicked in a connection area and select it
-                for (Component comp: getComponents()) {
-                    if(comp instanceof Connection) {
-                        Connection connection = (Connection) comp;
-                        MouseEvent me = SwingUtilities.convertMouseEvent(Diagram.this, e, connection);
-
-                        if (connection.pick(me)) {
-                            select(connection, e.isShiftDown() || e.isControlDown());
-                            e.consume();
-                            return;
-                        }
-                    }
-                }
-                //we didn't find anything, let's unselect
-                selectedItems.clear();
-                repaint();
+                controller.findSelection(e, e.isShiftDown() || e.isControlDown());
             } else if (SwingUtilities.isMiddleMouseButton(e)) {
                 setCursor(mvCursor);
                 pp.setLocation(e.getPoint());
@@ -446,6 +346,8 @@ public class Diagram extends JPanel {
         }
 
     }
+
+
 
     private class MyMenu extends JPopupMenu {
 

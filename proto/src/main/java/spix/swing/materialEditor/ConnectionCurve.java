@@ -6,19 +6,17 @@ package spix.swing.materialEditor;
 
 import com.jme3.shader.VariableMapping;
 import spix.app.utils.MaterialDefUtils;
-import spix.swing.materialEditor.controller.MaterialDefController;
-import spix.util.SwingUtils;
+import spix.swing.materialEditor.controller.MatDefEditorController;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
-import java.beans.*;
 
 /**
  * @author Nehon
  */
-public class ConnectionCurve extends JPanel implements Selectable, PropertyChangeListener {
+public class ConnectionCurve extends JPanel implements Selectable {
 
     protected Dot start;
     protected Dot end;
@@ -27,7 +25,7 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
     private int nbCurve = 2;
     private final CubicCurve2D[] curves = new CubicCurve2D[2];
     private String key = "";
-    private MaterialDefController controller;
+    private MatDefEditorController controller;
 
     private final static Color LIGHT_GREY = new Color(190, 190, 190);
     private final static Color VERY_DARK_GREY = new Color(5, 5, 5);
@@ -39,9 +37,11 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
     private final Point p3 = new Point();
     private final Point p4 = new Point();
 
+    private boolean selected = false;
+
     private ComponentManager componentListener = new ComponentManager();
 
-    public ConnectionCurve(MaterialDefController controller, Dot start, Dot end) {
+    public ConnectionCurve(MatDefEditorController controller, Dot start, Dot end) {
         this.controller = controller;
         if (start.getParamType() == Dot.ParamType.Output) {
             this.start = start;
@@ -80,6 +80,11 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
     }
 
     @Override
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
+
+    @Override
     protected void paintComponent(Graphics g) {
 
         Graphics2D g2 = ((Graphics2D) g);
@@ -89,7 +94,7 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
 
         g2.setStroke(new BasicStroke(4));
         Path2D.Double path1 = new Path2D.Double();
-        if (getDiagram().getSelectedItems().contains(this)) {
+        if (selected) {
             g.setColor(SELECTED_COLOR);
         } else {
             g.setColor(VERY_DARK_GREY);
@@ -128,7 +133,7 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
         ((Graphics2D) g).draw(path1);
         g2.setStroke(new BasicStroke(2));
 
-        if (getDiagram().getSelectedItems().contains(this)) {
+        if (selected) {
             g.setColor(Color.WHITE);
         } else {
             g.setColor(LIGHT_GREY);
@@ -292,20 +297,6 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
         setSize(maxX - minX, maxY - minY);
     }
 
-
-    // TODO: 21/05/2016 This can be moved to the controller as it's only used for selection.
-    // Selection should be handled globally and components should only have a selected flag to properly render when selected.
-    private Diagram getDiagram() {
-        return controller.getEditor().getDiagram();
-    }
-
-
-    // TODO: 21/05/2016 maybe put this as a controller method, this would avoid having a reference to the diagram in here.
-    private void dispatchEventToDiagram(MouseEvent e) {
-        MouseEvent me = SwingUtils.convertEvent(this, e, getDiagram());
-        getDiagram().dispatchEvent(me);
-    }
-
     public boolean pick(MouseEvent e) {
 
         requestFocusInWindow(true);
@@ -315,11 +306,6 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
             return curves[i].intersects(e.getX() - margin, e.getY() - margin, e.getX() + margin, e.getY() + margin);
         }
         return false;
-    }
-
-    public void propertyChange(PropertyChangeEvent evt) {
-//        MappingBlock map = (MappingBlock) evt.getSource();
-//        key = MaterialUtils.makeKey(map, getDiagram().getCurrentTechniqueName());
     }
 
     public Dot getStart() {
@@ -334,27 +320,27 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            dispatchEventToDiagram(e);
+            controller.dispatchEventToDiagram(e, ConnectionCurve.this);
         }
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            dispatchEventToDiagram(e);
+            controller.dispatchEventToDiagram(e, ConnectionCurve.this);
         }
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            dispatchEventToDiagram(e);
+            controller.dispatchEventToDiagram(e, ConnectionCurve.this);
         }
 
         @Override
         public void mousePressed(MouseEvent e) {
-            dispatchEventToDiagram(e);
+            controller.dispatchEventToDiagram(e, ConnectionCurve.this);
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            dispatchEventToDiagram(e);
+            controller.dispatchEventToDiagram(e, ConnectionCurve.this);
         }
     }
 
@@ -363,8 +349,7 @@ public class ConnectionCurve extends JPanel implements Selectable, PropertyChang
         public void keyPressed(KeyEvent e) {
 
             if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-                Diagram diag = getDiagram();
-                diag.removeSelected();
+                controller.removeSelected();
             }
         }
     }

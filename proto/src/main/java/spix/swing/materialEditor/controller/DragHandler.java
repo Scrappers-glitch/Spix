@@ -5,7 +5,7 @@ import spix.swing.materialEditor.Dot;
 /**
  * Created by Nehon on 19/05/2016.
  */
-public class DragController {
+public class DragHandler {
 
     private Dot draggedFrom;
     private Dot draggedTo;
