@@ -23,7 +23,7 @@ public class Diagram extends JPanel {
 
     private final static Cursor defCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
     private final static Cursor mvCursor = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
-
+    private final Point contextMenuPosition = new Point(0, 0);
 
     private final MyMenu contextMenu = new MyMenu("Add");
     //private final BackdropPanel backDrop = new BackdropPanel();
@@ -146,7 +146,7 @@ public class Diagram extends JPanel {
         nodeItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                AddNodeDialog d = new AddNodeDialog(null, true, parent.obj.getLookup().lookup(ProjectAssetManager.class), Diagram.this, clickLoc);
+//                AddNodeDialog d = new AddNodeDialog(null, true, parent.obj.getLookup().lookup(ProjectAssetManager.class), Diagram.this, contextMenuPosition);
 //                d.setLocationRelativeTo(null);
 //                d.setVisible(true);
             }
@@ -158,7 +158,7 @@ public class Diagram extends JPanel {
         matParamItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                AddMaterialParameterDialog d = new AddMaterialParameterDialog(null, true, Diagram.this, clickLoc);
+//                AddMaterialParameterDialog d = new AddMaterialParameterDialog(null, true, Diagram.this, contextMenuPosition);
 //                d.setLocationRelativeTo(null);
 //                d.setVisible(true);
             }
@@ -168,7 +168,7 @@ public class Diagram extends JPanel {
         worldParamItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                AddWorldParameterDialog d = new AddWorldParameterDialog(null, true, Diagram.this, clickLoc);
+//                AddWorldParameterDialog d = new AddWorldParameterDialog(null, true, Diagram.this, contextMenuPosition);
 //                d.setLocationRelativeTo(null);
 //                d.setVisible(true);
             }
@@ -178,9 +178,7 @@ public class Diagram extends JPanel {
         attributeItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                AddAttributeDialog d = new AddAttributeDialog(null, true, Diagram.this, clickLoc);
-//                d.setLocationRelativeTo(null);
-//                d.setVisible(true);
+                controller.displayAddAttibuteDialog(contextMenuPosition);
             }
         });
         contextMenu.add(attributeItem);
@@ -302,7 +300,7 @@ public class Diagram extends JPanel {
 
     private class DiagramMouseListener extends MouseAdapter {
         private final Point pp = new Point();
-        private final Point clickLoc = new Point(0, 0);
+
 
         @Override
         public void mousePressed(MouseEvent e) {
@@ -326,7 +324,7 @@ public class Diagram extends JPanel {
                     break;
                 case MouseEvent.BUTTON3:
                     contextMenu.show(Diagram.this, e.getX(), e.getY());
-                    clickLoc.setLocation(e.getX(), e.getY());
+                    contextMenuPosition.setLocation(e.getX(), e.getY());
                     break;
             }
 

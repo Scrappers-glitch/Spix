@@ -210,7 +210,7 @@ public class DiagramUiHandler {
         attachNodePanel(node);
     }
 
-    void addInputPanel(MatDefEditorController controller, ShaderNodeVariable shaderNodeVariable) {
+    NodePanel addInputPanel(MatDefEditorController controller, ShaderNodeVariable shaderNodeVariable) {
         String key = MaterialDefUtils.makeInputKey(currentTechniqueName, shaderNodeVariable.getNameSpace(), shaderNodeVariable.getName());
         NodePanel node = nodes.get(key);
         if (node == null) {
@@ -219,7 +219,7 @@ public class DiagramUiHandler {
                 case "MatParam":
                     node = InputPanel.create(controller, key, InputPanel.ShaderInputType.MatParam, shaderNodeVariable);
                     break;
-                case "Attribute":
+                case "Attr":
                     node = InputPanel.create(controller, key, InputPanel.ShaderInputType.Attribute, shaderNodeVariable);
                     break;
                 case "WorldParam":
@@ -229,6 +229,7 @@ public class DiagramUiHandler {
             nodes.put(node.getKey(), node);
             attachNodePanel(node);
         }
+        return node;
     }
 
 

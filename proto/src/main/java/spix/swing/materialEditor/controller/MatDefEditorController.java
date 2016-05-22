@@ -9,7 +9,8 @@ import spix.app.utils.CloneUtils;
 import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
-import spix.swing.materialEditor.nodes.NodePanel;
+import spix.swing.materialEditor.dialog.AddAttributeDialog;
+import spix.swing.materialEditor.nodes.*;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import javax.swing.*;
@@ -147,7 +148,7 @@ public class MatDefEditorController {
         dataHandler.removeMappingForKey(conn.getKey());
     }
 
-    public void removeNode(String key){
+    public void removeNode(String key) {
 
         /*the order in those calls is very important.
             1. the node deletion in the ui
@@ -162,12 +163,12 @@ public class MatDefEditorController {
     }
 
 
-    public void addShaderNode(ShaderNode sn){
+    public void addShaderNode(ShaderNode sn) {
         diagramUiHandler.addShaderNodePanel(this, sn);
         // TODO: 22/05/2016 actually add the node to the techniqueDef
     }
 
-    public NodePanel addOutPanel( Shader.ShaderType type, ShaderNodeVariable var){
+    public NodePanel addOutPanel(Shader.ShaderType type, ShaderNodeVariable var) {
         NodePanel node = diagramUiHandler.makeOutPanel(this, type, var);
         return node;
     }
@@ -181,16 +182,16 @@ public class MatDefEditorController {
     }
 
 
-    public void select(Selectable selectable, boolean multi ){
+    public void select(Selectable selectable, boolean multi) {
         selectionHandler.select(selectable, multi);
         diagramUiHandler.refreshDiagram();
     }
 
-    public void findSelection(MouseEvent me, boolean multi){
+    public void findSelection(MouseEvent me, boolean multi) {
         //Click on the diagram, we are trying to find if we clicked in a connection area and select it
         Connection conn = diagramUiHandler.pickForConnection(me);
 
-        if( conn != null) {
+        if (conn != null) {
             select(conn, multi);
             me.consume();
             return;
@@ -201,7 +202,7 @@ public class MatDefEditorController {
         diagramUiHandler.refreshDiagram();
     }
 
-    public void removeSelected(){
+    public void removeSelected() {
 
         int result = JOptionPane.showConfirmDialog(editor, "Delete all selected items, nodes and mappings?", "Delete Selected", JOptionPane.OK_CANCEL_OPTION);
 
@@ -214,9 +215,21 @@ public class MatDefEditorController {
         diagramUiHandler.dispatchEventToDiagram(e, source);
     }
 
-    public void onNodeMoved(NodePanel node){
+    public void onNodeMoved(NodePanel node) {
         diagramUiHandler.fitContent();
         // TODO: 22/05/2016 save the location of the node in the metadata
+    }
+
+    public void displayAddAttibuteDialog(Point clickPosition) {
+        AddAttributeDialog d = new AddAttributeDialog(editor, true, this, clickPosition);
+        d.setLocationRelativeTo(editor);
+        d.setVisible(true);
+    }
+    public void addAttribute(String name, String type, Point point) {
+        ShaderNodeVariable param = new ShaderNodeVariable(type, "Attr", name);
+        NodePanel node = diagramUiHandler.addInputPanel(this, param);
+        node.setLocation(point);
+        diagramUiHandler.refreshDiagram();
     }
 
 }
