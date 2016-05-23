@@ -165,11 +165,15 @@ public class DiagramUiHandler {
             //It smells like a race condition between several threads, but I should always be on the swing thread...
             //in case it happens again I display all I can here and crash the app.
             System.err.println("Is event dispatch thread: " + SwingUtilities.isEventDispatchThread());
+            for (String k : nodes.keySet()) {
+                System.err.println("Key: "+ k + " => " + nodes.get(k));
+            }
             throw new IllegalArgumentException("Cannot delete node for key: " + key);
         }
 
         if (n instanceof InOutPanel) {
-            outPanels.get(n.getShaderType()).get(n.getNodeName()).remove(n);
+            InOutPanel p = (InOutPanel)n;
+            outPanels.get(p.getShaderType()).get(p.getVarName()).remove(p);
         }
         n.cleanup();
 
