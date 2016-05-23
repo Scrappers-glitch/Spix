@@ -11,11 +11,8 @@ import spix.swing.materialEditor.controller.MatDefEditorController;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.*;
 import java.util.*;
 import java.util.List;
-
-import static org.codehaus.groovy.tools.shell.util.Preferences.getEditor;
 
 /**
  * @author Nehon
@@ -28,12 +25,15 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
     protected Map<String, Dot> outputDots = new LinkedHashMap<>();
     private JPanel content;
     private JLabel header;
+    private JLabel previewLabel;
     private Color color;
     private Icon icon;
     private String nodeName;
     private String key;
     private NodeToolBar toolBar;
     private boolean selected = false;
+    protected boolean displayPreview = false;
+
 
     public NodePanel(MatDefEditorController controller, String key, Color color, Icon icon) {
         super(controller);
@@ -85,7 +85,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
 
         initHeader(header);
         setOpaque(false);
-        setBounds(0, 0, 150, 30 + inputs.size() * 20 + outputs.size() * 20);
+        setBounds(0, 0, 150, 30 + inputs.size() * 20 + outputs.size() * 20 + (displayPreview?95:0));
 
     }
 
@@ -237,6 +237,23 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
 
         int txtLength = 100;
 
+
+        if(displayPreview){
+            previewLabel = new JLabel();
+            previewLabel.setBackground(new java.awt.Color(100, 100, 255));
+            previewLabel.setForeground(new java.awt.Color(100, 100, 255));
+            previewLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+            previewLabel.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+            previewLabel.setIconTextGap(0);
+            previewLabel.setMaximumSize(new java.awt.Dimension(128, 128));
+            previewLabel.setMinimumSize(new java.awt.Dimension(128, 128));
+            previewLabel.setOpaque(true);
+            previewLabel.setPreferredSize(new java.awt.Dimension(128, 128));
+            add(previewLabel);
+            previewLabel.setBounds(11, 24, 128, 128);
+        }
+
+
         GroupLayout.ParallelGroup grpHoriz = contentLayout.createParallelGroup(GroupLayout.Alignment.LEADING);
 
         int i = 0;
@@ -248,6 +265,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
                     .addComponent(outputDots.get(key), GroupLayout.PREFERRED_SIZE, 10, GroupLayout.PREFERRED_SIZE));
             i++;
         }
+
         i = 0;
         for (String key : inputDots.keySet()) {
             grpHoriz.addGroup(GroupLayout.Alignment.LEADING, contentLayout.createSequentialGroup()
@@ -262,21 +280,34 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         GroupLayout.ParallelGroup grpVert = contentLayout.createParallelGroup(GroupLayout.Alignment.LEADING);
 
         GroupLayout.SequentialGroup grp = contentLayout.createSequentialGroup();
-        i = 0;
-        for (String key : inputDots.keySet()) {
-            grp.addGroup(contentLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(inputDots.get(key), GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(inputLabels.get(i))).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-            i++;
-        }
-        i = 0;
-        for (String key : outputDots.keySet()) {
-            grp.addGroup(contentLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(outputDots.get(key), GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(outputLabels.get(i))).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-            i++;
-        }
 
+        if (displayPreview) {
+            grp.addGroup(contentLayout.createSequentialGroup()
+                    .addGap(50, 50, 50));
+            grp.addGroup(contentLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                    .addComponent(inputDots.get(inputDots.keySet().iterator().next()), GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(inputLabels.get(0))
+                    .addComponent(outputDots.get(outputDots.keySet().iterator().next()), GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(outputLabels.get(0)));
+
+        } else {
+
+            i = 0;
+            for (String key : inputDots.keySet()) {
+                grp.addGroup(contentLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                        .addComponent(inputDots.get(key), GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(inputLabels.get(i))).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
+                i++;
+            }
+
+            i = 0;
+            for (String key : outputDots.keySet()) {
+                grp.addGroup(contentLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                        .addComponent(outputDots.get(key), GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(outputLabels.get(i))).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
+                i++;
+            }
+        }
         grpVert.addGroup(GroupLayout.Alignment.TRAILING, grp);
 
         contentLayout.setVerticalGroup(grpVert);
@@ -287,7 +318,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                         .addGroup(GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                 .addGap(6, 6, 6)
-                                .addComponent(header, 100, 100, 100))
+                                .addComponent(header, 135, 135, 135))
                         .addGroup(GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                 .addGap(6, 6, 6))
                         .addComponent(content, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));

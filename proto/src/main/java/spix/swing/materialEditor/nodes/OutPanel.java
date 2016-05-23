@@ -19,6 +19,7 @@ public abstract class OutPanel extends NodePanel {
 
     private OutPanel(MatDefEditorController controller, String key, ShaderNodeVariable var, Color color, Icon icon){
         super(controller, key, color, icon);
+        displayPreview = true;
         varName = var.getName();
         setNodeName(var.getNameSpace());
         List<ShaderNodeVariable> outputs = new ArrayList<ShaderNodeVariable>();
@@ -79,7 +80,8 @@ public abstract class OutPanel extends NodePanel {
 
             @Override
             protected void initHeader(JLabel header) {
-                header.setText(type.name() + " out");
+                //header.setText(getVarName() + " (" +type.name().substring(0,4)+")");
+                header.setText(type.name()+": "+getVarName());
                 header.setToolTipText(type.name() + " shader output");
             }
         };
