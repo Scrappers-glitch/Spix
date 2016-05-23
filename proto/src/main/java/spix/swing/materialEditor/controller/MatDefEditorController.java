@@ -9,7 +9,7 @@ import spix.app.utils.CloneUtils;
 import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
-import spix.swing.materialEditor.dialog.AddAttributeDialog;
+import spix.swing.materialEditor.dialog.*;
 import spix.swing.materialEditor.nodes.*;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
@@ -222,7 +222,6 @@ public class MatDefEditorController {
 
     public void displayAddAttibuteDialog(Point clickPosition) {
         AddAttributeDialog d = new AddAttributeDialog(editor, true, this, clickPosition);
-        d.setLocationRelativeTo(editor);
         d.setVisible(true);
     }
     public void addAttribute(String name, String type, Point point) {
@@ -232,4 +231,18 @@ public class MatDefEditorController {
         diagramUiHandler.refreshDiagram();
     }
 
+    public void displayAddMatParamDialog(Point clickPosition) {
+        AddMaterialParameterDialog d = new AddMaterialParameterDialog(editor, true, this, clickPosition);
+        d.setVisible(true);
+    }
+    public void addMatParam(String name, String type, Point point) {
+        if (type.equals("Color")) {
+            type = "Vector4";
+        }
+        type = VarType.valueOf(type).getGlslType();
+        ShaderNodeVariable param = new ShaderNodeVariable(type, "MatParam", name);
+        NodePanel node = diagramUiHandler.addInputPanel(this, param);
+        node.setLocation(point);
+        diagramUiHandler.refreshDiagram();
+    }
 }

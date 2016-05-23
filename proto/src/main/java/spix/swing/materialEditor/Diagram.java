@@ -158,9 +158,7 @@ public class Diagram extends JPanel {
         matParamItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                AddMaterialParameterDialog d = new AddMaterialParameterDialog(null, true, Diagram.this, contextMenuPosition);
-//                d.setLocationRelativeTo(null);
-//                d.setVisible(true);
+                controller.displayAddMatParamDialog(contextMenuPosition);
             }
         });
         contextMenu.add(matParamItem);

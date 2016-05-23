@@ -4,11 +4,12 @@
  */
 package spix.swing.materialEditor.dialog;
 
-import com.jme3.scene.VertexBuffer;
+import com.jme3.shader.VarType;
 import spix.swing.materialEditor.controller.MatDefEditorController;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.*;
 
 /**
@@ -16,28 +17,28 @@ import java.util.*;
  * @author Nehon
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class AddAttributeDialog extends javax.swing.JDialog {
-
-    private Point clickPosition;
-    private MatDefEditorController controller;
+public class AddMaterialParameterDialog extends javax.swing.JDialog {
 
     private ResourceBundle labels = ResourceBundle.getBundle("Bundle", Locale.ROOT);
+    private MatDefEditorController controller;
+    private Point clickPosition;
 
     /**
      * Creates new form AddMaterialParameter
      */
-    public AddAttributeDialog(java.awt.Frame parent, boolean modal, MatDefEditorController controller, Point clickPosition) {
+    public AddMaterialParameterDialog(java.awt.Frame parent, boolean modal, MatDefEditorController controller, Point clickPosition) {
         super(parent, modal);
+
         initComponents();
         DefaultComboBoxModel model = new DefaultComboBoxModel();
+        model.addElement("Color");
+        for (VarType varType : VarType.values()) {
 
-        for (VertexBuffer.Type attr : VertexBuffer.Type.values()) {
-            model.addElement("in" + attr.name());
+            model.addElement(varType.name());
         }
         this.controller = controller;
         this.clickPosition = clickPosition;
-        nameField.setModel(model);
-        updateType();
+        typeField.setModel(model);
         setLocationRelativeTo(parent);
     }
 
@@ -53,22 +54,22 @@ public class AddAttributeDialog extends javax.swing.JDialog {
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        nameField = new javax.swing.JComboBox();
-        jLabel2 = new javax.swing.JLabel();
-        typeField = new javax.swing.JTextField();
+        typeField = new javax.swing.JComboBox();
+        jLabel3 = new javax.swing.JLabel();
+        nameField = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle(labels.getString("AddAttributeDialog.title")); // NOI18N
+        setTitle(labels.getString("AddMaterialParameterDialog.title")); // NOI18N
         setModal(true);
 
-        jButton1.setText(labels.getString("AddAttributeDialog.jButton1.text")); // NOI18N
+        jButton1.setText(labels.getString("AddMaterialParameterDialog.jButton1.text")); // NOI18N
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
-        jButton2.setText(labels.getString("AddAttributeDialog.jButton2.text")); // NOI18N
+        jButton2.setText(labels.getString("AddMaterialParameterDialog.jButton2.text")); // NOI18N
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
@@ -76,18 +77,18 @@ public class AddAttributeDialog extends javax.swing.JDialog {
         });
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel1.setText(labels.getString("AddAttributeDialog.jLabel1.text")); // NOI18N
+        jLabel1.setText(labels.getString("AddMaterialParameterDialog.jLabel1.text")); // NOI18N
 
-        nameField.setModel(new DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        nameField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                nameFieldActionPerformed(evt);
+        typeField.setModel(new DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        jLabel3.setText(labels.getString("AddMaterialParameterDialog.jLabel3.text")); // NOI18N
+
+        nameField.setText(labels.getString("AddMaterialParameterDialog.nameField.text")); // NOI18N
+        nameField.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(KeyEvent evt) {
+                nameFieldKeyPressed(evt);
             }
         });
-
-        jLabel2.setText(labels.getString("AddAttributeDialog.jLabel2.text")); // NOI18N
-
-        typeField.setText(labels.getString("AddAttributeDialog.typeField.text")); // NOI18N
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -102,12 +103,12 @@ public class AddAttributeDialog extends javax.swing.JDialog {
                         .addComponent(jButton1))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel2)
+                            .addComponent(jLabel3)
                             .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(nameField, 0, 253, Short.MAX_VALUE)
-                            .addComponent(typeField))))
+                            .addComponent(typeField, 0, 253, Short.MAX_VALUE)
+                            .addComponent(nameField))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -116,12 +117,12 @@ public class AddAttributeDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(nameField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
                     .addComponent(typeField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(nameField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 23, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
                     .addComponent(jButton2))
@@ -136,66 +137,31 @@ public class AddAttributeDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        controller.addAttribute((String) nameField.getSelectedItem(), typeField.getText(), clickPosition);
-        setVisible(false);
+        okPressed();
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void nameFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nameFieldActionPerformed
-        updateType();
-    }
-
-    private void updateType() {
-        VertexBuffer.Type attr = VertexBuffer.Type.valueOf(((String) nameField.getSelectedItem()).replaceFirst("in", ""));
-        switch (attr) {
-
-            case BoneWeight:
-
-            case BindPoseNormal:
-            case Binormal:
-
-            case Normal:
-                typeField.setText("vec3");
-                break;
-
-            case Size:
-                typeField.setText("float");
-                break;
-
-            case Position:
-            case BindPosePosition:
-            case BindPoseTangent:
-            case Tangent:
-            case Color:
-                typeField.setText("vec4");
-                break;
-            case InterleavedData:
-                typeField.setText("int");
-                break;
-            case Index:
-                typeField.setText("uint");
-                break;
-            case BoneIndex:
-                typeField.setText("uvec4");
-                break;
-
-            case TexCoord:
-            case TexCoord2:
-            case TexCoord3:
-            case TexCoord4:
-            case TexCoord5:
-            case TexCoord6:
-            case TexCoord7:
-            case TexCoord8:
-                typeField.setText("vec2");
-                break;
+    private void nameFieldKeyPressed(KeyEvent evt) {//GEN-FIRST:event_nameFieldKeyPressed
+        if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+            okPressed();
         }
-    }//GEN-LAST:event_nameFieldActionPerformed
+    }//GEN-LAST:event_nameFieldKeyPressed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JComboBox nameField;
-    private javax.swing.JTextField typeField;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JTextField nameField;
+    private javax.swing.JComboBox typeField;
     // End of variables declaration//GEN-END:variables
+
+    private void okPressed() {
+        String name = nameField.getText();
+        if (name.length() > 1) {
+            name = name.substring(0, 1).toUpperCase() + name.substring(1);
+        } else {
+            name = name.toUpperCase();
+        }
+        controller.addMatParam(name, (String) typeField.getSelectedItem(), clickPosition);
+        setVisible(false);
+    }
 }

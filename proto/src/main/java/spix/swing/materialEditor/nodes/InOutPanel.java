@@ -17,8 +17,11 @@ import static com.jme3.shader.Shader.ShaderType.Vertex;
  */
 public abstract class InOutPanel extends NodePanel {
 
+    private String varName = "";
+
     private InOutPanel(MatDefEditorController controller, String key, ShaderNodeVariable var, Color color, Icon icon){
         super(controller, key, color, icon);
+        varName = var.getName();
         setNodeName(var.getNameSpace());
         List<ShaderNodeVariable> outputs = new ArrayList<ShaderNodeVariable>();
         outputs.add(new ShaderNodeVariable(var.getType(),var.getName()));
@@ -26,6 +29,10 @@ public abstract class InOutPanel extends NodePanel {
         inputs.add(new ShaderNodeVariable(var.getType(),var.getName()));
 
         init(inputs, outputs);
+    }
+
+    public String getVarName() {
+        return varName;
     }
 
     public boolean isInputAvailable(){
