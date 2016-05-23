@@ -166,7 +166,6 @@ public class MatDefEditorController {
         dataHandler.removeShaderNodeForKey(key);
     }
 
-
     public NodePanel addShaderNode(ShaderNode sn) {
         dataHandler.addShaderNode(sn);
         return diagramUiHandler.addShaderNodePanel(this, sn);
@@ -177,52 +176,16 @@ public class MatDefEditorController {
         return node;
     }
 
-    public void multiMove(DraggablePanel movedPanel, int xOffset, int yOffset) {
-        selectionHandler.multiMove(movedPanel, xOffset, yOffset);
-    }
-
-    public void multiStartDrag(DraggablePanel movedPanel) {
-        selectionHandler.multiStartDrag(movedPanel);
-    }
-
-
-    public void select(Selectable selectable, boolean multi) {
-        selectionHandler.select(selectable, multi);
+    public NodePanel addOutPanel(Shader.ShaderType type, ShaderNodeVariable var, Point point) {
+        NodePanel node = diagramUiHandler.makeOutPanel(this, type, var);
+        node.setLocation(point);
         diagramUiHandler.refreshDiagram();
+        return node;
     }
 
-    public void findSelection(MouseEvent me, boolean multi) {
-        //Click on the diagram, we are trying to find if we clicked in a connection area and select it
-        Connection conn = diagramUiHandler.pickForConnection(me);
-
-        if (conn != null) {
-            select(conn, multi);
-            me.consume();
-            return;
-        }
-
-        //we didn't find anything, let's unselect
-        selectionHandler.clearSelection();
-        diagramUiHandler.refreshDiagram();
-    }
-
-    public void removeSelected() {
-
-        int result = JOptionPane.showConfirmDialog(editor, "Delete all selected items, nodes and mappings?", "Delete Selected", JOptionPane.OK_CANCEL_OPTION);
-
-        if (result == JOptionPane.OK_OPTION) {
-            selectionHandler.removeSelected(this);
-        }
-    }
-
-    public void dispatchEventToDiagram(MouseEvent e, Component source) {
-        diagramUiHandler.dispatchEventToDiagram(e, source);
-    }
-
-    public void onNodeMoved(NodePanel node) {
-        diagramUiHandler.fitContent();
-
-        // TODO: 22/05/2016 save the location of the node in the metadata
+    public void displayAddFragmentOutputDialog(Point clickPosition) {
+        AddFragmentOutputDialog d = new AddFragmentOutputDialog(editor, true, this, clickPosition);
+        d.setVisible(true);
     }
 
     public void displayAddAttibuteDialog(Point clickPosition) {
@@ -291,4 +254,51 @@ public class MatDefEditorController {
     }
 
 
+    public void multiMove(DraggablePanel movedPanel, int xOffset, int yOffset) {
+        selectionHandler.multiMove(movedPanel, xOffset, yOffset);
+    }
+
+    public void multiStartDrag(DraggablePanel movedPanel) {
+        selectionHandler.multiStartDrag(movedPanel);
+    }
+
+
+    public void select(Selectable selectable, boolean multi) {
+        selectionHandler.select(selectable, multi);
+        diagramUiHandler.refreshDiagram();
+    }
+
+    public void findSelection(MouseEvent me, boolean multi) {
+        //Click on the diagram, we are trying to find if we clicked in a connection area and select it
+        Connection conn = diagramUiHandler.pickForConnection(me);
+
+        if (conn != null) {
+            select(conn, multi);
+            me.consume();
+            return;
+        }
+
+        //we didn't find anything, let's unselect
+        selectionHandler.clearSelection();
+        diagramUiHandler.refreshDiagram();
+    }
+
+    public void removeSelected() {
+
+        int result = JOptionPane.showConfirmDialog(editor, "Delete all selected items, nodes and mappings?", "Delete Selected", JOptionPane.OK_CANCEL_OPTION);
+
+        if (result == JOptionPane.OK_OPTION) {
+            selectionHandler.removeSelected(this);
+        }
+    }
+
+    public void dispatchEventToDiagram(MouseEvent e, Component source) {
+        diagramUiHandler.dispatchEventToDiagram(e, source);
+    }
+
+    public void onNodeMoved(NodePanel node) {
+        diagramUiHandler.fitContent();
+
+        // TODO: 22/05/2016 save the location of the node in the metadata
+    }
 }

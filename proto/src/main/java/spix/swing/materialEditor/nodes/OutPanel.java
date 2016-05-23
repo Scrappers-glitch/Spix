@@ -10,16 +10,14 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-import static com.jme3.shader.Shader.ShaderType.Vertex;
-
 /**
  * Created by bouquet on 15/05/16.
  */
-public abstract class InOutPanel extends NodePanel {
+public abstract class OutPanel extends NodePanel {
 
     private String varName = "";
 
-    private InOutPanel(MatDefEditorController controller, String key, ShaderNodeVariable var, Color color, Icon icon){
+    private OutPanel(MatDefEditorController controller, String key, ShaderNodeVariable var, Color color, Icon icon){
         super(controller, key, color, icon);
         varName = var.getName();
         setNodeName(var.getNameSpace());
@@ -51,11 +49,13 @@ public abstract class InOutPanel extends NodePanel {
         return inputDots.values().iterator().next();
     }
 
-    public static InOutPanel create(MatDefEditorController controller, String key, Shader.ShaderType type, ShaderNodeVariable var){
+    public static OutPanel create(MatDefEditorController controller, String key, Shader.ShaderType type, ShaderNodeVariable var){
         Color color = new Color(0,0,0);
+        Icon icon = Icons.output;
         switch (type){
             case Vertex:
                 color = new Color(220, 220, 70);
+                icon = Icons.outputV;
                 break;
             case Fragment:
                 color = new Color(114, 200, 255);
@@ -71,7 +71,7 @@ public abstract class InOutPanel extends NodePanel {
                 break;
         }
 
-        return new InOutPanel(controller, key, var, color, Icons.output) {
+        return new OutPanel(controller, key, var, color, icon) {
             @Override
             public Shader.ShaderType getShaderType() {
                 return type;

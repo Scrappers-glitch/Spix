@@ -13,6 +13,7 @@ public class Icons {
 
     public final static ImageIcon node = new ImageIcon(Icons.class.getResource("/icons/node.png"));
     public final static ImageIcon output = new ImageIcon(Icons.class.getResource("/icons/output.png"));
+    public final static ImageIcon outputV = new ImageIcon(Icons.class.getResource("/icons/outputV.png"));
     public final static ImageIcon world = new ImageIcon(Icons.class.getResource("/icons/earth.png"));
     public final static ImageIcon attrib = new ImageIcon(Icons.class.getResource("/icons/attrib.png"));
     public final static ImageIcon mat = new ImageIcon(Icons.class.getResource("/icons/mat.png"));

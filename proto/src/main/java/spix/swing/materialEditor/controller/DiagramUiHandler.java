@@ -22,7 +22,7 @@ public class DiagramUiHandler {
     private String currentTechniqueName;
     private Map<String, NodePanel> nodes = new HashMap<>();
     //A convenience map to easy access to the output nodes;
-    private Map<Shader.ShaderType, Map<String, List<InOutPanel>>> outPanels = new HashMap<>();
+    private Map<Shader.ShaderType, Map<String, List<OutPanel>>> outPanels = new HashMap<>();
     protected List<Connection> connections = new ArrayList<>();
 
     public DiagramUiHandler(MatDefEditorController controller) {
@@ -125,17 +125,17 @@ public class DiagramUiHandler {
 
     private NodePanel getOutPanel(MatDefEditorController controller, Shader.ShaderType type, ShaderNodeVariable var, NodePanel node, boolean forInput) {
 
-        List<InOutPanel> panelList = getOutPanelList(type, var);
+        List<OutPanel> panelList = getOutPanelList(type, var);
 
 
-        for (InOutPanel inOutPanel : panelList) {
+        for (OutPanel outPanel : panelList) {
             if (forInput) {
-                if (inOutPanel.isOutputAvailable() && !inOutPanel.getInputConnectPoint(var.getName()).isConnectedToNode(node)) {
-                    return inOutPanel;
+                if (outPanel.isOutputAvailable() && !outPanel.getInputConnectPoint(var.getName()).isConnectedToNode(node)) {
+                    return outPanel;
                 }
             } else {
-                if (inOutPanel.isInputAvailable() && !inOutPanel.getOutputConnectPoint(var.getName()).isConnectedToNode(node)) {
-                    return inOutPanel;
+                if (outPanel.isInputAvailable() && !outPanel.getOutputConnectPoint(var.getName()).isConnectedToNode(node)) {
+                    return outPanel;
                 }
             }
         }
@@ -144,13 +144,13 @@ public class DiagramUiHandler {
 
     }
 
-    private List<InOutPanel> getOutPanelList(Shader.ShaderType type, ShaderNodeVariable var) {
-        Map<String, List<InOutPanel>> map = outPanels.get(type);
+    private List<OutPanel> getOutPanelList(Shader.ShaderType type, ShaderNodeVariable var) {
+        Map<String, List<OutPanel>> map = outPanels.get(type);
         if (map == null) {
             map = new HashMap<>();
             outPanels.put(type, map);
         }
-        List<InOutPanel> panelList = map.get(var.getName());
+        List<OutPanel> panelList = map.get(var.getName());
         if (panelList == null) {
             panelList = new ArrayList<>();
             map.put(var.getName(), panelList);
@@ -171,8 +171,8 @@ public class DiagramUiHandler {
             throw new IllegalArgumentException("Cannot delete node for key: " + key);
         }
 
-        if (n instanceof InOutPanel) {
-            InOutPanel p = (InOutPanel)n;
+        if (n instanceof OutPanel) {
+            OutPanel p = (OutPanel)n;
             outPanels.get(p.getShaderType()).get(p.getVarName()).remove(p);
         }
         n.cleanup();
@@ -199,9 +199,9 @@ public class DiagramUiHandler {
     }
 
     NodePanel makeOutPanel(MatDefEditorController controller, Shader.ShaderType type, ShaderNodeVariable var) {
-        List<InOutPanel> panelList = getOutPanelList(type, var);
+        List<OutPanel> panelList = getOutPanelList(type, var);
         String key = MaterialDefUtils.makeGlobalOutKey(currentTechniqueName, var.getName(), UUID.randomUUID().toString());
-        InOutPanel node = InOutPanel.create(controller, key, type, var);
+        OutPanel node = OutPanel.create(controller, key, type, var);
         panelList.add(node);
         nodes.put(key, node);
         attachNodePanel(node);

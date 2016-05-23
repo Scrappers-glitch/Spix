@@ -100,7 +100,7 @@ public class Dot extends JPanel {
     private boolean canConnect(Dot pair) {
 
         if (pair == null || paramType == ParamType.Input ||
-                ((pair.getNode() instanceof InOutPanel || node instanceof InOutPanel) && shaderType != pair.shaderType)) {
+                ((pair.getNode() instanceof OutPanel || node instanceof OutPanel) && shaderType != pair.shaderType)) {
             img = Icons.imgOrange;
             repaint();
             return false;

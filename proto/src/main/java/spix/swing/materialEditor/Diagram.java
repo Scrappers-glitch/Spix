@@ -4,7 +4,7 @@
  */
 package spix.swing.materialEditor;
 
-import com.jme3.shader.Shader;
+import com.jme3.shader.*;
 import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.*;
@@ -126,11 +126,16 @@ public class Diagram extends JPanel {
         outputItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                OutBusPanel p2 = new OutBusPanel("color" + (outBuses.size() - 1), Shader.ShaderType.Fragment);
-//                p2.setBounds(0, 350 + 50 * (outBuses.size() - 1), p2.getWidth(), p2.getHeight());
-//
-//                addOutBus(p2);
+                controller.displayAddFragmentOutputDialog(contextMenuPosition);
+            }
+        });
 
+        JMenuItem outputVItem = createMenuItem("Output position", Icons.outputV);
+        contextMenu.add(outputVItem);
+        outputVItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                controller.addOutPanel(Shader.ShaderType.Vertex,new ShaderNodeVariable("vec4", "Global", "position"), contextMenuPosition);
             }
         });
     }
@@ -174,8 +179,8 @@ public class Diagram extends JPanel {
 
         }
         for (Component node : getComponents()) {
-            if (node instanceof InOutPanel) {
-                InOutPanel out = (InOutPanel) node;
+            if (node instanceof OutPanel) {
+                OutPanel out = (OutPanel) node;
                 Dot input = out.getInputConnectPoint();
                 if (input.isConnected()) {
                     for (Dot dot : input.getConnectedDots()) {
