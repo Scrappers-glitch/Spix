@@ -88,40 +88,7 @@ public class Diagram extends JPanel {
 //        repaint();
 //    }
 //
-//    public void addMatParam(String type, String name, Point point) {
-//        String fixedType = type;
-//        if (type.equals("Color")) {
-//            fixedType = "Vector4";
-//        }
-//        ShaderNodeVariable param = new ShaderNodeVariable(VarType.valueOf(fixedType).getGlslType(), name);
-//        NodePanel np = new NodePanel(param, NodePanel.NodeType.MatParam);
-//        addShaderNode(np);
-//        np.setLocation(point.x, point.y);
-//        np.revalidate();
-//        repaint();
-//        getEditorParent().notifyAddMapParam(type, name);
-//    }
-//
-//    public void addWorldParam(UniformBinding binding, Point point) {
-//
-//        ShaderNodeVariable param = new ShaderNodeVariable(binding.getGlslType(), binding.name());
-//        NodePanel np = new NodePanel(param, NodePanel.NodeType.WorldParam);
-//        addShaderNode(np);
-//        np.setLocation(point.x, point.y);
-//        np.revalidate();
-//        repaint();
-//        getEditorParent().notifyAddWorldParam(binding.name());
-//    }
-//
-//    public void addAttribute(String name, String type, Point point) {
-//        ShaderNodeVariable param = new ShaderNodeVariable(type, "Attr", name);
-//        NodePanel np = new NodePanel(param, NodePanel.NodeType.Attribute);
-//        addShaderNode(np);
-//        np.setLocation(point.x, point.y);
-//        np.revalidate();
-//        repaint();
-//    }
-//
+
 
 
     private JMenuItem createMenuItem(String text, Icon icon) {
@@ -166,9 +133,7 @@ public class Diagram extends JPanel {
         worldParamItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                AddWorldParameterDialog d = new AddWorldParameterDialog(null, true, Diagram.this, contextMenuPosition);
-//                d.setLocationRelativeTo(null);
-//                d.setVisible(true);
+                controller.displayAddWorldParamDialog(contextMenuPosition);
             }
         });
         contextMenu.add(worldParamItem);

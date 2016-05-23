@@ -245,4 +245,15 @@ public class MatDefEditorController {
         node.setLocation(point);
         diagramUiHandler.refreshDiagram();
     }
+
+    public void displayAddWorldParamDialog(Point clickPosition) {
+        AddWorldParameterDialog d = new AddWorldParameterDialog(editor, true, this, clickPosition);
+        d.setVisible(true);
+    }
+    public void addWorldParam(UniformBinding binding, Point point){
+        ShaderNodeVariable param = new ShaderNodeVariable(binding.getGlslType(), "WorldParam", binding.name());
+        NodePanel node = diagramUiHandler.addInputPanel(this, param);
+        node.setLocation(point);
+        diagramUiHandler.refreshDiagram();
+    }
 }
