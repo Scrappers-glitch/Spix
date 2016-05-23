@@ -68,29 +68,6 @@ public class Diagram extends JPanel {
         //  parent.showShaderEditor(node.getName(), node.getType(), node.filePaths);
     }
 
-
-
-    //
-//    public void addNodesFromDefs(List<ShaderNodeDefinition> defList, String path, Point clickPosition) {
-//        int i = 0;
-//        for (ShaderNodeDefinition def : defList) {
-//            ShaderNodeBlock sn = new ShaderNodeBlock(def, path);
-//            sn.setName(fixNodeName(sn.getName()));
-//
-//            NodePanel np = new NodePanel(sn, def);
-//            addShaderNode(np);
-//            np.setLocation(clickPosition.x + i * 150, clickPosition.y);
-//            sn.setSpatialOrder(np.getLocation().x);
-//            i++;
-//            np.revalidate();
-//            getEditorParent().notifyAddNode(sn, def);
-//        }
-//        repaint();
-//    }
-//
-
-
-
     private JMenuItem createMenuItem(String text, Icon icon) {
         JMenuItem item = new JMenuItem(text, icon);
         item.setFont(new Font("Tahoma", 1, 10)); // NOI18N
@@ -113,9 +90,7 @@ public class Diagram extends JPanel {
         nodeItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                AddNodeDialog d = new AddNodeDialog(null, true, parent.obj.getLookup().lookup(ProjectAssetManager.class), Diagram.this, contextMenuPosition);
-//                d.setLocationRelativeTo(null);
-//                d.setVisible(true);
+                controller.displayAddNodeDialog(contextMenuPosition);
             }
         });
 

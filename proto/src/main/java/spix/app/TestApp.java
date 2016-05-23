@@ -651,6 +651,8 @@ public class TestApp extends SimpleApplication {
         stateManager.getState(FlyCamAppState.class).setEnabled(false);
         flyCam.setDragToRotate(true);
 
+        stateManager.getState(SpixState.class).getSpix().getBlackboard().set("application.assetmanager", assetManager);
+
         // Set an initial camera position
         cam.setLocation(new Vector3f(0, 1, 10));
 

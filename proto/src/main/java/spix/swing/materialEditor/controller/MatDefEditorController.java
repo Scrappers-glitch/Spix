@@ -1,5 +1,6 @@
 package spix.swing.materialEditor.controller;
 
+import com.jme3.asset.AssetManager;
 import com.jme3.material.*;
 import com.jme3.scene.Geometry;
 import com.jme3.shader.*;
@@ -37,12 +38,14 @@ public class MatDefEditorController {
     private DataHandler dataHandler = new DataHandler();
 
 
+
     public MatDefEditorController(SwingGui gui, MatDefEditorWindow editor) {
         this.gui = gui;
         this.editor = editor;
         sceneSelection = gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         sceneSelection.addPropertyChangeListener(sceneSelectionChangeListener);
         diagramUiHandler = new DiagramUiHandler(this);
+
     }
 
     public void cleanup() {
@@ -95,6 +98,7 @@ public class MatDefEditorController {
     void initTechnique(TechniqueDef technique, MaterialDef matDef) {
         diagramUiHandler.setCurrentTechniqueName(technique.getName());
         dataHandler.setCurrentTechnique(technique);
+        dataHandler.setCurrentMatDef(matDef);
 
         if (technique.isUsingShaderNodes()) {
             MaterialDefUtils.computeShaderNodeGenerationInfo(technique);
@@ -163,9 +167,9 @@ public class MatDefEditorController {
     }
 
 
-    public void addShaderNode(ShaderNode sn) {
-        diagramUiHandler.addShaderNodePanel(this, sn);
-        // TODO: 22/05/2016 actually add the node to the techniqueDef
+    public NodePanel addShaderNode(ShaderNode sn) {
+        dataHandler.addShaderNode(sn);
+        return diagramUiHandler.addShaderNodePanel(this, sn);
     }
 
     public NodePanel addOutPanel(Shader.ShaderType type, ShaderNodeVariable var) {
@@ -217,6 +221,7 @@ public class MatDefEditorController {
 
     public void onNodeMoved(NodePanel node) {
         diagramUiHandler.fitContent();
+
         // TODO: 22/05/2016 save the location of the node in the metadata
     }
 
@@ -236,14 +241,16 @@ public class MatDefEditorController {
         d.setVisible(true);
     }
     public void addMatParam(String name, String type, Point point) {
+        String fixedType = type;
         if (type.equals("Color")) {
-            type = "Vector4";
+            fixedType = "Vector4";
         }
-        type = VarType.valueOf(type).getGlslType();
-        ShaderNodeVariable param = new ShaderNodeVariable(type, "MatParam", name);
+        fixedType = VarType.valueOf(fixedType).getGlslType();
+        ShaderNodeVariable param = new ShaderNodeVariable(fixedType, "MatParam", name);
         NodePanel node = diagramUiHandler.addInputPanel(this, param);
         node.setLocation(point);
         diagramUiHandler.refreshDiagram();
+        dataHandler.addMatParam(param, VarType.valueOf(type) );
     }
 
     public void displayAddWorldParamDialog(Point clickPosition) {
@@ -251,9 +258,37 @@ public class MatDefEditorController {
         d.setVisible(true);
     }
     public void addWorldParam(UniformBinding binding, Point point){
+        dataHandler.addWorldParm(binding);
         ShaderNodeVariable param = new ShaderNodeVariable(binding.getGlslType(), "WorldParam", binding.name());
         NodePanel node = diagramUiHandler.addInputPanel(this, param);
         node.setLocation(point);
         diagramUiHandler.refreshDiagram();
     }
+
+
+    public void displayAddNodeDialog(Point clickPosition) {
+        AssetManager assetManager = (AssetManager)gui.getSpix().getBlackboard().get("application.assetmanager");
+        AddNodeDialog d = new AddNodeDialog(editor, true, assetManager, this, clickPosition);
+        d.setVisible(true);
+    }
+
+    public void addNodesFromDefs(List<ShaderNodeDefinition> defList, String path, Point point){
+
+        for (ShaderNodeDefinition def : defList) {
+            ShaderNode sn = new ShaderNode(def.getName(),def, null);
+            sn.setName(fixNodeName(sn.getName()));
+
+            NodePanel np = addShaderNode(sn);
+            np.setLocation(point);
+            np.revalidate();
+        }
+        diagramUiHandler.refreshDiagram();
+
+    }
+
+    private String fixNodeName(String name) {
+        return diagramUiHandler.fixNodeName(name, 0);
+    }
+
+
 }

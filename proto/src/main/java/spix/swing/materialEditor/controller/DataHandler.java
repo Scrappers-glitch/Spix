@@ -1,7 +1,8 @@
 package spix.swing.materialEditor.controller;
 
-import com.jme3.material.TechniqueDef;
+import com.jme3.material.*;
 import com.jme3.shader.*;
+import com.jme3.texture.image.ColorSpace;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import java.util.*;
@@ -14,6 +15,7 @@ import static com.jme3.shader.Shader.ShaderType.Fragment;
 public class DataHandler {
 
     private TechniqueDef currentTechnique;
+    private MaterialDef currentMatDef;
     //convenience map for quick access to the data
     private Map<String, ShaderNode> nodes = new HashMap<>();
     private Map<String, VariableMapping> mappings = new HashMap<>();
@@ -65,6 +67,25 @@ public class DataHandler {
         }
     }
 
+    public void addWorldParm(UniformBinding binding){
+        currentTechnique.getWorldBindings().add(binding);
+    }
+
+    public void addMatParam(ShaderNodeVariable var, VarType type){
+        if(type.isTextureType()){
+            // TODO: 23/05/2016 We should ask the user for the color space (linear or srgb)
+            currentMatDef.addMaterialParamTexture(type, var.getName(), ColorSpace.sRGB);
+        } else {
+            // TODO: 23/05/2016 We should ask the user for the default value.
+            currentMatDef.addMaterialParam(type, var.getName(), null);
+        }
+    }
+
+    public void addShaderNode(ShaderNode node){
+        currentTechnique.getShaderNodes().add(node);
+        registerShaderNode(node);
+    }
+
     public void registerShaderNode(ShaderNode node){
         String key = MaterialDefUtils.makeShaderNodeKey(currentTechnique.getName(), node.getName());
         nodes.put(key, node);
@@ -92,5 +113,9 @@ public class DataHandler {
     public void setCurrentTechnique(TechniqueDef currentTechnique) {
         clear();
         this.currentTechnique = currentTechnique;
+    }
+
+    public void setCurrentMatDef(MaterialDef currentMatDef) {
+        this.currentMatDef = currentMatDef;
     }
 }

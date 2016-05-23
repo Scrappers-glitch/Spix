@@ -208,10 +208,11 @@ public class DiagramUiHandler {
         return node;
     }
 
-    void addShaderNodePanel(MatDefEditorController controller, ShaderNode sn) {
+    NodePanel addShaderNodePanel(MatDefEditorController controller, ShaderNode sn) {
         NodePanel node = ShaderNodePanel.create(controller, MaterialDefUtils.makeShaderNodeKey(currentTechniqueName, sn.getName()), sn);
         nodes.put(node.getKey(), node);
         attachNodePanel(node);
+        return node;
     }
 
     NodePanel addInputPanel(MatDefEditorController controller, ShaderNodeVariable shaderNodeVariable) {
@@ -236,13 +237,7 @@ public class DiagramUiHandler {
         return node;
     }
 
-
-    // TODO: 21/05/2016 See if we really need this. It was use in the sdk if the user was naming a node with the same name as another.
-    private String fixNodeName(String name) {
-        return fixNodeName(name, 0);
-    }
-
-    private String fixNodeName(String name, int count) {
+    String fixNodeName(String name, int count) {
         for (NodePanel nodePanel : nodes.values()) {
             if ((name + (count == 0 ? "" : count)).equals(nodePanel.getNodeName())) {
                 return fixNodeName(name, count + 1);

@@ -1,5 +1,6 @@
 package spix.swing.materialEditor;
 
+import com.jme3.asset.AssetManager;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.controller.MatDefEditorController;
 
