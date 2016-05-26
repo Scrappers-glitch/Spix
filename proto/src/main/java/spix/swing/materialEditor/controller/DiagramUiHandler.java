@@ -52,7 +52,7 @@ public class DiagramUiHandler {
 
 
     private void attachNodePanel(NodePanel node) {
-        if(node == null){
+        if (node == null) {
             return;
         }
 
@@ -128,13 +128,9 @@ public class DiagramUiHandler {
         List<OutPanel> panelList = getOutPanelList(type, var);
 
 
-        for (OutPanel outPanel : panelList) {
-            if (forInput) {
+        if (!forInput) {
+            for (OutPanel outPanel : panelList) {
                 if (outPanel.isOutputAvailable() && !outPanel.getInputConnectPoint(var.getName()).isConnectedToNode(node)) {
-                    return outPanel;
-                }
-            } else {
-                if (outPanel.isInputAvailable() && !outPanel.getOutputConnectPoint(var.getName()).isConnectedToNode(node)) {
                     return outPanel;
                 }
             }
@@ -160,19 +156,19 @@ public class DiagramUiHandler {
 
     void removeNode(MatDefEditorController controller, String key) {
         NodePanel n = nodes.remove(key);
-        if (n == null){
+        if (n == null) {
             //todo Somtimes, for some unknown reason the node is null.
             //It smells like a race condition between several threads, but I should always be on the swing thread...
             //in case it happens again I display all I can here and crash the app.
             System.err.println("Is event dispatch thread: " + SwingUtilities.isEventDispatchThread());
             for (String k : nodes.keySet()) {
-                System.err.println("Key: "+ k + " => " + nodes.get(k));
+                System.err.println("Key: " + k + " => " + nodes.get(k));
             }
             throw new IllegalArgumentException("Cannot delete node for key: " + key);
         }
 
         if (n instanceof OutPanel) {
-            OutPanel p = (OutPanel)n;
+            OutPanel p = (OutPanel) n;
             outPanels.get(p.getShaderType()).get(p.getVarName()).remove(p);
         }
         n.cleanup();
@@ -256,12 +252,12 @@ public class DiagramUiHandler {
         return null;
     }
 
-    public void autoLayout(){
+    public void autoLayout() {
         diagram.autoLayout();
         refreshDiagram();
     }
 
-    public void fitContent(){
+    public void fitContent() {
         diagram.fitContent();
     }
 }
