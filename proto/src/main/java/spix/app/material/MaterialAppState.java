@@ -13,7 +13,7 @@ import com.jme3.shader.*;
 import com.jme3.texture.*;
 import com.jme3.util.*;
 
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -50,16 +50,19 @@ public class MaterialAppState extends BaseAppState {
         Logger log = Logger.getLogger(TangentBinormalGenerator.class.getName());
         log.setLevel(Level.SEVERE);
         TangentBinormalGenerator.generate(sphMesh);
+        setColorToMesh(sphMesh);
         sphere = new Geometry("previewSphere", sphMesh);
         sphere.setLocalRotation(new Quaternion().fromAngleAxis(FastMath.QUARTER_PI, Vector3f.UNIT_X));
 
         Box boxMesh = new Box(1.75f, 1.75f, 1.75f);
         TangentBinormalGenerator.generate(boxMesh);
+        setColorToMesh(boxMesh);
         box = new Geometry("previewBox", boxMesh);
         box.setLocalRotation(new Quaternion().fromAngleAxis(-FastMath.DEG_TO_RAD * 30, Vector3f.UNIT_X).multLocal(new Quaternion().fromAngleAxis(FastMath.QUARTER_PI, Vector3f.UNIT_Y)));
 
         Quad quadMesh = new Quad(4.5f, 4.5f);
         TangentBinormalGenerator.generate(quadMesh);
+        setColorToMesh(quadMesh);
         quad = new Geometry("previewQuad", quadMesh);
         quad.setLocalTranslation(new Vector3f(-2.25f, -2.25f, 0));
 
@@ -174,7 +177,12 @@ public class MaterialAppState extends BaseAppState {
      * @param mesh
      */
     private void setColorToMesh(Mesh mesh){
-
+        ColorRGBA[] colors = new ColorRGBA[mesh.getVertexCount()];
+        for (int i = 0; i < colors.length; i++) {
+            colors[i] = ColorRGBA.randomColor();
+        }
+        FloatBuffer b = BufferUtils.createFloatBuffer(colors);
+        mesh.setBuffer(VertexBuffer.Type.Color, 4, b);
     }
 
     @Override
