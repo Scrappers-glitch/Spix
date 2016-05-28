@@ -6,12 +6,14 @@ import com.jme3.scene.Geometry;
 import com.jme3.shader.*;
 import groovy.util.ObservableList;
 import spix.app.DefaultConstants;
+import spix.app.material.MaterialAppState;
 import spix.app.utils.CloneUtils;
 import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.dialog.*;
 import spix.swing.materialEditor.nodes.*;
+import spix.swing.materialEditor.preview.*;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import javax.swing.*;
@@ -36,6 +38,7 @@ public class MatDefEditorController {
     private DiagramUiHandler diagramUiHandler;
     private SelectionHandler selectionHandler = new SelectionHandler();
     private DataHandler dataHandler = new DataHandler();
+    private MaterialPreviewRenderer previewRenderer;
 
 
 
@@ -45,7 +48,7 @@ public class MatDefEditorController {
         sceneSelection = gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         sceneSelection.addPropertyChangeListener(sceneSelectionChangeListener);
         diagramUiHandler = new DiagramUiHandler(this);
-
+        previewRenderer = new MaterialPreviewRenderer(gui);
     }
 
     public void cleanup() {
@@ -99,6 +102,8 @@ public class MatDefEditorController {
         diagramUiHandler.setCurrentTechniqueName(technique.getName());
         dataHandler.setCurrentTechnique(technique);
         dataHandler.setCurrentMatDef(matDef);
+        previewRenderer.setMatdDef(matDef);
+        previewRenderer.setTechniqueName(technique.getName());
 
         if (technique.isUsingShaderNodes()) {
             MaterialDefUtils.computeShaderNodeGenerationInfo(technique);
@@ -138,6 +143,11 @@ public class MatDefEditorController {
 
         //this will change when we have meta data
         diagramUiHandler.autoLayout();
+        diagramUiHandler.refreshPreviews();
+    }
+
+    public void preview(PreviewRequest request){
+        previewRenderer.showMaterial(request);
     }
 
     public Connection connect(Dot start, Dot end) {

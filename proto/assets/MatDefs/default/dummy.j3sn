@@ -1,0 +1,17 @@
+ShaderNodeDefinitions{ 
+    ShaderNodeDefinition Dummy {
+        Type: Fragment
+
+        Shader GLSL100: MatDefs/default/dummy100.frag
+        
+        Documentation{
+            does nothing
+        }
+        Input {
+            vec4 inColor
+        }
+        Output {
+
+        }
+    }
+}

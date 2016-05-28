@@ -1,13 +1,14 @@
 package spix.swing.materialEditor.utils;
 
-import com.jme3.material.MatParam;
-import com.jme3.material.MaterialDef;
-import com.jme3.material.TechniqueDef;
+import com.jme3.material.*;
 import com.jme3.shader.*;
 import spix.swing.materialEditor.Dot;
 
 import java.util.List;
 import java.util.Set;
+
+import static spix.swing.materialEditor.icons.Icons.node;
+import static sun.management.snmp.jvminstr.JvmThreadInstanceEntryImpl.ThreadStateMap.Byte1.other;
 
 /**
  * Created by bouquet on 14/05/16.
@@ -53,9 +54,9 @@ public class MaterialDefUtils {
                         //TODO tbh I don't know why it's here, IMO it shouldn't, they should be added during the shader generation phase not before
                         var.setName(var.getName().replaceFirst("g_","").replaceAll("m_",""));
                         if(def.getType() == Shader.ShaderType.Fragment){
-                            fragmentUniforms.add(var);
+                            addUnique(fragmentUniforms, var);
                         } else {
-                            vertexUniforms.add(var);
+                            addUnique( vertexUniforms, var);
                         }
                     } else {
                         //the nameSpace is the name of another node, if it comes from a different type of node the var is a varying
@@ -67,25 +68,80 @@ public class MaterialDefUtils {
                             continue;
                         }
                         if(otherNode.getDefinition().getType() != def.getType()){
-                            varyings.add(var);
+                            addUnique(varyings, var);
+                            var.setShaderOutput(true);
+                            for (VariableMapping variableMapping : otherNode.getInputMapping()) {
+                                if (variableMapping.getLeftVariable().getName().equals(var.getName())) {
+                                    variableMapping.getLeftVariable().setShaderOutput(true);
+                                }
+                            }
                         }
                         //and this other node is apparently used so we remove it from the unusedNodes list
                         unusedNodes.remove(otherNode.getName());
                     }
                 }
+
             }
             List<VariableMapping> out = sn.getOutputMapping();
-            if (out != null) {
+            if (out != null && !out.isEmpty()) {
                 for (VariableMapping map : out) {
                     ShaderNodeVariable var = map.getLeftVariable();
                     if (var.getNameSpace().equals("Global")) {
                         computeGlobals(technique, fragmentGlobals, def, var);
                     }
                 }
+                //shader has an output it's used in the shader code.
+                unusedNodes.remove(sn.getName());
+            } else {
+                //some nodes has no output by design ans their def specifies so.
+                if(sn.getDefinition().isNoOutput()){
+                    unusedNodes.remove(sn.getName());
+                }
             }
         }
     }
 
+    /**
+     * Adds back the g_ and m_ for world params and mat params needed for the technique to work properly
+     * @param info
+     */
+    public static void fixUniformNames(ShaderGenerationInfo info) {
+        for (ShaderNodeVariable var : info.getFragmentUniforms()) {
+            fixUniformName(var);
+        }
+
+        for (ShaderNodeVariable var : info.getVertexUniforms()) {
+            fixUniformName(var);
+        }
+    }
+
+
+    private static void addUnique(List<ShaderNodeVariable> variables, ShaderNodeVariable var){
+        for (ShaderNodeVariable variable : variables) {
+            if(var.equals(variable)){
+                return;
+            }
+        }
+        variables.add(var);
+    }
+    /**
+     * as previous method but for one variable.
+     * @param var
+     */
+    private static void fixUniformName(ShaderNodeVariable var) {
+        if(var.getNameSpace().equals("MatParam") && !var.getName().startsWith("m_")){
+            var.setName("m_" + var.getName());
+        } else if(var.getNameSpace().equals("WorldParam") && !var.getName().startsWith("g_")){
+            var.setName("g_" + var.getName());
+        }
+    }
+
+    /**
+     * Retrieve a shader node by name
+     * @param technique
+     * @param name
+     * @return
+     */
     private static ShaderNode findShaderNodeByName(TechniqueDef technique, String name) {
         for (ShaderNode shaderNode : technique.getShaderNodes()) {
             if(shaderNode.getName().equals(name)){
@@ -121,6 +177,7 @@ public class MaterialDefUtils {
     }
 
     private static void computeGlobals(TechniqueDef technique, List<ShaderNodeVariable> fragmentGlobals, ShaderNodeDefinition def, ShaderNodeVariable var) {
+        var.setShaderOutput(true);
         if (def.getType() == Shader.ShaderType.Vertex) {
             if (technique.getShaderGenerationInfo().getVertexGlobal() == null) {
                 technique.getShaderGenerationInfo().setVertexGlobal(var);

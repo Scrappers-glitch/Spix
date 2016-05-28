@@ -13,7 +13,7 @@ MaterialDef Simple {
                 InputMappings {
                     worldViewProjectionMatrix = WorldParam.WorldViewProjectionMatrix
                     modelPosition = Attr.inPosition
-                    vertColor = Attr.inColor
+                    vertColor = Global.position
                 }
                 OutputMappings {
                     Global.position = projPosition
@@ -24,7 +24,7 @@ MaterialDef Simple {
             ShaderNode ColorMult {
                 Definition : ColorMult : Common/MatDefs/ShaderNodes/Basic/ColorMult.j3sn
                 InputMappings {
-                    color1 = CommonVert.vertColor
+                    color1 = Global.color
                     color2 = MatParam.Color
                 }
                 OutputMappings {

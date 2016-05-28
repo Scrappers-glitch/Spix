@@ -54,7 +54,7 @@ import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 
 import spix.app.form.*;
 import spix.app.light.*;
-import spix.app.material.MatDefPropertySetFactory;
+import spix.app.material.*;
 import spix.app.properties.*;
 import spix.awt.AwtPanelState;
 import spix.core.*;
@@ -114,7 +114,8 @@ public class TestApp extends SimpleApplication {
                 new LightWidgetState(),
                 new NodeWidgetState(),
               new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
-              new SpixState(new Spix()));
+              new SpixState(new Spix()),
+                new MaterialAppState());
 
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
@@ -232,6 +233,8 @@ public class TestApp extends SimpleApplication {
                         matDefEditorWindow.dispose();
                     }
                 });
+
+                spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), gui));
             }
         });
 

@@ -13,35 +13,24 @@ MaterialDef Simple {
                 InputMappings {
                     worldViewProjectionMatrix = WorldParam.WorldViewProjectionMatrix
                     modelPosition = Attr.inPosition
-                    vertColor = Attr.inColor
+                    vertColor = Global.position
                 }
                 OutputMappings {
                     Global.position = projPosition
                 }
             }
         }
-        FragmentShaderNodes {
-            ShaderNode ColorMult {
-                Definition : ColorMult : Common/MatDefs/ShaderNodes/Basic/ColorMult.j3sn
+
+         FragmentShaderNodes {
+            ShaderNode Dummy {
+                Definition : Dummy : MatDefs/default/dummy.j3sn
                 InputMappings {
-                    color1 = CommonVert.vertColor
-                    color2 = MatParam.Color
+                    inColor = Global.color
                 }
                 OutputMappings {
-                    Global.color = outColor
-                }
-            }
-            ShaderNode ColorMix {
-                Definition : ColorMix : Common/MatDefs/ShaderNodes/Basic/ColorMix.j3sn
-                InputMappings {
-                    color1 = CommonVert.vertColor
-                    color2 = Global.color
-                    factor = MatParam.Factor
-                }
-                OutputMappings {
-                    Global.color = outColor
                 }
             }
         }
+
     }
 }

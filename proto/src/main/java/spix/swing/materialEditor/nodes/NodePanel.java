@@ -25,7 +25,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
     protected Map<String, Dot> outputDots = new LinkedHashMap<>();
     private JPanel content;
     private JLabel header;
-    private JLabel previewLabel;
+    protected JLabel previewLabel;
     private Color color;
     private Icon icon;
     private String nodeName;

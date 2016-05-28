@@ -1,13 +1,11 @@
 package spix.app.utils;
 
 import com.jme3.material.*;
+import com.jme3.material.logic.DefaultTechniqueDefLogic;
 import com.jme3.shader.*;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by bouquet on 14/05/16.
@@ -53,10 +51,18 @@ public class CloneUtils {
     }
 
     public static  TechniqueDef cloneTechniqueDef(TechniqueDef techniqueDef) throws NoSuchFieldException, IllegalAccessException {
-        TechniqueDef techDef = new TechniqueDef(techniqueDef.getName(), techniqueDef.getSortId());
+        int sortId = (techniqueDef.getName() + UUID.randomUUID().toString()).hashCode();
+        TechniqueDef techDef = new TechniqueDef(techniqueDef.getName(), sortId);
         techDef.setLightMode(techniqueDef.getLightMode());
         techDef.setShadowMode(techniqueDef.getShadowMode());
         techDef.setNoRender(techniqueDef.isNoRender());
+        techDef.setShaderPrologue(techniqueDef.getShaderPrologue());
+        techDef.getRequiredCaps().addAll(techniqueDef.getRequiredCaps());
+
+
+//        for (Shader.ShaderType shaderType : techniqueDef.getShaderProgramLanguages().keySet()) {
+//            techDef.setShaderFile(techDef.hashCode() + "", "GLSL100");
+//        }
 
         //WorldParams
         for (UniformBinding uniformBinding : techniqueDef.getWorldBindings()) {
@@ -106,7 +112,11 @@ public class CloneUtils {
 
         }
 
+
         techDef.setShaderGenerationInfo(new ShaderGenerationInfo());
+        // TODO: 26/05/2016 here we should create the appropriate logic as the logic retains a reference on the techDef...
+        techDef.setLogic(new DefaultTechniqueDefLogic(techDef));
+        techDef.setShaderFile(techDef.hashCode() + "", techDef.hashCode() + "", "GLSL100", "GLSL100");
         return techDef;
     }
 
@@ -131,3 +141,4 @@ public class CloneUtils {
 
 
 }
+

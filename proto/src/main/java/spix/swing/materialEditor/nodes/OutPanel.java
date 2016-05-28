@@ -1,9 +1,11 @@
 package spix.swing.materialEditor.nodes;
 
 import com.jme3.shader.*;
+import spix.app.material.MaterialAppState;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
+import spix.swing.materialEditor.preview.PreviewRequest;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,15 +19,16 @@ public abstract class OutPanel extends NodePanel {
 
     private String varName = "";
 
-    private OutPanel(MatDefEditorController controller, String key, ShaderNodeVariable var, Color color, Icon icon){
+    private OutPanel(MatDefEditorController controller, String key, ShaderNodeVariable var, Color color, Icon icon) {
         super(controller, key, color, icon);
+        var.setShaderOutput(true);
         displayPreview = true;
         varName = var.getName();
         setNodeName(var.getNameSpace());
         List<ShaderNodeVariable> outputs = new ArrayList<ShaderNodeVariable>();
-        outputs.add(new ShaderNodeVariable(var.getType(),var.getName()));
+        outputs.add(new ShaderNodeVariable(var.getType(), var.getName()));
         List<ShaderNodeVariable> inputs = new ArrayList<ShaderNodeVariable>();
-        inputs.add(new ShaderNodeVariable(var.getType(),var.getName()));
+        inputs.add(new ShaderNodeVariable(var.getType(), var.getName()));
 
         init(inputs, outputs);
     }
@@ -34,11 +37,11 @@ public abstract class OutPanel extends NodePanel {
         return varName;
     }
 
-    public boolean isInputAvailable(){
+    public boolean isInputAvailable() {
         return !inputDots.values().iterator().next().isConnected();
     }
 
-    public boolean isOutputAvailable(){
+    public boolean isOutputAvailable() {
         return !outputDots.values().iterator().next().isConnected();
     }
 
@@ -50,10 +53,20 @@ public abstract class OutPanel extends NodePanel {
         return inputDots.values().iterator().next();
     }
 
-    public static OutPanel create(MatDefEditorController controller, String key, Shader.ShaderType type, ShaderNodeVariable var){
-        Color color = new Color(0,0,0);
+    public void preview() {
+
+        String nodeName = null;
+        for (Dot dot : getInputConnectPoint().getConnectedDots()) {
+            nodeName = dot.getNode().getName();
+        }
+
+        controller.preview(new PreviewRequest(getShaderType(), nodeName, previewLabel, MaterialAppState.DisplayType.Box));
+    }
+
+    public static OutPanel create(MatDefEditorController controller, String key, Shader.ShaderType type, ShaderNodeVariable var) {
+        Color color = new Color(0, 0, 0);
         Icon icon = Icons.output;
-        switch (type){
+        switch (type) {
             case Vertex:
                 color = new Color(220, 220, 70);
                 icon = Icons.outputV;
@@ -81,7 +94,7 @@ public abstract class OutPanel extends NodePanel {
             @Override
             protected void initHeader(JLabel header) {
                 //header.setText(getVarName() + " (" +type.name().substring(0,4)+")");
-                header.setText(type.name()+": "+getVarName());
+                header.setText(type.name() + ": " + getVarName());
                 header.setToolTipText(type.name() + " shader output");
             }
         };

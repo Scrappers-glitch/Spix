@@ -20,7 +20,7 @@ public class DiagramUiHandler {
 
     private Diagram diagram;
     private String currentTechniqueName;
-    private Map<String, NodePanel> nodes = new HashMap<>();
+    private Map<String, NodePanel> nodes = new LinkedHashMap<>();
     //A convenience map to easy access to the output nodes;
     private Map<Shader.ShaderType, Map<String, List<OutPanel>>> outPanels = new HashMap<>();
     protected List<Connection> connections = new ArrayList<>();
@@ -259,5 +259,15 @@ public class DiagramUiHandler {
 
     public void fitContent() {
         diagram.fitContent();
+    }
+
+    public void refreshPreviews(){
+
+        for (NodePanel nodePanel : nodes.values()) {
+            if(nodePanel instanceof OutPanel){
+                ((OutPanel)nodePanel).preview();
+              //  break;
+            }
+        }
     }
 }
