@@ -257,7 +257,7 @@ public class MatDefEditorController {
         NodePanel node = diagramUiHandler.addInputPanel(this, param);
         node.setLocation(point);
         diagramUiHandler.refreshDiagram();
-        dataHandler.addMatParam(param, VarType.valueOf(type) );
+        dataHandler.addMatParam(param, type);
     }
 
     public void displayAddWorldParamDialog(Point clickPosition) {

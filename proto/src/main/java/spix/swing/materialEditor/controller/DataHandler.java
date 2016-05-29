@@ -71,7 +71,11 @@ public class DataHandler {
         currentTechnique.getWorldBindings().add(binding);
     }
 
-    public void addMatParam(ShaderNodeVariable var, VarType type){
+    public void addMatParam(ShaderNodeVariable var, String strType){
+        if(strType.equals("Color")){
+            strType = "Vector4";
+        }
+        VarType type = VarType.valueOf(strType);
         if(type.isTextureType()){
             // TODO: 23/05/2016 We should ask the user for the color space (linear or srgb)
             currentMatDef.addMaterialParamTexture(type, var.getName(), ColorSpace.sRGB);
