@@ -53,14 +53,18 @@ public abstract class OutPanel extends NodePanel {
         return inputDots.values().iterator().next();
     }
 
-    public void preview() {
+    public PreviewRequest makePreviewRequest() {
 
+        String nodeName = getForNodeName();
+        return new PreviewRequest(getShaderType(), nodeName, previewLabel, MaterialAppState.DisplayType.Box);
+    }
+
+    public String getForNodeName() {
         String nodeName = null;
         for (Dot dot : getInputConnectPoint().getConnectedDots()) {
             nodeName = dot.getNode().getName();
         }
-
-        controller.preview(new PreviewRequest(getShaderType(), nodeName, previewLabel, MaterialAppState.DisplayType.Box));
+        return nodeName;
     }
 
     public static OutPanel create(MatDefEditorController controller, String key, Shader.ShaderType type, ShaderNodeVariable var) {

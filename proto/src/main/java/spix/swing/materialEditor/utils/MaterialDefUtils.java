@@ -25,12 +25,19 @@ public class MaterialDefUtils {
      */
     public static void computeShaderNodeGenerationInfo(TechniqueDef technique) {
 
+
         List<ShaderNodeVariable> attributes = technique.getShaderGenerationInfo().getAttributes();
         List<ShaderNodeVariable> fragmentGlobals = technique.getShaderGenerationInfo().getFragmentGlobals();
         List<ShaderNodeVariable> fragmentUniforms = technique.getShaderGenerationInfo().getFragmentUniforms();
         List<ShaderNodeVariable> vertexUniforms = technique.getShaderGenerationInfo().getVertexUniforms();
         List<ShaderNodeVariable> varyings = technique.getShaderGenerationInfo().getVaryings();
         List<String> unusedNodes = technique.getShaderGenerationInfo().getUnusedNodes();
+        attributes.clear();
+        fragmentGlobals.clear();
+        fragmentUniforms.clear();
+        vertexUniforms.clear();
+        varyings.clear();
+        unusedNodes.clear();
 
         //considering that none of the nodes are used, we'll remove them from the list when we have proof they are actually used.
         for (ShaderNode shaderNode : technique.getShaderNodes()) {
@@ -51,7 +58,6 @@ public class MaterialDefUtils {
                         addUnique(attributes, var);
                     } else if (var.getNameSpace().equals("MatParam") || var.getNameSpace().equals("WorldParam")){
                         //Remove the g_ and the m_ form the uniform name
-                        //TODO tbh I don't know why it's here, IMO it shouldn't, they should be added during the shader generation phase not before
                         var.setName(var.getName().replaceFirst("g_","").replaceAll("m_",""));
                         if(def.getType() == Shader.ShaderType.Fragment){
                             addUnique(fragmentUniforms, var);

@@ -61,7 +61,8 @@ public class MaterialService {
                         }
                     });
                 } catch (RendererException e){
-                    CompilationError ce = new CompilationError(logHandler.getBuffer(), e.getMessage(), m.getActiveTechnique().getDef().getShaderNodes().size());
+                    int nbNodesRendered = def.getTechniqueDefs(request.getTechniqueName()).get(0).getShaderNodes().size();
+                    CompilationError ce = new CompilationError(logHandler.getBuffer(), e.getMessage(),nbNodesRendered);
                     gui.runOnSwing(new Runnable() {
                         @Override
                         public void run() {
@@ -167,12 +168,12 @@ public class MaterialService {
     public static class CompilationError{
         private String shaderSource;
         private Map<Integer,String> errors = new HashMap<>();
-        private int nbNodes;
+        private int nbRenderedNodes;
 
-        public CompilationError(String source, String error, int nbNodes){
+        public CompilationError(String source, String error, int nbRenderedNodes){
             shaderSource = source;
             String[] lines = error.split("\\n");
-            this.nbNodes = nbNodes;
+            this.nbRenderedNodes = nbRenderedNodes;
 
             int index = 0;
             for (String line : lines) {
@@ -201,8 +202,8 @@ public class MaterialService {
             return errors;
         }
 
-        public int getNbNodes() {
-            return nbNodes;
+        public int getNbRenderedNodes() {
+            return nbRenderedNodes;
         }
 
         @Override

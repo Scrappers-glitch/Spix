@@ -1,9 +1,12 @@
 package spix.swing.materialEditor.controller;
 
-import com.jme3.material.TechniqueDef;
+import com.jme3.material.*;
 import com.jme3.shader.*;
+import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
+import spix.swing.materialEditor.errorlog.ErrorLog;
 import spix.swing.materialEditor.nodes.*;
+import spix.swing.materialEditor.preview.*;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 import spix.util.SwingUtils;
 
@@ -25,7 +28,7 @@ public class DiagramUiHandler {
     private Map<Shader.ShaderType, Map<String, List<OutPanel>>> outPanels = new HashMap<>();
     protected List<Connection> connections = new ArrayList<>();
 
-    public DiagramUiHandler( Diagram diagram) {
+    public DiagramUiHandler(Diagram diagram) {
         this.diagram = diagram;
     }
 
@@ -149,13 +152,14 @@ public class DiagramUiHandler {
         NodePanel n = nodes.remove(key);
         if (n == null) {
             //todo Somtimes, for some unknown reason the node is null.
-            //It smells like a race condition between several threads, but I should always be on the swing thread...
-            //in case it happens again I display all I can here and crash the app.
+            //It's not a threading issue, seems to always occur on the awt event thread.
+            //Seems more that this code is sometimes called twice in a row...
             System.err.println("Is event dispatch thread: " + SwingUtilities.isEventDispatchThread());
             for (String k : nodes.keySet()) {
                 System.err.println("Key: " + k + " => " + nodes.get(k));
             }
-            throw new IllegalArgumentException("Cannot delete node for key: " + key);
+            return;
+            //throw new IllegalArgumentException("Cannot delete node for key: " + key);
         }
 
         if (n instanceof OutPanel) {
@@ -253,13 +257,20 @@ public class DiagramUiHandler {
         diagram.fitContent();
     }
 
-    public void refreshPreviews(){
+    private List<OutPanel> getOutPanelsForPreviews() {
 
+        List<OutPanel> panels = new ArrayList<>();
         for (NodePanel nodePanel : nodes.values()) {
-            if(nodePanel instanceof OutPanel){
-                ((OutPanel)nodePanel).preview();
-              //  break;
+            if (nodePanel instanceof OutPanel) {
+                panels.add((OutPanel) nodePanel);
             }
         }
+        return panels;
     }
+
+    public void refreshPreviews(SwingGui gui, ErrorLog errorLog, MaterialDef matDef) {
+        MaterialPreviewRenderer previewRenderer = new MaterialPreviewRenderer();
+        previewRenderer.batchRequests(gui, errorLog, getOutPanelsForPreviews(), matDef, currentTechniqueName);
+    }
+
 }

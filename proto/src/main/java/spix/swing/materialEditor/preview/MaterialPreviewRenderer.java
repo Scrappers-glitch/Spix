@@ -4,71 +4,74 @@
  */
 package spix.swing.materialEditor.preview;
 
-import com.jme3.material.*;
-import spix.app.material.*;
+import com.jme3.material.MaterialDef;
+import spix.app.material.MaterialService;
 import spix.core.RequestCallback;
 import spix.swing.SwingGui;
-import spix.swing.materialEditor.errorlog.*;
+import spix.swing.materialEditor.errorlog.ErrorLog;
 import spix.swing.materialEditor.icons.Icons;
+import spix.swing.materialEditor.nodes.OutPanel;
+import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
-import java.util.logging.*;
+import java.util.*;
 
 /**
- *
  * @author Nehon
  */
 public class MaterialPreviewRenderer {
 
-    private SwingGui gui;
-    private MaterialDef matDef;
-    private String techniqueName;
-    private ErrorLog errorLog;
+    private List<MaterialService.CompilationError> errors = new ArrayList<>();
+    private int nbRequestsDone = 0;
 
-    public MaterialPreviewRenderer(SwingGui gui, ErrorLog errorLog) {
-        this.gui = gui;
-        this.errorLog = errorLog;
+    public void batchRequests(SwingGui gui, ErrorLog errorLog, final List<OutPanel> outs, MaterialDef matDef, String techniqueName) {
+
+        for (OutPanel out : outs) {
+
+            PreviewRequest request = out.makePreviewRequest();
+
+            request.setMaterialDef(matDef);
+            MaterialDefUtils.computeShaderNodeGenerationInfo(matDef.getTechniqueDefs(techniqueName).get(0));
+            request.setTechniqueName(techniqueName);
+            gui.getSpix().getService(MaterialService.class).requestPreview(request,
+                    new RequestCallback<BufferedImage>() {
+                        @Override
+                        public void done(BufferedImage result) {
+                            request.getTargetLabel().setIcon(new ImageIcon(result));
+                            errorLog.noError();
+                            closeRequest(outs, errorLog);
+                        }
+                    }, new RequestCallback<MaterialService.CompilationError>() {
+                        @Override
+                        public void done(MaterialService.CompilationError result) {
+                            errors.add(result);
+                            request.getTargetLabel().setIcon(Icons.error);
+                            closeRequest(outs, errorLog);
+                        }
+                    });
+        }
+
     }
 
-    public void setMatDef(MaterialDef matDef) {
-        this.matDef = matDef;
-    }
+    private void closeRequest(final List<OutPanel> outs, ErrorLog errorLog) {
+        nbRequestsDone++;
 
-    public void setTechniqueName(String techniqueName) {
-        this.techniqueName = techniqueName;
-    }
-
-    public void showMaterial(PreviewRequest request) {
-        request.setMaterialDef(matDef);
-        request.setTechniqueName(techniqueName);
-        gui.getSpix().getService(MaterialService.class).requestPreview(request,
-        new RequestCallback<BufferedImage>() {
-            @Override
-            public void done(BufferedImage result) {
-                request.getTargetLabel().setIcon(new ImageIcon(result));
-                errorLog.noError();
-            }
-        }, new RequestCallback<MaterialService.CompilationError>() {
-            @Override
-            public void done(MaterialService.CompilationError result) {
-                if(matDef.getTechniqueDefs(techniqueName).get(0).getShaderNodes().size() == result.getNbNodes()) {
-                    errorLog.error(result);
+        if (nbRequestsDone == outs.size()) {
+            //we're done lets handle errors if any
+            if(!errors.isEmpty()) {
+                //We are looking for the error that occured on the shader woth the most nodes as it will have the most information
+                MaterialService.CompilationError errorToDisplay = null;
+                for (MaterialService.CompilationError error : errors) {
+                    if (errorToDisplay == null || error.getNbRenderedNodes() > errorToDisplay.getNbRenderedNodes()) {
+                        errorToDisplay = error;
+                    }
                 }
-                request.getTargetLabel().setIcon(Icons.error);
+                errorLog.error(errorToDisplay);
             }
-        });
 
-    }
-
-    private static int lastErrorHash = 0;
-
-    private void smartLog(String expText, String message) {
-        int hash = message.hashCode();
-        if (hash != lastErrorHash) {
-            Logger.getLogger(MaterialPreviewRenderer.class.getName()).log(Level.SEVERE, expText, message);
-            lastErrorHash = hash;
         }
     }
+
 
 }

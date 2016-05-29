@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.List;
 
 import static com.sun.javafx.fxml.expression.Expression.add;
-import static spix.swing.materialEditor.icons.Icons.node;
 
 /**
  * Created by Nehon on 18/05/2016.
@@ -41,8 +40,7 @@ public class MatDefEditorController {
     private DiagramUiHandler diagramUiHandler;
     private SelectionHandler selectionHandler = new SelectionHandler();
     private DataHandler dataHandler = new DataHandler();
-    private MaterialPreviewRenderer previewRenderer;
-
+    private ErrorLog errorLog = new ErrorLog();
 
 
     public MatDefEditorController(SwingGui gui, MatDefEditorWindow editor) {
@@ -60,7 +58,6 @@ public class MatDefEditorController {
 
         centerPane.setLayout(new BorderLayout());
 
-        ErrorLog errorLog = new ErrorLog();
         errorLog.setPreferredSize(new Dimension(100, 500));
         centerPane.add(errorLog, BorderLayout.SOUTH);
 
@@ -81,8 +78,6 @@ public class MatDefEditorController {
         southToolBar.add(errorLog.getErrorLogButton());
 
         diagramUiHandler = new DiagramUiHandler(diagram);
-        previewRenderer = new MaterialPreviewRenderer(gui, errorLog);
-
 
     }
 
@@ -137,8 +132,7 @@ public class MatDefEditorController {
         diagramUiHandler.setCurrentTechniqueName(technique.getName());
         dataHandler.setCurrentTechnique(technique);
         dataHandler.setCurrentMatDef(matDef);
-        previewRenderer.setMatDef(matDef);
-        previewRenderer.setTechniqueName(technique.getName());
+
 
         if (technique.isUsingShaderNodes()) {
             MaterialDefUtils.computeShaderNodeGenerationInfo(technique);
@@ -178,17 +172,13 @@ public class MatDefEditorController {
 
         //this will change when we have meta data
         diagramUiHandler.autoLayout();
-        diagramUiHandler.refreshPreviews();
-    }
-
-    public void preview(PreviewRequest request){
-        previewRenderer.showMaterial(request);
+        diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
     }
 
     public Connection connect(Dot start, Dot end) {
         Connection conn = diagramUiHandler.connect(this, start, end);
         dataHandler.addMapping(MaterialDefUtils.createVariableMapping(start, end));
-        diagramUiHandler.refreshPreviews();
+        diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
         return conn;
     }
 
@@ -200,7 +190,7 @@ public class MatDefEditorController {
 
     public void removeConnection(Connection conn) {
         removeConnectionNoRefresh(conn);
-        diagramUiHandler.refreshPreviews();
+        diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
     }
 
     public void removeNode(String key) {
@@ -215,7 +205,7 @@ public class MatDefEditorController {
         */
         diagramUiHandler.removeNode(this, key);
         dataHandler.removeShaderNodeForKey(key);
-        diagramUiHandler.refreshPreviews();
+        diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
     }
 
     public NodePanel addShaderNode(ShaderNode sn) {
@@ -232,6 +222,7 @@ public class MatDefEditorController {
     public NodePanel addOutPanel(Shader.ShaderType type, ShaderNodeVariable var, Point point) {
         NodePanel node = diagramUiHandler.makeOutPanel(this, type, var);
         node.setLocation(point);
+        diagramUiHandler.refreshDiagram();
         return node;
     }
 
