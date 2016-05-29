@@ -34,7 +34,7 @@ public class MaterialAppState extends BaseAppState {
     private FrameBuffer offBuffer;
     private ByteBuffer cpuBuf = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
     private ShaderNode dummySN;
-
+    private final static boolean debug = false;
 
     public enum DisplayType {
 
@@ -129,26 +129,28 @@ public class MaterialAppState extends BaseAppState {
     }
 
     private void displayCode(Material mat) {
-        //That's how you need to initialize it
-        Glsl150ShaderGenerator glsl15 = new Glsl150ShaderGenerator(getApplication().getAssetManager());
-        glsl15.initialize(mat.getActiveTechnique().getDef());
+        if(debug) {
+            //That's how you need to initialize it
+            Glsl150ShaderGenerator glsl15 = new Glsl150ShaderGenerator(getApplication().getAssetManager());
+            glsl15.initialize(mat.getActiveTechnique().getDef());
 
-        // that how you need to generate the shader
-        StringBuilder sb = new StringBuilder();
-        TechniqueDef def = mat.getActiveTechnique().getDef();
-        sb.append(def.getShaderPrologue());
-        //This is a bit cumbersome but you know...
-        mat.getActiveTechnique().getDynamicDefines().generateSource(sb, Arrays.asList(def.getDefineNames()), Arrays.asList(def.getDefineTypes()));
-        String definesSourceCode = sb.toString();
+            // that how you need to generate the shader
+            StringBuilder sb = new StringBuilder();
+            TechniqueDef def = mat.getActiveTechnique().getDef();
+            sb.append(def.getShaderPrologue());
+            //This is a bit cumbersome but you know...
+            mat.getActiveTechnique().getDynamicDefines().generateSource(sb, Arrays.asList(def.getDefineNames()), Arrays.asList(def.getDefineTypes()));
+            String definesSourceCode = sb.toString();
 
-        Shader s = glsl15.generateShader(definesSourceCode);
-        System.err.println("########################################################################");
-        System.err.println(def.getName());
-        System.err.println("########################################################################");
-        //Then it's like before.
-        for (Shader.ShaderSource shaderSource : s.getSources()) {
-            System.err.println("##########   " + shaderSource.getType() + "   ##########");
-            System.err.println(shaderSource.getSource());
+            Shader s = glsl15.generateShader(definesSourceCode);
+            System.err.println("########################################################################");
+            System.err.println(def.getName());
+            System.err.println("########################################################################");
+            //Then it's like before.
+            for (Shader.ShaderSource shaderSource : s.getSources()) {
+                System.err.println("##########   " + shaderSource.getType() + "   ##########");
+                System.err.println(shaderSource.getSource());
+            }
         }
     }
 
