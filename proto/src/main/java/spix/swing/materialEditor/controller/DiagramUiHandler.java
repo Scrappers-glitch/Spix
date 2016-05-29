@@ -169,7 +169,7 @@ public class DiagramUiHandler {
             if (conn.getStart().getNode() == n || conn.getEnd().getNode() == n) {
                 it.remove();
                 //it's important to call this from the controller so the connections are not just removed from the UI
-                controller.removeConnection(conn);
+                controller.removeConnectionNoRefresh(conn);
             }
         }
 

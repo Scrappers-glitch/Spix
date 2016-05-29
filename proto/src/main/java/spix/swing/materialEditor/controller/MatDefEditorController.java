@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.List;
 
 import static com.sun.javafx.fxml.expression.Expression.add;
+import static spix.swing.materialEditor.icons.Icons.node;
 
 /**
  * Created by Nehon on 18/05/2016.
@@ -187,13 +188,19 @@ public class MatDefEditorController {
     public Connection connect(Dot start, Dot end) {
         Connection conn = diagramUiHandler.connect(this, start, end);
         dataHandler.addMapping(MaterialDefUtils.createVariableMapping(start, end));
+        diagramUiHandler.refreshPreviews();
         return conn;
     }
 
-    public void removeConnection(Connection conn) {
+    void removeConnectionNoRefresh(Connection conn) {
 
         diagramUiHandler.removeConnection(conn);
         dataHandler.removeMappingForKey(conn.getKey());
+    }
+
+    public void removeConnection(Connection conn) {
+        removeConnectionNoRefresh(conn);
+        diagramUiHandler.refreshPreviews();
     }
 
     public void removeNode(String key) {
@@ -208,11 +215,13 @@ public class MatDefEditorController {
         */
         diagramUiHandler.removeNode(this, key);
         dataHandler.removeShaderNodeForKey(key);
+        diagramUiHandler.refreshPreviews();
     }
 
     public NodePanel addShaderNode(ShaderNode sn) {
         dataHandler.addShaderNode(sn);
-        return diagramUiHandler.addShaderNodePanel(this, sn);
+        NodePanel node = diagramUiHandler.addShaderNodePanel(this, sn);
+        return node;
     }
 
     public NodePanel addOutPanel(Shader.ShaderType type, ShaderNodeVariable var) {
@@ -223,7 +232,6 @@ public class MatDefEditorController {
     public NodePanel addOutPanel(Shader.ShaderType type, ShaderNodeVariable var, Point point) {
         NodePanel node = diagramUiHandler.makeOutPanel(this, type, var);
         node.setLocation(point);
-        diagramUiHandler.refreshDiagram();
         return node;
     }
 
