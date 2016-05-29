@@ -6,22 +6,24 @@ import com.jme3.scene.Geometry;
 import com.jme3.shader.*;
 import groovy.util.ObservableList;
 import spix.app.DefaultConstants;
-import spix.app.material.MaterialAppState;
 import spix.app.utils.CloneUtils;
 import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.dialog.*;
+import spix.swing.materialEditor.errorlog.*;
 import spix.swing.materialEditor.nodes.*;
 import spix.swing.materialEditor.preview.*;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
 import java.util.List;
+
+import static com.sun.javafx.fxml.expression.Expression.add;
 
 /**
  * Created by Nehon on 18/05/2016.
@@ -45,10 +47,42 @@ public class MatDefEditorController {
     public MatDefEditorController(SwingGui gui, MatDefEditorWindow editor) {
         this.gui = gui;
         this.editor = editor;
+
+
         sceneSelection = gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         sceneSelection.addPropertyChangeListener(sceneSelectionChangeListener);
-        diagramUiHandler = new DiagramUiHandler(this);
-        previewRenderer = new MaterialPreviewRenderer(gui);
+
+        Container mainContainer = editor.getContentPane();
+        mainContainer.setLayout(new BorderLayout());
+        JPanel centerPane = new JPanel();
+        mainContainer.add(centerPane, BorderLayout.CENTER);
+
+        centerPane.setLayout(new BorderLayout());
+
+        ErrorLog errorLog = new ErrorLog();
+        errorLog.setPreferredSize(new Dimension(100, 500));
+        centerPane.add(errorLog, BorderLayout.SOUTH);
+
+        Diagram diagram = new Diagram(this);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(diagram);
+        centerPane.add(scrollPane, BorderLayout.CENTER);
+        scrollPane.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                diagram.fitContent();
+            }
+        });
+
+        JToolBar southToolBar = new JToolBar();
+        southToolBar.setFloatable(false);
+        editor.getContentPane().add(southToolBar, BorderLayout.PAGE_END);
+        southToolBar.add(errorLog.getErrorLogButton());
+
+        diagramUiHandler = new DiagramUiHandler(diagram);
+        previewRenderer = new MaterialPreviewRenderer(gui, errorLog);
+
+
     }
 
     public void cleanup() {
@@ -102,7 +136,7 @@ public class MatDefEditorController {
         diagramUiHandler.setCurrentTechniqueName(technique.getName());
         dataHandler.setCurrentTechnique(technique);
         dataHandler.setCurrentMatDef(matDef);
-        previewRenderer.setMatdDef(matDef);
+        previewRenderer.setMatDef(matDef);
         previewRenderer.setTechniqueName(technique.getName());
 
         if (technique.isUsingShaderNodes()) {

@@ -28,6 +28,8 @@ public class Icons {
     public final static ImageIcon in = new ImageIcon(Icons.class.getResource("/icons/in.png"));
     public final static ImageIcon out = new ImageIcon(Icons.class.getResource("/icons/out.png"));
     public final static ImageIcon error = new ImageIcon(Icons.class.getResource("/icons/error.png"));
+    public final static ImageIcon errorSmall = new ImageIcon(Icons.class.getResource("/icons/errorSmall.png"));
+    public final static ImageIcon errorGray = new ImageIcon(Icons.class.getResource("/icons/errorGray.png"));
     public final static ImageIcon code = new ImageIcon(Icons.class.getResource("/icons/code.png"));
     public final static ImageIcon codeHover = new ImageIcon(Icons.class.getResource("/icons/codeHover.png"));
     public final static ImageIcon deleteNode = new ImageIcon(Icons.class.getResource("/icons/deleteNode.png"));

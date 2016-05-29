@@ -13,6 +13,7 @@ import spix.swing.materialEditor.utils.MaterialDefUtils;
 import java.awt.image.*;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.regex.*;
 
 /**
  * Created by Nehon on 24/05/2016.
@@ -21,6 +22,7 @@ public class MaterialService {
 
     private MaterialAppState state;
     private SwingGui gui;
+    private RendererExceptionHandler logHandler = new RendererExceptionHandler();
 
 
     public MaterialService(MaterialAppState state, SwingGui gui) {
@@ -30,7 +32,7 @@ public class MaterialService {
     }
 
 
-    public void requestPreview(PreviewRequest request, RequestCallback<BufferedImage> callback, RequestCallback<RendererException> error){
+    public void requestPreview(PreviewRequest request, RequestCallback<BufferedImage> callback, RequestCallback<CompilationError> error){
         gui.runOnRender(new Runnable() {
             @Override
             public void run() {
@@ -59,10 +61,11 @@ public class MaterialService {
                         }
                     });
                 } catch (RendererException e){
+                    CompilationError ce = new CompilationError(logHandler.getBuffer(), e.getMessage(), m.getActiveTechnique().getDef().getShaderNodes().size());
                     gui.runOnSwing(new Runnable() {
                         @Override
                         public void run() {
-                            error.done(e);
+                            error.done(ce);
                         }
                     });
                     return;
@@ -160,4 +163,57 @@ public class MaterialService {
         return image;
     }
 
+
+    public static class CompilationError{
+        private String shaderSource;
+        private Map<Integer,String> errors = new HashMap<>();
+        private int nbNodes;
+
+        public CompilationError(String source, String error, int nbNodes){
+            shaderSource = source;
+            String[] lines = error.split("\\n");
+            this.nbNodes = nbNodes;
+
+            int index = 0;
+            for (String line : lines) {
+                String[] cells = line.split(":");
+                if(cells.length == 3){
+                    Pattern p = Pattern.compile("0\\((\\d*)\\)");
+                    Matcher m = p.matcher(cells[0].trim());
+                    if(m.find()) {
+                        int ln = Integer.parseInt(m.group(1));
+                        errors.put(ln, cells[1] + ": " + cells[2]);
+                    } else {
+                        errors.put(index, line);
+                    }
+                } else {
+                    errors.put(index, line);
+                }
+                index++;
+            }
+        }
+
+        public String getShaderSource() {
+            return shaderSource;
+        }
+
+        public Map<Integer, String> getErrors() {
+            return errors;
+        }
+
+        public int getNbNodes() {
+            return nbNodes;
+        }
+
+        @Override
+        public String toString() {
+            String res = shaderSource + "\n";
+            for (Integer key : errors.keySet()) {
+                res += key+ " : " + errors.get(key) + "\n";
+            }
+
+            return res;
+
+        }
+    }
 }

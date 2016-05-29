@@ -240,8 +240,8 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
 
         if(displayPreview){
             previewLabel = new JLabel();
-            previewLabel.setBackground(new java.awt.Color(100, 100, 255));
-            previewLabel.setForeground(new java.awt.Color(100, 100, 255));
+            previewLabel.setBackground(new java.awt.Color(100, 100, 100));
+            previewLabel.setForeground(new java.awt.Color(100, 100, 100));
             previewLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
             previewLabel.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
             previewLabel.setIconTextGap(0);

@@ -25,17 +25,8 @@ public class DiagramUiHandler {
     private Map<Shader.ShaderType, Map<String, List<OutPanel>>> outPanels = new HashMap<>();
     protected List<Connection> connections = new ArrayList<>();
 
-    public DiagramUiHandler(MatDefEditorController controller) {
-        diagram = new Diagram(controller);
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setViewportView(diagram);
-        controller.getEditor().getContentPane().add(scrollPane);
-        scrollPane.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                diagram.fitContent();
-            }
-        });
+    public DiagramUiHandler( Diagram diagram) {
+        this.diagram = diagram;
     }
 
     void clear() {
@@ -254,6 +245,7 @@ public class DiagramUiHandler {
 
     public void autoLayout() {
         diagram.autoLayout();
+        diagram.fitContent();
         refreshDiagram();
     }
 
