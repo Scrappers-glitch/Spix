@@ -34,4 +34,10 @@ public class Icons {
     public final static ImageIcon codeHover = new ImageIcon(Icons.class.getResource("/icons/codeHover.png"));
     public final static ImageIcon deleteNode = new ImageIcon(Icons.class.getResource("/icons/deleteNode.png"));
     public final static ImageIcon deleteNodeHover = new ImageIcon(Icons.class.getResource("/icons/deleteNodeHover.png"));
+    public final static ImageIcon sphere = new ImageIcon(Icons.class.getResource("/icons/Sphere.png"));
+    public final static ImageIcon quad = new ImageIcon(Icons.class.getResource("/icons/Quad.png"));
+    public final static ImageIcon cube = new ImageIcon(Icons.class.getResource("/icons/cube.png"));
+    public final static ImageIcon sphereHover = new ImageIcon(Icons.class.getResource("/icons/SphereHover.png"));
+    public final static ImageIcon quadHover = new ImageIcon(Icons.class.getResource("/icons/QuadHover.png"));
+    public final static ImageIcon cubeHover = new ImageIcon(Icons.class.getResource("/icons/cubeHover.png"));
 }

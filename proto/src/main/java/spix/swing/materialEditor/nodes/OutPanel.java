@@ -18,6 +18,8 @@ import java.util.List;
 public abstract class OutPanel extends NodePanel {
 
     private String varName = "";
+    private MaterialAppState.DisplayType displayType = MaterialAppState.DisplayType.Box;
+    private OutToolBar outToolBar;
 
     private OutPanel(MatDefEditorController controller, String key, ShaderNodeVariable var, Color color, Icon icon) {
         super(controller, key, color, icon);
@@ -30,6 +32,7 @@ public abstract class OutPanel extends NodePanel {
         List<ShaderNodeVariable> inputs = new ArrayList<ShaderNodeVariable>();
         inputs.add(new ShaderNodeVariable(var.getType(), var.getName()));
 
+        outToolBar = new OutToolBar(this);
         init(inputs, outputs);
     }
 
@@ -53,10 +56,37 @@ public abstract class OutPanel extends NodePanel {
         return inputDots.values().iterator().next();
     }
 
+    public void setDisplayType(MaterialAppState.DisplayType displayType) {
+        this.displayType = displayType;
+        controller.refreshPreviews();
+    }
+
     public PreviewRequest makePreviewRequest() {
 
         String nodeName = getForNodeName();
-        return new PreviewRequest(getShaderType(), nodeName, previewLabel, MaterialAppState.DisplayType.Box);
+        return new PreviewRequest(getShaderType(), nodeName, previewLabel, displayType);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g1) {
+        super.paintComponent(g1);
+        if(!selected) {
+            if (outToolBar.isVisible()) {
+                outToolBar.setVisible(false);
+            }
+        }
+    }
+
+    @Override
+    protected void showToolBar() {
+        super.showToolBar();
+        outToolBar.display();
+    }
+
+    @Override
+    public void cleanup() {
+        super.cleanup();
+        outToolBar.cleanup();
     }
 
     public String getForNodeName() {

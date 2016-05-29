@@ -11,9 +11,8 @@ import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.dialog.*;
-import spix.swing.materialEditor.errorlog.*;
-import spix.swing.materialEditor.nodes.*;
-import spix.swing.materialEditor.preview.*;
+import spix.swing.materialEditor.errorlog.ErrorLog;
+import spix.swing.materialEditor.nodes.NodePanel;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import javax.swing.*;
@@ -22,8 +21,6 @@ import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
 import java.util.List;
-
-import static com.sun.javafx.fxml.expression.Expression.add;
 
 /**
  * Created by Nehon on 18/05/2016.
@@ -175,6 +172,10 @@ public class MatDefEditorController {
         diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
     }
 
+    public void refreshPreviews(){
+        diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
+    }
+
     public Connection connect(Dot start, Dot end) {
         Connection conn = diagramUiHandler.connect(this, start, end);
         dataHandler.addMapping(MaterialDefUtils.createVariableMapping(start, end));
@@ -273,6 +274,7 @@ public class MatDefEditorController {
 
 
     public void displayAddNodeDialog(Point clickPosition) {
+        // TODO: 29/05/2016 The assetManager shouldn't be shared through the blackboard. If the swing part needs the assetManager to load files, it should use a Request and a Service to retrieve those files.
         AssetManager assetManager = (AssetManager)gui.getSpix().getBlackboard().get("application.assetmanager");
         AddNodeDialog d = new AddNodeDialog(editor, true, assetManager, this, clickPosition);
         d.setVisible(true);

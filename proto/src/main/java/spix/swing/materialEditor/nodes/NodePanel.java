@@ -31,7 +31,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
     private String nodeName;
     private String key;
     private NodeToolBar toolBar;
-    private boolean selected = false;
+    protected boolean selected = false;
     protected boolean displayPreview = false;
 
 
@@ -195,7 +195,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         }
     }
 
-    private void showToolBar() {
+    protected void showToolBar() {
         toolBar.display();
     }
 
@@ -208,11 +208,6 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
 
     public void cleanup() {
         toolBar.cleanup();
-
-        // TODO: 21/05/2016 For some unknown reason the toolBar parent is sometimes null... it should not happen yet it does.
-        if (toolBar.getParent() != null) {
-            toolBar.getParent().remove(toolBar);
-        }
     }
 
     /**
