@@ -48,7 +48,7 @@ public class MaterialDefUtils {
                     if (var.getNameSpace().equals("Global")) {
                         computeGlobals(technique, fragmentGlobals, def, var);
                     } else if (var.getNameSpace().equals("Attr")) {
-                        attributes.add(var);
+                        addUnique(attributes, var);
                     } else if (var.getNameSpace().equals("MatParam") || var.getNameSpace().equals("WorldParam")){
                         //Remove the g_ and the m_ form the uniform name
                         //TODO tbh I don't know why it's here, IMO it shouldn't, they should be added during the shader generation phase not before
