@@ -38,6 +38,7 @@ public class MatDefEditorController {
     private SelectionHandler selectionHandler = new SelectionHandler();
     private DataHandler dataHandler = new DataHandler();
     private ErrorLog errorLog = new ErrorLog();
+    private Deque<String> sortedNodes;
 
 
     public MatDefEditorController(SwingGui gui, MatDefEditorWindow editor) {
@@ -168,12 +169,12 @@ public class MatDefEditorController {
         }
 
         //this will change when we have meta data
-        diagramUiHandler.autoLayout();
         refreshPreviews();
+        diagramUiHandler.autoLayout(sortedNodes);
     }
 
     public void refreshPreviews(){
-        dataHandler.sortNodes(diagramUiHandler.getNodesForSort());
+        sortedNodes = dataHandler.sortNodes(diagramUiHandler.getNodesForSort());
         diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
     }
 

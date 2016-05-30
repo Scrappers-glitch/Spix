@@ -125,7 +125,7 @@ public class DataHandler {
         this.currentMatDef = currentMatDef;
     }
 
-    public void sortNodes(List<Node> nodeList){
+    public Deque<String> sortNodes(List<Node> nodeList){
         for (Node node : nodeList) {
             ShaderNode sn = nodes.get(node.getKey());
             //if the node has no output it should be as soon as possible ins the node list
@@ -157,5 +157,6 @@ public class DataHandler {
         }
 
         currentTechnique.setShaderNodes(sortedNodes);
+        return sortedStack;
     }
 }

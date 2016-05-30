@@ -248,11 +248,63 @@ public class DiagramUiHandler {
         return null;
     }
 
-    public void autoLayout() {
-        diagram.autoLayout();
+    public void autoLayout(Deque<String> sortedNodes) {
+        //diagram.autoLayout();
+        int offset = 200;
+        final int wMargin = 25;
+        final int hMargin = 10;
+        for (String key : sortedNodes) {
+            NodePanel p = nodes.get(key);
+
+            if (p instanceof ShaderNodePanel) {
+                int heightOffset = 0;
+                p.setLocation(offset, getNodeTop(p));
+                for (Dot dot : p.getInputConnectPoints().values()) {
+                    for (Dot pair : dot.getConnectedDots()) {
+                        NodePanel p2 = pair.getNode();
+                        if (!(p2 instanceof ShaderNodePanel)) {
+                            int x = p.getX() - p2.getWidth() - wMargin;
+                            int y = p.getY() + heightOffset;
+                            p2.setLocation(x, y);
+
+                            heightOffset += p2.getHeight() + hMargin;
+                        }
+                    }
+                }
+                heightOffset = 0;
+                for (Dot dot : p.getOutputConnectPoints().values()) {
+                    for (Dot pair : dot.getConnectedDots()) {
+                        NodePanel p2 = pair.getNode();
+                        if (p2 instanceof OutPanel) {
+                            int x = p.getX() + p.getWidth() + wMargin;
+                            int y = p.getY() + heightOffset;
+                            p2.setLocation(x, y);
+
+                            heightOffset += p2.getHeight() + hMargin;
+                        }
+                    }
+                }
+                offset += 350;
+            }
+
+        }
         diagram.fitContent();
         refreshDiagram();
     }
+
+    private int getNodeTop(NodePanel node) {
+
+        if (node.getShaderType() == Shader.ShaderType.Vertex) {
+            return 50;
+        }
+        if (node.getShaderType() == Shader.ShaderType.Fragment) {
+            return 300;
+        }
+
+        return 0;
+
+    }
+
 
     public void fitContent() {
         diagram.fitContent();
@@ -274,16 +326,16 @@ public class DiagramUiHandler {
         previewRenderer.batchRequests(gui, errorLog, getOutPanelsForPreviews(), matDef, currentTechniqueName);
     }
 
-    public List<Node> getNodesForSort(){
+    public List<Node> getNodesForSort() {
         List<Node> sortNodes = new ArrayList<>();
         Map<String, Node> nodeMap = new HashMap<>();
         for (String key : nodes.keySet()) {
             NodePanel p = nodes.get(key);
-            if(isNodeForSort(p)) {
+            if (isNodeForSort(p)) {
                 Node n = getNode(nodeMap, key, p.getShaderType());
                 for (Dot dot : p.getOutputConnectPoints().values()) {
                     for (Dot pair : dot.getConnectedDots()) {
-                        if(isNodeForSort(pair.getNode())){
+                        if (isNodeForSort(pair.getNode())) {
                             Node n2 = getNode(nodeMap, pair.getNode().getKey(), pair.getNode().getShaderType());
                             n.addChild(n2);
                             n2.addParent(n);
@@ -304,7 +356,7 @@ public class DiagramUiHandler {
 
     private Node getNode(Map<String, Node> nodeMap, String key, Shader.ShaderType type) {
         Node n = nodeMap.get(key);
-        if(n == null){
+        if (n == null) {
             n = new Node(key, type);
             nodeMap.put(key, n);
         }
