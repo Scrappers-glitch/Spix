@@ -114,7 +114,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         return Collections.unmodifiableMap(inputDots);
     }
 
-    public Map<String, Dot> getOutputConnectPoints(String varName) {
+    public Map<String, Dot> getOutputConnectPoints() {
         return Collections.unmodifiableMap(outputDots);
     }
 
@@ -208,6 +208,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
 
     public void cleanup() {
         toolBar.cleanup();
+        toolBar.getParent().remove(toolBar);
     }
 
     /**

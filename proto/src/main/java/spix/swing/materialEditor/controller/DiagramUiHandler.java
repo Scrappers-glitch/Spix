@@ -7,6 +7,7 @@ import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.errorlog.ErrorLog;
 import spix.swing.materialEditor.nodes.*;
 import spix.swing.materialEditor.preview.*;
+import spix.swing.materialEditor.sort.Node;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 import spix.util.SwingUtils;
 
@@ -23,7 +24,7 @@ public class DiagramUiHandler {
 
     private Diagram diagram;
     private String currentTechniqueName;
-    private Map<String, NodePanel> nodes = new LinkedHashMap<>();
+    private Map<String, NodePanel> nodes = new HashMap<>();
     //A convenience map to easy access to the output nodes;
     private Map<Shader.ShaderType, Map<String, List<OutPanel>>> outPanels = new HashMap<>();
     protected List<Connection> connections = new ArrayList<>();
@@ -271,6 +272,43 @@ public class DiagramUiHandler {
     public void refreshPreviews(SwingGui gui, ErrorLog errorLog, MaterialDef matDef) {
         MaterialPreviewRenderer previewRenderer = new MaterialPreviewRenderer();
         previewRenderer.batchRequests(gui, errorLog, getOutPanelsForPreviews(), matDef, currentTechniqueName);
+    }
+
+    public List<Node> getNodesForSort(){
+        List<Node> sortNodes = new ArrayList<>();
+        Map<String, Node> nodeMap = new HashMap<>();
+        for (String key : nodes.keySet()) {
+            NodePanel p = nodes.get(key);
+            if(isNodeForSort(p)) {
+                Node n = getNode(nodeMap, key, p.getShaderType());
+                for (Dot dot : p.getOutputConnectPoints().values()) {
+                    for (Dot pair : dot.getConnectedDots()) {
+                        if(isNodeForSort(pair.getNode())){
+                            Node n2 = getNode(nodeMap, pair.getNode().getKey(), pair.getNode().getShaderType());
+                            n.addChild(n2);
+                            n2.addParent(n);
+                        }
+                    }
+                }
+                sortNodes.add(n);
+            }
+        }
+
+
+        return sortNodes;
+    }
+
+    private boolean isNodeForSort(NodePanel p) {
+        return p instanceof ShaderNodePanel || p instanceof OutPanel;
+    }
+
+    private Node getNode(Map<String, Node> nodeMap, String key, Shader.ShaderType type) {
+        Node n = nodeMap.get(key);
+        if(n == null){
+            n = new Node(key, type);
+            nodeMap.put(key, n);
+        }
+        return n;
     }
 
 }

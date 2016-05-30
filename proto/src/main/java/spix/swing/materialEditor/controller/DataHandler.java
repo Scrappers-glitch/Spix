@@ -3,11 +3,13 @@ package spix.swing.materialEditor.controller;
 import com.jme3.material.*;
 import com.jme3.shader.*;
 import com.jme3.texture.image.ColorSpace;
+import spix.swing.materialEditor.sort.*;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import java.util.*;
 
 import static com.jme3.shader.Shader.ShaderType.Fragment;
+import static com.jme3.shader.Shader.ShaderType.Vertex;
 
 /**
  * Created by Nehon on 22/05/2016.
@@ -121,5 +123,39 @@ public class DataHandler {
 
     public void setCurrentMatDef(MaterialDef currentMatDef) {
         this.currentMatDef = currentMatDef;
+    }
+
+    public void sortNodes(List<Node> nodeList){
+        for (Node node : nodeList) {
+            ShaderNode sn = nodes.get(node.getKey());
+            //if the node has no output it should be as soon as possible ins the node list
+            //so we set it as parent to any node that is not in his parent line.
+            //vertex nodes must be befor any fragment node, so we add precedence
+            if(node.getType() == Vertex){
+                for (Node node1 : nodeList) {
+                    if(node1.getType() == Fragment){
+                        node.addChild(node1);
+                    }
+                }
+            }
+        }
+
+//        for (Node sortNode : nodeList) {
+//            System.err.println(sortNode);
+//        }
+
+        Deque<String> sortedStack = TopologicalSort.sort(nodeList);
+
+        List<ShaderNode> sortedNodes = new ArrayList<>();
+        //System.err.println("----------------Node Order------------------");
+        for (String key : sortedStack) {
+            ShaderNode n = nodes.get(key);
+            if(n != null){
+                sortedNodes.add(n);
+          //      System.err.println(n.getName());
+            }
+        }
+
+        currentTechnique.setShaderNodes(sortedNodes);
     }
 }

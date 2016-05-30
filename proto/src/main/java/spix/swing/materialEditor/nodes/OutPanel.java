@@ -87,6 +87,7 @@ public abstract class OutPanel extends NodePanel {
     public void cleanup() {
         super.cleanup();
         outToolBar.cleanup();
+        outToolBar.getParent().remove(outToolBar);
     }
 
     public String getForNodeName() {

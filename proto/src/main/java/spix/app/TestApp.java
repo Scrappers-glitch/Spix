@@ -675,6 +675,8 @@ public class TestApp extends SimpleApplication {
 
 
         geom = new Geometry("Box", b);
+     //  mat = new Material(assetManager, "Common/MatDefs/Misc/UnshadedNodes.j3md");
+        //mat = new Material(assetManager, "MatDefs/circle/circle.j3md");
         mat = new Material(assetManager, "MatDefs/default/default.j3md");
         mat.setColor("Color", ColorRGBA.Yellow);
         geom.setMaterial(mat);

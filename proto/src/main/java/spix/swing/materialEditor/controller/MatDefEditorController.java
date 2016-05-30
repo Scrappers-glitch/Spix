@@ -169,17 +169,18 @@ public class MatDefEditorController {
 
         //this will change when we have meta data
         diagramUiHandler.autoLayout();
-        diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
+        refreshPreviews();
     }
 
     public void refreshPreviews(){
+        dataHandler.sortNodes(diagramUiHandler.getNodesForSort());
         diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
     }
 
     public Connection connect(Dot start, Dot end) {
         Connection conn = diagramUiHandler.connect(this, start, end);
         dataHandler.addMapping(MaterialDefUtils.createVariableMapping(start, end));
-        diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
+        refreshPreviews();
         return conn;
     }
 
@@ -191,7 +192,7 @@ public class MatDefEditorController {
 
     public void removeConnection(Connection conn) {
         removeConnectionNoRefresh(conn);
-        diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
+        refreshPreviews();
     }
 
     public void removeNode(String key) {
@@ -206,7 +207,7 @@ public class MatDefEditorController {
         */
         diagramUiHandler.removeNode(this, key);
         dataHandler.removeShaderNodeForKey(key);
-        diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
+        refreshPreviews();
     }
 
     public NodePanel addShaderNode(ShaderNode sn) {
