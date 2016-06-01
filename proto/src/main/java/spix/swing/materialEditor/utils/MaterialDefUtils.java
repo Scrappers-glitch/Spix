@@ -4,9 +4,9 @@ import com.jme3.material.*;
 import com.jme3.shader.*;
 import spix.swing.materialEditor.Dot;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import static java.awt.SystemColor.info;
 import static spix.swing.materialEditor.icons.Icons.node;
 import static sun.management.snmp.jvminstr.JvmThreadInstanceEntryImpl.ThreadStateMap.Byte1.other;
 
@@ -104,6 +104,94 @@ public class MaterialDefUtils {
                     unusedNodes.remove(sn.getName());
                 }
             }
+        }
+        computeConditions(technique);
+    }
+
+    private static void computeConditions(TechniqueDef techniqueDef) {
+
+        ShaderGenerationInfo info = techniqueDef.getShaderGenerationInfo();
+        updateConditions(info.getVertexUniforms(), techniqueDef.getShaderNodes());
+        updateConditions(info.getFragmentUniforms(), techniqueDef.getShaderNodes());
+        updateConditions(info.getVaryings(), techniqueDef.getShaderNodes());
+
+        for (ShaderNodeVariable v : info.getVaryings()) {
+            for (ShaderNode sn : techniqueDef.getShaderNodes()) {
+                if (sn.getDefinition().getType() == Shader.ShaderType.Vertex) {
+                    for (VariableMapping mapping : sn.getInputMapping()) {
+                        if (mapping.getLeftVariable().equals(v)) {
+                            if (mapping.getCondition() == null || v.getCondition() == null) {
+                                mapping.setCondition(v.getCondition());
+                            } else {
+                                mapping.setCondition("(" + mapping.getCondition() + ") || (" + v.getCondition() + ")");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        updateConditions(info.getAttributes(), techniqueDef.getShaderNodes());
+    }
+
+    private static void updateConditions(List<ShaderNodeVariable> vars, List<ShaderNode> allNodes) {
+        for (ShaderNodeVariable shaderNodeVariable : vars) {
+            makeCondition(shaderNodeVariable, allNodes);
+        }
+    }
+
+    // TODO: 01/06/2016 All this condition computation seems very very inefficient, I should rework this.
+    private static void makeCondition(ShaderNodeVariable var, List<ShaderNode> allNodes) {
+        var.setCondition(null);
+        List<ShaderNode> nodes = new ArrayList<>();
+
+        for (ShaderNode node : allNodes) {
+            for (VariableMapping mapping : node.getInputMapping()) {
+                if(mapping.getRightVariable() == var){
+                    nodes.add(node);
+                }
+            }
+        }
+
+
+        for (ShaderNode node : nodes) {
+            String condition = null;
+            for (VariableMapping mapping : node.getInputMapping()) {
+                if (mapping.getRightVariable().equals(var)) {
+                    if (mapping.getCondition() == null) {
+                        condition = null;
+                        break;
+                    }
+                    if (condition == null) {
+                        condition = "(" + mapping.getCondition() + ")";
+                    } else {
+                        if (!condition.contains(mapping.getCondition())) {
+                            condition = condition + " || (" + mapping.getCondition() + ")";
+                        }
+                    }
+                }
+            }
+            if (node.getCondition() == null && condition == null) {
+                var.setCondition(null);
+                return;
+            }
+            if (node.getCondition() != null) {
+                if (condition == null) {
+                    condition = node.getCondition();
+                } else {
+                    if (!condition.contains(node.getCondition())) {
+                        condition = "(" + node.getCondition() + ") && (" + condition + ")";
+                    }
+                }
+            }
+            if (var.getCondition() == null) {
+                var.setCondition(condition);
+            } else {
+                if (!var.getCondition().contains(condition)) {
+                    var.setCondition("(" + var.getCondition() + ") || (" + condition + ")");
+                }
+            }
+
         }
     }
 
