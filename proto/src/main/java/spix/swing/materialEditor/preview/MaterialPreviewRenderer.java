@@ -8,7 +8,7 @@ import com.jme3.material.MaterialDef;
 import spix.app.material.MaterialService;
 import spix.core.RequestCallback;
 import spix.swing.SwingGui;
-import spix.swing.materialEditor.errorlog.ErrorLog;
+import spix.swing.materialEditor.panels.ErrorLog;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.OutPanel;
 import spix.swing.materialEditor.utils.MaterialDefUtils;

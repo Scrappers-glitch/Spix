@@ -11,9 +11,10 @@ import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.dialog.*;
-import spix.swing.materialEditor.errorlog.ErrorLog;
+import spix.swing.materialEditor.panels.*;
+import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.NodePanel;
-import spix.swing.materialEditor.utils.MaterialDefUtils;
+import spix.swing.materialEditor.utils.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,6 +22,8 @@ import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
 import java.util.List;
+
+import static com.sun.javafx.fxml.expression.Expression.add;
 
 /**
  * Created by Nehon on 18/05/2016.
@@ -37,7 +40,7 @@ public class MatDefEditorController {
     private DiagramUiHandler diagramUiHandler;
     private SelectionHandler selectionHandler = new SelectionHandler();
     private DataHandler dataHandler = new DataHandler();
-    private ErrorLog errorLog = new ErrorLog();
+    private ErrorLog errorLog;
     private Deque<String> sortedNodes;
 
 
@@ -56,8 +59,22 @@ public class MatDefEditorController {
 
         centerPane.setLayout(new BorderLayout());
 
+        errorLog = new ErrorLog(centerPane);
         errorLog.setPreferredSize(new Dimension(100, 500));
         centerPane.add(errorLog, BorderLayout.SOUTH);
+
+        DockPanel westPanel = new DockPanel(DockPanel.Slot.West, centerPane);
+        westPanel.setPreferredSize(new Dimension(500, 10));
+        JEditorPane ed = new JEditorPane("glsl","Hello world");
+        westPanel.setComponent(new JScrollPane(ed));
+        centerPane.add(westPanel,BorderLayout.WEST);
+
+
+        NoneSelectedButtonGroup group = new NoneSelectedButtonGroup();
+        JToggleButton b = westPanel.getButton();
+        b.setIcon(Icons.shaderCode);
+        b.setRolloverIcon(Icons.shaderCodeHover);
+
 
         Diagram diagram = new Diagram(this);
         JScrollPane scrollPane = new JScrollPane();
@@ -70,10 +87,23 @@ public class MatDefEditorController {
             }
         });
 
+
+        JToolBar westToolBar = new JToolBar(JToolBar.VERTICAL);
+        westToolBar.setFloatable(false);
+        editor.getContentPane().add(westToolBar, BorderLayout.WEST);
+        group.add(b);
+        westToolBar.add(b);
+
         JToolBar southToolBar = new JToolBar();
         southToolBar.setFloatable(false);
         editor.getContentPane().add(southToolBar, BorderLayout.PAGE_END);
-        southToolBar.add(errorLog.getErrorLogButton());
+
+        southToolBar.addSeparator(new Dimension(30,10));
+        southToolBar.add(errorLog.getButton());
+
+
+
+
 
         diagramUiHandler = new DiagramUiHandler(diagram);
 
@@ -349,3 +379,4 @@ public class MatDefEditorController {
         // TODO: 22/05/2016 save the location of the node in the metadata
     }
 }
+

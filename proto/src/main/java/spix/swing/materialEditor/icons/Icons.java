@@ -40,4 +40,7 @@ public class Icons {
     public final static ImageIcon sphereHover = new ImageIcon(Icons.class.getResource("/icons/SphereHover.png"));
     public final static ImageIcon quadHover = new ImageIcon(Icons.class.getResource("/icons/QuadHover.png"));
     public final static ImageIcon cubeHover = new ImageIcon(Icons.class.getResource("/icons/cubeHover.png"));
+    public final static ImageIcon shaderCode = new ImageIcon(Icons.class.getResource("/icons/shaderCodeButton.png"));
+    public final static ImageIcon shaderCodeHover = new ImageIcon(Icons.class.getResource("/icons/shaderCodeButtonHover.png"));
 }
+

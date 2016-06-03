@@ -4,7 +4,7 @@ import com.jme3.material.*;
 import com.jme3.shader.*;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
-import spix.swing.materialEditor.errorlog.ErrorLog;
+import spix.swing.materialEditor.panels.ErrorLog;
 import spix.swing.materialEditor.nodes.*;
 import spix.swing.materialEditor.preview.*;
 import spix.swing.materialEditor.sort.Node;

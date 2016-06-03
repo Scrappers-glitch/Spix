@@ -1,39 +1,27 @@
-package spix.swing.materialEditor.errorlog;
+package spix.swing.materialEditor.panels;
 
-import com.jme3.renderer.opengl.GLRenderer;
 import spix.app.material.MaterialService;
 import spix.swing.materialEditor.icons.Icons;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.logging.*;
-
-import static java.awt.Color.gray;
 
 /**
  * Created by Nehon on 28/05/2016.
  */
-public class ErrorLog  extends JPanel{
+public class ErrorLog  extends DockPanel{
 
-    private JButton errorLogButton;
+
     private JList<String> errorList = new JList<>();
     private MaterialService.CompilationError lastError;
 
-    public ErrorLog(){
+    public ErrorLog(Container container){
+        super(Slot.South, container);
 
-        setLayout(new BorderLayout());
-
-        errorLogButton = new JButton("Error log");
-        errorLogButton.setToolTipText("Toggle error log");
-        errorLogButton.setVerticalAlignment(SwingConstants.CENTER);
-
-        errorLogButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(!isVisible());
-            }
-        });
+        button.setText("Error log");
+        button.setToolTipText("Toggle error log");
+        button.setVerticalAlignment(SwingConstants.CENTER);
 
         errorList.setOpaque(true);
         errorList.setBackground(new Color(50,50,50));
@@ -57,7 +45,7 @@ public class ErrorLog  extends JPanel{
             }
         });
 
-        add(new JScrollPane(errorList), BorderLayout.CENTER);
+        setComponent(new JScrollPane(errorList));
 
         noError();
     }
@@ -66,9 +54,10 @@ public class ErrorLog  extends JPanel{
 
 
     public void noError(){
-        errorLogButton.setText("Error Log");
-        errorLogButton.setForeground(new Color(50,50,50));
-        errorLogButton.setIcon(Icons.errorGray);
+        button.setText("Error Log");
+        button.setForeground(new Color(50,50,50));
+        button.setIcon(Icons.errorGray);
+        button.getModel().setSelected(false);
         setVisible(false);
     }
 
@@ -82,12 +71,9 @@ public class ErrorLog  extends JPanel{
         lastError = error;
         errorList.setModel(model);
 
-        errorLogButton.setText("Error Log - " + error.getErrors().get(0));
-        errorLogButton.setForeground(new Color(250,250,250));
-        errorLogButton.setIcon(Icons.errorSmall);
+        button.setText("Error Log - " + error.getErrors().get(0));
+        button.setForeground(new Color(250,250,250));
+        button.setIcon(Icons.errorSmall);
     }
 
-    public JButton getErrorLogButton() {
-        return errorLogButton;
-    }
 }
