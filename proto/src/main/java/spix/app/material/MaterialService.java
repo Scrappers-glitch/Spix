@@ -12,7 +12,7 @@ import spix.swing.materialEditor.preview.PreviewRequest;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import java.awt.image.*;
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.util.*;
 import java.util.regex.*;
 
@@ -54,7 +54,7 @@ public class MaterialService {
                 m.setColor("Color", ColorRGBA.Yellow);
 
                 try {
-                    BufferedImage image = convert(state.requestPreview(m, request.getTechniqueName(), request.getDisplayType()));
+                    BufferedImage image = convert(state.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex()));
                     gui.runOnSwing(new Runnable() {
                         @Override
                         public void run() {

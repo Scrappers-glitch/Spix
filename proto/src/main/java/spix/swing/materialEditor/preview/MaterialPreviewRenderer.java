@@ -4,7 +4,8 @@
  */
 package spix.swing.materialEditor.preview;
 
-import com.jme3.material.MaterialDef;
+import com.jme3.material.*;
+import com.jme3.shader.ShaderNodeVariable;
 import spix.app.material.MaterialService;
 import spix.core.RequestCallback;
 import spix.swing.SwingGui;
@@ -27,13 +28,20 @@ public class MaterialPreviewRenderer {
 
     public void batchRequests(SwingGui gui, ErrorLog errorLog, final List<OutPanel> outs, MaterialDef matDef, String techniqueName) {
 
+        TechniqueDef techDef = matDef.getTechniqueDefs(techniqueName).get(0);
+        MaterialDefUtils.computeShaderNodeGenerationInfo(techDef);
+
         for (OutPanel out : outs) {
 
             PreviewRequest request = out.makePreviewRequest();
-
             request.setMaterialDef(matDef);
-            MaterialDefUtils.computeShaderNodeGenerationInfo(matDef.getTechniqueDefs(techniqueName).get(0));
             request.setTechniqueName(techniqueName);
+            for (int i = 0; i < techDef.getShaderGenerationInfo().getFragmentGlobals().size(); i++) {
+                ShaderNodeVariable var = techDef.getShaderGenerationInfo().getFragmentGlobals().get(i);
+                if(var.getName().equals(out.getVarName())){
+                    request.setOutIndex(i);
+                }
+            }
             gui.getSpix().getService(MaterialService.class).requestPreview(request,
                     new RequestCallback<BufferedImage>() {
                         @Override

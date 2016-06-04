@@ -13,6 +13,7 @@ import com.jme3.shader.*;
 import com.jme3.texture.*;
 import com.jme3.util.*;
 
+import java.lang.reflect.Field;
 import java.nio.*;
 import java.util.*;
 import java.util.logging.*;
@@ -36,9 +37,9 @@ public class MaterialAppState extends BaseAppState {
     private FrameBuffer offBuffer;
     private ByteBuffer cpuBuf = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
     private ShaderNode dummySN;
-    private final static boolean debug = false;
     private Glsl150ShaderGenerator glsl15;
     private Glsl100ShaderGenerator glsl10;
+    private Texture2D[] texs;
 
     public enum DisplayType {
 
@@ -91,7 +92,6 @@ public class MaterialAppState extends BaseAppState {
 
         offBuffer = new FrameBuffer(SIZE, SIZE, 1);
         offBuffer.setDepthBuffer(Image.Format.Depth);
-        offBuffer.setColorBuffer(Image.Format.RGBA8);
         offBuffer.setSrgb(true);
         vp.setOutputFrameBuffer(offBuffer);
 
@@ -107,6 +107,12 @@ public class MaterialAppState extends BaseAppState {
 
         glsl15 = new Glsl150ShaderGenerator(getApplication().getAssetManager());
         glsl10 = new Glsl100ShaderGenerator(getApplication().getAssetManager());
+
+        texs = new Texture2D[8];
+        for (int i = 0; i < texs.length; i++) {
+            texs[i] = new Texture2D(SIZE,SIZE, Image.Format.RGBA8);
+        }
+
     }
 
     public ShaderNode getDummySN() {
@@ -118,40 +124,48 @@ public class MaterialAppState extends BaseAppState {
 
     }
 
-    public ByteBuffer requestPreview(Material mat, String techniqueName, DisplayType displayType) throws RendererException {
+    public ByteBuffer requestPreview(Material mat, String techniqueName, DisplayType displayType, int index) throws RendererException {
         setupScene(displayType, mat);
         RenderManager rm = getApplication().getRenderManager();
         mat.selectTechnique(techniqueName, rm);
+
+        int nbOut = mat.getActiveTechnique().getDef().getShaderGenerationInfo().getFragmentGlobals().size();
+        offBuffer.resetObject();
+        offBuffer.setMultiTarget(nbOut > 1);
+        offBuffer.clearColorTargets();
+        for (int i = 0; i < nbOut; i++) {
+            //textures here are useless, I never use them because I read directly from the framebuffer.
+            //However they are needed because you can't add multiple render target in the frame buffer class otherwise.
+            // TODO: 04/06/2016 add support in the FrameBuffer class for adding more render buffer with out a texture.
+            offBuffer.addColorTexture(texs[i]);
+        }
 
         Renderer r = rm.getRenderer();
         r.setFrameBuffer(offBuffer);
         r.clearBuffers(true, true, true);
         rm.renderViewPortRaw(vp);
 
-        displayCode(mat.getActiveTechnique().getDef());
+        try {
+            // this is a shameful hack.
+            // readFrameBufferWithFormat only read from the first render buffer.
+            // to read the relevant buffer, I access the list with reflection and remove the first buffers until the one I need is the first one.
+            // TODO: 04/06/2016 Add support in the renderer for reading all the buffers of a framebuffer or/and a specified one.
+            Field colorBufField = offBuffer.getClass().getDeclaredField("colorBufs");
+            colorBufField.setAccessible(true);
+            List<FrameBuffer.RenderBuffer> buffers = (List<FrameBuffer.RenderBuffer>)colorBufField.get(offBuffer);
+            for (int i = 0; i < index; i++) {
+                FrameBuffer.RenderBuffer rb = buffers.remove(0);
+                rb.resetObject();
+            }
+            r.readFrameBufferWithFormat(offBuffer, cpuBuf, Image.Format.BGRA8);
 
-        r.readFrameBufferWithFormat(offBuffer, cpuBuf, Image.Format.BGRA8);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
 
         return cpuBuf;
-    }
-
-    private void displayCode(TechniqueDef def) {
-        if(debug) {
-            glsl15.initialize(def);
-            // that how you need to generate the shader
-            StringBuilder sb = new StringBuilder();
-            sb.append(def.getShaderPrologue());
-
-            Shader s = glsl15.generateShader(sb.toString());
-            System.err.println("########################################################################");
-            System.err.println(def.getName());
-            System.err.println("########################################################################");
-            //Then it's like before.
-            for (Shader.ShaderSource shaderSource : s.getSources()) {
-                System.err.println("##########   " + shaderSource.getType() + "   ##########");
-                System.err.println(shaderSource.getSource());
-            }
-        }
     }
 
     public Map<String, Shader> generateCode(TechniqueDef def){
@@ -170,8 +184,6 @@ public class MaterialAppState extends BaseAppState {
 
     private void setupScene(DisplayType displayType, Material mat) {
 
-//        mat= new Material(getApplication().getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-//        mat.setColor("Color", ColorRGBA.White);
         previewNode.detachAllChildren();
         switch (displayType) {
             case Box:

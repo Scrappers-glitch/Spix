@@ -30,7 +30,10 @@ public class AddFragmentOutputDialog extends JDialog {
         initComponents();
         DefaultComboBoxModel model = new DefaultComboBoxModel();
 
-        for (int i = 0; i < 50; i++) {
+        //most often the maximum number of render target is 8... though it may change in the future.
+        //you can fetch the capability from the GPU but here you don't know where the shader will be executed so it's not relevant.
+        //8 is already a lot so it might never be a problem.
+        for (int i = 0; i < 8; i++) {
             model.addElement("color" + (i==0?"":i));
         }
 

@@ -1,6 +1,6 @@
 package spix.swing.materialEditor.preview;
 
-import com.jme3.material.*;
+import com.jme3.material.MaterialDef;
 import com.jme3.shader.Shader;
 import spix.app.material.MaterialAppState;
 
@@ -17,6 +17,7 @@ public class PreviewRequest {
     private String outputForNode;
     private MaterialDef materialDef;
     private String techniqueName;
+    private int outIndex = 0;
 
     public PreviewRequest(Shader.ShaderType shaderType, String outputForNode, JLabel targetLabel, MaterialAppState.DisplayType displayType) {
         this.shaderType = shaderType;
@@ -39,6 +40,14 @@ public class PreviewRequest {
 
     public JLabel getTargetLabel() {
         return targetLabel;
+    }
+
+    public int getOutIndex() {
+        return outIndex;
+    }
+
+    public void setOutIndex(int outIndex) {
+        this.outIndex = outIndex;
     }
 
     public MaterialDef getMaterialDef() {
