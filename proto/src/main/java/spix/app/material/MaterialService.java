@@ -4,6 +4,7 @@ import com.jme3.material.*;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.RendererException;
 import com.jme3.shader.*;
+import com.sun.org.apache.bcel.internal.classfile.Code;
 import spix.app.utils.CloneUtils;
 import spix.core.RequestCallback;
 import spix.swing.SwingGui;
@@ -46,7 +47,7 @@ public class MaterialService {
                 //creating a new material with the mat def.
                 Material m = new Material(def);
                 //if the preview is for a vertex output, we switch to wireframe mode.
-                boolean wire = request.getShaderType() == Shader.ShaderType.Vertex ? true : false;
+                boolean wire = request.getShaderType() == Shader.ShaderType.Vertex;
                 m.getAdditionalRenderState().setWireframe(wire);
 
 
@@ -75,6 +76,25 @@ public class MaterialService {
             }
         });
     }
+
+    public void requestCode(TechniqueDef def, RequestCallback<Map<String, Shader>> callback){
+
+        //Not really needed as it should be thread safe.
+        gui.runOnRender(new Runnable() {
+            @Override
+            public void run() {
+                Map<String, Shader> shaders = state.generateCode(def);
+                gui.runOnSwing(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.done(shaders);
+                    }
+                });
+            }
+        });
+
+    }
+
 
     /**
      * Create a custom material definition with a technique that only goes to the output that requested the preview.

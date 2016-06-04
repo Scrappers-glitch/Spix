@@ -17,6 +17,8 @@ import java.nio.*;
 import java.util.*;
 import java.util.logging.*;
 
+import static spix.swing.materialEditor.icons.Icons.mat;
+
 /**
  * Created by Nehon on 24/05/2016.
  */
@@ -35,6 +37,8 @@ public class MaterialAppState extends BaseAppState {
     private ByteBuffer cpuBuf = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
     private ShaderNode dummySN;
     private final static boolean debug = false;
+    private Glsl150ShaderGenerator glsl15;
+    private Glsl100ShaderGenerator glsl10;
 
     public enum DisplayType {
 
@@ -100,6 +104,9 @@ public class MaterialAppState extends BaseAppState {
 
         dummySN.getInputMapping().add(new VariableMapping(in, "", global, "", null));
       //  dummySN.getOutputMapping().add(new VariableMapping(global, "", out, "", null));
+
+        glsl15 = new Glsl150ShaderGenerator(getApplication().getAssetManager());
+        glsl10 = new Glsl100ShaderGenerator(getApplication().getAssetManager());
     }
 
     public ShaderNode getDummySN() {
@@ -121,28 +128,21 @@ public class MaterialAppState extends BaseAppState {
         r.clearBuffers(true, true, true);
         rm.renderViewPortRaw(vp);
 
-        displayCode(mat);
+        displayCode(mat.getActiveTechnique().getDef());
 
         r.readFrameBufferWithFormat(offBuffer, cpuBuf, Image.Format.BGRA8);
 
         return cpuBuf;
     }
 
-    private void displayCode(Material mat) {
+    private void displayCode(TechniqueDef def) {
         if(debug) {
-            //That's how you need to initialize it
-            Glsl150ShaderGenerator glsl15 = new Glsl150ShaderGenerator(getApplication().getAssetManager());
-            glsl15.initialize(mat.getActiveTechnique().getDef());
-
+            glsl15.initialize(def);
             // that how you need to generate the shader
             StringBuilder sb = new StringBuilder();
-            TechniqueDef def = mat.getActiveTechnique().getDef();
             sb.append(def.getShaderPrologue());
-            //This is a bit cumbersome but you know...
-            mat.getActiveTechnique().getDynamicDefines().generateSource(sb, Arrays.asList(def.getDefineNames()), Arrays.asList(def.getDefineTypes()));
-            String definesSourceCode = sb.toString();
 
-            Shader s = glsl15.generateShader(definesSourceCode);
+            Shader s = glsl15.generateShader(sb.toString());
             System.err.println("########################################################################");
             System.err.println(def.getName());
             System.err.println("########################################################################");
@@ -152,6 +152,20 @@ public class MaterialAppState extends BaseAppState {
                 System.err.println(shaderSource.getSource());
             }
         }
+    }
+
+    public Map<String, Shader> generateCode(TechniqueDef def){
+        Map<String, Shader> shaders = new HashMap<>();
+        StringBuilder sb = new StringBuilder();
+        sb.append(def.getShaderPrologue());
+
+        glsl15.initialize(def);
+        glsl10.initialize(def);
+
+        shaders.put("GLSL150",glsl15.generateShader(sb.toString()));
+        shaders.put("GLSL100",glsl10.generateShader(sb.toString()));
+
+        return shaders;
     }
 
     private void setupScene(DisplayType displayType, Material mat) {

@@ -41,6 +41,7 @@ public class MatDefEditorController {
     private SelectionHandler selectionHandler = new SelectionHandler();
     private DataHandler dataHandler = new DataHandler();
     private ErrorLog errorLog;
+    private ShaderCodePanel shaderCodePanel;
     private Deque<String> sortedNodes;
 
 
@@ -59,23 +60,6 @@ public class MatDefEditorController {
 
         centerPane.setLayout(new BorderLayout());
 
-        errorLog = new ErrorLog(centerPane);
-        errorLog.setPreferredSize(new Dimension(100, 500));
-        centerPane.add(errorLog, BorderLayout.SOUTH);
-
-        DockPanel westPanel = new DockPanel(DockPanel.Slot.West, centerPane);
-        westPanel.setPreferredSize(new Dimension(500, 10));
-        JEditorPane ed = new JEditorPane("glsl","Hello world");
-        westPanel.setComponent(new JScrollPane(ed));
-        centerPane.add(westPanel,BorderLayout.WEST);
-
-
-        NoneSelectedButtonGroup group = new NoneSelectedButtonGroup();
-        JToggleButton b = westPanel.getButton();
-        b.setIcon(Icons.shaderCode);
-        b.setRolloverIcon(Icons.shaderCodeHover);
-
-
         Diagram diagram = new Diagram(this);
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(diagram);
@@ -87,23 +71,26 @@ public class MatDefEditorController {
             }
         });
 
+        errorLog = new ErrorLog(centerPane);
+        errorLog.setPreferredSize(new Dimension(100, 500));
+        centerPane.add(errorLog, BorderLayout.SOUTH);
+
+        shaderCodePanel = new ShaderCodePanel(centerPane, gui);
+        shaderCodePanel.setPreferredSize(new Dimension(500, 10));
 
         JToolBar westToolBar = new JToolBar(JToolBar.VERTICAL);
         westToolBar.setFloatable(false);
         editor.getContentPane().add(westToolBar, BorderLayout.WEST);
+        JToggleButton b = shaderCodePanel.getButton();
+        NoneSelectedButtonGroup group = new NoneSelectedButtonGroup();
         group.add(b);
         westToolBar.add(b);
 
         JToolBar southToolBar = new JToolBar();
         southToolBar.setFloatable(false);
-        editor.getContentPane().add(southToolBar, BorderLayout.PAGE_END);
-
+        editor.getContentPane().add(southToolBar, BorderLayout.SOUTH);
         southToolBar.addSeparator(new Dimension(30,10));
         southToolBar.add(errorLog.getButton());
-
-
-
-
 
         diagramUiHandler = new DiagramUiHandler(diagram);
 
@@ -206,6 +193,7 @@ public class MatDefEditorController {
     public void refreshPreviews(){
         sortedNodes = dataHandler.sortNodes(diagramUiHandler.getNodesForSort());
         diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
+        shaderCodePanel.refreshCode(dataHandler.getCurrentTechnique());
     }
 
     public Connection connect(Dot start, Dot end) {

@@ -121,6 +121,10 @@ public class DataHandler {
         this.currentTechnique = currentTechnique;
     }
 
+    public TechniqueDef getCurrentTechnique() {
+        return currentTechnique;
+    }
+
     public void setCurrentMatDef(MaterialDef currentMatDef) {
         this.currentMatDef = currentMatDef;
     }

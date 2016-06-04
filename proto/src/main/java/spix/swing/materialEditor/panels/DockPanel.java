@@ -9,6 +9,8 @@ import java.awt.event.*;
  */
 public class DockPanel extends JPanel {
 
+    public static final int MARGIN = 5;
+
     public enum Slot{
         North,
         East,
@@ -19,6 +21,7 @@ public class DockPanel extends JPanel {
     private String layoutSlot;
     protected JToggleButton button;
     private Container container;
+    private Component component;
 
     public DockPanel(Slot slot, Container container){
         super(new BorderLayout());
@@ -31,22 +34,22 @@ public class DockPanel extends JPanel {
         setVisible(false);
         switch (slot){
             case North:
-                setBorder(BorderFactory.createEmptyBorder(0,0,5,0));
+                setBorder(BorderFactory.createEmptyBorder(0,0, MARGIN,0));
                 setCursor( Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR));
                 layoutSlot = BorderLayout.NORTH;
                 break;
             case South:
-                setBorder(BorderFactory.createEmptyBorder(5,0,0,0));
+                setBorder(BorderFactory.createEmptyBorder(MARGIN,0,0,0));
                 setCursor( Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR));
                 layoutSlot = BorderLayout.SOUTH;
                 break;
             case West:
-                setBorder(BorderFactory.createEmptyBorder(0,0,0,5));
+                setBorder(BorderFactory.createEmptyBorder(0,0,0, MARGIN));
                 setCursor( Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR));
                 layoutSlot = BorderLayout.WEST;
                 break;
             case East:
-                setBorder(BorderFactory.createEmptyBorder(0,5,0,0));
+                setBorder(BorderFactory.createEmptyBorder(0, MARGIN,0,0));
                 setCursor( Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR));
                 layoutSlot = BorderLayout.EAST;
                 break;
@@ -57,9 +60,17 @@ public class DockPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(isVisible()){
-                    container.remove(DockPanel.this);
-                    setVisible(false);
+                    dock();
                 } else {
+                    Component c = ((BorderLayout) container.getLayout()).getLayoutComponent(layoutSlot);
+                    if (c != null) {
+                        if (c instanceof DockPanel) {
+                            ((DockPanel) c).dock();
+                        } else {
+                            container.remove(c);
+                        }
+                        setPreferredSize(c.getPreferredSize());
+                    }
                     container.add(DockPanel.this, layoutSlot);
                     setVisible(true);
                 }
@@ -92,6 +103,12 @@ public class DockPanel extends JPanel {
         });
     }
 
+
+    public void dock() {
+        container.remove(DockPanel.this);
+        setVisible(false);
+    }
+
     public JToggleButton getButton() {
         return button;
     }
@@ -99,6 +116,7 @@ public class DockPanel extends JPanel {
     public void setComponent(Component comp){
         super.add(comp, BorderLayout.CENTER);
         comp.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        this.component = comp;
     }
 
     @Override
