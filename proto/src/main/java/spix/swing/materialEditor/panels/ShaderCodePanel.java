@@ -36,7 +36,10 @@ public class ShaderCodePanel extends DockPanel {
 
         editor = new ShaderCodeEditor();
 
-        setComponent(new JScrollPane(editor));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JScrollPane(editor), BorderLayout.CENTER);
+
+        setComponent(panel);
 
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -45,6 +48,8 @@ public class ShaderCodePanel extends DockPanel {
             }
         });
 
+        setTitle("Shader Code");
+        setIcon(Icons.code);
         button.setIcon(Icons.shaderCode);
         button.setRolloverIcon(Icons.shaderCodeHover);
 
@@ -71,7 +76,7 @@ public class ShaderCodePanel extends DockPanel {
         toolbar.add(versionLablel);
         toolbar.add(cb);
 
-        add(toolbar, BorderLayout.NORTH);
+        panel.add(toolbar, BorderLayout.NORTH);
 
     }
 

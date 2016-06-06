@@ -54,11 +54,12 @@ public class ErrorLog  extends DockPanel{
 
 
     public void noError(){
+        setTitle("Error Log");
         button.setText("Error Log");
         button.setForeground(new Color(50,50,50));
+        setIcon(Icons.errorGray);
         button.setIcon(Icons.errorGray);
-        button.getModel().setSelected(false);
-        setVisible(false);
+        dock();
     }
 
     public void error(MaterialService.CompilationError error){
@@ -71,9 +72,11 @@ public class ErrorLog  extends DockPanel{
         lastError = error;
         errorList.setModel(model);
 
+        setTitle("Error Log - " + error.getErrors().get(0));
         button.setText("Error Log - " + error.getErrors().get(0));
         button.setForeground(new Color(250,250,250));
         button.setIcon(Icons.errorSmall);
+        setIcon(Icons.errorSmall);
     }
 
 }

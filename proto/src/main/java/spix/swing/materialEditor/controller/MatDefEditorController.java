@@ -42,6 +42,7 @@ public class MatDefEditorController {
     private DataHandler dataHandler = new DataHandler();
     private ErrorLog errorLog;
     private ShaderCodePanel shaderCodePanel;
+    private PropPanel propertiesPanel;
     private Deque<String> sortedNodes;
 
 
@@ -78,19 +79,28 @@ public class MatDefEditorController {
         shaderCodePanel = new ShaderCodePanel(centerPane, gui);
         shaderCodePanel.setPreferredSize(new Dimension(500, 10));
 
+        propertiesPanel = new PropPanel(centerPane);
+        propertiesPanel.setPreferredSize(new Dimension(250,10));
+
         JToolBar westToolBar = new JToolBar(JToolBar.VERTICAL);
         westToolBar.setFloatable(false);
         editor.getContentPane().add(westToolBar, BorderLayout.WEST);
-        JToggleButton b = shaderCodePanel.getButton();
-        NoneSelectedButtonGroup group = new NoneSelectedButtonGroup();
-        group.add(b);
-        westToolBar.add(b);
+        NoneSelectedButtonGroup groupW = new NoneSelectedButtonGroup();
+        groupW.add( shaderCodePanel.getButton());
+        westToolBar.add( shaderCodePanel.getButton());
 
         JToolBar southToolBar = new JToolBar();
         southToolBar.setFloatable(false);
         editor.getContentPane().add(southToolBar, BorderLayout.SOUTH);
         southToolBar.addSeparator(new Dimension(30,10));
         southToolBar.add(errorLog.getButton());
+
+        JToolBar eastToolBar = new JToolBar(JToolBar.VERTICAL);
+        eastToolBar.setFloatable(false);
+        editor.getContentPane().add(eastToolBar, BorderLayout.EAST);
+        NoneSelectedButtonGroup groupE = new NoneSelectedButtonGroup();
+        groupE.add( propertiesPanel.getButton());
+        eastToolBar.add( propertiesPanel.getButton());
 
         diagramUiHandler = new DiagramUiHandler(diagram);
 

@@ -42,5 +42,13 @@ public class Icons {
     public final static ImageIcon cubeHover = new ImageIcon(Icons.class.getResource("/icons/cubeHover.png"));
     public final static ImageIcon shaderCode = new ImageIcon(Icons.class.getResource("/icons/shaderCodeButton.png"));
     public final static ImageIcon shaderCodeHover = new ImageIcon(Icons.class.getResource("/icons/shaderCodeButtonHover.png"));
+    public final static ImageIcon dockLeft = new ImageIcon(Icons.class.getResource("/icons/dock-left.png"));
+    public final static ImageIcon dockDown = new ImageIcon(Icons.class.getResource("/icons/dock-down.png"));
+    public final static ImageIcon dockRight = new ImageIcon(Icons.class.getResource("/icons/dock-right.png"));
+    public final static ImageIcon dockLeftHover = new ImageIcon(Icons.class.getResource("/icons/dock-left-hover.png"));
+    public final static ImageIcon dockDownHover = new ImageIcon(Icons.class.getResource("/icons/dock-down-hover.png"));
+    public final static ImageIcon dockRightHover = new ImageIcon(Icons.class.getResource("/icons/dock-right-hover.png"));
+    public final static ImageIcon properties = new ImageIcon(Icons.class.getResource("/icons/properties.png"));
+    public final static ImageIcon propertieseHover = new ImageIcon(Icons.class.getResource("/icons/properties-hover.png"));
 }
 
