@@ -6,17 +6,20 @@ import com.jme3.scene.Geometry;
 import com.jme3.shader.*;
 import groovy.util.ObservableList;
 import spix.app.DefaultConstants;
+import spix.app.material.hack.*;
 import spix.app.utils.CloneUtils;
-import spix.core.SelectionModel;
-import spix.swing.SwingGui;
+import spix.awt.AwtPanelState;
+import spix.core.*;
+import spix.swing.*;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.dialog.*;
+import spix.swing.materialEditor.nodes.*;
 import spix.swing.materialEditor.panels.*;
 import spix.swing.materialEditor.icons.Icons;
-import spix.swing.materialEditor.nodes.NodePanel;
 import spix.swing.materialEditor.utils.*;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
@@ -53,7 +56,64 @@ public class MatDefEditorController {
 
         sceneSelection = gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         sceneSelection.addPropertyChangeListener(sceneSelectionChangeListener);
+        Diagram diagram = initUi(gui, editor);
+        diagramUiHandler = new DiagramUiHandler(diagram);
 
+
+
+
+        PropertyEditorPanel matDefProps = new PropertyEditorPanel(gui, "ui.matdef.editor");
+        JPanel p = new JPanel(new GridLayout(1,1));
+        p.setBorder(new TitledBorder("Material definition"));
+        p.add(matDefProps);
+
+        PropertyEditorPanel techDefProps = new PropertyEditorPanel(gui, "ui.matdef.editor");
+        JPanel p2 = new JPanel(new GridLayout(1,1));
+        p2.setBorder(new TitledBorder("Technique definition"));
+        p2.add(techDefProps);
+
+        PropertyEditorPanel shaderNodeProp = new PropertyEditorPanel(gui, "ui.matdef.editor");
+        JPanel p3 = new JPanel(new GridLayout(1,1));
+        p3.setBorder(new TitledBorder("Shader node"));
+        p3.add(shaderNodeProp);
+
+        JPanel props = new JPanel();
+        SpringLayout sl = new SpringLayout();
+
+        sl.putConstraint(SpringLayout.NORTH, p,  3,SpringLayout.NORTH,props);
+        sl.putConstraint(SpringLayout.NORTH, p2, 3,SpringLayout.SOUTH,p);
+        sl.putConstraint(SpringLayout.NORTH, p3, 3,SpringLayout.SOUTH,p2);
+        sl.putConstraint(SpringLayout.WEST, p, 3,SpringLayout.WEST,props);
+        sl.putConstraint(SpringLayout.EAST, p, 3,SpringLayout.EAST,props);
+        sl.putConstraint(SpringLayout.WEST, p2, 3,SpringLayout.WEST,props);
+        sl.putConstraint(SpringLayout.EAST, p2, 3,SpringLayout.EAST,props);
+        sl.putConstraint(SpringLayout.WEST, p3, 3,SpringLayout.WEST,props);
+        sl.putConstraint(SpringLayout.EAST, p3, 3,SpringLayout.EAST,props);
+
+
+
+        props.setLayout(sl);
+        props.add(p);
+        props.add(p2);
+        props.add(p3);
+
+        propertiesPanel.setComponent(new JScrollPane(props));
+
+        // Bind the selection to the editor panel, converting objects to
+        // property set wrappers if appropriate.
+        gui.getSpix().getBlackboard().bind("matdDefEditor.selection.matdef.singleSelect",
+                matDefProps, "object",
+                new ToPropertySetFunction(gui.getSpix()));
+        gui.getSpix().getBlackboard().bind("matdDefEditor.selection.technique.singleSelect",
+                techDefProps, "object",
+                new ToPropertySetFunction(gui.getSpix()));
+        gui.getSpix().getBlackboard().bind("matdDefEditor.selection.item.singleSelect",
+                shaderNodeProp, "object",
+                new ToPropertySetFunction(gui.getSpix()));
+
+    }
+
+    public Diagram initUi(SwingGui gui, MatDefEditorWindow editor) {
         Container mainContainer = editor.getContentPane();
         mainContainer.setLayout(new BorderLayout());
         JPanel centerPane = new JPanel();
@@ -101,9 +161,7 @@ public class MatDefEditorController {
         NoneSelectedButtonGroup groupE = new NoneSelectedButtonGroup();
         groupE.add( propertiesPanel.getButton());
         eastToolBar.add( propertiesPanel.getButton());
-
-        diagramUiHandler = new DiagramUiHandler(diagram);
-
+        return diagram;
     }
 
     public void cleanup() {
@@ -118,39 +176,6 @@ public class MatDefEditorController {
 
     public DragHandler getDragHandler() {
         return dragHandler;
-    }
-
-    private class SceneSelectionChangeListener implements PropertyChangeListener {
-        @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-
-            //I receive this event before the property change.
-            //Ask Paul about this as it seems it's intentional.
-            if (evt instanceof ObservableList.ElementUpdatedEvent) {
-                return;
-            }
-
-            if (evt.getNewValue() instanceof Geometry) {
-                Geometry g = (Geometry) evt.getNewValue();
-                try {
-                    matDef = CloneUtils.cloneMatDef(g.getMaterial().getMaterialDef(), techniques);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (NoSuchFieldException e) {
-                    e.printStackTrace();
-                }
-
-
-                gui.runOnSwing(new Runnable() {
-                    @Override
-                    public void run() {
-                        editor.setTitle(matDef.getName());
-                        initTechnique(techniques.get(0), matDef);
-                    }
-                });
-
-            }
-        }
     }
 
     void initTechnique(TechniqueDef technique, MaterialDef matDef) {
@@ -339,6 +364,13 @@ public class MatDefEditorController {
 
 
     public void select(Selectable selectable, boolean multi) {
+        if(selectable instanceof ShaderNodePanel) {
+            ShaderNode node = dataHandler.getShaderNodeForKey(selectable.getKey());
+            gui.getSpix().getBlackboard().set("matdDefEditor.selection.item.singleSelect", node);
+        } else if(selectable instanceof Connection) {
+            VariableMapping mapping = dataHandler.getMappingForKey(selectable.getKey());
+            gui.getSpix().getBlackboard().set("matdDefEditor.selection.item.singleSelect", mapping);
+        }
         selectionHandler.select(selectable, multi);
         diagramUiHandler.refreshDiagram();
     }
@@ -376,5 +408,43 @@ public class MatDefEditorController {
 
         // TODO: 22/05/2016 save the location of the node in the metadata
     }
+
+
+    private class SceneSelectionChangeListener implements PropertyChangeListener {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+
+            //I receive this event before the property change.
+            //Ask Paul about this as it seems it's intentional.
+            if (evt instanceof ObservableList.ElementUpdatedEvent) {
+                return;
+            }
+
+            if (evt.getNewValue() instanceof Geometry) {
+                Geometry g = (Geometry) evt.getNewValue();
+                try {
+                    matDef = CloneUtils.cloneMatDef(g.getMaterial().getMaterialDef(), techniques);
+                    gui.getSpix().getBlackboard().set("matdDefEditor.selection.matdef.singleSelect",new MatDefWrapper(matDef));
+                    gui.getSpix().getBlackboard().set("matdDefEditor.selection.technique.singleSelect",new TechniqueDefWrapper(techniques.get(0)));
+
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                }
+
+
+                gui.runOnSwing(new Runnable() {
+                    @Override
+                    public void run() {
+                        editor.setTitle(matDef.getName());
+                        initTechnique(techniques.get(0), matDef);
+                    }
+                });
+
+            }
+        }
+    }
+
 }
 

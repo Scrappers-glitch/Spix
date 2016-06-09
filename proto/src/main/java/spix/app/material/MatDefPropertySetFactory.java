@@ -40,6 +40,7 @@ import com.jme3.light.Light;
 import com.jme3.material.*;
 import com.jme3.math.FastMath;
 import spix.app.light.LightWrapper;
+import spix.app.material.hack.MatDefWrapper;
 import spix.app.properties.*;
 import spix.core.*;
 import spix.props.*;
@@ -53,17 +54,18 @@ import java.util.*;
  *
  *  @author   Rémy Bouquet
  */
-public class MatDefPropertySetFactory implements PropertySetFactory<MaterialDef>{
+public class MatDefPropertySetFactory implements PropertySetFactory<MatDefWrapper>{
 
     public MatDefPropertySetFactory() {
     }
 
-    public PropertySet createPropertySet(MaterialDef matDef, Spix spix ) {
+    public PropertySet createPropertySet(MatDefWrapper matDef, Spix spix ) {
         System.out.println("Need to create a property set for:" + matDef);
         List<Property> props = new ArrayList<>();
 
         props.add(BeanProperty.create(matDef, "name"));
-        props.add(BeanProperty.create(matDef, "assetName"));
+        //props.add(BeanProperty.create(matDef, "assetName"));
+
         return new DefaultPropertySet(matDef, props);
     }
 }

@@ -36,10 +36,11 @@
 
 package spix.app.material;
 
-import com.jme3.material.*;
-import spix.app.material.hack.TechniqueDefWrapper;
+import com.jme3.material.TechniqueDef;
+import com.jme3.shader.*;
 import spix.core.*;
 import spix.props.*;
+import spix.type.Type;
 
 import java.util.*;
 
@@ -49,19 +50,39 @@ import java.util.*;
  *
  *  @author   Rémy Bouquet
  */
-public class TechniqueDefPropertySetFactory implements PropertySetFactory<TechniqueDefWrapper>{
+public class ShaderNodePropertySetFactory implements PropertySetFactory<ShaderNode>{
 
-    public TechniqueDefPropertySetFactory() {
+    public ShaderNodePropertySetFactory() {
     }
 
-    public PropertySet createPropertySet(TechniqueDefWrapper techniqueDef, Spix spix ) {
-        System.out.println("Need to create a property set for:" + techniqueDef);
+    public PropertySet createPropertySet(ShaderNode shaderNode, Spix spix ) {
+        System.out.println("Need to create a property set for:" + shaderNode);
         List<Property> props = new ArrayList<>();
 
-        props.add(BeanProperty.create(techniqueDef, "name"));
-        props.add(BeanProperty.create(techniqueDef, "noRender"));
-        props.add(BeanProperty.create(techniqueDef, "lightMode"));
-        props.add(BeanProperty.create(techniqueDef, "shadowMode"));
-        return new DefaultPropertySet(techniqueDef, props);
+        props.add(BeanProperty.create(shaderNode, "name"));
+        props.add(BeanProperty.create(shaderNode, "condition"));
+
+        return new DefaultPropertySet(shaderNode, props);
+    }
+
+    public static class MappingsListProperty extends AbstractProperty{
+        public MappingsListProperty(String id) {
+            super(id);
+        }
+
+        @Override
+        public Type getType() {
+            return new Type(List.class);
+        }
+
+        @Override
+        public void setValue(Object value) {
+
+        }
+
+        @Override
+        public Object getValue() {
+            return null;
+        }
     }
 }

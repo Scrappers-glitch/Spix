@@ -46,6 +46,7 @@ import com.jme3.material.*;
 import com.jme3.math.*;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
+import com.jme3.shader.*;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
 import com.simsilica.lemur.GuiGlobals;
@@ -55,6 +56,7 @@ import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 import spix.app.form.*;
 import spix.app.light.*;
 import spix.app.material.*;
+import spix.app.material.hack.*;
 import spix.app.properties.*;
 import spix.awt.AwtPanelState;
 import spix.core.*;
@@ -134,7 +136,10 @@ public class TestApp extends SimpleApplication {
 
         spix.registerPropertySetFactory(Spatial.class, new SpatialPropertySetFactory());
         spix.registerPropertySetFactory(LightWrapper.class, new LightPropertySetFactory());
-        spix.registerPropertySetFactory(MaterialDef.class, new MatDefPropertySetFactory());
+        spix.registerPropertySetFactory(MatDefWrapper.class, new MatDefPropertySetFactory());
+        spix.registerPropertySetFactory(TechniqueDefWrapper.class, new TechniqueDefPropertySetFactory());
+        spix.registerPropertySetFactory(ShaderNode.class, new ShaderNodePropertySetFactory());
+        spix.registerPropertySetFactory(VariableMapping.class, new VariableMappingPropertySetFactory());
         
         spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());
 
@@ -187,7 +192,10 @@ public class TestApp extends SimpleApplication {
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Vector3f.class,                                                                                           
                                              new DefaultComponentFactory(Vector3fPanel.class)); 
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Quaternion.class, 
-                                             new DefaultComponentFactory(QuaternionPanel.class)); 
+                                             new DefaultComponentFactory(QuaternionPanel.class));
+
+                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, ShaderNodeVariable.class,
+                        new DefaultComponentFactory(ShaderNodeVariablePanel.class));
 
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");
                 objectEditor.setPreferredSize(new Dimension(250, 100));
