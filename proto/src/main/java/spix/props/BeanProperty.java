@@ -117,14 +117,14 @@ public class BeanProperty extends AbstractProperty {
     }
 
     public static BeanProperty create( Object object, String name, boolean cloneOldValues ) {
-        return create(object, name, cloneOldValues, null); 
+        return create(object, name, name, cloneOldValues, null);
     }
     
     public static BeanProperty create( Object object, String name, Type overrideType ) {
-        return create(object, name, false, overrideType);
+        return create(object, name, name, false, overrideType);
     }
     
-    public static BeanProperty create( Object object, String name, boolean cloneOldValues, Type overrideType ) {
+    public static BeanProperty create( Object object, String name, String uniqueName, boolean cloneOldValues, Type overrideType ) {
         try {
             // Use the bean property info to find the appropriate property
             // We'll move this method later as we will likely have different
@@ -148,7 +148,7 @@ public class BeanProperty extends AbstractProperty {
                     write = findSetter(type, n, read.getReturnType());
                 }
 
-                return new BeanProperty(object, name, read, write, cloneOldValues, overrideType);
+                return new BeanProperty(object, uniqueName, read, write, cloneOldValues, overrideType);
             }
 
             return null;
