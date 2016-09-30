@@ -1,14 +1,14 @@
 package spix.swing.materialEditor.panels;
 
-import com.jme3.scene.debug.Grid;
 import spix.swing.materialEditor.icons.Icons;
 
 import javax.swing.*;
-import javax.swing.border.*;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
-import java.awt.event.*;
-
-import static com.sun.java.accessibility.util.AWTEventMonitor.addActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Created by Nehon on 03/06/2016.
@@ -97,20 +97,9 @@ public class DockPanel extends JPanel {
                 if (isVisible()) {
                     dock();
                 } else {
-                    Component c = ((BorderLayout) container.getLayout()).getLayoutComponent(layoutSlot);
-                    if (c != null) {
-                        if (c instanceof DockPanel) {
-                            ((DockPanel) c).dock();
-                        } else {
-                            container.remove(c);
-                        }
-                        setPreferredSize(c.getPreferredSize());
-                    }
-                    container.add(DockPanel.this, layoutSlot);
-                    setVisible(true);
+                    unDock();
                 }
-                container.revalidate();
-                container.repaint();
+
             }
         });
 
@@ -152,6 +141,25 @@ public class DockPanel extends JPanel {
         button.setSelected(false);
         container.remove(DockPanel.this);
         setVisible(false);
+        container.revalidate();
+        container.repaint();
+    }
+
+    public void unDock() {
+        Component c = ((BorderLayout) container.getLayout()).getLayoutComponent(layoutSlot);
+        if (c != null) {
+            if (c instanceof DockPanel) {
+                ((DockPanel) c).dock();
+            } else {
+                container.remove(c);
+            }
+            setPreferredSize(c.getPreferredSize());
+        }
+        container.add(DockPanel.this, layoutSlot);
+        setVisible(true);
+        container.revalidate();
+        container.repaint();
+
     }
 
     public JToggleButton getButton() {

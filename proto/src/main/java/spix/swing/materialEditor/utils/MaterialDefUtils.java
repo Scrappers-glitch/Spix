@@ -1,14 +1,14 @@
 package spix.swing.materialEditor.utils;
 
-import com.jme3.material.*;
+import com.jme3.material.MatParam;
+import com.jme3.material.MaterialDef;
+import com.jme3.material.ShaderGenerationInfo;
+import com.jme3.material.TechniqueDef;
 import com.jme3.shader.*;
 import spix.swing.materialEditor.Dot;
 
-import java.util.*;
-
-import static java.awt.SystemColor.info;
-import static spix.swing.materialEditor.icons.Icons.node;
-import static sun.management.snmp.jvminstr.JvmThreadInstanceEntryImpl.ThreadStateMap.Byte1.other;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by bouquet on 14/05/16.

@@ -5,7 +5,6 @@ import spix.swing.materialEditor.icons.Icons;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 
 /**
  * Created by Nehon on 28/05/2016.

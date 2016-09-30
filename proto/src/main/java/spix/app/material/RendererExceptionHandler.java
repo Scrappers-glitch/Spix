@@ -1,11 +1,11 @@
 package spix.app.material;
 
 import com.jme3.renderer.opengl.GLRenderer;
-import com.sun.org.apache.bcel.internal.generic.IFLE;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.*;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 public class RendererExceptionHandler {
 

@@ -1,20 +1,28 @@
 package spix.app.material;
 
-import com.jme3.material.*;
+import com.jme3.material.Material;
+import com.jme3.material.MaterialDef;
+import com.jme3.material.TechniqueDef;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.RendererException;
-import com.jme3.shader.*;
-import com.sun.org.apache.bcel.internal.classfile.Code;
+import com.jme3.shader.Shader;
+import com.jme3.shader.ShaderNode;
 import spix.app.utils.CloneUtils;
 import spix.core.RequestCallback;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.preview.PreviewRequest;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
-import java.awt.image.*;
-import java.nio.*;
-import java.util.*;
-import java.util.regex.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.WritableRaster;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Nehon on 24/05/2016.

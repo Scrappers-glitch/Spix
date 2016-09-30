@@ -12,6 +12,11 @@ import javax.swing.*;
 public class Icons {
 
     public final static ImageIcon node = new ImageIcon(Icons.class.getResource("/icons/node.png"));
+    public final static ImageIcon jmeNode = new ImageIcon(Icons.class.getResource("/icons/node.gif"));
+    public final static ImageIcon model = new ImageIcon(Icons.class.getResource("/icons/model.gif"));
+    public final static ImageIcon mesh = new ImageIcon(Icons.class.getResource("/icons/mesh.gif"));
+    public final static ImageIcon material = new ImageIcon(Icons.class.getResource("/icons/material.gif"));
+    public final static ImageIcon lightBulb = new ImageIcon(Icons.class.getResource("/icons/lightbulb.gif"));
     public final static ImageIcon output = new ImageIcon(Icons.class.getResource("/icons/output.png"));
     public final static ImageIcon outputV = new ImageIcon(Icons.class.getResource("/icons/outputV.png"));
     public final static ImageIcon world = new ImageIcon(Icons.class.getResource("/icons/earth.png"));
@@ -50,5 +55,6 @@ public class Icons {
     public final static ImageIcon dockRightHover = new ImageIcon(Icons.class.getResource("/icons/dock-right-hover.png"));
     public final static ImageIcon properties = new ImageIcon(Icons.class.getResource("/icons/properties.png"));
     public final static ImageIcon propertieseHover = new ImageIcon(Icons.class.getResource("/icons/properties-hover.png"));
+    public final static ImageIcon reload = new ImageIcon(Icons.class.getResource("/icons/reload.png"));
 }
 
