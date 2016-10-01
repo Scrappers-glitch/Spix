@@ -231,8 +231,11 @@ public class MatDefEditorController {
     }
 
     public void refreshPreviews(){
-        sortedNodes = dataHandler.sortNodes(diagramUiHandler.getNodesForSort());
-        diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
+        if(dataHandler.getCurrentTechnique().isUsingShaderNodes()) {
+            sortedNodes = dataHandler.sortNodes(diagramUiHandler.getNodesForSort());
+            diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
+        }
+
         shaderCodePanel.refreshCode(dataHandler.getCurrentTechnique());
     }
 

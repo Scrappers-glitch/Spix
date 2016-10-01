@@ -249,6 +249,9 @@ public class DiagramUiHandler {
     }
 
     public void autoLayout(Deque<String> sortedNodes) {
+        if(sortedNodes == null) {
+            return;
+        }
         //diagram.autoLayout();
         int offset = 200;
         final int wMargin = 25;

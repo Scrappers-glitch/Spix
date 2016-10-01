@@ -91,13 +91,24 @@ public class MaterialService {
         gui.runOnRender(new Runnable() {
             @Override
             public void run() {
-                Map<String, Shader> shaders = state.generateCode(def);
-                gui.runOnSwing(new Runnable() {
-                    @Override
-                    public void run() {
-                        callback.done(shaders);
-                    }
-                });
+                if(def.isUsingShaderNodes()) {
+                    Map<String, Shader> shaders = state.generateCode(def);
+                    gui.runOnSwing(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.done(shaders);
+                        }
+                    });
+                } else {
+//                    Map<String, Shader> shaders = state.getCode(def);
+//                    gui.runOnSwing(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            callback.done(shaders);
+//                        }
+//                    });
+                }
+
             }
         });
 
