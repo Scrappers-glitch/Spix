@@ -84,6 +84,9 @@ public class ShaderCodePanel extends DockPanel {
         gui.getSpix().getService(MaterialService.class).requestCode(def, new RequestCallback<Map<String, Shader>>() {
             @Override
             public void done(Map<String, Shader> result) {
+                if(result == null){
+                    return;
+                }
                 shaders = result;
                 Shader s = shaders.get(currentShaderVersion);
 

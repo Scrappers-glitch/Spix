@@ -100,13 +100,13 @@ public class MaterialService {
                         }
                     });
                 } else {
-//                    Map<String, Shader> shaders = state.getCode(def);
-//                    gui.runOnSwing(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            callback.done(shaders);
-//                        }
-//                    });
+                    Map<String, Shader> shaders = state.getCode(def);
+                    gui.runOnSwing(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.done(shaders);
+                        }
+                    });
                 }
 
             }

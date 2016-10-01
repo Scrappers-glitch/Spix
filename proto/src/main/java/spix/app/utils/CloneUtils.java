@@ -90,7 +90,7 @@ public class CloneUtils {
             }
 
             techDef.setShaderNodes(shaderNodes);
-
+            techDef.setShaderFile(techDef.hashCode() + "", techDef.hashCode() + "", "GLSL100", "GLSL100");
 
         } else {
             //copy defines
@@ -109,14 +109,17 @@ public class CloneUtils {
             paramToDefineIdField.setAccessible(true);
             HashMap<String, Integer> paramToDefineId = (HashMap<String, Integer> )paramToDefineIdField.get(techniqueDef);
             paramToDefineIdField.set(techDef, paramToDefineId.clone());
-
+            techDef.setShaderFile(techniqueDef.getShaderProgramName(Shader.ShaderType.Vertex),
+                    techniqueDef.getShaderProgramName(Shader.ShaderType.Fragment) ,
+                    techniqueDef.getShaderProgramLanguage(Shader.ShaderType.Vertex),
+                    techniqueDef.getShaderProgramLanguage(Shader.ShaderType.Fragment));
         }
 
 
         techDef.setShaderGenerationInfo(new ShaderGenerationInfo());
         // TODO: 26/05/2016 here we should create the appropriate logic as the logic retains a reference on the techDef...
         techDef.setLogic(new DefaultTechniqueDefLogic(techDef));
-        techDef.setShaderFile(techDef.hashCode() + "", techDef.hashCode() + "", "GLSL100", "GLSL100");
+
         return techDef;
     }
 

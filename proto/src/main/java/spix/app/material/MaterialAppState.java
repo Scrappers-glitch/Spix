@@ -2,7 +2,7 @@ package spix.app.material;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.asset.ShaderNodeDefinitionKey;
+import com.jme3.asset.*;
 import com.jme3.light.PointLight;
 import com.jme3.material.*;
 import com.jme3.math.*;
@@ -180,6 +180,23 @@ public class MaterialAppState extends BaseAppState {
         shaders.put("GLSL100",glsl10.generateShader(sb.toString()));
 
         return shaders;
+    }
+
+    public Map<String, Shader> getCode(TechniqueDef def){
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(def.getShaderPrologue());
+        Application app = getApplication();
+        try {
+            Shader s = def.getShader(app.getAssetManager(), app.getRenderer().getCaps(), new DefineList(0));
+            Map<String, Shader> shaders = new HashMap<>();
+            shaders.put(def.getShaderProgramLanguages().get(0), s);
+            return shaders;
+        }catch (AssetNotFoundException e){
+            Logger.getLogger(this.getClass().getName()).log(Level.WARNING,"Could not load shader source for technique def {0}", def.getName());
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private void setupScene(DisplayType displayType, Material mat) {
