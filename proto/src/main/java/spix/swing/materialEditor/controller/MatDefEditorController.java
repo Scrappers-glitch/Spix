@@ -39,6 +39,7 @@ public class MatDefEditorController {
     private DragHandler dragHandler = new DragHandler();
     private SelectionModel sceneSelection;
     private SceneSelectionChangeListener sceneSelectionChangeListener = new SceneSelectionChangeListener();
+    private DiagramSelectionChangeListener diagramSelectionChangeListener = new DiagramSelectionChangeListener();
     private List<TechniqueDef> techniques = new ArrayList<>();
     private DiagramUiHandler diagramUiHandler;
     private SelectionHandler selectionHandler = new SelectionHandler();
@@ -47,6 +48,7 @@ public class MatDefEditorController {
     private ShaderCodePanel shaderCodePanel;
     private PropPanel propertiesPanel;
     private Deque<String> sortedNodes;
+    private TitledBorder selectionBorder;
 
 
     public MatDefEditorController(SwingGui gui, MatDefEditorWindow editor) {
@@ -74,7 +76,8 @@ public class MatDefEditorController {
 
         PropertyEditorPanel shaderNodeProp = new PropertyEditorPanel(gui, "ui.matdef.editor");
         JPanel p3 = new JPanel(new GridLayout(1,1));
-        p3.setBorder(new TitledBorder("Shader node"));
+        selectionBorder = new TitledBorder("Selection");
+        p3.setBorder(selectionBorder);
         p3.add(shaderNodeProp);
 
         JPanel props = new JPanel();
@@ -110,6 +113,8 @@ public class MatDefEditorController {
         gui.getSpix().getBlackboard().bind("matdDefEditor.selection.item.singleSelect",
                 shaderNodeProp, "object",
                 new ToPropertySetFunction(gui.getSpix()));
+
+
 
     }
 
@@ -432,6 +437,31 @@ public class MatDefEditorController {
                 } catch (NoSuchFieldException e) {
                     e.printStackTrace();
                 }
+
+
+                gui.runOnSwing(new Runnable() {
+                    @Override
+                    public void run() {
+                        editor.setTitle(matDef.getName());
+                        initTechnique(techniques.get(0), matDef);
+                    }
+                });
+
+            }
+        }
+    }
+
+    private class DiagramSelectionChangeListener implements PropertyChangeListener {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+
+            //I receive this event before the property change.
+            //Ask Paul about this as it seems it's intentional.
+            if (evt instanceof ObservableList.ElementUpdatedEvent) {
+                return;
+            }
+
+            if (evt.getNewValue() instanceof VariableMapping) {
 
 
                 gui.runOnSwing(new Runnable() {

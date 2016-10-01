@@ -142,6 +142,8 @@ public class TestApp extends SimpleApplication {
         spix.registerPropertySetFactory(VariableMapping.class, new VariableMappingPropertySetFactory());
         
         spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());
+        spix.registerFormFactory(new Type(VariableMapping.class), new VariableMappingFormFactory());
+
 
         SelectionModel selectionModel = new SelectionModel();
         spix.getBlackboard().set("main.selection", selectionModel);

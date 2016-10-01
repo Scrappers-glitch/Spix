@@ -58,13 +58,17 @@ public class VariableMappingPropertySetFactory implements PropertySetFactory<Var
         System.out.println("Need to create a property set for:" + mapping);
         List<Property> props = new ArrayList<>();
 
-
-        props.add(BeanProperty.create(mapping, "rightVariable"));
-        props.add(BeanProperty.create(mapping, "rightSwizzling"));
-        props.add(BeanProperty.create(mapping, "leftVariable"));
-        props.add(BeanProperty.create(mapping, "leftSwizzling"));
         props.add(BeanProperty.create(mapping, "condition"));
-
+        props.add(BeanProperty.create(mapping.getRightVariable(), "type", "fromVariableType", false, null));
+        props.add(BeanProperty.create(mapping.getRightVariable(), "name", "fromVariableName", false, null));
+        props.add(BeanProperty.create(mapping.getRightVariable(), "nameSpace", "fromVariableNode", false, null));
+        props.add(BeanProperty.create(mapping.getRightVariable(), "multiplicity", "fromVariableMultiplicity", false, null));
+        props.add(BeanProperty.create(mapping, "rightSwizzling", "fromVariableSwizzle", false, null));
+        props.add(BeanProperty.create(mapping.getLeftVariable(), "type", "toVariableType", false, null));
+        props.add(BeanProperty.create(mapping.getLeftVariable(), "name", "toVariableName", false, null));
+        props.add(BeanProperty.create(mapping.getLeftVariable(), "nameSpace", "toVariableNode", false, null));
+        props.add(BeanProperty.create(mapping.getLeftVariable(), "multiplicity", "toVariableMultiplicity", false, null));
+        props.add(BeanProperty.create(mapping, "leftSwizzling", "toVariableSwizzle", false, null));
         return new DefaultPropertySet(mapping, props);
     }
 
