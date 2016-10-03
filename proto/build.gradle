@@ -93,6 +93,11 @@ task runTestApp(type: JavaExec) {
     main = "spix.app.TestApp"
 }
 
+task runEditor(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = "spix.app.Editor"
+}
+
 task runTestLaf(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "spix.app.TestLaf"

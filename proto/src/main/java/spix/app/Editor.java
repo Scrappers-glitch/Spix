@@ -52,6 +52,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
+import com.jme3.shader.*;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
 import com.simsilica.lemur.GuiGlobals;
@@ -63,9 +64,8 @@ import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 import spix.app.form.SpatialFormFactory;
 import spix.app.light.LightWidgetState;
 import spix.app.light.LightWrapper;
-import spix.app.material.MatDefPropertySetFactory;
-import spix.app.material.MaterialAppState;
-import spix.app.material.MaterialService;
+import spix.app.material.*;
+import spix.app.material.hack.*;
 import spix.app.properties.LightPropertySetFactory;
 import spix.app.properties.SpatialPropertySetFactory;
 import spix.awt.AwtPanelState;
@@ -153,8 +153,12 @@ public class Editor extends SimpleApplication {
 
         spix.registerPropertySetFactory(Spatial.class, new SpatialPropertySetFactory());
         spix.registerPropertySetFactory(LightWrapper.class, new LightPropertySetFactory());
-        spix.registerPropertySetFactory(MaterialDef.class, new MatDefPropertySetFactory());
-        
+        spix.registerPropertySetFactory(MatDefWrapper.class, new MatDefPropertySetFactory());
+        spix.registerPropertySetFactory(TechniqueDefWrapper.class, new TechniqueDefPropertySetFactory());
+        spix.registerPropertySetFactory(ShaderNode.class, new ShaderNodePropertySetFactory());
+        spix.registerPropertySetFactory(VariableMapping.class, new VariableMappingPropertySetFactory());
+
+
         spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());
 
         SelectionModel selectionModel = new SelectionModel();
@@ -220,7 +224,7 @@ public class Editor extends SimpleApplication {
 
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");
                 objectEditor.setPreferredSize(new Dimension(250, 100));
-                propertiesPanel.setComponent(objectEditor);
+                propertiesPanel.setComponent(new JScrollPane(objectEditor));
 
                 stateManager.attach(new AwtPanelState(centerPane, BorderLayout.CENTER));
 
