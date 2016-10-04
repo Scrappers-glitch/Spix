@@ -43,7 +43,6 @@ import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.light.*;
 import com.jme3.material.Material;
-import com.jme3.material.MaterialDef;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
@@ -52,7 +51,8 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
-import com.jme3.shader.*;
+import com.jme3.shader.ShaderNode;
+import com.jme3.shader.VariableMapping;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
 import com.simsilica.lemur.GuiGlobals;
@@ -65,7 +65,8 @@ import spix.app.form.SpatialFormFactory;
 import spix.app.light.LightWidgetState;
 import spix.app.light.LightWrapper;
 import spix.app.material.*;
-import spix.app.material.hack.*;
+import spix.app.material.hack.MatDefWrapper;
+import spix.app.material.hack.TechniqueDefWrapper;
 import spix.app.properties.LightPropertySetFactory;
 import spix.app.properties.SpatialPropertySetFactory;
 import spix.awt.AwtPanelState;
@@ -73,8 +74,6 @@ import spix.core.*;
 import spix.core.Action;
 import spix.swing.ActionUtils;
 import spix.swing.*;
-import spix.swing.materialEditor.MatDefEditorWindow;
-import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.panels.DockPanel;
 import spix.swing.materialEditor.panels.PropPanel;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
@@ -169,6 +168,13 @@ public class Editor extends SimpleApplication {
         SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
                 mainFrame = new JFrame("Test App");
+                mainFrame.setIconImage(Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/icons/model.gif")));
+                try {
+                    SystemTray.getSystemTray().add(new TrayIcon(Toolkit.getDefaultToolkit().getImage("/icons/model.gif")));
+                } catch (AWTException e) {
+                    e.printStackTrace();
+                }
+
                 mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 mainFrame.addWindowListener(new WindowAdapter() {
                     @Override
@@ -185,7 +191,11 @@ public class Editor extends SimpleApplication {
                 centerPane.setLayout(new BorderLayout());
 
 
-                SceneExplorerPanel sceneExplorerPanel = new SceneExplorerPanel(DockPanel.Slot.West, centerPane, spix);
+               // Register the SwingGui layer and let it handle all of the requests
+                // for which it is capable.
+                SwingGui gui = spix.registerService(SwingGui.class, new SwingGui(spix, mainFrame));
+
+                SceneExplorerPanel sceneExplorerPanel = new SceneExplorerPanel(DockPanel.Slot.West, centerPane, gui);
                 sceneExplorerPanel.setPreferredSize(new Dimension(250,10));
                 sceneExplorerPanel.unDock();
 
@@ -206,11 +216,6 @@ public class Editor extends SimpleApplication {
                 NoneSelectedButtonGroup groupW = new NoneSelectedButtonGroup();
                 groupW.add( sceneExplorerPanel.getButton());
                 westToolBar.add( sceneExplorerPanel.getButton());
-
-
-               // Register the SwingGui layer and let it handle all of the requests
-                // for which it is capable.
-                SwingGui gui = spix.registerService(SwingGui.class, new SwingGui(spix, mainFrame));
 
                 
                 // Register a custom read-only display for Vector3fs that formats the values

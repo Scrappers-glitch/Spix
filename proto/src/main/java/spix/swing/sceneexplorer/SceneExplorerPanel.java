@@ -4,19 +4,22 @@ import com.jme3.light.Light;
 import com.jme3.material.Material;
 import com.jme3.scene.*;
 import com.jme3.scene.control.Control;
+import spix.app.DefaultConstants;
 import spix.core.SelectionModel;
 import spix.core.Spix;
+import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.panels.DockPanel;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeCellRenderer;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Created by bouquet on 30/09/16.
@@ -24,18 +27,39 @@ import java.awt.event.ActionListener;
 public class SceneExplorerPanel extends DockPanel {
 
     private JTree sceneTree;
-    private Spix spix;
+    private SwingGui gui;
 
-    public SceneExplorerPanel(Slot slot, Container container, Spix spix) {
+    public SceneExplorerPanel(Slot slot, Container container, SwingGui gui) {
         super(slot, container);
 
-        this.spix = spix;
+        this.gui = gui;
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Scene");
 
         sceneTree = new JTree(root);
         sceneTree.setShowsRootHandles(true);
         sceneTree.setRootVisible(false);
         sceneTree.setCellRenderer(new ItemRenderer());
+        sceneTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        sceneTree.addTreeSelectionListener(new TreeSelectionListener() {
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode)
+                        sceneTree.getLastSelectedPathComponent();
+
+                Object o = node.getUserObject();
+                if(o instanceof Node || o instanceof Geometry || o instanceof Light) {
+
+                    gui.runOnRender(new Runnable() {
+                        @Override
+                        public void run() {
+                            SelectionModel sm = (SelectionModel) gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY);
+                            sm.setSingleSelection(o);
+                        }
+                    });
+
+                }
+            }
+        });
 
 
         JPanel p = new JPanel(new BorderLayout());
@@ -67,6 +91,7 @@ public class SceneExplorerPanel extends DockPanel {
     private void buildTree(Spatial s, DefaultMutableTreeNode parent){
         DefaultMutableTreeNode item = new DefaultMutableTreeNode(s);
         parent.add(item);
+
 
         if(s instanceof Geometry){
             Geometry g = (Geometry)s;
@@ -101,7 +126,7 @@ public class SceneExplorerPanel extends DockPanel {
     }
 
     public void refresh(){
-        Node n = spix.getBlackboard().get("scene.root", Node.class);
+        Node n = gui.getSpix().getBlackboard().get("scene.root", Node.class);
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Scene");
 
         buildTree(n, root);

@@ -223,6 +223,17 @@ public class LightWidgetState extends BaseAppState {
                     Node oldWidget = ((LightWrapper) event.getOldValue()).getWidget();
                     oldWidget.addMatParamOverride(new MatParamOverride(VarType.Vector4, "Color", ColorRGBA.Black));
                 }
+
+                if(event.getNewValue() instanceof Light) {
+                    for (LightWrapper wrapper : wrappers) {
+                        if(wrapper.getLight() == event.getNewValue()){
+                            getState(SpixState.class).getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(wrapper);
+                            break;
+                        }
+                    }
+
+                }
+
             }
 
         }
