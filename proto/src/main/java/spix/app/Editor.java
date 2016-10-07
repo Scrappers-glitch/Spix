@@ -74,6 +74,8 @@ import spix.core.*;
 import spix.core.Action;
 import spix.swing.ActionUtils;
 import spix.swing.*;
+import spix.swing.materialEditor.MatDefEditorWindow;
+import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.panels.DockPanel;
 import spix.swing.materialEditor.panels.PropPanel;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
@@ -88,10 +90,14 @@ import spix.undo.UndoManager;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.prefs.Preferences;
+
+import static com.sun.java.accessibility.util.AWTEventMonitor.addComponentListener;
+import static org.lwjgl.opengl.Display.setLocation;
+import static spix.swing.materialEditor.MatDefEditorWindow.*;
 
 
 /**
@@ -103,6 +109,12 @@ public class Editor extends SimpleApplication {
 
     private volatile JFrame mainFrame;
     private Spix spix;
+
+    public static final String EDITOR_WIDTH = "Editor.width";
+    public static final String EDITOR_HEIGHT = "Editor.height";
+    public static final String EDITOR_X = "Editor.x";
+    public static final String EDITOR_Y = "Editor.y";
+    private Preferences prefs = Preferences.userNodeForPackage(Editor.class);
 
     public static void main(String[] args) throws Exception {
 
@@ -165,6 +177,15 @@ public class Editor extends SimpleApplication {
         spix.getBlackboard().set("main.selection", selectionModel);
         selectionModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");
 
+
+
+
+
+
+
+
+
+
         // Have to create the frame on the AWT EDT.
         SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
@@ -175,6 +196,23 @@ public class Editor extends SimpleApplication {
                 } catch (AWTException e) {
                     e.printStackTrace();
                 }
+                mainFrame.addComponentListener(new ComponentAdapter() {
+                    @Override
+                    public void componentResized(ComponentEvent e) {
+                        prefs.putInt(EDITOR_WIDTH, e.getComponent().getWidth());
+                        prefs.putInt(EDITOR_HEIGHT, e.getComponent().getHeight());
+                        System.err.println("size : "+ e.getComponent().getWidth() + " " + e.getComponent().getHeight());
+                    }
+
+                    @Override
+                    public void componentMoved(ComponentEvent e) {
+                        prefs.putInt(EDITOR_X, e.getComponent().getX());
+                        prefs.putInt(EDITOR_Y, e.getComponent().getY());
+                        System.err.println(e.getComponent().getX() + " " + e.getComponent().getY());
+                    }
+                });
+
+
 
                 mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 mainFrame.addWindowListener(new WindowAdapter() {
@@ -182,6 +220,8 @@ public class Editor extends SimpleApplication {
                     public void windowClosed(WindowEvent e) {
                         stop();
                     }
+
+
                 });
 
                 mainFrame.setJMenuBar(createMainMenu());
@@ -273,9 +313,20 @@ public class Editor extends SimpleApplication {
             public void run() {
                 if( !mainFrame.isVisible() ) {
                     // By now we should have the panel inside
+
                     mainFrame.pack();
                     mainFrame.setLocationRelativeTo(null);
+
+                    int width = prefs.getInt(EDITOR_WIDTH, 300);
+                    int height = prefs.getInt(EDITOR_HEIGHT, 150);
+
+                    int x = prefs.getInt(EDITOR_X, 300);
+                    int y = prefs.getInt(EDITOR_Y, 150);
+                    mainFrame.setSize(new Dimension(width, height));
+                    mainFrame.setLocation(x, y);
+
                     mainFrame.setVisible(true);
+
                 }
             }
         });
