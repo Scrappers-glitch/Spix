@@ -167,6 +167,7 @@ System.out.println(this.form.debugString());
                     gbc.gridwidth = 2;
                     gbc.gridx = 0;
                     gbc.weightx = 1;
+                    gbc.ipady = 10;
                     gbc.anchor = GridBagConstraints.WEST;
                     gbc.fill = GridBagConstraints.HORIZONTAL;
                     add(view, gbc);

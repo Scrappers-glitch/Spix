@@ -46,6 +46,10 @@ public class SceneExplorerPanel extends DockPanel {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode)
                         sceneTree.getLastSelectedPathComponent();
 
+                if(node == null){
+                    return;
+                }
+
                 Object o = node.getUserObject();
                 if(o instanceof Node || o instanceof Geometry || o instanceof Light) {
 
@@ -204,6 +208,8 @@ public class SceneExplorerPanel extends DockPanel {
             return label;
         }
     }
+
+
 
 
 }

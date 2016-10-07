@@ -156,6 +156,7 @@ public class Editor extends SimpleApplication {
         spix.registerPropertySetFactory(TechniqueDefWrapper.class, new TechniqueDefPropertySetFactory());
         spix.registerPropertySetFactory(ShaderNode.class, new ShaderNodePropertySetFactory());
         spix.registerPropertySetFactory(VariableMapping.class, new VariableMappingPropertySetFactory());
+        spix.registerPropertySetFactory(Material.class, new MaterialPropertySetFactory());
 
 
         spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());

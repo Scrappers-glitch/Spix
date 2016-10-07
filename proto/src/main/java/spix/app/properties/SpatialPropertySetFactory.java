@@ -84,6 +84,10 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
        // props.add(localScale);
         props.add(localRotation);
 
+        if(spatial instanceof Geometry){
+            props.add(BeanProperty.create(spatial,"material", true));
+        }
+
         return new DefaultPropertySet(spatial, props);
     }
 
