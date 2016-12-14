@@ -246,15 +246,18 @@ public class SelectionHighlightState extends BaseAppState {
             BoundingBox bb2 = new BoundingBox(Vector3f.ZERO,0.1f,0.1f,0.1f);
 
             for (Spatial spatial : node.getChildren()) {
-                BoundingVolume b = spatial.getWorldBound().clone();
-                b.setCenter(node.worldToLocal(b.getCenter(), null));
-                if( b instanceof BoundingBox){
-                    BoundingBox bb = (BoundingBox)b;
-                    bb.setXExtent(bb.getXExtent()/node.getWorldScale().getX());
-                    bb.setYExtent(bb.getYExtent()/node.getWorldScale().getY());
-                    bb.setZExtent(bb.getZExtent()/node.getWorldScale().getZ());
+                BoundingVolume b = spatial.getWorldBound();
+                if (b != null) {
+                    b = b.clone();
+                    b.setCenter(node.worldToLocal(b.getCenter(), null));
+                    if (b instanceof BoundingBox) {
+                        BoundingBox bb = (BoundingBox) b;
+                        bb.setXExtent(bb.getXExtent() / node.getWorldScale().getX());
+                        bb.setYExtent(bb.getYExtent() / node.getWorldScale().getY());
+                        bb.setZExtent(bb.getZExtent() / node.getWorldScale().getZ());
+                    }
+                    bb2.mergeLocal(b);
                 }
-                bb2.mergeLocal(b);
             }
             //bb2.mergeLocal(bb);
 
