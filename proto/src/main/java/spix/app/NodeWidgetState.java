@@ -39,26 +39,18 @@ package spix.app;
 import com.jme3.app.*;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.bounding.*;
-import com.jme3.light.*;
 import com.jme3.material.*;
-import com.jme3.math.*;
+import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.*;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
-import com.jme3.util.SafeArrayList;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
-import spix.app.light.*;
 import spix.app.utils.ShapeUtils;
 import spix.core.*;
 
-import java.beans.*;
 import java.util.*;
-
-import static com.jme3.light.Light.Type.Ambient;
-import static com.jme3.light.Light.Type.Directional;
-import static com.jme3.light.Light.Type.Spot;
 
 //import javafx.scene.shape.Circle;
 
@@ -76,8 +68,7 @@ public class NodeWidgetState extends BaseAppState {
     private Camera cam;
     private Node nodesNode;
     private SelectionModel selection;
-    private SelectionObserver selectionObserver = new SelectionObserver();
-    private LightSelectionDispatcher selectionDispatcher = new LightSelectionDispatcher();
+    private NodeSelectionDispatcher selectionDispatcher = new NodeSelectionDispatcher();
     private Map<Node, Node> nodeMap = new HashMap<>();
 
     public NodeWidgetState() {
@@ -100,14 +91,27 @@ public class NodeWidgetState extends BaseAppState {
         recurseAddNodes(rootNode, 1);
     }
 
-    private void recurseAddNodes(Node n, int indent){
-        if(nodesNode.getParent() != null) {
-            addNode(n, indent);
-        }
+    public void setScene(Spatial n) {
+        clear();
+        recurseAddNodes(n, 1);
+    }
 
-        for (Spatial s: n.getChildren()){
-            if(s instanceof Node){
-                recurseAddNodes((Node)s, indent + 1);
+    private void clear() {
+        nodesNode.detachAllChildren();
+        nodeMap.clear();
+    }
+
+    private void recurseAddNodes(Spatial spatial, int indent) {
+        if (spatial instanceof Node) {
+            Node n = (Node) spatial;
+            if (nodesNode.getParent() != null) {
+                addNode(n, indent);
+            }
+
+            for (Spatial s : n.getChildren()) {
+                if (s instanceof Node) {
+                    recurseAddNodes((Node) s, indent + 1);
+                }
             }
         }
     }
@@ -181,14 +185,12 @@ public class NodeWidgetState extends BaseAppState {
     protected void onEnable() {
         getRoot().attachChild(nodesNode);
         this.selection = getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
-        selection.addPropertyChangeListener(selectionObserver);
         CursorEventControl.addListenersToSpatial(nodesNode, selectionDispatcher);
     }
 
     @Override
     protected void onDisable() {
         nodesNode.removeFromParent();
-        selection.removePropertyChangeListener(selectionObserver);
         CursorEventControl.removeListenersFromSpatial(nodesNode, selectionDispatcher);
     }
 
@@ -223,7 +225,7 @@ public class NodeWidgetState extends BaseAppState {
     public void render(RenderManager renderManager) {
     }
 
-    private class LightSelectionDispatcher implements CursorListener{
+    private class NodeSelectionDispatcher implements CursorListener {
 
         private CursorMotionEvent lastMotion;
 
@@ -278,38 +280,4 @@ public class NodeWidgetState extends BaseAppState {
         }
     }
 
-    //Light widget selection Highlighting is handled by listening to the selection change event.
-    //The SelectionHighlightState only handles Spatials and I felt hackish to manage an exception for Light wrappers
-    private class SelectionObserver implements PropertyChangeListener {
-
-        public void propertyChange( PropertyChangeEvent event ) {
-            if(event.getNewValue() != event.getOldValue() ){
-
-                if(event.getNewValue() instanceof LightWrapper) {
-                    Node widget = ((LightWrapper) event.getNewValue()).getWidget();
-                    //TODO Perfect candidate for MPO, let's do it when we are on alpha 5
-                    //for now we recurse and set the color on every material.
-                    setColorRecurse(ColorRGBA.Orange, widget);
-                }
-                if(event.getOldValue() instanceof LightWrapper) {
-                    Node oldWidget = ((LightWrapper) event.getOldValue()).getWidget();
-                    setColorRecurse(ColorRGBA.Black, oldWidget);
-                }
-            }
-
-        }
-    }
-
-    private void setColorRecurse(ColorRGBA color, Node node){
-        for(Spatial s:node.getChildren()){
-            if(s instanceof Geometry){
-                Material m = ((Geometry)s).getMaterial();
-                if (m.getMaterialDef().getMaterialParam("Color") != null) {
-                    m.setColor("Color", color);
-                }
-            } else if(s instanceof  Node){
-                setColorRecurse(color,(Node)s);
-            }
-        }
-    }
 }

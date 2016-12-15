@@ -39,65 +39,40 @@ package spix.app;
 import com.google.common.base.Predicates;
 import com.jme3.app.*;
 import com.jme3.app.state.ScreenshotAppState;
-import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.light.*;
 import com.jme3.material.Material;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
-import com.jme3.math.Vector3f;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+import com.jme3.math.*;
+import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
-import com.jme3.shader.ShaderNode;
-import com.jme3.shader.VariableMapping;
+import com.jme3.shader.*;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
 import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.event.CursorButtonEvent;
-import com.simsilica.lemur.event.CursorEventControl;
-import com.simsilica.lemur.event.CursorListener;
-import com.simsilica.lemur.event.CursorMotionEvent;
+import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
-import spix.app.form.SpatialFormFactory;
-import spix.app.light.LightWidgetState;
-import spix.app.light.LightWrapper;
+import spix.app.form.*;
+import spix.app.light.*;
 import spix.app.material.*;
-import spix.app.material.hack.MatDefWrapper;
-import spix.app.material.hack.TechniqueDefWrapper;
-import spix.app.properties.LightPropertySetFactory;
-import spix.app.properties.SpatialPropertySetFactory;
+import spix.app.material.hack.*;
+import spix.app.properties.*;
 import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.core.Action;
 import spix.swing.ActionUtils;
 import spix.swing.*;
-import spix.swing.materialEditor.MatDefEditorWindow;
-import spix.swing.materialEditor.controller.MatDefEditorController;
-import spix.swing.materialEditor.panels.DockPanel;
-import spix.swing.materialEditor.panels.PropPanel;
+import spix.swing.materialEditor.panels.*;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
 import spix.swing.sceneexplorer.SceneExplorerPanel;
 import spix.type.Type;
-import spix.ui.ColorRequester;
-import spix.ui.FileRequester;
-import spix.ui.MessageRequester;
-import spix.undo.RedoAction;
-import spix.undo.UndoAction;
-import spix.undo.UndoManager;
+import spix.ui.*;
+import spix.undo.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.prefs.Preferences;
-
-import static com.sun.java.accessibility.util.AWTEventMonitor.addComponentListener;
-import static org.lwjgl.opengl.Display.setLocation;
-import static spix.swing.materialEditor.MatDefEditorWindow.*;
 
 
 /**
@@ -145,7 +120,8 @@ public class Editor extends SimpleApplication {
                 new NodeWidgetState(),
               new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
               new SpixState(new Spix()),
-                new MaterialAppState());
+                new MaterialAppState(),
+                new FileIOAppState());
 
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
@@ -172,6 +148,7 @@ public class Editor extends SimpleApplication {
 
 
         spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());
+        spix.registerFormFactory(new Type(VariableMapping.class), new VariableMappingFormFactory());
 
         SelectionModel selectionModel = new SelectionModel();
         spix.getBlackboard().set("main.selection", selectionModel);
@@ -189,7 +166,7 @@ public class Editor extends SimpleApplication {
         // Have to create the frame on the AWT EDT.
         SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
-                mainFrame = new JFrame("Test App");
+                mainFrame = new JFrame("jMonkeyEngine Tool Suite");
                 mainFrame.setIconImage(Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/icons/model.gif")));
                 try {
                     SystemTray.getSystemTray().add(new TrayIcon(Toolkit.getDefaultToolkit().getImage("/icons/model.gif")));
@@ -346,6 +323,19 @@ public class Editor extends SimpleApplication {
         file.add(new NopAction("New"));
         file.add(null); // separator
         file.add(new NopAction("Open") {
+            public void performAction(Spix spix) {
+                // Uses the alternate requester service approach
+                spix.getService(FileRequester.class).requestFile("Open Scene",
+                        "JME Object", "j3o", null, true,
+                        new RequestCallback<File>() {
+                            public void done(File f) {
+                                System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
+                                stateManager.getState(FileIOAppState.class).loadFile(f);
+                            }
+                        });
+            }
+        });
+        file.add(new NopAction("Append asset") {
             public void performAction( Spix spix ) {
                 // Uses the alternate requester service approach
                 spix.getService(FileRequester.class).requestFile("Open Scene",
@@ -353,7 +343,7 @@ public class Editor extends SimpleApplication {
                              new RequestCallback<File>() {
                                 public void done( File f ) {
                                     System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
-                                    loadFile(f);
+                                    stateManager.getState(FileIOAppState.class).AppendFile(f);
                                 }
                              });
             }
@@ -828,38 +818,6 @@ public class Editor extends SimpleApplication {
 //System.out.println("-----------frame-------------");
     }
 
-
-    private void loadFile( File f ) {
-        // JME doesn't really make this easy... so we cheat a little and make some
-        // assumptions.
-        File assetRoot = f.getParentFile();
-        String modelPath = f.getName();
-        while( assetRoot.getParentFile() != null && !"assets".equals(assetRoot.getName()) ) {
-            modelPath = assetRoot.getName() + "/" + modelPath;
-            assetRoot = assetRoot.getParentFile();
-        }
-        System.out.println("Asset root:" + assetRoot + "   modelPath:" + modelPath);
-
-        assetManager.registerLocator(assetRoot.toString(), FileLocator.class);
-
-        Spatial scene = assetManager.loadModel(modelPath);
-
-        System.out.println("Scene:" + scene);
-
-        // For now, find out where to put the scene so that it is next to whatever
-        // is currently loaded
-        BoundingBox currentBounds = (BoundingBox)rootNode.getWorldBound();
-        BoundingBox modelBounds = (BoundingBox)scene.getWorldBound();
-
-        System.out.println("root bounds:" + currentBounds);
-        System.out.println("model bounds:" + modelBounds);
-
-        float worldRight = currentBounds.getCenter().x + currentBounds.getXExtent();
-        float modelLeft = -modelBounds.getCenter().x + modelBounds.getXExtent();
-
-        scene.setLocalTranslation(worldRight + modelLeft, 0, 0);
-        rootNode.attachChild(scene);
-    }
 
     private void addSpatial( Spatial spatial ) {
 

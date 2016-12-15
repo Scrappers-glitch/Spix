@@ -57,10 +57,6 @@ public class VariableMappingFormFactory extends DefaultFormFactory {
     @Override
     public Form createForm( Spix spix, PropertySet properties, String context ) {
 
-        // We basically want the default behavior except we will pull out the
-        // world transforms into their own form and the local transforms into
-        // their own form.
-
 
         FormField rightForm = getFormField(spix, properties, context, "from");
         FormField leftForm = getFormField(spix, properties, context, "to");
