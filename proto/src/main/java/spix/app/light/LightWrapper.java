@@ -5,17 +5,13 @@ import com.jme3.bounding.*;
 import com.jme3.light.Light;
 import com.jme3.material.*;
 import com.jme3.math.*;
-import com.jme3.renderer.*;
-import com.jme3.renderer.queue.RenderQueue;
+import com.jme3.renderer.Camera;
 import com.jme3.scene.*;
-import com.jme3.scene.control.*;
+import com.jme3.scene.control.BillboardControl;
 import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
-import com.jme3.util.BufferUtils;
-import com.simsilica.lemur.*;
+import com.simsilica.lemur.GuiGlobals;
 import spix.props.PropertySet;
-
-import java.nio.*;
 
 /**
  * Created by Nehon on 02/04/2016.
@@ -88,7 +84,7 @@ public abstract class LightWrapper<L extends Light> {
 
     protected float getGlobalScale(){
         BoundingVolume v = target.getWorldBound();
-        if(v.getType() == BoundingVolume.Type.AABB){
+        if (v != null && v.getType() == BoundingVolume.Type.AABB) {
             BoundingBox bb = (BoundingBox)v;
             Vector3f vec = new Vector3f(bb.getXExtent(), bb.getYExtent(), bb.getZExtent());
             return vec.length();
