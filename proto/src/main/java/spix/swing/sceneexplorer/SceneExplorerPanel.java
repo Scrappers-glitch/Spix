@@ -6,20 +6,19 @@ import com.jme3.scene.*;
 import com.jme3.scene.control.Control;
 import spix.app.DefaultConstants;
 import spix.core.SelectionModel;
-import spix.core.Spix;
+import spix.props.Property;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.panels.DockPanel;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.*;
 import javax.swing.tree.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
+import java.beans.*;
+
+import static spix.app.DefaultConstants.SCENE_ROOT;
 
 /**
  * Created by bouquet on 30/09/16.
@@ -28,6 +27,7 @@ public class SceneExplorerPanel extends DockPanel {
 
     private JTree sceneTree;
     private SwingGui gui;
+    private ScenePropertyListener scenePropertyListener = new ScenePropertyListener();
 
     public SceneExplorerPanel(Slot slot, Container container, SwingGui gui) {
         super(slot, container);
@@ -46,12 +46,12 @@ public class SceneExplorerPanel extends DockPanel {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode)
                         sceneTree.getLastSelectedPathComponent();
 
-                if(node == null){
+                if (node == null) {
                     return;
                 }
 
                 Object o = node.getUserObject();
-                if(o instanceof Node || o instanceof Geometry || o instanceof Light) {
+                if (o instanceof Node || o instanceof Geometry || o instanceof Light) {
 
                     gui.runOnRender(new Runnable() {
                         @Override
@@ -67,7 +67,7 @@ public class SceneExplorerPanel extends DockPanel {
 
 
         JPanel p = new JPanel(new BorderLayout());
-        p.add(new JScrollPane(sceneTree),BorderLayout.CENTER);
+        p.add(new JScrollPane(sceneTree), BorderLayout.CENTER);
         setComponent(p);
 
         JToolBar tb = new JToolBar();
@@ -92,24 +92,30 @@ public class SceneExplorerPanel extends DockPanel {
 
     }
 
-    private void buildTree(Spatial s, DefaultMutableTreeNode parent){
+    public void init(){
+        Property sceneProperty = (Property) gui.getSpix().getBlackboard().get(SCENE_ROOT);
+        sceneProperty.addPropertyChangeListener(scenePropertyListener);
+        refresh();
+    }
+
+    private void buildTree(Spatial s, DefaultMutableTreeNode parent) {
         DefaultMutableTreeNode item = new DefaultMutableTreeNode(s);
         parent.add(item);
 
 
-        if(s instanceof Geometry){
-            Geometry g = (Geometry)s;
-            item.add( new DefaultMutableTreeNode(g.getMesh()));
-            item.add( new DefaultMutableTreeNode(g.getMaterial()));
+        if (s instanceof Geometry) {
+            Geometry g = (Geometry) s;
+            item.add(new DefaultMutableTreeNode(g.getMesh()));
+            item.add(new DefaultMutableTreeNode(g.getMaterial()));
         }
 
-        if(s instanceof Node){
-            Node n = (Node)s;
+        if (s instanceof Node) {
+            Node n = (Node) s;
             for (Spatial child : n.getChildren()) {
-                buildTree(child,item);
+                buildTree(child, item);
             }
 
-            if(n.getLocalLightList().size() != 0) {
+            if (n.getLocalLightList().size() != 0) {
                 DefaultMutableTreeNode lights = new DefaultMutableTreeNode("Lights");
                 item.add(lights);
                 for (Light light : n.getLocalLightList()) {
@@ -118,7 +124,7 @@ public class SceneExplorerPanel extends DockPanel {
                 }
             }
         }
-        if(s.getNumControls() > 0){
+        if (s.getNumControls() > 0) {
             DefaultMutableTreeNode controls = new DefaultMutableTreeNode("Controls");
             item.add(controls);
             for (int i = 0; i < s.getNumControls(); i++) {
@@ -129,12 +135,12 @@ public class SceneExplorerPanel extends DockPanel {
         }
     }
 
-    public void refresh(){
-        Node n = gui.getSpix().getBlackboard().get("scene.root", Node.class);
+    public void refresh() {
+        Node n = (Node) (gui.getSpix().getBlackboard().get(SCENE_ROOT, Property.class)).getValue();
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Scene");
 
         buildTree(n, root);
-        sceneTree.setModel(new DefaultTreeModel(root,true));
+        sceneTree.setModel(new DefaultTreeModel(root, true));
 
         for (int i = 0; i < sceneTree.getRowCount(); i++) {
             sceneTree.expandRow(i);
@@ -142,9 +148,7 @@ public class SceneExplorerPanel extends DockPanel {
 
     }
 
-//    DefaultTreeCellRenderer
-
-    private class ItemRenderer implements TreeCellRenderer{
+    private class ItemRenderer implements TreeCellRenderer {
         private JLabel label;
 
         ItemRenderer() {
@@ -177,18 +181,18 @@ public class SceneExplorerPanel extends DockPanel {
                 Control c = (Control) o;
                 label.setIcon(Icons.tech);
                 label.setText(c.getClass().getSimpleName());
-            }else if (o instanceof Light) {
+            } else if (o instanceof Light) {
                 Light l = (Light) o;
                 label.setIcon(Icons.lightBulb);
-                if(l.getName() == null){
+                if (l.getName() == null) {
                     label.setText(l.getType().name());
                 } else {
                     label.setText(l.getName());
                 }
-            }else if(o instanceof String) {
-                String text = (String)o;
-                label.setText((String)o);
-                switch (text){
+            } else if (o instanceof String) {
+                String text = (String) o;
+                label.setText((String) o);
+                switch (text) {
                     case "Lights":
                         label.setIcon(Icons.lightBulb);
                         break;
@@ -200,8 +204,8 @@ public class SceneExplorerPanel extends DockPanel {
                 }
             }
 
-            if (hasFocus){
-               label.setBackground(Color.DARK_GRAY);
+            if (hasFocus) {
+                label.setBackground(Color.DARK_GRAY);
             } else {
                 label.setBackground(null);
             }
@@ -209,7 +213,17 @@ public class SceneExplorerPanel extends DockPanel {
         }
     }
 
+    private class ScenePropertyListener implements PropertyChangeListener {
 
+        @Override
+        public void propertyChange(PropertyChangeEvent event) {
+            if (event.getNewValue() != event.getOldValue()) {
+                if (event.getNewValue() instanceof Spatial) {
+                    refresh();
+                }
+            }
+        }
+    }
 
 
 }

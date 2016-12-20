@@ -36,9 +36,9 @@
 
 package spix.ui;
 
-import java.io.File;
-
 import spix.core.RequestCallback;
+
+import java.io.File;
 
 /**
  *  Provides user interface implementation-specific support for requesting
@@ -51,6 +51,9 @@ public interface FileRequester {
     public void requestFile( String title, String typeDescription, String extensions,
                              File initialValue, boolean forOpen,
                              RequestCallback<File> callback );
+
+    public void requestDirectory(String title, String typeDescription, File initialValue, boolean forOpen,
+                                 RequestCallback<File> callback);
 }
 
 

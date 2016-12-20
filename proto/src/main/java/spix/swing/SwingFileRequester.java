@@ -36,13 +36,11 @@
 
 package spix.swing;
 
-import java.awt.Component;
-import java.io.File;
-import javax.swing.JFileChooser;
-import javax.swing.SwingUtilities;
+import spix.core.RequestCallback;
+import spix.ui.FileRequester;
 
-import spix.core.*;
-import spix.ui.*;
+import javax.swing.*;
+import java.io.File;
 
 /**
  *
@@ -71,6 +69,22 @@ public class SwingFileRequester implements FileRequester {
                 }
             }
         });                             
+    }
+
+    @Override
+    public void requestDirectory(final String title, final String typeDescription,
+                                 final File initialValue, final boolean forOpen,
+                                 final RequestCallback<File> callback) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                File f = FileChooser.getFile(swingGui.getRootWindow(), title, typeDescription, "",
+                        initialValue, forOpen, JFileChooser.DIRECTORIES_ONLY);
+                //If the user did not cancel we load the file.
+                if (f != null) {
+                    swingGui.getSpix().sendResponse(callback, f);
+                }
+            }
+        });
     }
 }
 
