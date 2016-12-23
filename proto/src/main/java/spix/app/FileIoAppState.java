@@ -31,12 +31,17 @@ public class FileIoAppState extends BaseAppState {
     private AssetLoadingListener assetListener = new AssetLoadingListener();
     private List<Runnable> enabledCommands = new CopyOnWriteArrayList<>();
 
+    public FileIoAppState() {
+
+    }
+
     @Override
     protected void initialize(Application app) {
         this.assetManager = app.getAssetManager();
         this.rootNode = ((SimpleApplication) app).getRootNode();
         getState(SpixState.class).getSpix().getBlackboard().set(MAIN_ASSETS_FOLDER, mainAssetProp);
         getState(SpixState.class).getSpix().getBlackboard().set(SCENE_ROOT, currentScene);
+        getState(SpixState.class).getSpix().getBlackboard().set(SCENE_FILE_NAME, currentOpenedFile);
     }
 
     @Override
@@ -96,6 +101,8 @@ public class FileIoAppState extends BaseAppState {
         BinaryExporter exporter = BinaryExporter.getInstance();
         File file = new File(fileName);
         Node scene = (Node) currentScene.getValue();
+        Property dirtyScene = (Property) getState(SpixState.class).getSpix().getBlackboard().get(SCENE_DIRTY);
+        dirtyScene.setValue(false);
         try {
             exporter.save(scene, file);
         } catch (IOException ex) {

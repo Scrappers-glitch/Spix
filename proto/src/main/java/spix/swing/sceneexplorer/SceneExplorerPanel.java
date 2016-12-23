@@ -140,12 +140,16 @@ public class SceneExplorerPanel extends DockPanel {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Scene");
 
         buildTree(n, root);
-        sceneTree.setModel(new DefaultTreeModel(root, true));
+        gui.runOnSwing(new Runnable() {
+            @Override
+            public void run() {
+                sceneTree.setModel(new DefaultTreeModel(root, true));
 
-        for (int i = 0; i < sceneTree.getRowCount(); i++) {
-            sceneTree.expandRow(i);
-        }
-
+                for (int i = 0; i < sceneTree.getRowCount(); i++) {
+                    sceneTree.expandRow(i);
+                }
+            }
+        });
     }
 
     private class ItemRenderer implements TreeCellRenderer {

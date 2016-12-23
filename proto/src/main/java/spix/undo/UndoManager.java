@@ -36,18 +36,16 @@
 
 package spix.undo;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.*;
-
 import com.google.common.collect.MapMaker;
-
-import org.slf4j.*;
-
 import com.jme3.util.clone.Cloner;
-
+import org.slf4j.*;
 import spix.core.*;
 import spix.props.*;
+
+import java.beans.*;
+import java.util.*;
+
+import static spix.app.DefaultConstants.SCENE_DIRTY;
 
 /**
  *  Manages the undo/redo stacks.
@@ -63,6 +61,7 @@ public class UndoManager {
     private EditListener editListener = new EditListener();
     private long frame;
     private long lastEditFrame;
+    private Property dirtyScene = new DefaultProperty(SCENE_DIRTY, Boolean.class, false);
  
     private long frameDelay = 15; // presuming we are called at 60 hz then this is .25 of a second.
                 // But note the above is kind of a hack to work around the fact that the app
@@ -89,6 +88,7 @@ public class UndoManager {
         // Create a map that will let us find the original objects
         // that a property belongs to for when we receive events
         beanIndex = new MapMaker().weakKeys().weakValues().makeMap();
+        spix.getBlackboard().set(SCENE_DIRTY, dirtyScene);
     }
  
     protected CompositeEdit getTransaction( boolean create ) {
@@ -102,7 +102,8 @@ public class UndoManager {
     public void addEdit( Edit edit ) {
         getTransaction(true).addEdit(edit);
         lastEditFrame = frame;
-        redoStack.clear();   
+        redoStack.clear();
+        dirtyScene.setValue(true);
     }
  
     public void undo() {

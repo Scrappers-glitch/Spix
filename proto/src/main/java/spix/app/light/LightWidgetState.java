@@ -36,21 +36,25 @@
 
 package spix.app.light;
 
-import com.jme3.app.*;
+import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.light.*;
-import com.jme3.material.*;
+import com.jme3.material.MatParamOverride;
 import com.jme3.math.*;
 import com.jme3.renderer.*;
 import com.jme3.scene.*;
 import com.jme3.shader.VarType;
-import com.jme3.util.*;
-//import javafx.scene.shape.Circle;
+import com.jme3.util.SafeArrayList;
 import com.simsilica.lemur.event.*;
 import spix.app.*;
 import spix.core.*;
+import spix.props.Property;
 
 import java.beans.*;
+
+import static spix.app.DefaultConstants.SCENE_ROOT;
+
+//import javafx.scene.shape.Circle;
 
 
 /**
@@ -66,7 +70,9 @@ public class LightWidgetState extends BaseAppState {
     private Node lightNode;
     private SafeArrayList<LightWrapper> wrappers = new SafeArrayList<>(LightWrapper.class);
     private SelectionModel selection;
+    private Property sceneProperty;
     private SelectionObserver selectionObserver = new SelectionObserver();
+    private SceneObserver sceneObserver = new SceneObserver();
     private LightSelectionDispatcher selectionDispatcher = new LightSelectionDispatcher();
 
     public LightWidgetState() {
@@ -82,20 +88,21 @@ public class LightWidgetState extends BaseAppState {
 
     @Override
     protected void initialize(Application app) {
-        Node rootNode = ((SimpleApplication) app).getRootNode();
+
         cam = app.getCamera();
         lightNode = new Node("Light Node");
 
-        recurseAddLights(rootNode);
     }
 
-    private void recurseAddLights(Node n){
-        for (Light light : n.getLocalLightList()) {
-            addLight(n, light);
+    private void recurseAddLights(Spatial s) {
+
+        for (Light light : s.getLocalLightList()) {
+            addLight(s, light);
         }
-        for (Spatial s: n.getChildren()){
-            if(s instanceof Node){
-                recurseAddLights((Node)s);
+        if (s instanceof Node) {
+            Node n = (Node) s;
+            for (Spatial spat : n.getChildren()) {
+                recurseAddLights(spat);
             }
         }
     }
@@ -134,6 +141,12 @@ public class LightWidgetState extends BaseAppState {
         this.selection = getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         selection.addPropertyChangeListener(selectionObserver);
         CursorEventControl.addListenersToSpatial(lightNode, selectionDispatcher);
+
+        sceneProperty = (Property) getSpix().getBlackboard().get(SCENE_ROOT);
+        sceneProperty.addPropertyChangeListener(sceneObserver);
+        Spatial rootNode = (Spatial) sceneProperty.getValue();
+        recurseAddLights(rootNode);
+
     }
 
     @Override
@@ -141,6 +154,9 @@ public class LightWidgetState extends BaseAppState {
         lightNode.removeFromParent();
         selection.removePropertyChangeListener(selectionObserver);
         CursorEventControl.removeListenersFromSpatial(lightNode, selectionDispatcher);
+
+        sceneProperty.removePropertyChangeListener(sceneObserver);
+        lightNode.detachAllChildren();
     }
 
     @Override
@@ -236,6 +252,18 @@ public class LightWidgetState extends BaseAppState {
 
             }
 
+        }
+    }
+
+    private class SceneObserver implements PropertyChangeListener {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getNewValue() != evt.getOldValue()) {
+                //the scene has changed let's wipe all the light widgets and re scan the new scene.
+                lightNode.detachAllChildren();
+                recurseAddLights((Spatial) evt.getNewValue());
+            }
         }
     }
 

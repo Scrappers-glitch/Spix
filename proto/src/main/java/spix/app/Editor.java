@@ -59,6 +59,7 @@ import spix.app.properties.*;
 import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.core.Action;
+import spix.props.Property;
 import spix.swing.ActionUtils;
 import spix.swing.*;
 import spix.swing.materialEditor.panels.*;
@@ -71,8 +72,11 @@ import spix.undo.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
 import java.io.*;
 import java.util.prefs.Preferences;
+
+import static spix.app.DefaultConstants.*;
 
 
 /**
@@ -109,6 +113,8 @@ public class Editor extends SimpleApplication {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
                 new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(true),
                 new GridState(), new BackgroundColorState(),
+                new SpixState(new Spix()),
+                new FileIoAppState(),
                 new SelectionHighlightState(),
                 new TransformState(),
                 new TranslationWidgetState(false),
@@ -117,9 +123,7 @@ public class Editor extends SimpleApplication {
                 new LightWidgetState(),
                 new NodeWidgetState(),
                 new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
-                new SpixState(new Spix()),
-                new MaterialAppState(),
-                new FileIoAppState());
+                new MaterialAppState());
 
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
@@ -158,11 +162,6 @@ public class Editor extends SimpleApplication {
             public void run() {
                 mainFrame = new JFrame("jMonkeyEngine Tool Suite");
                 mainFrame.setIconImage(Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/icons/model.gif")));
-                try {
-                    SystemTray.getSystemTray().add(new TrayIcon(Toolkit.getDefaultToolkit().getImage("/icons/model.gif")));
-                } catch (AWTException e) {
-                    e.printStackTrace();
-                }
                 mainFrame.addComponentListener(new ComponentAdapter() {
                     @Override
                     public void componentResized(ComponentEvent e) {
@@ -188,6 +187,7 @@ public class Editor extends SimpleApplication {
 
                 mainFrame.setJMenuBar(createMainMenu());
 
+
                 JPanel centerPane = new JPanel();
                 mainFrame.getContentPane().add(centerPane, BorderLayout.CENTER);
 
@@ -198,6 +198,29 @@ public class Editor extends SimpleApplication {
                 // for which it is capable.
                 SwingGui gui = spix.registerService(SwingGui.class, new SwingGui(spix, mainFrame));
 
+                Property dirtyScene = (Property) spix.getBlackboard().get(SCENE_DIRTY);
+                dirtyScene.addPropertyChangeListener(new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(PropertyChangeEvent evt) {
+                        gui.runOnSwing(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (!evt.getNewValue().equals(evt.getOldValue())) {
+                                    String title = mainFrame.getTitle();
+                                    if (title.endsWith("*")) {
+                                        title = title.substring(0, title.length() - 1);
+                                    }
+                                    if (evt.getNewValue().equals(Boolean.TRUE)) {
+                                        title += "*";
+                                    }
+                                    mainFrame.setTitle(title);
+                                }
+                            }
+                        });
+                    }
+                });
+
+
                 SceneExplorerPanel sceneExplorerPanel = new SceneExplorerPanel(DockPanel.Slot.West, centerPane, gui);
                 sceneExplorerPanel.setPreferredSize(new Dimension(250, 10));
                 sceneExplorerPanel.unDock();
@@ -205,6 +228,18 @@ public class Editor extends SimpleApplication {
                     @Override
                     public void run() {
                         sceneExplorerPanel.init();
+
+                        ((Property) spix.getBlackboard().get(SCENE_FILE_NAME)).addPropertyChangeListener(new PropertyChangeListener() {
+                            @Override
+                            public void propertyChange(PropertyChangeEvent evt) {
+                                gui.runOnSwing(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mainFrame.setTitle("jMonkeyEngine Tool Suite - " + ((Property) spix.getBlackboard().get(MAIN_ASSETS_FOLDER)).getValue() + " - " + ((Property) spix.getBlackboard().get(SCENE_FILE_NAME)).getValue());
+                                    }
+                                });
+                            }
+                        });
                     }
                 });
 
@@ -746,7 +781,7 @@ public class Editor extends SimpleApplication {
         // Set an initial camera position
         cam.setLocation(new Vector3f(0, 1, 10));
 
-        Node intermediateNode = new Node("intermediate");
+        // Node intermediateNode = new Node("intermediate");
 
         Box b = new Box(Vector3f.ZERO, 1, 1, 1);
         Geometry geom = new Geometry("Box", b);
@@ -757,8 +792,8 @@ public class Editor extends SimpleApplication {
         mat.setBoolean("UseMaterialColors", true);
         geom.setMaterial(mat);
         geom.setMaterial(mat);
-        intermediateNode.attachChild(geom);
-        rootNode.attachChild(intermediateNode);
+        //  intermediateNode.attachChild(geom);
+        // rootNode.attachChild(intermediateNode);
 
 
         geom = new Geometry("Box", b);
@@ -768,24 +803,24 @@ public class Editor extends SimpleApplication {
         mat.setColor("Color", ColorRGBA.Yellow);
         geom.setMaterial(mat);
         geom.setLocalTranslation(3, 0, 0);
-        rootNode.attachChild(geom);
+        //      rootNode.attachChild(geom);
 
 
         DirectionalLight light = new DirectionalLight();
         light.setDirection(new Vector3f(-0.2f, -1, -0.3f).normalizeLocal());
         rootNode.addLight(light);
 
-        AmbientLight ambient = new AmbientLight();
-        ambient.setColor(new ColorRGBA(0.25f, 0.25f, 0.25f, 1));
-        rootNode.addLight(ambient);
-
-        PointLight pl = new PointLight(new Vector3f(-2, 0, -2), 4);
-        rootNode.addLight(pl);
-
-        SpotLight sl = new SpotLight(new Vector3f(3, 3, -3), new Vector3f(-1f, -1, 1f).normalizeLocal(), 10, ColorRGBA.White.mult(2));
-        sl.setSpotOuterAngle(FastMath.DEG_TO_RAD * 15);
-        sl.setSpotInnerAngle(FastMath.DEG_TO_RAD * 10);
-        rootNode.addLight(sl);
+//        AmbientLight ambient = new AmbientLight();
+//        ambient.setColor(new ColorRGBA(0.25f, 0.25f, 0.25f, 1));
+//        rootNode.addLight(ambient);
+//
+//        PointLight pl = new PointLight(new Vector3f(-2, 0, -2), 4);
+//        rootNode.addLight(pl);
+//
+//        SpotLight sl = new SpotLight(new Vector3f(3, 3, -3), new Vector3f(-1f, -1, 1f).normalizeLocal(), 10, ColorRGBA.White.mult(2));
+//        sl.setSpotOuterAngle(FastMath.DEG_TO_RAD * 15);
+//        sl.setSpotInnerAngle(FastMath.DEG_TO_RAD * 10);
+//        rootNode.addLight(sl);
 
         // Because we will use Lemur for some things... go ahead and setup
         // the very basics
@@ -914,7 +949,8 @@ public class Editor extends SimpleApplication {
         try {
             Light l = lightClass.newInstance();
             anchor.addLight(l);
-            getStateManager().getState(LightWidgetState.class).addLight(rootNode, l);
+            Node node = (Node) ((Property) stateManager.getState(SpixState.class).getSpix().getBlackboard().get(SCENE_ROOT)).getValue();
+            getStateManager().getState(LightWidgetState.class).addLight(node, l);
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {

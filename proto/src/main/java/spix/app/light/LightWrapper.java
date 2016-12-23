@@ -89,7 +89,7 @@ public abstract class LightWrapper<L extends Light> {
             Vector3f vec = new Vector3f(bb.getXExtent(), bb.getYExtent(), bb.getZExtent());
             return vec.length();
         }
-        if(v.getType() == BoundingVolume.Type.Sphere){
+        if (v != null && v.getType() == BoundingVolume.Type.Sphere) {
             BoundingSphere bs = (BoundingSphere)v;
             return bs.getRadius();
         }
