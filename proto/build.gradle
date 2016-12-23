@@ -4,7 +4,7 @@ apply plugin: 'application'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
-mainClassName='spix.props.Test'
+mainClassName = 'spix.props.Test'
 //mainClassName='spix.blackboard.BlackboardTest'
 //mainClassName='spix.type.TypeRegistryTest'
 //mainClassName='spix.core.SpixTest'
@@ -14,10 +14,10 @@ mainClassName='spix.props.Test'
 //sourceSets.main.groovy.srcDirs += ["src/main/java"]
 
 sourceSets {
-  main {
-    java { srcDirs = [] }    // no source dirs for the java compiler
-    groovy { srcDirs = ["src/main/java"] }  // compile   everything in src/ with groovy
-  }
+    main {
+        java { srcDirs = [] }    // no source dirs for the java compiler
+        groovy { srcDirs = ["src/main/java"] }  // compile   everything in src/ with groovy
+    }
 }
 
 /*
@@ -77,13 +77,14 @@ dependencies {
     compile "org.jmonkeyengine:jme3-core:$jmeVersion"
     compile "org.jmonkeyengine:jme3-desktop:$jmeVersion"
     compile "org.jmonkeyengine:jme3-lwjgl:$jmeVersion"
+    compile "org.jmonkeyengine:jme3-jogg:$jmeVersion"
 
     compile "com.github.insubstantial:substance:[7.3,)"
 
     compile 'org.slf4j:slf4j-api:1.7.13'
     runtime 'org.apache.logging.log4j:log4j-api:2.5'
     runtime 'org.apache.logging.log4j:log4j-core:2.5'
-    runtime 'org.apache.logging.log4j:log4j-slf4j-impl:2.5'    
+    runtime 'org.apache.logging.log4j:log4j-slf4j-impl:2.5'
 
     runtime project(':assets')
 }
