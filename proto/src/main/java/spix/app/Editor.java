@@ -588,25 +588,25 @@ public class Editor extends SimpleApplication {
         lightMenu.add(new NopAction("Directional light") {
             @Override
             public void performAction(Spix spix) {
-                addLight(DirectionalLight.class);
+                addLight(new DirectionalLight(new Vector3f(1, -1, 0).normalizeLocal()));
             }
         });
         lightMenu.add(new NopAction("Spot light") {
             @Override
             public void performAction(Spix spix) {
-                addLight(SpotLight.class);
+                addLight(new SpotLight(new Vector3f(5, 5, 0), new Vector3f(-1, -1, 0).normalizeLocal(), 10));
             }
         });
         lightMenu.add(new NopAction("Point light") {
             @Override
             public void performAction(Spix spix) {
-                addLight(PointLight.class);
+                addLight(new PointLight(new Vector3f(0, 3, 0), 10));
             }
         });
         lightMenu.add(new NopAction("Ambient light") {
             @Override
             public void performAction(Spix spix) {
-                addLight(AmbientLight.class);
+                addLight(new AmbientLight());
             }
         });
 
@@ -936,7 +936,7 @@ public class Editor extends SimpleApplication {
         addSpatial(selected.deepClone());
     }
 
-    private void addLight(Class<? extends Light> lightClass) {
+    private void addLight(Light l) {
         Spatial selected = getSelectedSpatial();
         Spatial anchor;
         Node node = (Node) ((Property) stateManager.getState(SpixState.class).getSpix().getBlackboard().get(SCENE_ROOT)).getValue();
@@ -949,17 +949,10 @@ public class Editor extends SimpleApplication {
             anchor = node;
         }
 
-        try {
-            Light l = lightClass.newInstance();
-            UndoManager um = spix.getService(UndoManager.class);
-            LightAddEdit edit = new LightAddEdit(anchor, l, getStateManager().getState(LightWidgetState.class));
-            edit.redo(spix);
-            um.addEdit(edit);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        UndoManager um = spix.getService(UndoManager.class);
+        LightAddEdit edit = new LightAddEdit(anchor, l, getStateManager().getState(LightWidgetState.class));
+        edit.redo(spix);
+        um.addEdit(edit);
 
     }
 

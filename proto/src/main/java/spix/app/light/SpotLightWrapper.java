@@ -32,7 +32,7 @@
 package spix.app.light;
 
 import com.jme3.asset.AssetManager;
-import com.jme3.light.*;
+import com.jme3.light.SpotLight;
 import com.jme3.math.*;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
@@ -86,7 +86,11 @@ public class SpotLightWrapper extends LightWrapper<SpotLight> {
     }
 
     private void updateWidgetRotationFromDirection(Spatial widget, Vector3f direction) {
-        tmpRot.lookAt(direction, Vector3f.UNIT_Y);
+        Vector3f up = Vector3f.UNIT_Y;
+        if (direction.dot(up) == -1 || direction.dot(up) == 1) {
+            up = Vector3f.UNIT_Z;
+        }
+        tmpRot.lookAt(direction, up);
         widget.setLocalRotation(tmpRot);
     }
 
