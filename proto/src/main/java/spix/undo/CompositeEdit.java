@@ -36,11 +36,10 @@
 
 package spix.undo;
 
-import java.util.*;
-
 import org.slf4j.*;
-
 import spix.core.Spix;
+
+import java.util.*;
 
 /**
  *  A list of Edits that are run together in order.
@@ -52,6 +51,7 @@ public class CompositeEdit implements Edit {
     static Logger log = LoggerFactory.getLogger(CompositeEdit.class);
 
     private List<Edit> edits = new ArrayList<>();
+    private Set<Class<? extends Edit>> editTypes = new HashSet<>();
     
     public CompositeEdit( Edit... edits ) {
         this.edits.addAll(Arrays.asList(edits));
@@ -70,8 +70,17 @@ public class CompositeEdit implements Edit {
         // what to do... but when it's multiple we might be screwing up some
         // order specific dependencies.  Still, it's a future improvement
         // worth looking into.
-    
+        editTypes.add(edit.getClass());
         edits.add(edit);
+    }
+
+    public boolean hasTypes(Class<? extends Edit>... types) {
+        for (Class<? extends Edit> type : types) {
+            if (editTypes.contains(type)) {
+                return true;
+            }
+        }
+        return false;
     }
  
     @Override   

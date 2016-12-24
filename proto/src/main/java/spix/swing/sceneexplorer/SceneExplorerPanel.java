@@ -10,6 +10,7 @@ import spix.props.Property;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.panels.DockPanel;
+import spix.undo.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -17,6 +18,7 @@ import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
+import java.util.ArrayList;
 
 import static spix.app.DefaultConstants.SCENE_ROOT;
 
@@ -28,6 +30,7 @@ public class SceneExplorerPanel extends DockPanel {
     private JTree sceneTree;
     private SwingGui gui;
     private ScenePropertyListener scenePropertyListener = new ScenePropertyListener();
+    private LastEditListener lastEditListener = new LastEditListener();
 
     public SceneExplorerPanel(Slot slot, Container container, SwingGui gui) {
         super(slot, container);
@@ -95,6 +98,8 @@ public class SceneExplorerPanel extends DockPanel {
     public void init(){
         Property sceneProperty = (Property) gui.getSpix().getBlackboard().get(SCENE_ROOT);
         sceneProperty.addPropertyChangeListener(scenePropertyListener);
+        Property lastEditProperty = (Property) gui.getSpix().getBlackboard().get(UndoManager.LAST_EDIT);
+        lastEditProperty.addPropertyChangeListener(lastEditListener);
         refresh();
     }
 
@@ -143,11 +148,29 @@ public class SceneExplorerPanel extends DockPanel {
         gui.runOnSwing(new Runnable() {
             @Override
             public void run() {
+                //TODO this is brute force...maybe it could be more clever and just update the tree instead of recreating one...
+                java.util.List<String> expandedPaths = new ArrayList<>();
+                for (int i = 0; i < sceneTree.getRowCount(); i++) {
+                    if (sceneTree.isExpanded(i)) {
+                        expandedPaths.add(sceneTree.getPathForRow(i).toString());
+                    }
+                }
+
                 sceneTree.setModel(new DefaultTreeModel(root, true));
 
+                //re expand expanded path
                 for (int i = 0; i < sceneTree.getRowCount(); i++) {
-                    sceneTree.expandRow(i);
+                    if (expandedPaths.contains(sceneTree.getPathForRow(i).toString())) {
+                        sceneTree.expandRow(i);
+                    }
                 }
+
+
+                if (!sceneTree.isExpanded(0)) {
+                    //always expand at least the first level
+                    sceneTree.expandRow(0);
+                }
+
             }
         });
     }
@@ -229,5 +252,18 @@ public class SceneExplorerPanel extends DockPanel {
         }
     }
 
+    private class LastEditListener implements PropertyChangeListener {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent event) {
+            if (event.getNewValue() instanceof CompositeEdit) {
+                CompositeEdit edit = (CompositeEdit) event.getNewValue();
+                if (edit.hasTypes(LightAddEdit.class)) {
+                    refresh();
+                }
+            }
+
+        }
+    }
 
 }

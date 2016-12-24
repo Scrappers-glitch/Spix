@@ -198,27 +198,7 @@ public class Editor extends SimpleApplication {
                 // for which it is capable.
                 SwingGui gui = spix.registerService(SwingGui.class, new SwingGui(spix, mainFrame));
 
-                Property dirtyScene = (Property) spix.getBlackboard().get(SCENE_DIRTY);
-                dirtyScene.addPropertyChangeListener(new PropertyChangeListener() {
-                    @Override
-                    public void propertyChange(PropertyChangeEvent evt) {
-                        gui.runOnSwing(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (!evt.getNewValue().equals(evt.getOldValue())) {
-                                    String title = mainFrame.getTitle();
-                                    if (title.endsWith("*")) {
-                                        title = title.substring(0, title.length() - 1);
-                                    }
-                                    if (evt.getNewValue().equals(Boolean.TRUE)) {
-                                        title += "*";
-                                    }
-                                    mainFrame.setTitle(title);
-                                }
-                            }
-                        });
-                    }
-                });
+
 
 
                 SceneExplorerPanel sceneExplorerPanel = new SceneExplorerPanel(DockPanel.Slot.West, centerPane, gui);
@@ -236,6 +216,28 @@ public class Editor extends SimpleApplication {
                                     @Override
                                     public void run() {
                                         mainFrame.setTitle("jMonkeyEngine Tool Suite - " + ((Property) spix.getBlackboard().get(MAIN_ASSETS_FOLDER)).getValue() + " - " + ((Property) spix.getBlackboard().get(SCENE_FILE_NAME)).getValue());
+                                    }
+                                });
+                            }
+                        });
+
+                        Property dirtyScene = (Property) spix.getBlackboard().get(SCENE_DIRTY);
+                        dirtyScene.addPropertyChangeListener(new PropertyChangeListener() {
+                            @Override
+                            public void propertyChange(PropertyChangeEvent evt) {
+                                gui.runOnSwing(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (!evt.getNewValue().equals(evt.getOldValue())) {
+                                            String title = mainFrame.getTitle();
+                                            if (title.endsWith("*")) {
+                                                title = title.substring(0, title.length() - 1);
+                                            }
+                                            if (evt.getNewValue().equals(Boolean.TRUE)) {
+                                                title += "*";
+                                            }
+                                            mainFrame.setTitle(title);
+                                        }
                                     }
                                 });
                             }
@@ -359,7 +361,7 @@ public class Editor extends SimpleApplication {
         file.add(new NopAction("New") {
             public void performAction(Spix spix) {
                 // Uses the alternate requester service approach
-                spix.getService(FileRequester.class).requestDirectory("New Scene",
+                spix.getService(FileRequester.class).requestDirectory("New Scene - pick your project's asset folder",
                         "Assets folder", null, true,
                         new RequestCallback<File>() {
                             public void done(File f) {
@@ -937,20 +939,22 @@ public class Editor extends SimpleApplication {
     private void addLight(Class<? extends Light> lightClass) {
         Spatial selected = getSelectedSpatial();
         Spatial anchor;
+        Node node = (Node) ((Property) stateManager.getState(SpixState.class).getSpix().getBlackboard().get(SCENE_ROOT)).getValue();
         if (selected != null) {
             anchor = selected;
-            while (anchor != null && !(anchor instanceof Node)) {
+            while (anchor != node && !(anchor instanceof Node)) {
                 anchor = anchor.getParent();
             }
         } else {
-            anchor = rootNode;
+            anchor = node;
         }
 
         try {
             Light l = lightClass.newInstance();
-            anchor.addLight(l);
-            Node node = (Node) ((Property) stateManager.getState(SpixState.class).getSpix().getBlackboard().get(SCENE_ROOT)).getValue();
-            getStateManager().getState(LightWidgetState.class).addLight(node, l);
+            UndoManager um = spix.getService(UndoManager.class);
+            LightAddEdit edit = new LightAddEdit(anchor, l, getStateManager().getState(LightWidgetState.class));
+            edit.redo(spix);
+            um.addEdit(edit);
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {

@@ -9,7 +9,9 @@ import com.jme3.export.binary.BinaryExporter;
 import com.jme3.scene.*;
 import spix.props.*;
 import spix.type.Type;
+import spix.undo.UndoManager;
 
+import java.beans.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -28,8 +30,10 @@ public class FileIoAppState extends BaseAppState {
     private Property mainAssetProp = new DefaultProperty(MAIN_ASSETS_FOLDER, new Type(String.class), "");
     private Property currentOpenedFile = new DefaultProperty(SCENE_FILE_NAME, new Type(String.class), "");
     private Property currentScene = new DefaultProperty(SCENE_ROOT, new Type(Spatial.class), new Node("default"));
+    private Property dirtyScene = new DefaultProperty(SCENE_DIRTY, Boolean.class, false);
     private AssetLoadingListener assetListener = new AssetLoadingListener();
     private List<Runnable> enabledCommands = new CopyOnWriteArrayList<>();
+    private LastEditListener lastEditListener = new LastEditListener();
 
     public FileIoAppState() {
 
@@ -42,6 +46,7 @@ public class FileIoAppState extends BaseAppState {
         getState(SpixState.class).getSpix().getBlackboard().set(MAIN_ASSETS_FOLDER, mainAssetProp);
         getState(SpixState.class).getSpix().getBlackboard().set(SCENE_ROOT, currentScene);
         getState(SpixState.class).getSpix().getBlackboard().set(SCENE_FILE_NAME, currentOpenedFile);
+        getState(SpixState.class).getSpix().getBlackboard().set(SCENE_DIRTY, dirtyScene);
     }
 
     @Override
@@ -54,6 +59,8 @@ public class FileIoAppState extends BaseAppState {
         for (Runnable r : enabledCommands) {
             r.run();
         }
+        Property lastEditProperty = (Property) getState(SpixState.class).getSpix().getBlackboard().get(UndoManager.LAST_EDIT);
+        lastEditProperty.addPropertyChangeListener(lastEditListener);
     }
 
     public void addEnabledCommand(Runnable runable) {
@@ -260,4 +267,11 @@ public class FileIoAppState extends BaseAppState {
         }
     }
 
+    private class LastEditListener implements PropertyChangeListener {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent event) {
+            dirtyScene.setValue(true);
+        }
+    }
 }

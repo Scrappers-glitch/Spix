@@ -45,8 +45,6 @@ import spix.props.*;
 import java.beans.*;
 import java.util.*;
 
-import static spix.app.DefaultConstants.SCENE_DIRTY;
-
 /**
  *  Manages the undo/redo stacks.
  *
@@ -55,13 +53,14 @@ import static spix.app.DefaultConstants.SCENE_DIRTY;
 public class UndoManager {
 
     static Logger log = LoggerFactory.getLogger(UndoManager.class);
+    public static final String LAST_EDIT = "undoManager.lastEdit";
 
     private Spix spix;
     private SpixObserver spixListener = new SpixObserver();
     private EditListener editListener = new EditListener();
     private long frame;
     private long lastEditFrame;
-    private Property dirtyScene = new DefaultProperty(SCENE_DIRTY, Boolean.class, false);
+    private Property lastEdit = new DefaultProperty(LAST_EDIT, Edit.class, null);
  
     private long frameDelay = 15; // presuming we are called at 60 hz then this is .25 of a second.
                 // But note the above is kind of a hack to work around the fact that the app
@@ -88,7 +87,8 @@ public class UndoManager {
         // Create a map that will let us find the original objects
         // that a property belongs to for when we receive events
         beanIndex = new MapMaker().weakKeys().weakValues().makeMap();
-        spix.getBlackboard().set(SCENE_DIRTY, dirtyScene);
+
+        spix.getBlackboard().set(LAST_EDIT, lastEdit);
     }
  
     protected CompositeEdit getTransaction( boolean create ) {
@@ -103,7 +103,7 @@ public class UndoManager {
         getTransaction(true).addEdit(edit);
         lastEditFrame = frame;
         redoStack.clear();
-        dirtyScene.setValue(true);
+        lastEdit.setValue(transaction);
     }
  
     public void undo() {
@@ -124,6 +124,9 @@ public class UndoManager {
         ignoreEvents = true;
         try {
             edit.undo(spix);
+            //That bad...but that's to force the change and trigger the events...
+            lastEdit.setValue(null);
+            lastEdit.setValue(edit);
         } finally { 
             ignoreEvents = false;
         }
@@ -142,12 +145,15 @@ public class UndoManager {
         ignoreEvents = true;
         try {
             edit.redo(spix);
+            //That bad...but that's to force the change and trigger the events...
+            lastEdit.setValue(null);
+            lastEdit.setValue(edit);
         } finally { 
             ignoreEvents = false;
         }
         undoStack.addFirst(edit);
     }
- 
+
     /**
      *  Advances the internal frame counter and starts a new 
      *  transaction context if needed. 

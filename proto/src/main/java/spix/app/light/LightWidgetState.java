@@ -51,6 +51,7 @@ import spix.core.*;
 import spix.props.Property;
 
 import java.beans.*;
+import java.util.Iterator;
 
 import static spix.app.DefaultConstants.SCENE_ROOT;
 
@@ -129,6 +130,16 @@ public class LightWidgetState extends BaseAppState {
         }
 
         lightNode.attachChild(widget);
+    }
+
+    public void removeLight(Light light) {
+        for (Iterator<LightWrapper> i = wrappers.iterator(); i.hasNext(); ) {
+            LightWrapper wrapper = i.next();
+            if (wrapper.getLight().equals(light)) {
+                lightNode.detachChild(wrapper.getWidget());
+                i.remove();
+            }
+        }
     }
 
     @Override
