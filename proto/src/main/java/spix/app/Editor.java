@@ -62,6 +62,7 @@ import spix.core.Action;
 import spix.props.Property;
 import spix.swing.ActionUtils;
 import spix.swing.*;
+import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.panels.*;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
 import spix.swing.sceneexplorer.SceneExplorerPanel;
@@ -123,7 +124,8 @@ public class Editor extends SimpleApplication {
                 new LightWidgetState(),
                 new NodeWidgetState(),
                 new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
-                new MaterialAppState());
+                new MaterialAppState(),
+                new DebugLightsState());
 
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
@@ -274,8 +276,10 @@ public class Editor extends SimpleApplication {
                 objectEditor.setPreferredSize(new Dimension(250, 100));
                 propertiesPanel.setComponent(new JScrollPane(objectEditor));
 
-                stateManager.attach(new AwtPanelState(centerPane, BorderLayout.CENTER));
-
+                JPanel scenePane = new JPanel(new BorderLayout());
+                centerPane.add(scenePane, BorderLayout.CENTER);
+                scenePane.add(createSceneToolbar(), BorderLayout.NORTH);
+                stateManager.attach(new AwtPanelState(scenePane, BorderLayout.CENTER));
 
                 // Setup a selection test to change the test label
 //                spix.getBlackboard().bind("main.selection.singleSelect",
@@ -354,11 +358,50 @@ public class Editor extends SimpleApplication {
         return ActionUtils.createActionMenuBar(createMainActions(), spix);
     }
 
+    private JToolBar createSceneToolbar() {
+        return ActionUtils.createActionToolbar(createSceneActions(), spix, JToolBar.HORIZONTAL);
+    }
+
+    private ActionList createSceneActions() {
+        ActionList sceneActions = new DefaultActionList("scene");
+
+        ActionList addAction = new DefaultActionList("Add");
+
+        addAction.add(new NopAction("Geometry"));
+        addAction.add(new NopAction("Node"));
+        ActionList lightActions = new DefaultActionList("Light");
+        createLightMenu(lightActions);
+
+        addAction.add(lightActions);
+        sceneActions.add(addAction);
+        sceneActions.add(null);
+
+        createTransformActions(sceneActions);
+        sceneActions.add(null);
+
+        Action toggleLight = new NopToggleAction("Debug Light", Icons.lightBulbOff, Icons.lightBulb) {
+            @Override
+            public void performAction(Spix spix) {
+                Boolean on = spix.getBlackboard().get("view.debug.lights", Boolean.class);
+                if (on == null) {
+                    on = Boolean.FALSE;
+                }
+                spix.getBlackboard().set("view.debug.lights", !on);
+            }
+        };
+        sceneActions.add(toggleLight);
+        spix.getBlackboard().bind("view.debug.lights", toggleLight, "toggled");
+        spix.getBlackboard().set("view.debug.lights", stateManager.getState(DebugLightsState.class).isEnabled());
+        spix.getBlackboard().bind("view.debug.lights", stateManager.getState(DebugLightsState.class), "enabled");
+
+        return sceneActions;
+    }
+
     private ActionList createMainActions() {
         ActionList main = new DefaultActionList("root");
 
         ActionList file = main.add(new DefaultActionList("File"));
-        file.add(new NopAction("New") {
+        file.add(new NopAction("New", "control N") {
             public void performAction(Spix spix) {
                 // Uses the alternate requester service approach
                 spix.getService(FileRequester.class).requestDirectory("New Scene - pick your project's asset folder",
@@ -372,7 +415,7 @@ public class Editor extends SimpleApplication {
             }
         });
         file.add(null); // separator
-        file.add(new NopAction("Open") {
+        file.add(new NopAction("Open", "control O") {
             public void performAction(Spix spix) {
                 // Uses the alternate requester service approach
                 spix.getService(FileRequester.class).requestFile("Open Scene",
@@ -398,7 +441,7 @@ public class Editor extends SimpleApplication {
                         });
             }
         });
-        file.add(new NopAction("Save") {
+        file.add(new NopAction("Save", "control S") {
             public void performAction(Spix spix) {
                 stateManager.getState(FileIoAppState.class).save();
             }
@@ -434,46 +477,10 @@ public class Editor extends SimpleApplication {
         //edit.add(new NopAction("Paste"));
 
         edit.add(null);
-        ActionList transform = edit.add(new DefaultActionList("Transform"));
+        //  ActionList transform = edit.add(new DefaultActionList("Transform"));
 
-        ToggleAction translate = transform.add(new AbstractToggleAction("Translate") {
-            public void performAction(Spix spix) {
-                spix.getBlackboard().set("transform.mode", "translate");
-            }
-        });
-        spix.getBlackboard().bind("transform.mode", translate, "toggled", Predicates.equalTo("translate"));
+        //createTransformActions(transform);
 
-        // Bind it to the translation widget app state also
-        spix.getBlackboard().bind("transform.mode", stateManager.getState(TranslationWidgetState.class),
-                "enabled", Predicates.equalTo("translate"));
-
-
-        ToggleAction scale = transform.add(new AbstractToggleAction("Scale") {
-            public void performAction(Spix spix) {
-                spix.getBlackboard().set("transform.mode", "scale");
-            }
-        });
-
-        spix.getBlackboard().bind("transform.mode", scale, "toggled", Predicates.equalTo("scale"));
-
-        // Bind it to the translation widget app state also
-        spix.getBlackboard().bind("transform.mode", stateManager.getState(ScaleWidgetState.class),
-                "enabled", Predicates.equalTo("scale"));
-
-        ToggleAction rotate = transform.add(new AbstractToggleAction("Rotate") {
-            public void performAction(Spix spix) {
-                spix.getBlackboard().set("transform.mode", "rotate");
-            }
-        });
-
-        spix.getBlackboard().bind("transform.mode", rotate, "toggled", Predicates.equalTo("rotate"));
-
-        // Bind it to the translation widget app state also
-        spix.getBlackboard().bind("transform.mode", stateManager.getState(RotationWidgetState.class),
-                "enabled", Predicates.equalTo("rotate"));
-
-        // And translate by default
-        spix.getBlackboard().set("transform.mode", "rotate");
 
         ActionList camera = main.add(new DefaultActionList("Camera"));
         final ToggleAction fly = camera.add(new AbstractToggleAction("Fly") {
@@ -585,30 +592,7 @@ public class Editor extends SimpleApplication {
 
         ActionList sceneMenu = main.add(new DefaultActionList("Scene"));
         ActionList lightMenu = sceneMenu.add(new DefaultActionList("Add light"));
-        lightMenu.add(new NopAction("Directional light") {
-            @Override
-            public void performAction(Spix spix) {
-                addLight(new DirectionalLight(new Vector3f(1, -1, 0).normalizeLocal()));
-            }
-        });
-        lightMenu.add(new NopAction("Spot light") {
-            @Override
-            public void performAction(Spix spix) {
-                addLight(new SpotLight(new Vector3f(5, 5, 0), new Vector3f(-1, -1, 0).normalizeLocal(), 10));
-            }
-        });
-        lightMenu.add(new NopAction("Point light") {
-            @Override
-            public void performAction(Spix spix) {
-                addLight(new PointLight(new Vector3f(0, 3, 0), 10));
-            }
-        });
-        lightMenu.add(new NopAction("Ambient light") {
-            @Override
-            public void performAction(Spix spix) {
-                addLight(new AmbientLight());
-            }
-        });
+        createLightMenu(lightMenu);
 
 
         ActionList help = main.add(new DefaultActionList("Help"));
@@ -620,6 +604,76 @@ public class Editor extends SimpleApplication {
 
 
         return main;
+    }
+
+    private void createLightMenu(ActionList actionList) {
+        actionList.add(new NopAction("Directional light") {
+            @Override
+            public void performAction(Spix spix) {
+                addLight(new DirectionalLight(new Vector3f(1, -1, 0).normalizeLocal()));
+            }
+        });
+        actionList.add(new NopAction("Spot light") {
+            @Override
+            public void performAction(Spix spix) {
+                addLight(new SpotLight(new Vector3f(5, 5, 0), new Vector3f(-1, -1, 0).normalizeLocal(), 10));
+            }
+        });
+        actionList.add(new NopAction("Point light") {
+            @Override
+            public void performAction(Spix spix) {
+                addLight(new PointLight(new Vector3f(0, 3, 0), 10));
+            }
+        });
+        actionList.add(new NopAction("Ambient light") {
+            @Override
+            public void performAction(Spix spix) {
+                addLight(new AmbientLight());
+            }
+        });
+    }
+
+    private void createTransformActions(ActionList transform) {
+        ToggleAction translate = transform.add(new NopToggleAction("Translate", Icons.translateOff, Icons.translate) {
+
+            public void performAction(Spix spix) {
+                spix.getBlackboard().set("transform.mode", "translate");
+            }
+        });
+        spix.getBlackboard().bind("transform.mode", translate, "toggled", Predicates.equalTo("translate"));
+
+        // Bind it to the translation widget app state also
+        spix.getBlackboard().bind("transform.mode", stateManager.getState(TranslationWidgetState.class),
+                "enabled", Predicates.equalTo("translate"));
+
+
+        ToggleAction scale = transform.add(new NopToggleAction("Scale", Icons.scaleOff, Icons.scale) {
+            public void performAction(Spix spix) {
+                spix.getBlackboard().set("transform.mode", "scale");
+            }
+        });
+
+        spix.getBlackboard().bind("transform.mode", scale, "toggled", Predicates.equalTo("scale"));
+
+        // Bind it to the translation widget app state also
+        spix.getBlackboard().bind("transform.mode", stateManager.getState(ScaleWidgetState.class),
+                "enabled", Predicates.equalTo("scale"));
+
+        ToggleAction rotate = transform.add(new NopToggleAction("Rotate", Icons.rotateOff, Icons.rotate) {
+            public void performAction(Spix spix) {
+                spix.getBlackboard().set("transform.mode", "rotate");
+            }
+        });
+
+        spix.getBlackboard().bind("transform.mode", rotate, "toggled", Predicates.equalTo("rotate"));
+
+        // Bind it to the translation widget app state also
+        spix.getBlackboard().bind("transform.mode", stateManager.getState(RotationWidgetState.class),
+                "enabled", Predicates.equalTo("rotate"));
+
+        // And translate by default
+        spix.getBlackboard().set("transform.mode", "rotate");
+
     }
 
     private void initPovMenus(ActionList camera) {
@@ -808,9 +862,7 @@ public class Editor extends SimpleApplication {
         //      rootNode.attachChild(geom);
 
 
-        DirectionalLight light = new DirectionalLight();
-        light.setDirection(new Vector3f(-0.2f, -1, -0.3f).normalizeLocal());
-        rootNode.addLight(light);
+//
 
 //        AmbientLight ambient = new AmbientLight();
 //        ambient.setColor(new ColorRGBA(0.25f, 0.25f, 0.25f, 1));
@@ -969,6 +1021,38 @@ public class Editor extends SimpleApplication {
 
         public NopAction(String name) {
             super(name);
+        }
+
+        public NopAction(String id, ImageIcon icon) {
+            super(id, "");
+            put(LARGE_ICON, icon);
+        }
+
+        public NopAction(String name, String accelerator) {
+            super(name);
+            put(ACCELERATOR, accelerator);
+        }
+
+        public void performAction(Spix spix) {
+        }
+    }
+
+    public static class NopToggleAction extends spix.core.AbstractToggleAction {
+
+        public NopToggleAction(String name) {
+            super(name);
+        }
+
+        public NopToggleAction(String id, ImageIcon icon, ImageIcon toggledIcon) {
+            super(id);
+            put(TOOLTIP, id);
+            put(LARGE_ICON, icon);
+            put(TOGGLED_LARGE_ICON, toggledIcon);
+        }
+
+        public NopToggleAction(String name, String accelerator) {
+            super(name);
+            put(ACCELERATOR, accelerator);
         }
 
         public void performAction(Spix spix) {

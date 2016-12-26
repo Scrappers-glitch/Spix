@@ -39,10 +39,6 @@ package spix.core;
 import java.beans.PropertyChangeListener;
 import java.util.Map;
 
-import groovy.util.ObservableMap;
-
-import com.google.common.base.MoreObjects;
-
 /**
  *  Represents a unit of application-level logic that can provide
  *  additional user-visible state about itself such as name, icon,
@@ -56,6 +52,9 @@ public interface Action extends Map {
     public static final String ENABLED = "enabled";
     public static final String VISIBLE = "visible";
     public static final String ACCELERATOR = "accelerator";
+    public static final String SMALL_ICON = "smallIcon";
+    public static final String LARGE_ICON = "largeIcon";
+    public static final String TOOLTIP = "tooltip";
      
     public String getId();
     public void setEnabled( boolean b );

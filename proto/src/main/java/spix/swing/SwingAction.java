@@ -36,16 +36,12 @@
 
 package spix.swing;
 
-import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-
 import spix.core.Action;
-import spix.core.ToggleAction;
-import spix.core.Spix;
+import spix.core.*;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.beans.*;
 
 /**
  *  Wraps a Spix action to make it compatible with Swing actions.
@@ -127,6 +123,12 @@ public class SwingAction implements javax.swing.Action {
                 return SELECTED_KEY;
             case Action.ACCELERATOR:
                 return ACCELERATOR_KEY;
+            case Action.LARGE_ICON:
+                return LARGE_ICON_KEY;
+            case Action.SMALL_ICON:
+                return SMALL_ICON;
+            case Action.TOOLTIP:
+                return SHORT_DESCRIPTION;
             default:
                 return s;
         }
@@ -140,6 +142,12 @@ public class SwingAction implements javax.swing.Action {
                 return ToggleAction.TOGGLED;
             case ACCELERATOR_KEY:
                 return Action.ACCELERATOR;
+            case LARGE_ICON_KEY:
+                return Action.LARGE_ICON;
+            case SMALL_ICON:
+                return Action.SMALL_ICON;
+            case SHORT_DESCRIPTION:
+                return Action.TOOLTIP;
             default:
                 return s;
         }

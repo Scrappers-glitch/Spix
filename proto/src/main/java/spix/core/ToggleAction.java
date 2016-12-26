@@ -44,6 +44,9 @@ package spix.core;
  *  @author    Paul Speed
  */
 public interface ToggleAction extends Action {
+
+
+    public static final String TOGGLED_LARGE_ICON = "ToggledlargeIcon";
  
     public static final String TOGGLED = "toggled";
     

@@ -17,6 +17,7 @@ public class Icons {
     public final static ImageIcon mesh = new ImageIcon(Icons.class.getResource("/icons/mesh.gif"));
     public final static ImageIcon material = new ImageIcon(Icons.class.getResource("/icons/material.gif"));
     public final static ImageIcon lightBulb = new ImageIcon(Icons.class.getResource("/icons/lightbulb.gif"));
+    public final static ImageIcon lightBulbOff = new ImageIcon(Icons.class.getResource("/icons/lightbulb_off.png"));
     public final static ImageIcon output = new ImageIcon(Icons.class.getResource("/icons/output.png"));
     public final static ImageIcon outputV = new ImageIcon(Icons.class.getResource("/icons/outputV.png"));
     public final static ImageIcon world = new ImageIcon(Icons.class.getResource("/icons/earth.png"));
@@ -56,5 +57,11 @@ public class Icons {
     public final static ImageIcon properties = new ImageIcon(Icons.class.getResource("/icons/properties.png"));
     public final static ImageIcon propertieseHover = new ImageIcon(Icons.class.getResource("/icons/properties-hover.png"));
     public final static ImageIcon reload = new ImageIcon(Icons.class.getResource("/icons/reload.png"));
+    public final static ImageIcon rotateOff = new ImageIcon(Icons.class.getResource("/icons/rotate_off.png"));
+    public final static ImageIcon scaleOff = new ImageIcon(Icons.class.getResource("/icons/scale_off.png"));
+    public final static ImageIcon translateOff = new ImageIcon(Icons.class.getResource("/icons/translate_off.png"));
+    public final static ImageIcon rotate = new ImageIcon(Icons.class.getResource("/icons/rotate.png"));
+    public final static ImageIcon scale = new ImageIcon(Icons.class.getResource("/icons/scale.png"));
+    public final static ImageIcon translate = new ImageIcon(Icons.class.getResource("/icons/translate.png"));
 }
 

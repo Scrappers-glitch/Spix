@@ -36,27 +36,19 @@
 
 package spix.swing;
 
-import java.awt.Component;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.Iterator;
-import java.util.List;
-import javax.swing.AbstractButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComponent;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-
-import groovy.util.ObservableList.ElementEvent;
-import groovy.util.ObservableList.MultiElementAddedEvent;
-import groovy.util.ObservableList.MultiElementRemovedEvent;
-
+import groovy.util.ObservableList.*;
+import spix.core.Action;
 import spix.core.*;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.beans.*;
+import java.util.*;
+import java.util.List;
+
+import static javax.swing.SwingUtilities.getWindowAncestor;
+import static spix.core.ToggleAction.TOGGLED_LARGE_ICON;
 
 /**
  *
@@ -64,6 +56,63 @@ import spix.core.*;
  *  @author    Paul Speed
  */
 public class ActionUtils {
+
+    public static JToolBar createActionToolbar(ActionList actions, Spix spix, int orientation) {
+        if (actions == null) {
+            throw new IllegalArgumentException("Cannot create toolbar for null action list.");
+        }
+
+        JToolBar result = new JToolBar(orientation);//new SwingAction(actions, spix));
+        for (Iterator i = actions.iterator(); i.hasNext(); ) {
+            Action a = (Action) i.next();
+            if (a == null) {
+                result.addSeparator();
+            } else {
+                result.add(createActionToolbarButton(a, spix));
+            }
+        }
+
+        // Setup an object to keep the menu in synch with the
+        // list.
+        actions.addPropertyChangeListener(new ActionMenuCoordinator(result, spix));
+
+        return result;
+    }
+
+
+    public static AbstractButton createActionToolbarButton(Action a, Spix spix) {
+
+        if (a instanceof ActionList) {
+            JMenu menu = createActionMenu((ActionList) a, spix);
+            JButton b = new JButton((String) a.get(Action.NAME));
+            b.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Point p = SwingUtilities.convertPoint(b, b.getLocation(), getWindowAncestor(b));
+                    Rectangle bounds = SwingUtilities.getWindowAncestor(b).getBounds();
+                    int x = 0, y = (int) b.getPreferredSize().getHeight() + 3;
+                    if (p.getY() > bounds.getHeight() / 2) {
+                        y = (int) -menu.getPopupMenu().getPreferredSize().getHeight() - 3;
+                    }
+                    menu.getPopupMenu().show(b, x, y);
+                }
+            });
+            return b;
+        }
+
+        if (a instanceof ToggleAction) {
+            JToggleButton tb = new JToggleButton(new SwingAction(a, spix));
+            tb.setHideActionText(true);
+            if (a.get(TOGGLED_LARGE_ICON) != null) {
+                tb.setSelectedIcon((ImageIcon) a.get(TOGGLED_LARGE_ICON));
+            }
+            return tb;
+        }
+
+        return new JButton(new SwingAction(a, spix));
+    }
+
+
 
     public static JMenu createActionMenu( ActionList actions, Spix spix ) {
         if( actions == null ) {
@@ -640,3 +689,4 @@ public class ActionUtils
     }
 
 }*/
+
