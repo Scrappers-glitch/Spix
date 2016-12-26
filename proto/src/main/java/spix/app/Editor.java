@@ -44,7 +44,6 @@ import com.jme3.light.*;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.scene.*;
-import com.jme3.scene.shape.Box;
 import com.jme3.shader.*;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
@@ -123,9 +122,10 @@ public class Editor extends SimpleApplication {
                 new RotationWidgetState(true),
                 new LightWidgetState(),
                 new NodeWidgetState(),
-                new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
                 new MaterialAppState(),
-                new DebugLightsState());
+                new DebugLightsState(),
+                new DecoratorViewPortState() // Put this last because of some dodgy update vs render stuff
+        );
 
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
@@ -150,12 +150,11 @@ public class Editor extends SimpleApplication {
         spix.registerPropertySetFactory(VariableMapping.class, new VariableMappingPropertySetFactory());
         spix.registerPropertySetFactory(Material.class, new MaterialPropertySetFactory());
 
-
         spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());
         spix.registerFormFactory(new Type(VariableMapping.class), new VariableMappingFormFactory());
 
         SelectionModel selectionModel = new SelectionModel();
-        spix.getBlackboard().set("main.selection", selectionModel);
+        spix.getBlackboard().set(SELECTION_PROPERTY, selectionModel);
         selectionModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");
 
 
@@ -281,23 +280,12 @@ public class Editor extends SimpleApplication {
                 scenePane.add(createSceneToolbar(), BorderLayout.NORTH);
                 stateManager.attach(new AwtPanelState(scenePane, BorderLayout.CENTER));
 
-                // Setup a selection test to change the test label
-//                spix.getBlackboard().bind("main.selection.singleSelect",
-//                                           testLabel, "text", ToStringFunction.INSTANCE);
 
                 // Bind the selection to the editor panel, converting objects to
                 // property set wrappers if appropriate.
                 spix.getBlackboard().bind("main.selection.singleSelect",
                         objectEditor, "object",
                         new ToPropertySetFunction(spix));
-
-                /*spix.getBlackboard().bind("main.selection.singleSelect",
-                                           testLabel2, "text",
-                                           Functions.compose(
-                                                ToStringFunction.INSTANCE,
-                                                new ToPropertySetFunction(spix)));*/
-
-                spix.getBlackboard().get("main.selection", SelectionModel.class).add("Test Selection");
 
 
 //                final MatDefEditorWindow matDefEditorWindow = new MatDefEditorWindow(gui);
@@ -767,67 +755,8 @@ public class Editor extends SimpleApplication {
 
         return objects;
     }
-
-    private ActionList createTestActions() {
-        final ActionList testActions = new DefaultActionList("Test");
-        final ActionList testActions2 = new DefaultActionList("Test");
-
-        testActions.add(new NopAction("Select Color") {
-            public void performAction(Spix spix) {
-                spix.getService(ColorRequester.class).requestColor("Select a Test Color", null, false,
-                        new RequestCallback<ColorRGBA>() {
-                            public void done(ColorRGBA color) {
-                                System.out.println("Selected color:" + color);
-                            }
-                        });
-            }
-        });
-
-        testActions.add(new NopAction("Select Color Interactive") {
-            public void performAction(Spix spix) {
-                spix.getService(ColorRequester.class).requestColor("Select a Test Color", null, true,
-                        new RequestCallback<ColorRGBA>() {
-                            public void done(ColorRGBA color) {
-                                System.out.println("Selected color:" + color);
-                            }
-                        });
-            }
-        });
-
-        // A self test
-        final Action testAction = testActions.add(new spix.core.AbstractAction("Test") {
-            private int count = 1;
-
-            public void performAction(Spix spix) {
-                System.out.println("A test spix action.  Thread:" + Thread.currentThread());
-                put(Action.NAME, "Test " + (++count));
-            }
-        });
-
-        // An add test
-        Action addAction = testActions.add(new spix.core.AbstractAction("Add") {
-            public void performAction(Spix spix) {
-                testActions.add(testAction);
-                testActions2.add(testAction);
-            }
-        });
-
-        // A remove test
-        Action removeAction = testActions.add(new spix.core.AbstractAction("Remove") {
-            public void performAction(Spix spix) {
-                testActions.remove(testAction);
-                testActions2.remove(testAction);
-            }
-        });
-
-        testActions.add(testActions2);
-
-        return testActions;
-    }
-
     @Override
     public void simpleInitApp() {
-        System.out.println("---------simpleInitApp()");
 
         stateManager.getState(FlyCamAppState.class).setEnabled(false);
         flyCam.setDragToRotate(true);
@@ -836,45 +765,6 @@ public class Editor extends SimpleApplication {
 
         // Set an initial camera position
         cam.setLocation(new Vector3f(0, 1, 10));
-
-        // Node intermediateNode = new Node("intermediate");
-
-        Box b = new Box(Vector3f.ZERO, 1, 1, 1);
-        Geometry geom = new Geometry("Box", b);
-        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        //mat.setTexture("ColorMap", assetManager.loadTexture("Interface/Logo/Monkey.jpg"));
-        mat.setColor("Diffuse", ColorRGBA.Gray);
-        mat.setColor("Ambient", ColorRGBA.Gray);
-        mat.setBoolean("UseMaterialColors", true);
-        geom.setMaterial(mat);
-        geom.setMaterial(mat);
-        //  intermediateNode.attachChild(geom);
-        // rootNode.attachChild(intermediateNode);
-
-
-        geom = new Geometry("Box", b);
-        //  mat = new Material(assetManager, "Common/MatDefs/Misc/UnshadedNodes.j3md");
-        //mat = new Material(assetManager, "MatDefs/circle/circle.j3md");
-        mat = new Material(assetManager, "MatDefs/default/default.j3md");
-        mat.setColor("Color", ColorRGBA.Yellow);
-        geom.setMaterial(mat);
-        geom.setLocalTranslation(3, 0, 0);
-        //      rootNode.attachChild(geom);
-
-
-//
-
-//        AmbientLight ambient = new AmbientLight();
-//        ambient.setColor(new ColorRGBA(0.25f, 0.25f, 0.25f, 1));
-//        rootNode.addLight(ambient);
-//
-//        PointLight pl = new PointLight(new Vector3f(-2, 0, -2), 4);
-//        rootNode.addLight(pl);
-//
-//        SpotLight sl = new SpotLight(new Vector3f(3, 3, -3), new Vector3f(-1f, -1, 1f).normalizeLocal(), 10, ColorRGBA.White.mult(2));
-//        sl.setSpotOuterAngle(FastMath.DEG_TO_RAD * 15);
-//        sl.setSpotInnerAngle(FastMath.DEG_TO_RAD * 10);
-//        rootNode.addLight(sl);
 
         // Because we will use Lemur for some things... go ahead and setup
         // the very basics
@@ -887,7 +777,7 @@ public class Editor extends SimpleApplication {
             private CursorMotionEvent lastMotion;
 
             public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
-                System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
+                //System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
 
                 if (!event.isPressed() && lastMotion != null) {
                     // Set the selection
@@ -895,17 +785,17 @@ public class Editor extends SimpleApplication {
                     if (lastMotion.getCollision() != null) {
                         selected = lastMotion.getCollision().getGeometry();
                     }
-                    System.out.println("Setting selection to:" + selected);
+                    //System.out.println("Setting selection to:" + selected);
                     spix.getBlackboard().get("main.selection", SelectionModel.class).setSingleSelection(selected);
                 }
             }
 
             public void cursorEntered(CursorMotionEvent event, Spatial target, Spatial capture) {
-                System.out.println("cursorEntered(" + event + ", " + target + ", " + capture + ")");
+                // System.out.println("cursorEntered(" + event + ", " + target + ", " + capture + ")");
             }
 
             public void cursorExited(CursorMotionEvent event, Spatial target, Spatial capture) {
-                System.out.println("cursorExited(" + event + ", " + target + ", " + capture + ")");
+                //System.out.println("cursorExited(" + event + ", " + target + ", " + capture + ")");
             }
 
             public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
@@ -914,13 +804,11 @@ public class Editor extends SimpleApplication {
             }
 
         });
-
-        spix.getBlackboard().set("scene.root", rootNode);
     }
 
     @Override
     public void simpleUpdate(float tpf) {
-//System.out.println("-----------frame-------------");
+
     }
 
 
@@ -1009,7 +897,7 @@ public class Editor extends SimpleApplication {
     }
 
     private Spatial getSelectedSpatial() {
-        SelectionModel model = getStateManager().getState(SpixState.class).getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+        SelectionModel model = getStateManager().getState(SpixState.class).getSpix().getBlackboard().get(SELECTION_PROPERTY, SelectionModel.class);
         Object obj = model.getSingleSelection();
         if (obj != null && obj instanceof Spatial) {
             return (Spatial) obj;
