@@ -379,8 +379,9 @@ public class Editor extends SimpleApplication {
         };
         sceneActions.add(toggleLight);
         spix.getBlackboard().bind("view.debug.lights", toggleLight, "toggled");
-        spix.getBlackboard().set("view.debug.lights", stateManager.getState(DebugLightsState.class).isEnabled());
         spix.getBlackboard().bind("view.debug.lights", stateManager.getState(DebugLightsState.class), "enabled");
+        spix.getBlackboard().set("view.debug.lights", stateManager.getState(DebugLightsState.class).isEnabled());
+
 
         return sceneActions;
     }
@@ -469,8 +470,15 @@ public class Editor extends SimpleApplication {
 
         //createTransformActions(transform);
 
+        // Set the default camera mode
+        //spix.getBlackboard().set("camera.mode", "blender");
+        // ...except flycam app state is stupid and NPEs... we'll wait until
+        // we replace it.  And when the blender state stops resetting the camera location.
 
-        ActionList camera = main.add(new DefaultActionList("Camera"));
+        ActionList view = main.add(new DefaultActionList("View"));
+        initPovMenus(view);
+
+        ActionList camera = view.add(new DefaultActionList("Camera"));
         final ToggleAction fly = camera.add(new AbstractToggleAction("Fly") {
             public void performAction(Spix spix) {
                 System.out.println("camera.mode=fly");
@@ -509,14 +517,8 @@ public class Editor extends SimpleApplication {
         spix.getBlackboard().bind("camera.mode", stateManager.getState(BlenderCameraState.class),
                 "enabled", Predicates.equalTo("blender"));
 
-        initPovMenus(camera);
 
-        // Set the default camera mode
-        //spix.getBlackboard().set("camera.mode", "blender");
-        // ...except flycam app state is stupid and NPEs... we'll wait until
-        // we replace it.  And when the blender state stops resetting the camera location.
-
-        ActionList view = main.add(new DefaultActionList("View"));
+        view.add(null);
         ToggleAction showGrid = view.add(new AbstractToggleAction("Grid") {
             public void performAction(Spix spix) {
                 Boolean on = spix.getBlackboard().get("view.grid", Boolean.class);
@@ -759,6 +761,8 @@ public class Editor extends SimpleApplication {
     public void simpleInitApp() {
 
         stateManager.getState(FlyCamAppState.class).setEnabled(false);
+        stateManager.getState(StatsAppState.class).setDisplayStatView(false);
+        stateManager.getState(StatsAppState.class).setDisplayFps(false);
         flyCam.setDragToRotate(true);
 
         stateManager.getState(SpixState.class).getSpix().getBlackboard().set("application.assetmanager", assetManager);

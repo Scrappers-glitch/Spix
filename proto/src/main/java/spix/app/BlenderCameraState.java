@@ -36,7 +36,7 @@
 
 package spix.app;
 
-import com.jme3.app.*;
+import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.input.KeyInput;
 import com.jme3.math.*;
@@ -126,6 +126,7 @@ public class BlenderCameraState extends BaseAppState {
         }
 
         target = new Node("Blender cam target");
+        target.setLocalRotation(new Quaternion().fromAngles(-10 * FastMath.DEG_TO_RAD, 0, 0).multLocal(new Quaternion().fromAngles(0, 25 * FastMath.DEG_TO_RAD, 0)));
         camNode = new CameraNode("Blender cam holder", cam);
         camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
         camNode.setEnabled(false);
@@ -238,7 +239,7 @@ public class BlenderCameraState extends BaseAppState {
 
     @Override
     protected void onEnable() {
-        System.out.println(getClass().getName() + " Enabled");
+        //System.out.println(getClass().getName() + " Enabled");
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.activateGroup(GROUP);
 
@@ -250,7 +251,7 @@ public class BlenderCameraState extends BaseAppState {
 
     @Override
     protected void onDisable() {
-        System.out.println(getClass().getName() + " Disabled");
+        //System.out.println(getClass().getName() + " Disabled");
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.deactivateGroup(GROUP);
 
