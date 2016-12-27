@@ -126,7 +126,6 @@ public class BlenderCameraState extends BaseAppState {
         }
 
         target = new Node("Blender cam target");
-        target.setLocalRotation(new Quaternion().fromAngles(-10 * FastMath.DEG_TO_RAD, 0, 0).multLocal(new Quaternion().fromAngles(0, 25 * FastMath.DEG_TO_RAD, 0)));
         camNode = new CameraNode("Blender cam holder", cam);
         camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
         camNode.setEnabled(false);
@@ -201,32 +200,32 @@ public class BlenderCameraState extends BaseAppState {
 
     public void switchToFront(){
         futureTargetRot = Quaternion.IDENTITY;
-        System.out.println("Front " + futureTargetRot);
+        //System.out.println("Front " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
     public void switchToBack(){
         futureTargetRot = new Quaternion().fromAngleAxis(FastMath.PI,Vector3f.UNIT_Y);
-        System.out.println("Back " + futureTargetRot);
+        //System.out.println("Back " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
     public void switchToLeft(){
         futureTargetRot = new Quaternion().fromAngleAxis(-FastMath.HALF_PI,Vector3f.UNIT_Y);
-        System.out.println("Left " + futureTargetRot);
+        //System.out.println("Left " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
     public void switchToRight(){
         futureTargetRot = new Quaternion().fromAngleAxis(FastMath.HALF_PI,Vector3f.UNIT_Y);
-        System.out.println("Right " + futureTargetRot);
+        //System.out.println("Right " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
     public void switchToTop(){
         futureTargetRot = new Quaternion().fromAngleAxis(-FastMath.HALF_PI,Vector3f.UNIT_X);
-        System.out.println("Top " + futureTargetRot);
+        //System.out.println("Top " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
     public void switchToBottom(){
         futureTargetRot = new Quaternion().fromAngleAxis(FastMath.HALF_PI,Vector3f.UNIT_X);
-        System.out.println("Bottom " + futureTargetRot);
+        //System.out.println("Bottom " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
 
@@ -247,6 +246,8 @@ public class BlenderCameraState extends BaseAppState {
         camNode.lookAt(target.getWorldTranslation(),Vector3f.UNIT_Y);
         camNode.setEnabled(true);
 
+        futureTargetRot = new Quaternion().fromAngles(0, 45 * FastMath.DEG_TO_RAD, 0).multLocal(new Quaternion().fromAngles(-20 * FastMath.DEG_TO_RAD, 0, 0));
+        startTargetRot = target.getLocalRotation();
     }
 
     @Override
