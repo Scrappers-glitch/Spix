@@ -72,14 +72,18 @@ public class FileIoAppState extends BaseAppState {
 
     }
 
-    public void newProject(String assetPath, String subPath) {
+    public void newScene(File assetPath) {
+        FilePath fp = getFilePath(assetPath);
+
         String oldPath = (String) mainAssetProp.getValue();
 
-        mainAssetProp.setValue(assetPath);
-        if (subPath == null) {
-            subPath = getUnusedName(assetPath, "Scenes/newScene.j3o");
+        mainAssetProp.setValue(fp.assetRoot);
+        if (fp.modelPath == null) {
+            fp.modelPath = "Scenes/newScene.j3o";
         }
-        currentOpenedFile.setValue(subPath);
+        fp.modelPath = getUnusedName(fp.assetRoot.toString(), fp.modelPath);
+
+        currentOpenedFile.setValue(fp.modelPath);
         Node newScene = new Node("New Scene");
         rootNode.detachAllChildren();
         rootNode.attachChild(newScene);
@@ -87,7 +91,7 @@ public class FileIoAppState extends BaseAppState {
         if (oldPath != null && oldPath.length() > 0) {
             assetManager.unregisterLocator(oldPath, FileLocator.class);
         }
-        assetManager.registerLocator(assetPath, FileLocator.class);
+        assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
         currentScene.setValue(newScene);
         save();
     }
@@ -104,6 +108,9 @@ public class FileIoAppState extends BaseAppState {
 
     public void saveAs(String fileName) {
         //actually save
+        if (!fileName.endsWith(".j3o")){
+            fileName += ".j3o";
+        }
 
         BinaryExporter exporter = BinaryExporter.getInstance();
         File file = new File(fileName);
@@ -117,7 +124,7 @@ public class FileIoAppState extends BaseAppState {
         }
     }
 
-    private String getUnusedName(String basePath, String filePath) {
+    public String getUnusedName(String basePath, String filePath) {
         Path path = Paths.get(basePath + File.separator + filePath);
         Path fileName = path.getFileName();
         Path folder = path.getParent();
@@ -142,6 +149,7 @@ public class FileIoAppState extends BaseAppState {
 
             currentScene.setValue(scene);
 
+            //TODO NodeWidgetState should listen for the SCENE_ROOT
             getState(NodeWidgetState.class).setScene(scene);
         } catch (AssetLoadException | AssetNotFoundException e) {
             e.printStackTrace();
@@ -151,38 +159,26 @@ public class FileIoAppState extends BaseAppState {
     }
 
     public Spatial loadScene(File f, boolean changeAssetFolder) throws AssetLoadException, AssetNotFoundException {
-        // JME doesn't really make this easy... so we cheat a little and make some
-        // assumptions.
-        File assetRoot = f.getParentFile();
-        String modelPath = f.getName();
-        while (assetRoot.getParentFile() != null && !"assets".equals(assetRoot.getName())) {
-            modelPath = assetRoot.getName() + "/" + modelPath;
-            assetRoot = assetRoot.getParentFile();
-        }
 
-        if(assetRoot.getParentFile() ==  null){
-            //we went all the way up not finding an asset folder and we may have a broken path so just take the file's folder as the asset path
-            assetRoot = f.getParentFile();
-            modelPath = f.getName();
-        }
+        FilePath fp = getFilePath(f);
 
         //System.out.println("Asset root:" + assetRoot + "   modelPath:" + modelPath);
-        assetManager.registerLocator(assetRoot.toString(), FileLocator.class);
+        assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
 
         if (changeAssetFolder) {
-            mainAssetProp.setValue(assetRoot.toString());
-            currentOpenedFile.setValue(modelPath);
+            mainAssetProp.setValue(fp.assetRoot.toString());
+            currentOpenedFile.setValue(fp.modelPath);
 
-        } else if (!mainAssetProp.getValue().equals(assetRoot.toString())) {
+        } else if (!mainAssetProp.getValue().equals(fp.assetRoot.toString())) {
             //This asset is not in the main asset root, meaning that if we add it in the scene as is the resulting j3o will be broken and will miss some assets.
             //We have to relocate them in the main asset folder.
 
             assetListener.clear();
             assetManager.addAssetEventListener(assetListener);
-            Spatial model = assetManager.loadModel(modelPath);
+            Spatial model = assetManager.loadModel(fp.modelPath);
 
             for (String dependency : assetListener.getDependencies()) {
-                Path source = Paths.get(assetRoot + File.separator + dependency);
+                Path source = Paths.get(fp.assetRoot + File.separator + dependency);
                 //check if the source file exists in the source folder (could be stock assets that doesn't need to be copied)
                 if (Files.exists(source)) {
                     Path target = Paths.get(mainAssetProp.getValue() + File.separator + dependency);
@@ -203,13 +199,32 @@ public class FileIoAppState extends BaseAppState {
                 }
             }
             assetManager.deleteFromCache(model.getKey());
-            assetManager.unregisterLocator(assetRoot.toString(), FileLocator.class);
+            assetManager.unregisterLocator(fp.assetRoot.toString(), FileLocator.class);
             assetManager.removeAssetEventListener(assetListener);
         }
 
-        Spatial model = assetManager.loadModel(modelPath);
+        Spatial model = assetManager.loadModel(fp.modelPath);
 
         return model;
+    }
+
+    private FilePath getFilePath(File f) {
+        // JME doesn't really make this easy... so we cheat a little and make some
+        // assumptions.
+        FilePath fp = new FilePath();
+        fp.assetRoot = f.getParentFile();
+        fp.modelPath = f.getName();
+        while (fp.assetRoot.getParentFile() != null && !"assets".equals(fp.assetRoot.getName())) {
+            fp.modelPath = fp.assetRoot.getName() + "/" + fp.modelPath;
+            fp.assetRoot = fp.assetRoot.getParentFile();
+        }
+
+        if(fp.assetRoot.getParentFile() ==  null){
+            //we went all the way up not finding an asset folder and we may have a broken path so just take the file's folder as the asset path
+            fp.assetRoot = f.getParentFile();
+            fp.modelPath = f.getName();
+        }
+        return fp;
     }
 
 
@@ -239,6 +254,8 @@ public class FileIoAppState extends BaseAppState {
             //TODO here we should report in an error log.
         }
     }
+
+
 
     private class AssetLoadingListener implements AssetEventListener {
         Set<String> dependencies = new HashSet<>();
@@ -273,5 +290,10 @@ public class FileIoAppState extends BaseAppState {
         public void propertyChange(PropertyChangeEvent event) {
             dirtyScene.setValue(true);
         }
+    }
+
+    private class FilePath{
+        File assetRoot;
+        String modelPath;
     }
 }

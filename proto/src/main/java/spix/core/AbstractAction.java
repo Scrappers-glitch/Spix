@@ -66,6 +66,10 @@ public abstract class AbstractAction extends ObservableMap
         put(ENABLED, true);
         put(VISIBLE, true);
     }
+    protected AbstractAction( String id, String name, String accelerator ) {
+        this(id, name);
+        put(ACCELERATOR, accelerator);
+    }
 
     public String getId() {
         return id;

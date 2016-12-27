@@ -50,6 +50,8 @@ import com.jme3.system.awt.AwtPanelsContext;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
+import spix.app.action.*;
+import spix.app.action.file.*;
 import spix.app.form.*;
 import spix.app.light.*;
 import spix.app.material.*;
@@ -363,8 +365,10 @@ public class Editor extends SimpleApplication {
         addAction.add(lightActions);
         sceneActions.add(addAction);
         sceneActions.add(null);
+        sceneActions.add(null);
 
         createTransformActions(sceneActions);
+        sceneActions.add(null);
         sceneActions.add(null);
 
         Action toggleLight = new NopToggleAction("Debug Light", Icons.lightBulbOff, Icons.lightBulb) {
@@ -390,51 +394,14 @@ public class Editor extends SimpleApplication {
         ActionList main = new DefaultActionList("root");
 
         ActionList file = main.add(new DefaultActionList("File"));
-        file.add(new NopAction("New", "control N") {
-            public void performAction(Spix spix) {
-                // Uses the alternate requester service approach
-                spix.getService(FileRequester.class).requestDirectory("New Scene - pick your project's asset folder",
-                        "Assets folder", null, true,
-                        new RequestCallback<File>() {
-                            public void done(File f) {
-                                System.out.println("New scene in " + f + "   Thread:" + Thread.currentThread());
-                                stateManager.getState(FileIoAppState.class).newProject(f.getPath(), null);
-                            }
-                        });
-            }
-        });
+        FileIoAppState fileIoState = stateManager.getState(FileIoAppState.class);
+        file.add(new NewFileAction(fileIoState));
+        file.add(new OpenFileAction(fileIoState));
+        //file.add(new OpenRecentAction(spix, fileIoState));
+        file.add(new ImportFileAction(fileIoState));
         file.add(null); // separator
-        file.add(new NopAction("Open", "control O") {
-            public void performAction(Spix spix) {
-                // Uses the alternate requester service approach
-                spix.getService(FileRequester.class).requestFile("Open Scene",
-                        "JME Object", "j3o", null, true,
-                        new RequestCallback<File>() {
-                            public void done(File f) {
-                                System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
-                                stateManager.getState(FileIoAppState.class).loadFile(f);
-                            }
-                        });
-            }
-        });
-        file.add(new NopAction("Import asset") {
-            public void performAction(Spix spix) {
-                // Uses the alternate requester service approach
-                spix.getService(FileRequester.class).requestFile("Open Scene",
-                        "JME Object", "j3o", null, true,
-                        new RequestCallback<File>() {
-                            public void done(File f) {
-                                System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
-                                stateManager.getState(FileIoAppState.class).AppendFile(f);
-                            }
-                        });
-            }
-        });
-        file.add(new NopAction("Save", "control S") {
-            public void performAction(Spix spix) {
-                stateManager.getState(FileIoAppState.class).save();
-            }
-        });
+        file.add(new SaveFileAction(fileIoState));
+        file.add(new SaveAsFileAction(fileIoState));
         file.add(null); // separator
         file.add(new NopAction("Take Screenshot") {
             public void performAction(Spix spix) {

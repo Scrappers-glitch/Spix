@@ -77,9 +77,17 @@ public class DefaultActionList extends AbstractAction
         children.add(child);
         return child;
     }
+
+    public <T extends Action> T add(int index,  T child ) {
+        children.add(index, child);
+        return child;
+    }
     
     public void remove( Action child ) {
         children.remove(child);
+    }
+    public void removeLast() {
+        children.remove(children.size() - 1);
     }
     
     public Iterator<Action> iterator() {
