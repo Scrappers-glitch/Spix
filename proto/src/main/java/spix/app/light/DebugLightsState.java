@@ -5,6 +5,10 @@ import com.jme3.app.state.BaseAppState;
 import com.jme3.light.*;
 import com.jme3.math.*;
 import com.jme3.scene.Node;
+import spix.app.SpixState;
+import spix.core.Spix;
+
+import static spix.app.DefaultConstants.VIEW_DEBUG_LIGHTS;
 
 /**
  * Created by Nehon on 26/12/2016.
@@ -18,6 +22,9 @@ public class DebugLightsState extends BaseAppState {
     @Override
     protected void initialize(Application app) {
         rootNode = ((SimpleApplication) app).getRootNode();
+        Spix spix = getState(SpixState.class).getSpix();
+        spix.getBlackboard().bind(VIEW_DEBUG_LIGHTS, this, "enabled");
+        spix.getBlackboard().set(VIEW_DEBUG_LIGHTS, this.isEnabled());
     }
 
     @Override

@@ -368,13 +368,11 @@ public class Editor extends SimpleApplication {
                 if (on == null) {
                     on = Boolean.FALSE;
                 }
-                spix.getBlackboard().set("view.debug.lights", !on);
+                spix.getBlackboard().set(VIEW_DEBUG_LIGHTS, !on);
             }
         };
         sceneActions.add(toggleLight);
-        spix.getBlackboard().bind("view.debug.lights", toggleLight, "toggled");
-        spix.getBlackboard().bind("view.debug.lights", stateManager.getState(DebugLightsState.class), "enabled");
-        spix.getBlackboard().set("view.debug.lights", stateManager.getState(DebugLightsState.class).isEnabled());
+        spix.getBlackboard().bind(VIEW_DEBUG_LIGHTS, toggleLight, "toggled");
 
 
         return sceneActions;

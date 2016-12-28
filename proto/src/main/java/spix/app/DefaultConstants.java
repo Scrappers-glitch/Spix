@@ -49,4 +49,7 @@ public class DefaultConstants {
     public static final String MAIN_ASSETS_FOLDER = "scene.mainAssetsFolder";
     public static final String SCENE_FILE_NAME = "scene.fileName";
     public static final String SCENE_DIRTY = "scene.dirty";
+
+    public static final String VIEW_DEBUG_LIGHTS= "view.debug.lights";
+
 }

@@ -54,6 +54,7 @@ import java.beans.*;
 import java.util.Iterator;
 
 import static spix.app.DefaultConstants.SCENE_ROOT;
+import static spix.app.DefaultConstants.VIEW_DEBUG_LIGHTS;
 
 //import javafx.scene.shape.Circle;
 
@@ -172,6 +173,13 @@ public class LightWidgetState extends BaseAppState {
         //the scene has changed let's wipe all the light widgets and re scan the new scene.
         lightNode.detachAllChildren();
         recurseAddLights(root);
+        if(lightNode.getChildren().isEmpty()){
+            //the scene has no lights so we activate the debug lights
+            getSpix().getBlackboard().set(VIEW_DEBUG_LIGHTS, true);
+        } else {
+            //there are lights in the scene so we deactivate the debug lights
+            getSpix().getBlackboard().set(VIEW_DEBUG_LIGHTS, false);
+        }
 
     }
 
