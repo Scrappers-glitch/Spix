@@ -172,7 +172,12 @@ public static final String 	SMALL_ICON 	"SmallIcon"
         }
         if( ACCELERATOR_KEY.equals(key) ) {
             if( o instanceof String ) {
-                KeyStroke ks = KeyStroke.getKeyStroke(String.valueOf(o));
+                String s = String.valueOf(o);
+                if(isMac()){
+                    //transforming all "control" keys in "meta" that is the mac command key
+                    s = s.replaceAll("control", "meta");
+                }
+                KeyStroke ks = KeyStroke.getKeyStroke(s);
                 return ks;
             } else {
                 throw new UnsupportedOperationException("Currently only accept string key stroke descriptions for ACCELERATOR.");
@@ -203,6 +208,13 @@ System.out.println("DelegateObserver.propertyChange(" + event + ") on thread:" +
             });
         }
     }
+
+    public static boolean isMac() {
+        String os = System.getProperty("os.name").toLowerCase();
+        return (os.indexOf("mac") >= 0);
+
+    }
+
 }
 
 
