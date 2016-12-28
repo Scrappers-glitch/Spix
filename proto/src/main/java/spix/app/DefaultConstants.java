@@ -43,6 +43,7 @@ package spix.app;
  *  @author    Paul Speed
  */
 public class DefaultConstants {
+    public static final String ASSET_MANAGER = "application.assetmanager";
     public static final String SELECTION_PROPERTY = "main.selection";
     public static final String SELECTION_HIGHLIGHT_COLOR = "main.selection.highlight.color";
     public static final String SCENE_ROOT = "scene.root";

@@ -44,6 +44,8 @@ import com.jme3.light.*;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.scene.*;
+import com.jme3.scene.shape.*;
+import com.jme3.scene.shape.Box;
 import com.jme3.shader.*;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
@@ -60,7 +62,6 @@ import spix.app.properties.*;
 import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.core.Action;
-import spix.props.Property;
 import spix.swing.ActionUtils;
 import spix.swing.*;
 import spix.swing.materialEditor.icons.Icons;
@@ -70,11 +71,11 @@ import spix.swing.sceneexplorer.SceneExplorerPanel;
 import spix.type.Type;
 import spix.ui.*;
 import spix.undo.*;
+import spix.undo.edit.LightAddEdit;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.*;
 import java.io.*;
 import java.util.prefs.Preferences;
 
@@ -347,8 +348,16 @@ public class Editor extends SimpleApplication {
 
         ActionList addAction = new DefaultActionList("Add");
 
-        addAction.add(new NopAction("Geometry"));
-        addAction.add(new NopAction("Node"));
+        ActionList addSpatialAction = new DefaultActionList("Spatial");
+        addSpatialAction.add(new AddSpatialAction("Node", AddSpatialAction.DEFAULT_NODE, spix));
+        addSpatialAction.add(null);
+        addSpatialAction.add(new AddSpatialAction("Box", AddSpatialAction.DEFAULT_BOX, spix));
+        addSpatialAction.add(new AddSpatialAction("Quad", AddSpatialAction.DEFAULT_QUAD, spix));
+        addSpatialAction.add(new AddSpatialAction("Sphere", AddSpatialAction.DEFAULT_SPHERE, spix));
+        addSpatialAction.add(new AddSpatialAction("Cylinder", AddSpatialAction.DEFAULT_CYLINDER, spix));
+        addSpatialAction.add(new AddSpatialAction("Torus", AddSpatialAction.DEFAULT_TORUS, spix));
+
+        addAction.add(addSpatialAction);
         ActionList lightActions = new DefaultActionList("Light");
         createLightMenu(lightActions);
 
@@ -720,7 +729,7 @@ public class Editor extends SimpleApplication {
         stateManager.getState(StatsAppState.class).setDisplayFps(false);
         flyCam.setDragToRotate(true);
 
-        stateManager.getState(SpixState.class).getSpix().getBlackboard().set("application.assetmanager", assetManager);
+        stateManager.getState(SpixState.class).getSpix().getBlackboard().set(ASSET_MANAGER, assetManager);
 
         // Set an initial camera position
         cam.setLocation(new Vector3f(0, 1, 10));

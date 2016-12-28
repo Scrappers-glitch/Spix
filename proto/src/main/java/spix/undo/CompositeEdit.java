@@ -82,6 +82,15 @@ public class CompositeEdit implements Edit {
         }
         return false;
     }
+
+    public <T> T getEditWithType(Class<T> type) {
+        for (Edit edit : edits) {
+            if(type.isAssignableFrom(edit.getClass())){
+                return type.cast(edit);
+            }
+        }
+        return null;
+    }
  
     @Override   
     public void undo( Spix spix ) {

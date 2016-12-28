@@ -49,6 +49,11 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import spix.app.utils.ShapeUtils;
 import spix.core.*;
+import spix.undo.CompositeEdit;
+import spix.undo.Edit;
+import spix.undo.UndoManager;
+import spix.undo.edit.SpatialAddEdit;
+import spix.undo.edit.SpatialRemoveEdit;
 
 import java.util.*;
 
@@ -165,6 +170,13 @@ public class NodeWidgetState extends BaseAppState {
 
     }
 
+    private void removeNode(Node node ){
+        Spatial widget = nodeMap.remove(node);
+        if(widget != null){
+            nodesNode.detachChild(widget);
+        }
+    }
+
     private void updateWidgetPosition(float indentVal, BoundingBox bv, Node widget, Node node) {
         //BoundingBox bb = bv;
 //        Spatial g = widget.getChild(0);
@@ -187,6 +199,7 @@ public class NodeWidgetState extends BaseAppState {
         this.selection = getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         CursorEventControl.addListenersToSpatial(nodesNode, selectionDispatcher);
         getSpix().getBlackboard().bind(DefaultConstants.SCENE_ROOT, this, "scene");
+        getSpix().getBlackboard().bind(UndoManager.LAST_EDIT, this, "lastEdit");
     }
 
     @Override
@@ -194,7 +207,32 @@ public class NodeWidgetState extends BaseAppState {
         nodesNode.removeFromParent();
         CursorEventControl.removeListenersFromSpatial(nodesNode, selectionDispatcher);
         getSpix().getBlackboard().unbind(DefaultConstants.SCENE_ROOT, this, "scene");
+        getSpix().getBlackboard().bind(UndoManager.LAST_EDIT, this, "lastEdit");
     }
+
+    public void setLastEdit(Edit edit){
+        if(edit instanceof CompositeEdit){
+            CompositeEdit ce = (CompositeEdit)edit;
+            SpatialAddEdit nodeEdit = ce.getEditWithType(SpatialAddEdit.class);
+            if( nodeEdit!= null && nodeEdit.getChild() instanceof Node){
+                Node node = (Node) nodeEdit.getChild();
+                if(nodeEdit instanceof SpatialRemoveEdit) {
+                    if(nodeEdit.isDone()) {
+                        removeNode(node);
+                    } else {
+                        addNode(node);
+                    }
+                } else {
+                    if(nodeEdit.isDone()) {
+                        addNode(node);
+                    } else {
+                        removeNode(node);
+                    }
+                }
+            }
+        }
+    }
+
 
     @Override
     public void update(float tpf) {

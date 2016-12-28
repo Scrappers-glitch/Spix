@@ -8,10 +8,12 @@ import com.jme3.bounding.BoundingBox;
 import com.jme3.export.binary.BinaryExporter;
 import com.jme3.scene.*;
 import spix.core.Blackboard;
+import spix.core.Spix;
 import spix.props.*;
 import spix.type.Type;
 import spix.undo.Edit;
 import spix.undo.UndoManager;
+import spix.undo.edit.SpatialAddEdit;
 
 import java.beans.*;
 import java.io.*;
@@ -48,6 +50,10 @@ public class FileIoAppState extends BaseAppState {
         blackboard.set(SCENE_FILE_NAME, "defaultScene.j3o");
     }
 
+    private Spix getSpix(){
+        return getState(SpixState.class).getSpix();
+    }
+
     @Override
     protected void cleanup(Application app) {
 
@@ -72,7 +78,7 @@ public class FileIoAppState extends BaseAppState {
 
         String oldPath = blackboard.get(MAIN_ASSETS_FOLDER, String.class);
 
-        blackboard.set(MAIN_ASSETS_FOLDER, fp.assetRoot);
+        blackboard.set(MAIN_ASSETS_FOLDER, fp.assetRoot.toString());
         if (fp.modelPath == null) {
             fp.modelPath = "Scenes/newScene.j3o";
         }
@@ -255,6 +261,9 @@ public class FileIoAppState extends BaseAppState {
             Spatial rootScene = (Spatial) blackboard.get(SCENE_ROOT);
             if (rootScene instanceof Node){
                 ((Node)rootScene).attachChild(scene);
+
+                UndoManager um = getSpix().getService(UndoManager.class);
+                um.addEdit(new SpatialAddEdit((Node)rootScene, scene));
             }
 
         } catch (AssetLoadException | AssetNotFoundException e) {

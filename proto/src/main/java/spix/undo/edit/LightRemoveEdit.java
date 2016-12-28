@@ -1,4 +1,4 @@
-package spix.undo;
+package spix.undo.edit;
 
 import com.jme3.light.Light;
 import com.jme3.scene.Spatial;

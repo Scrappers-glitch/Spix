@@ -1,9 +1,10 @@
-package spix.undo;
+package spix.undo.edit;
 
 import com.jme3.light.Light;
 import com.jme3.scene.Spatial;
 import spix.app.light.LightWidgetState;
 import spix.core.Spix;
+import spix.undo.SceneGraphStructureEdit;
 
 /**
  * Created by Nehon on 23/12/2016.
