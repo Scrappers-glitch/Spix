@@ -106,22 +106,40 @@ public class DefaultBlackboard implements Blackboard {
         return spix.getPropertySet(properties.get(path));
     }
 
-    public void bind( String billboardProperty, Object target, String targetProperty ) {
-        bind(billboardProperty, target, targetProperty, (Function)null);
+    public void bind( String blackboardProperty, Object target, String targetProperty ) {
+        bind(blackboardProperty, target, targetProperty, (Function)null);
     }
 
-    public void bind( String billboardProperty, Object target, String targetProperty, Predicate transform ) {
-        bind(billboardProperty, target, targetProperty,
+    public void bind( String blackboardProperty, Object target, String targetProperty, Predicate transform ) {
+        bind(blackboardProperty, target, targetProperty,
              transform == null ? null : Functions.forPredicate(transform));
     }
 
-    public void bind( String billboardProperty, Object target, String targetProperty, Function transform ) {
+    public void bind( String blackboardProperty, Object target, String targetProperty, Function transform ) {
         BeanProperty property = BeanProperty.create(target, targetProperty);
         if( property == null ) {
             throw new RuntimeException("No property found:" + targetProperty + " on " + target);
         }
         Binding binding = new Binding(property, transform);
-        addListener(billboardProperty, binding);
+        addListener(blackboardProperty, binding);
+    }
+
+    public void unbind ( String blackboardProperty, Object target, String targetProperty ) {
+        Binding toRemove = null;
+        BeanProperty prop = BeanProperty.create(target, targetProperty);
+        PropertyChangeListener[] listeners = properties.getPropertyChangeListeners(blackboardProperty);
+        for (PropertyChangeListener listener : listeners) {
+            if(listener instanceof Binding){
+                Binding b = (Binding) listener;
+                if(b.target.equals(prop)){
+                    toRemove = b;
+                }
+            }
+        }
+
+        if( toRemove != null ){
+            removeListener(blackboardProperty, toRemove);
+        }
     }
 
     public void addListener( String property, PropertyChangeListener l ) {

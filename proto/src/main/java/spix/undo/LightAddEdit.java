@@ -8,7 +8,7 @@ import spix.core.Spix;
 /**
  * Created by Nehon on 23/12/2016.
  */
-public class LightAddEdit implements Edit {
+public class LightAddEdit implements SceneGraphStructureEdit {
 
     protected Spatial spatial;
     protected Light light;

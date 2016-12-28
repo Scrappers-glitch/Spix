@@ -186,12 +186,14 @@ public class NodeWidgetState extends BaseAppState {
         getRoot().attachChild(nodesNode);
         this.selection = getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         CursorEventControl.addListenersToSpatial(nodesNode, selectionDispatcher);
+        getSpix().getBlackboard().bind(DefaultConstants.SCENE_ROOT, this, "scene");
     }
 
     @Override
     protected void onDisable() {
         nodesNode.removeFromParent();
         CursorEventControl.removeListenersFromSpatial(nodesNode, selectionDispatcher);
+        getSpix().getBlackboard().unbind(DefaultConstants.SCENE_ROOT, this, "scene");
     }
 
     @Override

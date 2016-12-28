@@ -7,8 +7,10 @@ import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.export.binary.BinaryExporter;
 import com.jme3.scene.*;
+import spix.core.Blackboard;
 import spix.props.*;
 import spix.type.Type;
+import spix.undo.Edit;
 import spix.undo.UndoManager;
 
 import java.beans.*;
@@ -16,6 +18,8 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static spix.app.DefaultConstants.*;
 
@@ -27,13 +31,8 @@ public class FileIoAppState extends BaseAppState {
 
     private AssetManager assetManager;
     private Node rootNode;
-    private Property mainAssetProp = new DefaultProperty(MAIN_ASSETS_FOLDER, new Type(String.class), "");
-    private Property currentOpenedFile = new DefaultProperty(SCENE_FILE_NAME, new Type(String.class), "");
-    private Property currentScene = new DefaultProperty(SCENE_ROOT, new Type(Spatial.class), new Node("default"));
-    private Property dirtyScene = new DefaultProperty(SCENE_DIRTY, Boolean.class, false);
+    private Blackboard blackboard;
     private AssetLoadingListener assetListener = new AssetLoadingListener();
-    private List<Runnable> enabledCommands = new CopyOnWriteArrayList<>();
-    private LastEditListener lastEditListener = new LastEditListener();
 
     public FileIoAppState() {
 
@@ -43,10 +42,10 @@ public class FileIoAppState extends BaseAppState {
     protected void initialize(Application app) {
         this.assetManager = app.getAssetManager();
         this.rootNode = ((SimpleApplication) app).getRootNode();
-        getState(SpixState.class).getSpix().getBlackboard().set(MAIN_ASSETS_FOLDER, mainAssetProp);
-        getState(SpixState.class).getSpix().getBlackboard().set(SCENE_ROOT, currentScene);
-        getState(SpixState.class).getSpix().getBlackboard().set(SCENE_FILE_NAME, currentOpenedFile);
-        getState(SpixState.class).getSpix().getBlackboard().set(SCENE_DIRTY, dirtyScene);
+        this.blackboard = getState(SpixState.class).getSpix().getBlackboard();
+        blackboard.set(MAIN_ASSETS_FOLDER, "");
+        blackboard.set(SCENE_ROOT, new Node("Default Scene"));
+        blackboard.set(SCENE_FILE_NAME, "defaultScene.j3o");
     }
 
     @Override
@@ -56,34 +55,30 @@ public class FileIoAppState extends BaseAppState {
 
     @Override
     protected void onEnable() {
-        for (Runnable r : enabledCommands) {
-            r.run();
-        }
-        Property lastEditProperty = (Property) getState(SpixState.class).getSpix().getBlackboard().get(UndoManager.LAST_EDIT);
-        lastEditProperty.addPropertyChangeListener(lastEditListener);
+        blackboard.bind(UndoManager.LAST_EDIT, this, "lastEdit");
     }
 
-    public void addEnabledCommand(Runnable runable) {
-        enabledCommands.add(runable);
+    public void setLastEdit(Edit edit){
+        blackboard.set(SCENE_DIRTY, true);
     }
 
     @Override
     protected void onDisable() {
-
+        blackboard.unbind(UndoManager.LAST_EDIT, this, "lastEdit");
     }
 
     public void newScene(File assetPath) {
         FilePath fp = getFilePath(assetPath);
 
-        String oldPath = (String) mainAssetProp.getValue();
+        String oldPath = blackboard.get(MAIN_ASSETS_FOLDER, String.class);
 
-        mainAssetProp.setValue(fp.assetRoot);
+        blackboard.set(MAIN_ASSETS_FOLDER, fp.assetRoot);
         if (fp.modelPath == null) {
             fp.modelPath = "Scenes/newScene.j3o";
         }
         fp.modelPath = getUnusedName(fp.assetRoot.toString(), fp.modelPath);
 
-        currentOpenedFile.setValue(fp.modelPath);
+        blackboard.set(SCENE_FILE_NAME, fp.modelPath);
         Node newScene = new Node("New Scene");
         rootNode.detachAllChildren();
         rootNode.attachChild(newScene);
@@ -92,13 +87,14 @@ public class FileIoAppState extends BaseAppState {
             assetManager.unregisterLocator(oldPath, FileLocator.class);
         }
         assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
-        currentScene.setValue(newScene);
+        blackboard.set(SCENE_ROOT, newScene);
         save();
     }
 
     public void save() {
-        saveAs(mainAssetProp.getValue() + File.separator + currentOpenedFile.getValue());
-        Spatial scene = (Spatial) currentScene.getValue();
+        saveAs(blackboard.get(MAIN_ASSETS_FOLDER, String.class) + File.separator + blackboard.get(SCENE_FILE_NAME));
+
+        Spatial scene = (Spatial) blackboard.get(SCENE_ROOT);
 
         if(scene.getKey() != null) {
             //removing the scene so that it's really reloaded if we reload it during this session.
@@ -114,14 +110,17 @@ public class FileIoAppState extends BaseAppState {
 
         BinaryExporter exporter = BinaryExporter.getInstance();
         File file = new File(fileName);
-        Node scene = (Node) currentScene.getValue();
-        Property dirtyScene = (Property) getState(SpixState.class).getSpix().getBlackboard().get(SCENE_DIRTY);
-        dirtyScene.setValue(false);
+        Spatial scene = (Spatial) blackboard.get(SCENE_ROOT);
+        getState(SpixState.class).getSpix().getBlackboard().set(SCENE_DIRTY, false);
         try {
             exporter.save(scene, file);
         } catch (IOException ex) {
             ex.printStackTrace();
+            return;
         }
+        FilePath fp = getFilePath(file);
+        blackboard.set(MAIN_ASSETS_FOLDER, fp.assetRoot.toString());
+        blackboard.set(SCENE_FILE_NAME, fp.modelPath);
     }
 
     public String getUnusedName(String basePath, String filePath) {
@@ -129,6 +128,15 @@ public class FileIoAppState extends BaseAppState {
         Path fileName = path.getFileName();
         Path folder = path.getParent();
         int count = 1;
+        String origFileName = fileName.toString();
+        //extract previous _number at the end of the file
+        Pattern p = Pattern.compile("(.*)_(\\d*)(\\.j3o)");
+        Matcher m = p.matcher(origFileName);
+        if(m.matches()){
+            count = Integer.parseInt(m.group(2)) + 1;
+            path = Paths.get(folder.toString() + File.separator + m.replaceFirst("$1$3"));
+            fileName = path.getFileName();
+        }
 
         while (Files.exists(path)) {
             String file[] = fileName.toString().split("\\.");
@@ -137,7 +145,7 @@ public class FileIoAppState extends BaseAppState {
             count++;
         }
 
-        return filePath.replaceAll(fileName.toString(), path.getFileName().toString());
+        return filePath.replaceAll(origFileName, path.getFileName().toString());
 
     }
 
@@ -147,10 +155,7 @@ public class FileIoAppState extends BaseAppState {
             rootNode.detachAllChildren();
             rootNode.attachChild(scene);
 
-            currentScene.setValue(scene);
-
-            //TODO NodeWidgetState should listen for the SCENE_ROOT
-            getState(NodeWidgetState.class).setScene(scene);
+            blackboard.set(SCENE_ROOT, scene);
         } catch (AssetLoadException | AssetNotFoundException e) {
             e.printStackTrace();
             //TODO here we should report in an error log.
@@ -166,10 +171,10 @@ public class FileIoAppState extends BaseAppState {
         assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
 
         if (changeAssetFolder) {
-            mainAssetProp.setValue(fp.assetRoot.toString());
-            currentOpenedFile.setValue(fp.modelPath);
+            blackboard.set(MAIN_ASSETS_FOLDER, fp.assetRoot.toString());
+            blackboard.set(SCENE_FILE_NAME, fp.modelPath);
 
-        } else if (!mainAssetProp.getValue().equals(fp.assetRoot.toString())) {
+        } else if (!blackboard.get(MAIN_ASSETS_FOLDER).equals(fp.assetRoot.toString())) {
             //This asset is not in the main asset root, meaning that if we add it in the scene as is the resulting j3o will be broken and will miss some assets.
             //We have to relocate them in the main asset folder.
 
@@ -181,7 +186,7 @@ public class FileIoAppState extends BaseAppState {
                 Path source = Paths.get(fp.assetRoot + File.separator + dependency);
                 //check if the source file exists in the source folder (could be stock assets that doesn't need to be copied)
                 if (Files.exists(source)) {
-                    Path target = Paths.get(mainAssetProp.getValue() + File.separator + dependency);
+                    Path target = Paths.get(blackboard.get(MAIN_ASSETS_FOLDER) + File.separator + dependency);
                     try {
                         System.err.println("copying " + source + " to " + target);
                         if (!Files.exists(target)) {
@@ -247,8 +252,11 @@ public class FileIoAppState extends BaseAppState {
             float modelLeft = -modelBounds.getCenter().x + modelBounds.getXExtent();
 
             scene.setLocalTranslation(worldRight + modelLeft, 0, 0);
-            Node rootScene = (Node) currentScene.getValue();
-            rootScene.attachChild(scene);
+            Spatial rootScene = (Spatial) blackboard.get(SCENE_ROOT);
+            if (rootScene instanceof Node){
+                ((Node)rootScene).attachChild(scene);
+            }
+
         } catch (AssetLoadException | AssetNotFoundException e) {
             e.printStackTrace();
             //TODO here we should report in an error log.
@@ -281,14 +289,6 @@ public class FileIoAppState extends BaseAppState {
 
         public Set<String> getDependencies() {
             return dependencies;
-        }
-    }
-
-    private class LastEditListener implements PropertyChangeListener {
-
-        @Override
-        public void propertyChange(PropertyChangeEvent event) {
-            dirtyScene.setValue(true);
         }
     }
 

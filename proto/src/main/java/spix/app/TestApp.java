@@ -53,6 +53,7 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 
+import spix.app.action.AnimationActionList;
 import spix.app.form.*;
 import spix.app.light.*;
 import spix.app.material.*;

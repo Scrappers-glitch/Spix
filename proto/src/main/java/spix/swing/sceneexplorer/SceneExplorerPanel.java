@@ -29,8 +29,6 @@ public class SceneExplorerPanel extends DockPanel {
 
     private JTree sceneTree;
     private SwingGui gui;
-    private ScenePropertyListener scenePropertyListener = new ScenePropertyListener();
-    private LastEditListener lastEditListener = new LastEditListener();
 
     public SceneExplorerPanel(Slot slot, Container container, SwingGui gui) {
         super(slot, container);
@@ -84,7 +82,7 @@ public class SceneExplorerPanel extends DockPanel {
         b.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                refresh();
+                refresh(gui.getSpix().getBlackboard().get(SCENE_ROOT, Spatial.class));
             }
         });
         tb.add(b);
@@ -93,14 +91,28 @@ public class SceneExplorerPanel extends DockPanel {
         setIcon(Icons.output);
         setTitle("Scene Explorer");
 
+        //register blackboard bindings
+        gui.getSpix().getBlackboard().bind(UndoManager.LAST_EDIT, this, "lastEdit");
+        gui.getSpix().getBlackboard().bind(SCENE_ROOT, this, "sceneRoot");
+
     }
 
-    public void init(){
-        Property sceneProperty = (Property) gui.getSpix().getBlackboard().get(SCENE_ROOT);
-        sceneProperty.addPropertyChangeListener(scenePropertyListener);
-        Property lastEditProperty = (Property) gui.getSpix().getBlackboard().get(UndoManager.LAST_EDIT);
-        lastEditProperty.addPropertyChangeListener(lastEditListener);
-        refresh();
+    public void setSceneRoot(Spatial root){
+        refresh(root);
+    }
+
+    /**
+     * bound to the blackboard
+     * @param lastEdit
+     */
+    public void setLastEdit(Edit lastEdit){
+        if (lastEdit instanceof CompositeEdit) {
+            CompositeEdit edit = (CompositeEdit) lastEdit;
+            if (edit.hasTypes(SceneGraphStructureEdit.class)) {
+                refresh(gui.getSpix().getBlackboard().get(SCENE_ROOT, Spatial.class));
+            }
+        }
+
     }
 
     private void buildTree(Spatial s, DefaultMutableTreeNode parent) {
@@ -140,11 +152,10 @@ public class SceneExplorerPanel extends DockPanel {
         }
     }
 
-    public void refresh() {
-        Node n = (Node) (gui.getSpix().getBlackboard().get(SCENE_ROOT, Property.class)).getValue();
+    public void refresh(Spatial sceneRoot) {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Scene");
 
-        buildTree(n, root);
+        buildTree(sceneRoot, root);
         gui.runOnSwing(new Runnable() {
             @Override
             public void run() {
@@ -237,32 +248,6 @@ public class SceneExplorerPanel extends DockPanel {
                 label.setBackground(null);
             }
             return label;
-        }
-    }
-
-    private class ScenePropertyListener implements PropertyChangeListener {
-
-        @Override
-        public void propertyChange(PropertyChangeEvent event) {
-            if (event.getNewValue() != event.getOldValue()) {
-                if (event.getNewValue() instanceof Spatial) {
-                    refresh();
-                }
-            }
-        }
-    }
-
-    private class LastEditListener implements PropertyChangeListener {
-
-        @Override
-        public void propertyChange(PropertyChangeEvent event) {
-            if (event.getNewValue() instanceof CompositeEdit) {
-                CompositeEdit edit = (CompositeEdit) event.getNewValue();
-                if (edit.hasTypes(LightAddEdit.class)) {
-                    refresh();
-                }
-            }
-
         }
     }
 

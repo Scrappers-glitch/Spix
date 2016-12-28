@@ -60,8 +60,16 @@ public class OpenRecentAction extends DefaultActionList {
             }
         }
     }
-    public List<String> getRecentFiles() {
-        return recentFiles;
+
+   public void setCurrentFile(String currentFile) {
+       String assetRoot = spix.getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class);
+       String path = assetRoot + File.separator + currentFile;
+        if(assetRoot.trim().equals("") || currentFile.trim().equals("") || recentFiles.contains(path)){
+            return;
+        }
+
+        addRecentFile(path);
+
     }
 
     private class OpenRecentFileAction extends AbstractAction {
@@ -69,7 +77,7 @@ public class OpenRecentAction extends DefaultActionList {
         String path;
 
         protected OpenRecentFileAction(String id, String path) {
-            super(id);
+            super(id, path);
             this.path = path;
         }
 
@@ -79,10 +87,6 @@ public class OpenRecentAction extends DefaultActionList {
         }
     }
 
-    public void setCurrentFile(Property currentFileProp) {
-        String assetRoot = (String)((Property)spix.getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER)).getValue();
-        addRecentFile(assetRoot + File.separator + currentFileProp.getValue());
 
-    }
 
 }

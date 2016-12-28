@@ -71,9 +71,7 @@ public class LightWidgetState extends BaseAppState {
     private Node lightNode;
     private SafeArrayList<LightWrapper> wrappers = new SafeArrayList<>(LightWrapper.class);
     private SelectionModel selection;
-    private Property sceneProperty;
     private SelectionObserver selectionObserver = new SelectionObserver();
-    private SceneObserver sceneObserver = new SceneObserver();
     private LightSelectionDispatcher selectionDispatcher = new LightSelectionDispatcher();
 
     public LightWidgetState() {
@@ -153,9 +151,8 @@ public class LightWidgetState extends BaseAppState {
         selection.addPropertyChangeListener(selectionObserver);
         CursorEventControl.addListenersToSpatial(lightNode, selectionDispatcher);
 
-        sceneProperty = (Property) getSpix().getBlackboard().get(SCENE_ROOT);
-        sceneProperty.addPropertyChangeListener(sceneObserver);
-        Spatial rootNode = (Spatial) sceneProperty.getValue();
+        Spatial rootNode = getSpix().getBlackboard().get(SCENE_ROOT, Spatial.class);
+        getSpix().getBlackboard().bind(SCENE_ROOT, this, "sceneRoot");
         recurseAddLights(rootNode);
 
     }
@@ -166,8 +163,16 @@ public class LightWidgetState extends BaseAppState {
         selection.removePropertyChangeListener(selectionObserver);
         CursorEventControl.removeListenersFromSpatial(lightNode, selectionDispatcher);
 
-        sceneProperty.removePropertyChangeListener(sceneObserver);
+        getSpix().getBlackboard().unbind(SCENE_ROOT, this, "sceneRoot");
         lightNode.detachAllChildren();
+    }
+
+    public void setSceneRoot(Spatial root){
+
+        //the scene has changed let's wipe all the light widgets and re scan the new scene.
+        lightNode.detachAllChildren();
+        recurseAddLights(root);
+
     }
 
     @Override
@@ -266,16 +271,5 @@ public class LightWidgetState extends BaseAppState {
         }
     }
 
-    private class SceneObserver implements PropertyChangeListener {
-
-        @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-            if (evt.getNewValue() != evt.getOldValue()) {
-                //the scene has changed let's wipe all the light widgets and re scan the new scene.
-                lightNode.detachAllChildren();
-                recurseAddLights((Spatial) evt.getNewValue());
-            }
-        }
-    }
 
 }

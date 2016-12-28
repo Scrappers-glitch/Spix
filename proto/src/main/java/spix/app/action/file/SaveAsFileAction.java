@@ -26,10 +26,10 @@ public class SaveAsFileAction extends AbstractAction {
 
     @Override
     public void performAction(Spix spix) {
-        Property mainAssetRoot = (Property)spix.getBlackboard().get(MAIN_ASSETS_FOLDER);
-        Property fileName = (Property)spix.getBlackboard().get(SCENE_FILE_NAME);
+        String mainAssetRoot = spix.getBlackboard().get(MAIN_ASSETS_FOLDER, String.class);
+        String fileName = spix.getBlackboard().get(SCENE_FILE_NAME, String.class);
         spix.getService(FileRequester.class).requestFile("Save As",
-                "JME Object", "j3o", new File(fileIoAppState.getUnusedName((String)mainAssetRoot.getValue(), (String)fileName.getValue())), false,
+                "JME Object", "j3o", new File(fileIoAppState.getUnusedName(mainAssetRoot, fileName)), false,
                 new RequestCallback<File>() {
                     public void done(File f) {
                         System.out.println("Save as :" + f + "   Thread:" + Thread.currentThread());

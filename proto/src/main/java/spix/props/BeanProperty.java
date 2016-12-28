@@ -224,4 +224,13 @@ public class BeanProperty extends AbstractProperty {
                 .add("setter", setter)
                 .toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof BeanProperty)){
+            return false;
+        }
+        BeanProperty b = (BeanProperty)obj;
+        return b.object == object && getName().equals(b.getName());
+    }
 }

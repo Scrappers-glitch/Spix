@@ -60,7 +60,6 @@ public class UndoManager {
     private EditListener editListener = new EditListener();
     private long frame;
     private long lastEditFrame;
-    private Property lastEdit = new DefaultProperty(LAST_EDIT, Edit.class, null);
  
     private long frameDelay = 15; // presuming we are called at 60 hz then this is .25 of a second.
                 // But note the above is kind of a hack to work around the fact that the app
@@ -87,8 +86,6 @@ public class UndoManager {
         // Create a map that will let us find the original objects
         // that a property belongs to for when we receive events
         beanIndex = new MapMaker().weakKeys().weakValues().makeMap();
-
-        spix.getBlackboard().set(LAST_EDIT, lastEdit);
     }
  
     protected CompositeEdit getTransaction( boolean create ) {
@@ -103,7 +100,7 @@ public class UndoManager {
         getTransaction(true).addEdit(edit);
         lastEditFrame = frame;
         redoStack.clear();
-        lastEdit.setValue(transaction);
+        spix.getBlackboard().set(LAST_EDIT, transaction);
     }
  
     public void undo() {
@@ -124,9 +121,9 @@ public class UndoManager {
         ignoreEvents = true;
         try {
             edit.undo(spix);
-            //That bad...but that's to force the change and trigger the events...
-            lastEdit.setValue(null);
-            lastEdit.setValue(edit);
+            //That's bad...but that's to force the change and trigger the events when the edit is the same as before...
+            spix.getBlackboard().set(LAST_EDIT, null);
+            spix.getBlackboard().set(LAST_EDIT, edit);
         } finally { 
             ignoreEvents = false;
         }
@@ -145,10 +142,10 @@ public class UndoManager {
         ignoreEvents = true;
         try {
             edit.redo(spix);
-            //That bad...but that's to force the change and trigger the events...
-            lastEdit.setValue(null);
-            lastEdit.setValue(edit);
-        } finally { 
+            //That's bad...but that's to force the change and trigger the events when the edit is the same as before...
+            spix.getBlackboard().set(LAST_EDIT, null);
+            spix.getBlackboard().set(LAST_EDIT, edit);
+        } finally {
             ignoreEvents = false;
         }
         undoStack.addFirst(edit);

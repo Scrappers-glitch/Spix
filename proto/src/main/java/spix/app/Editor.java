@@ -88,6 +88,7 @@ public class Editor extends SimpleApplication {
 
     private volatile JFrame mainFrame;
     private Spix spix;
+    private SwingGui gui;
 
     public static final String EDITOR_WIDTH = "Editor.width";
     public static final String EDITOR_HEIGHT = "Editor.height";
@@ -179,6 +180,8 @@ public class Editor extends SimpleApplication {
                     }
                 });
 
+                spix.getBlackboard().bind(SCENE_DIRTY, Editor.this, "sceneIsDirty");
+                spix.getBlackboard().bind(SCENE_FILE_NAME, Editor.this, "sceneFileName");
 
                 mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 mainFrame.addWindowListener(new WindowAdapter() {
@@ -199,54 +202,12 @@ public class Editor extends SimpleApplication {
 
                 // Register the SwingGui layer and let it handle all of the requests
                 // for which it is capable.
-                SwingGui gui = spix.registerService(SwingGui.class, new SwingGui(spix, mainFrame));
-
-
+                gui = spix.registerService(SwingGui.class, new SwingGui(spix, mainFrame));
 
 
                 SceneExplorerPanel sceneExplorerPanel = new SceneExplorerPanel(DockPanel.Slot.West, centerPane, gui);
                 sceneExplorerPanel.setPreferredSize(new Dimension(250, 10));
                 sceneExplorerPanel.unDock();
-                stateManager.getState(FileIoAppState.class).addEnabledCommand(new Runnable() {
-                    @Override
-                    public void run() {
-                        sceneExplorerPanel.init();
-
-                        ((Property) spix.getBlackboard().get(SCENE_FILE_NAME)).addPropertyChangeListener(new PropertyChangeListener() {
-                            @Override
-                            public void propertyChange(PropertyChangeEvent evt) {
-                                gui.runOnSwing(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        mainFrame.setTitle("jMonkeyEngine Tool Suite - " + ((Property) spix.getBlackboard().get(MAIN_ASSETS_FOLDER)).getValue() + " - " + ((Property) spix.getBlackboard().get(SCENE_FILE_NAME)).getValue());
-                                    }
-                                });
-                            }
-                        });
-
-                        Property dirtyScene = (Property) spix.getBlackboard().get(SCENE_DIRTY);
-                        dirtyScene.addPropertyChangeListener(new PropertyChangeListener() {
-                            @Override
-                            public void propertyChange(PropertyChangeEvent evt) {
-                                gui.runOnSwing(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (!evt.getNewValue().equals(evt.getOldValue())) {
-                                            String title = mainFrame.getTitle();
-                                            if (title.endsWith("*")) {
-                                                title = title.substring(0, title.length() - 1);
-                                            }
-                                            if (evt.getNewValue().equals(Boolean.TRUE)) {
-                                                title += "*";
-                                            }
-                                            mainFrame.setTitle(title);
-                                        }
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
 
                 PropPanel propertiesPanel = new PropPanel(centerPane);
                 propertiesPanel.setPreferredSize(new Dimension(250, 10));
@@ -343,6 +304,35 @@ public class Editor extends SimpleApplication {
 
     }
 
+    //maybe extract this in another class later...
+    private boolean sceneDirty = false;
+    public void setSceneIsDirty(boolean dirty){
+        gui.runOnSwing(new Runnable() {
+            @Override
+            public void run() {
+                if (dirty != sceneDirty) {
+                    String title = mainFrame.getTitle();
+                    if (title.endsWith("*")) {
+                        title = title.substring(0, title.length() - 1);
+                    }
+                    if (dirty) {
+                        title += "*";
+                    }
+                    mainFrame.setTitle(title);
+                    sceneDirty = dirty;
+                }
+            }
+        });
+    }
+    public void setSceneFileName(String fileName){
+        gui.runOnSwing(new Runnable() {
+            @Override
+            public void run() {
+                mainFrame.setTitle("jMonkeyEngine Tool Suite - " + spix.getBlackboard().get(MAIN_ASSETS_FOLDER) + " - " + spix.getBlackboard().get(SCENE_FILE_NAME));
+            }
+        });
+    }
+
 
     private JMenuBar createMainMenu() {
         return ActionUtils.createActionMenuBar(createMainActions(), spix);
@@ -397,7 +387,7 @@ public class Editor extends SimpleApplication {
         FileIoAppState fileIoState = stateManager.getState(FileIoAppState.class);
         file.add(new NewFileAction(fileIoState));
         file.add(new OpenFileAction(fileIoState));
-        //file.add(new OpenRecentAction(spix, fileIoState));
+        file.add(new OpenRecentAction(spix, fileIoState));
         file.add(new ImportFileAction(fileIoState));
         file.add(null); // separator
         file.add(new SaveFileAction(fileIoState));
@@ -850,14 +840,14 @@ public class Editor extends SimpleApplication {
     private void addLight(Light l) {
         Spatial selected = getSelectedSpatial();
         Spatial anchor;
-        Node node = (Node) ((Property) stateManager.getState(SpixState.class).getSpix().getBlackboard().get(SCENE_ROOT)).getValue();
+        Spatial spatial = spix.getBlackboard().get(SCENE_ROOT, Spatial.class);
         if (selected != null) {
             anchor = selected;
-            while (anchor != node && !(anchor instanceof Node)) {
+            while (anchor != spatial && !(anchor instanceof Node)) {
                 anchor = anchor.getParent();
             }
         } else {
-            anchor = node;
+            anchor = spatial;
         }
 
         UndoManager um = spix.getService(UndoManager.class);
