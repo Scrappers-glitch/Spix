@@ -2,7 +2,10 @@ package spix.swing.sceneexplorer;
 
 import com.jme3.light.Light;
 import com.jme3.material.Material;
-import com.jme3.scene.*;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Mesh;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 import spix.app.DefaultConstants;
 import spix.core.SelectionModel;
@@ -10,17 +13,25 @@ import spix.props.Property;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.panels.DockPanel;
-import spix.undo.*;
+import spix.undo.CompositeEdit;
+import spix.undo.Edit;
+import spix.undo.SceneGraphStructureEdit;
+import spix.undo.UndoManager;
 
 import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.beans.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Enumeration;
 
 import static spix.app.DefaultConstants.SCENE_ROOT;
+import static spix.app.DefaultConstants.SELECTION_PROPERTY;
 
 /**
  * Created by bouquet on 30/09/16.
@@ -52,13 +63,15 @@ public class SceneExplorerPanel extends DockPanel {
                 }
 
                 Object o = node.getUserObject();
-                if (o instanceof Node || o instanceof Geometry || o instanceof Light) {
+                if (o instanceof Spatial || o instanceof Light) {
 
                     gui.runOnRender(new Runnable() {
                         @Override
                         public void run() {
                             SelectionModel sm = (SelectionModel) gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY);
-                            sm.setSingleSelection(o);
+                            if(sm.getSingleSelection() != o) {
+                                sm.setSingleSelection(o);
+                            }
                         }
                     });
 
@@ -94,6 +107,10 @@ public class SceneExplorerPanel extends DockPanel {
         //register blackboard bindings
         gui.getSpix().getBlackboard().bind(UndoManager.LAST_EDIT, this, "lastEdit");
         gui.getSpix().getBlackboard().bind(SCENE_ROOT, this, "sceneRoot");
+
+        //Listening to selection to reflect the selection in the tree.
+        SelectionModel selection = gui.getSpix().getBlackboard().get(SELECTION_PROPERTY, SelectionModel.class);
+        selection.addPropertyChangeListener(new SelectionObserver());
 
     }
 
@@ -242,13 +259,47 @@ public class SceneExplorerPanel extends DockPanel {
                 }
             }
 
-            if (hasFocus) {
+            if (hasFocus || selected) {
                 label.setBackground(Color.DARK_GRAY);
             } else {
                 label.setBackground(null);
             }
             return label;
         }
+    }
+
+    private class SelectionObserver implements PropertyChangeListener {
+
+        public void propertyChange( PropertyChangeEvent event ) {
+            if(event.getNewValue() != event.getOldValue() ){
+                gui.runOnSwing(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(event.getNewValue() instanceof  Spatial) {
+                            Spatial s = (Spatial) event.getNewValue();
+                            DefaultMutableTreeNode node = searchNode(s);
+                            if(sceneTree.getLastSelectedPathComponent() != node) {
+                                sceneTree.getSelectionModel().setSelectionPath(new TreePath(node.getPath()));
+                            }
+                        }
+                    }
+                });
+
+            }
+
+        }
+    }
+
+    public DefaultMutableTreeNode searchNode(Object userObject) {
+        DefaultMutableTreeNode node = null;
+        Enumeration e = ((DefaultMutableTreeNode)sceneTree.getModel().getRoot()).breadthFirstEnumeration();
+        while (e.hasMoreElements()) {
+            node = (DefaultMutableTreeNode) e.nextElement();
+            if (userObject.equals(node.getUserObject())) {
+                return node;
+            }
+        }
+        return null;
     }
 
 }
