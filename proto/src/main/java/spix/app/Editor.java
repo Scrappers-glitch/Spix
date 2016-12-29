@@ -689,6 +689,9 @@ public class Editor extends SimpleApplication {
     private ActionList createObjectActions() {
         ActionList objects = new DefaultActionList("Selection");
 
+        DeleteAction delete = new DeleteAction(spix);
+        objects.add(delete);
+
 
         AnimationActionList animation = objects.add(new AnimationActionList("Animation"));
         spix.getBlackboard().bind("main.selection.singleSelect",

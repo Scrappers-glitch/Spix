@@ -115,7 +115,7 @@ public class LightWidgetState extends BaseAppState {
         if (s instanceof Node) {
             Node n = (Node) s;
             for (Spatial spat : n.getChildren()) {
-                recurseAddLights(spat);
+                recurseRemoveLights(spat);
             }
         }
     }

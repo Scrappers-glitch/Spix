@@ -36,11 +36,10 @@
 
 package spix.swing;
 
-import java.awt.Component;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+import spix.core.RequestCallback;
+import spix.ui.MessageRequester;
 
-import spix.ui.*;
+import javax.swing.*;
 
 /**
  *
@@ -70,6 +69,16 @@ public class SwingMessageRequester implements MessageRequester {
                 }
                 JOptionPane.showMessageDialog(swingGui.getRootWindow(), message, title, msgType);
             }
-        });                            
-    } 
+        });
+    }
+
+    @Override
+    public void confirm(String title, String message, RequestCallback<Boolean> callback) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                int result = JOptionPane.showConfirmDialog(swingGui.getRootWindow(), message, title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                swingGui.getSpix().sendResponse(callback, result == JOptionPane.YES_OPTION);
+            }
+        });
+    }
 }

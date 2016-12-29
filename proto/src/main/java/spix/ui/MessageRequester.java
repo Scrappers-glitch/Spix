@@ -37,6 +37,8 @@
 package spix.ui;
 
 
+import spix.core.RequestCallback;
+
 /**
  *  Used by application code to show a message to the user.
  *
@@ -45,6 +47,8 @@ package spix.ui;
 public interface MessageRequester {
     
     public enum Type { Information, Error }
-    
-    public void showMessage( String title, String message, Type type ); 
+
+    public void showMessage(String title, String message, Type type);
+
+    public void confirm(String title, String message, RequestCallback<Boolean> callback);
 }
