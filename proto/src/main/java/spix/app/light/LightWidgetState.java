@@ -48,7 +48,8 @@ import com.jme3.util.SafeArrayList;
 import com.simsilica.lemur.event.*;
 import spix.app.*;
 import spix.core.*;
-import spix.props.Property;
+import spix.undo.*;
+import spix.undo.edit.*;
 
 import java.beans.*;
 import java.util.Iterator;
@@ -107,6 +108,18 @@ public class LightWidgetState extends BaseAppState {
         }
     }
 
+    private void recurseRemoveLights(Spatial s) {
+        for (Light light : s.getLocalLightList()) {
+            removeLight(light);
+        }
+        if (s instanceof Node) {
+            Node n = (Node) s;
+            for (Spatial spat : n.getChildren()) {
+                recurseAddLights(spat);
+            }
+        }
+    }
+
     public void addLight(Spatial parent, Light light) {
         Node widget = new Node(light.toString()+ " Widget");
 
@@ -130,6 +143,7 @@ public class LightWidgetState extends BaseAppState {
 
         lightNode.attachChild(widget);
     }
+
 
     public void removeLight(Light light) {
         for (Iterator<LightWrapper> i = wrappers.iterator(); i.hasNext(); ) {
@@ -156,6 +170,8 @@ public class LightWidgetState extends BaseAppState {
         getSpix().getBlackboard().bind(SCENE_ROOT, this, "sceneRoot");
         recurseAddLights(rootNode);
 
+        getSpix().getBlackboard().bind(UndoManager.LAST_EDIT, this, "lastEdit");
+
     }
 
     @Override
@@ -166,6 +182,49 @@ public class LightWidgetState extends BaseAppState {
 
         getSpix().getBlackboard().unbind(SCENE_ROOT, this, "sceneRoot");
         lightNode.detachAllChildren();
+
+        getSpix().getBlackboard().bind(UndoManager.LAST_EDIT, this, "lastEdit");
+    }
+
+    public void setLastEdit(Edit edit) {
+        if (edit instanceof CompositeEdit) {
+            CompositeEdit ce = (CompositeEdit) edit;
+            LightAddEdit lightEdit = ce.getEditWithType(LightAddEdit.class);
+            if (lightEdit != null) {
+                if (lightEdit instanceof LightRemoveEdit) {
+                    if (lightEdit.isDone()) {
+                        removeLight(lightEdit.getLight());
+                    } else {
+                        addLight(lightEdit.getSpatial(), lightEdit.getLight());
+                    }
+                } else {
+                    if (lightEdit.isDone()) {
+                        addLight(lightEdit.getSpatial(), lightEdit.getLight());
+                    } else {
+                        removeLight(lightEdit.getLight());
+                    }
+                }
+            }
+
+            //if a node has been added or removed, we remove the relevant lights.
+            SpatialAddEdit nodeEdit = ce.getEditWithType(SpatialAddEdit.class);
+            if (nodeEdit != null) {
+                Spatial s = nodeEdit.getChild();
+                if (nodeEdit instanceof SpatialRemoveEdit) {
+                    if (nodeEdit.isDone()) {
+                        recurseRemoveLights(s);
+                    } else {
+                        recurseAddLights(s);
+                    }
+                } else {
+                    if (nodeEdit.isDone()) {
+                        recurseAddLights(s);
+                    } else {
+                        recurseRemoveLights(s);
+                    }
+                }
+            }
+        }
     }
 
     public void setSceneRoot(Spatial root){

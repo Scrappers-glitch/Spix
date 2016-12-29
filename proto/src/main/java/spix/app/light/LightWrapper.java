@@ -24,14 +24,14 @@ public abstract class LightWrapper<L extends Light> {
     protected Node center;
     private PropertySet lightPropertySet;
     private Material dot;
-    private Spatial target;
+    private Spatial parent;
     private Vector3f prevTargetPos = Vector3f.NAN.clone();
 
 
-    public LightWrapper(Node node, L light, Spatial target, AssetManager assetManager) {
+    public LightWrapper(Node node, L light, Spatial parent, AssetManager assetManager) {
         this.widget = node;
         this.light = light;
-        this.target = target;
+        this.parent = parent;
         initMaterials(assetManager);
         center =  makeCenter();
         widget.attachChild(makeWidget());
@@ -44,15 +44,15 @@ public abstract class LightWrapper<L extends Light> {
 
     public void update (float tpf, Camera cam){
         if(lightPropertySet != null) {
-            if(!prevTargetPos.equals(target.getWorldTranslation())){
-                setPositionRelativeToTarget(target, prevTargetPos, lightPropertySet);
+            if (!prevTargetPos.equals(parent.getWorldTranslation())) {
+                setPositionRelativeToTarget(parent, prevTargetPos, lightPropertySet);
             }
-            widgetUpdate(target, widget, lightPropertySet, tpf);
+            widgetUpdate(parent, widget, lightPropertySet, tpf);
         } else {
-            initWidget(target, widget, light);
+            initWidget(parent, widget, light);
         }
 
-        prevTargetPos.set(target.getWorldTranslation());
+        prevTargetPos.set(parent.getWorldTranslation());
         updateCenter(cam);
 
     }
@@ -82,8 +82,12 @@ public abstract class LightWrapper<L extends Light> {
         return widget;
     }
 
+    public Spatial getParent() {
+        return parent;
+    }
+
     protected float getGlobalScale(){
-        BoundingVolume v = target.getWorldBound();
+        BoundingVolume v = parent.getWorldBound();
         if (v != null && v.getType() == BoundingVolume.Type.AABB) {
             BoundingBox bb = (BoundingBox)v;
             Vector3f vec = new Vector3f(bb.getXExtent(), bb.getYExtent(), bb.getZExtent());

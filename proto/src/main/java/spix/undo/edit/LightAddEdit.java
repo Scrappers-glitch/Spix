@@ -2,7 +2,6 @@ package spix.undo.edit;
 
 import com.jme3.light.Light;
 import com.jme3.scene.Spatial;
-import spix.app.light.LightWidgetState;
 import spix.core.Spix;
 import spix.undo.SceneGraphStructureEdit;
 
@@ -13,32 +12,43 @@ public class LightAddEdit implements SceneGraphStructureEdit {
 
     protected Spatial spatial;
     protected Light light;
-    protected LightWidgetState lightWidgetState;
+    protected boolean done = true;
 
-    public LightAddEdit(Spatial spatial, Light light, LightWidgetState lightWidgetState) {
+    public LightAddEdit(Spatial spatial, Light light) {
         this.spatial = spatial;
         this.light = light;
-        this.lightWidgetState = lightWidgetState;
+        //this.lightWidgetState = lightWidgetState;
     }
 
     @Override
     public void undo(Spix spix) {
         removeLight();
+        done = false;
     }
 
     @Override
     public void redo(Spix spix) {
         addLight();
+        done = true;
     }
 
     protected void addLight() {
         spatial.addLight(light);
-        lightWidgetState.addLight(spatial, light);
     }
 
     protected void removeLight() {
         spatial.removeLight(light);
-        lightWidgetState.removeLight(light);
     }
 
+    public Spatial getSpatial() {
+        return spatial;
+    }
+
+    public Light getLight() {
+        return light;
+    }
+
+    public boolean isDone() {
+        return done;
+    }
 }

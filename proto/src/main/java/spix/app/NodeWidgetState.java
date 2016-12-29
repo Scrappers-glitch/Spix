@@ -49,11 +49,8 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import spix.app.utils.ShapeUtils;
 import spix.core.*;
-import spix.undo.CompositeEdit;
-import spix.undo.Edit;
-import spix.undo.UndoManager;
-import spix.undo.edit.SpatialAddEdit;
-import spix.undo.edit.SpatialRemoveEdit;
+import spix.undo.*;
+import spix.undo.edit.*;
 
 import java.util.*;
 
@@ -128,7 +125,7 @@ public class NodeWidgetState extends BaseAppState {
             indent ++;
             parent = parent.getParent();
         }
-        addNode(node, indent);
+        recurseAddNodes(node, indent);
     }
 
 
@@ -168,6 +165,16 @@ public class NodeWidgetState extends BaseAppState {
             nodeMap.put(node, widget);
         }
 
+    }
+
+    private void recurseRemoveNode(Node n) {
+        removeNode(n);
+        for (Spatial spatial : n.getChildren()) {
+            if (spatial instanceof Node) {
+                Node child = (Node) spatial;
+                recurseRemoveNode(child);
+            }
+        }
     }
 
     private void removeNode(Node node ){
@@ -218,7 +225,7 @@ public class NodeWidgetState extends BaseAppState {
                 Node node = (Node) nodeEdit.getChild();
                 if(nodeEdit instanceof SpatialRemoveEdit) {
                     if(nodeEdit.isDone()) {
-                        removeNode(node);
+                        recurseRemoveNode(node);
                     } else {
                         addNode(node);
                     }
@@ -226,7 +233,7 @@ public class NodeWidgetState extends BaseAppState {
                     if(nodeEdit.isDone()) {
                         addNode(node);
                     } else {
-                        removeNode(node);
+                        recurseRemoveNode(node);
                     }
                 }
             }

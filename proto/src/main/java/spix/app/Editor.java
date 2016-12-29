@@ -44,8 +44,6 @@ import com.jme3.light.*;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.scene.*;
-import com.jme3.scene.shape.*;
-import com.jme3.scene.shape.Box;
 import com.jme3.shader.*;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
@@ -691,6 +689,7 @@ public class Editor extends SimpleApplication {
     private ActionList createObjectActions() {
         ActionList objects = new DefaultActionList("Selection");
 
+
         AnimationActionList animation = objects.add(new AnimationActionList("Animation"));
         spix.getBlackboard().bind("main.selection.singleSelect",
                 animation, "selection");
@@ -858,7 +857,7 @@ public class Editor extends SimpleApplication {
         }
 
         UndoManager um = spix.getService(UndoManager.class);
-        LightAddEdit edit = new LightAddEdit(anchor, l, getStateManager().getState(LightWidgetState.class));
+        LightAddEdit edit = new LightAddEdit(anchor, l);
         edit.redo(spix);
         um.addEdit(edit);
 

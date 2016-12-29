@@ -2,7 +2,6 @@ package spix.undo.edit;
 
 import com.jme3.light.Light;
 import com.jme3.scene.Spatial;
-import spix.app.light.LightWidgetState;
 import spix.core.Spix;
 
 /**
@@ -10,17 +9,19 @@ import spix.core.Spix;
  */
 public class LightRemoveEdit extends LightAddEdit {
 
-    public LightRemoveEdit(Spatial spatial, Light light, LightWidgetState lightWidgetState) {
-        super(spatial, light, lightWidgetState);
+    public LightRemoveEdit(Spatial spatial, Light light) {
+        super(spatial, light);
     }
 
     @Override
     public void undo(Spix spix) {
         addLight();
+        done = false;
     }
 
     @Override
     public void redo(Spix spix) {
         removeLight();
+        done = true;
     }
 }
