@@ -2,33 +2,23 @@ package spix.swing.sceneexplorer;
 
 import com.jme3.light.Light;
 import com.jme3.material.Material;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+import com.jme3.scene.*;
 import com.jme3.scene.control.Control;
 import spix.app.DefaultConstants;
+import spix.app.light.LightWrapper;
 import spix.core.SelectionModel;
-import spix.props.Property;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.panels.DockPanel;
-import spix.undo.CompositeEdit;
-import spix.undo.Edit;
-import spix.undo.SceneGraphStructureEdit;
-import spix.undo.UndoManager;
+import spix.undo.*;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.*;
 import javax.swing.tree.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.Enumeration;
+import java.awt.event.*;
+import java.beans.*;
+import java.util.*;
 
 import static spix.app.DefaultConstants.SCENE_ROOT;
 import static spix.app.DefaultConstants.SELECTION_PROPERTY;
@@ -275,9 +265,13 @@ public class SceneExplorerPanel extends DockPanel {
                 gui.runOnSwing(new Runnable() {
                     @Override
                     public void run() {
-                        if(event.getNewValue() instanceof  Spatial) {
-                            Spatial s = (Spatial) event.getNewValue();
-                            DefaultMutableTreeNode node = searchNode(s);
+                        Object o = event.getNewValue();
+                        if (o instanceof Spatial || o instanceof LightWrapper) {
+                            if (o instanceof LightWrapper) {
+                                LightWrapper lw = (LightWrapper) o;
+                                o = lw.getLight();
+                            }
+                            DefaultMutableTreeNode node = searchNode(o);
                             if(sceneTree.getLastSelectedPathComponent() != node) {
                                 sceneTree.getSelectionModel().setSelectionPath(new TreePath(node.getPath()));
                             }
