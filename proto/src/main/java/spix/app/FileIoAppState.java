@@ -225,7 +225,7 @@ public class FileIoAppState extends BaseAppState {
         FilePath fp = new FilePath();
         fp.assetRoot = f.getParentFile();
         fp.modelPath = f.getName();
-        while (fp.assetRoot.getParentFile() != null && !"assets".equals(fp.assetRoot.getName())) {
+        while (fp.assetRoot.getParentFile() != null && !("assets".equals(fp.assetRoot.getName()) || "resources".equals(fp.assetRoot.getName()))) {
             fp.modelPath = fp.assetRoot.getName() + "/" + fp.modelPath;
             fp.assetRoot = fp.assetRoot.getParentFile();
         }
