@@ -70,18 +70,18 @@ public class MatParamProperty extends AbstractProperty {
 
     @Override
     public void setValue(Object value) {
-        MatParam param = material.getParam(getName());
+        MatParam param = material.getParam(getId());
         Object old = null;
         if (param != null) {
            old = param.getValue();
         }
-        this.material.setParam(getName(), varType, value);
+        this.material.setParam(getId(), varType, value);
         firePropertyChange(old, value, true);
     }
 
     @Override
     public Object getValue() {
-        MatParam param = material.getParam(getName());
+        MatParam param = material.getParam(getId());
         if (param == null) {
             try {
                 return getNewInstance(varType);

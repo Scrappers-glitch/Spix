@@ -36,18 +36,22 @@
 
 package spix.swing;
 
-import java.awt.Component;
-import java.lang.reflect.InvocationTargetException;
-import javax.swing.SwingUtilities;
-
-import org.slf4j.*;
-
 import com.jme3.math.ColorRGBA;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spix.core.Spix;
-import spix.props.*;
-import spix.type.*;
-import spix.ui.*;
+import spix.props.Property;
+import spix.props.PropertySet;
+import spix.type.ContextHandlerRegistry;
+import spix.type.HandlerRegistry;
+import spix.type.Type;
+import spix.ui.ColorRequester;
+import spix.ui.FileRequester;
+import spix.ui.MessageRequester;
+
+import javax.swing.*;
+import java.awt.*;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  *  Consolidates the general swing-related user interface configuration
@@ -96,6 +100,11 @@ public class SwingGui {
         DefaultComponentFactory floatFactory = new DefaultComponentFactory(FloatPanel.class);
         editFactories.register(Float.class, floatFactory);
         editFactories.register(Float.TYPE, floatFactory);
+
+        DefaultComponentFactory booleanFactory = new DefaultComponentFactory(BooleanPanel.class);
+        editFactories.register(Boolean.class, booleanFactory);
+        editFactories.register(Boolean.TYPE, booleanFactory);
+
         editFactories.register(ColorRGBA.class, new DefaultComponentFactory(ColorPanel.class));
         editFactories.register(Enum.class, new DefaultComponentFactory(EnumPanel.class));  
         editFactories.register(String.class, new DefaultComponentFactory(StringPanel.class));
