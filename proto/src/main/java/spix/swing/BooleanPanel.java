@@ -40,6 +40,8 @@ import com.google.common.base.Function;
 import spix.props.Property;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * A boolean Property view that uses a JCheckBox
@@ -53,8 +55,16 @@ public class BooleanPanel extends AbstractPropertyPanel<JCheckBox> {
     public BooleanPanel(Property prop) {
         super(prop);
 
-        setView(new JCheckBox());
-        getView().setBorder(BorderFactory.createEtchedBorder());
+        JCheckBox checkBox = new JCheckBox();
+        checkBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                prop.setValue(checkBox.isSelected());
+            }
+        });
+
+        checkBox.setBorder(BorderFactory.createEtchedBorder());
+        setView(checkBox);
     }
 
 
