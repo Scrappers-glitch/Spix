@@ -3,9 +3,7 @@ package spix.app.action;
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+import com.jme3.scene.*;
 import com.jme3.scene.shape.*;
 import spix.core.SelectionModel;
 import spix.core.Spix;
@@ -58,7 +56,7 @@ public class AddSpatialAction extends AddAction{
         Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         mat.setBoolean("UseMaterialColors", true);
         mat.setColor("Diffuse", ColorRGBA.Gray.clone());
-        mat.setColor("Ambient", ColorRGBA.Gray.clone());
+        mat.setColor("Ambient", ColorRGBA.DarkGray.clone());
         return mat;
     }
 }
