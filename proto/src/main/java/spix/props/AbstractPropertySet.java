@@ -36,15 +36,17 @@
 
 package spix.props;
 
+import com.google.common.base.MoreObjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import spix.type.Type;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.*;
-
-import org.slf4j.*;
-
-import com.google.common.base.MoreObjects;
-
-import spix.type.Type;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  *
@@ -60,6 +62,7 @@ public abstract class AbstractPropertySet implements PropertySet {
     private Type type;
     private final Map<String, Property> properties = new LinkedHashMap<>();
     private final Thread creatingThread;
+    private String iconPath = null;
 
     protected AbstractPropertySet( Property parent, Object object, Property... props ) {
         this(parent, object, Arrays.asList(props));
@@ -95,6 +98,15 @@ public abstract class AbstractPropertySet implements PropertySet {
     @Override
     public Iterator<Property> iterator() {
         return properties.values().iterator();
+    }
+
+    @Override
+    public String getIconPath() {
+        return iconPath;
+    }
+
+    public void setIconPath(String iconPath) {
+        this.iconPath = iconPath;
     }
 
     @Override

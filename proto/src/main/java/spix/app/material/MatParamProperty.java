@@ -39,12 +39,11 @@ import com.jme3.material.MatParam;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.shader.VarType;
-import com.jme3.texture.Texture2D;
-import com.jme3.texture.Texture3D;
-import com.jme3.texture.TextureArray;
-import com.jme3.texture.TextureCubeMap;
+import com.jme3.texture.*;
 import spix.props.AbstractProperty;
 import spix.type.Type;
+
+import java.util.ArrayList;
 
 /**
  * Created by bouquet on 05/10/16.
@@ -79,6 +78,10 @@ public class MatParamProperty extends AbstractProperty {
         firePropertyChange(old, value, true);
     }
 
+    public Material getMaterial() {
+        return material;
+    }
+
     @Override
     public Object getValue() {
         MatParam param = material.getParam(getId());
@@ -105,7 +108,8 @@ public class MatParamProperty extends AbstractProperty {
             case Vector3:
                 return Vector3f.class;
             case Vector4:
-                return Vector4f.class;
+                //This is not perfect, but most of the time this is meant as a color.
+                return ColorRGBA.class;
             case Texture2D:
                 return Texture2D.class;
             case Texture3D:
@@ -118,6 +122,14 @@ public class MatParamProperty extends AbstractProperty {
                 return Matrix3f.class;
             case Matrix4:
                 return Matrix4f.class;
+            case Matrix4Array:
+            case Matrix3Array:
+            case FloatArray:
+            case IntArray:
+            case Vector2Array:
+            case Vector3Array:
+            case Vector4Array:
+                return ArrayList.class;
             default:
                 return Object.class;
         }

@@ -36,14 +36,15 @@
 
 package spix.app.properties;
 
-import java.util.*;
-
-import com.jme3.math.Vector3f;
-import com.jme3.scene.*;
-
-import spix.core.*;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Spatial;
+import spix.app.material.MaterialProperty;
+import spix.core.PropertySetFactory;
+import spix.core.Spix;
 import spix.props.*;
-import spix.type.Type;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -85,7 +86,8 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
         props.add(localRotation);
 
         if(spatial instanceof Geometry){
-            props.add(BeanProperty.create(spatial,"material", true));
+            Geometry g = (Geometry) spatial;
+            props.add(new MaterialProperty(g, g.getMaterial()));
         }
 
         return new DefaultPropertySet(spatial, props);

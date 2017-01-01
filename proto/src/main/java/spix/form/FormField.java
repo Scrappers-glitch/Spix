@@ -46,10 +46,21 @@ import com.google.common.base.MoreObjects;
 public class FormField extends Field {
 
     private Form form;
+    private String iconPath;
 
     public FormField( String name, Form form ) {
         super(name);
         this.form = form;
+    }
+
+    public FormField(String name, Form form, String iconPath) {
+        super(name);
+        this.form = form;
+        this.iconPath = iconPath;
+    }
+
+    public String getIconPath() {
+        return iconPath;
     }
 
     public Form getForm() {

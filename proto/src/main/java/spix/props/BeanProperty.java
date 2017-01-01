@@ -36,15 +36,14 @@
 
 package spix.props;
 
-import java.beans.*;
-import java.lang.reflect.*;
-import java.util.Objects;
-
 import com.google.common.base.MoreObjects;
-
 import com.jme3.util.clone.Cloner;
-
 import spix.type.Type;
+
+import java.beans.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Objects;
 
 /**
  *
@@ -232,5 +231,9 @@ public class BeanProperty extends AbstractProperty {
         }
         BeanProperty b = (BeanProperty)obj;
         return b.object == object && getName().equals(b.getName());
+    }
+
+    public Object getObject() {
+        return object;
     }
 }

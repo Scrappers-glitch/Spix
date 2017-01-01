@@ -44,7 +44,8 @@ import com.jme3.light.*;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.scene.*;
-import com.jme3.shader.*;
+import com.jme3.shader.ShaderNode;
+import com.jme3.shader.VariableMapping;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
 import com.simsilica.lemur.GuiGlobals;
@@ -52,33 +53,38 @@ import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
 import spix.app.action.*;
 import spix.app.action.file.*;
-import spix.app.form.*;
+import spix.app.form.SpatialFormFactory;
+import spix.app.form.VariableMappingFormFactory;
 import spix.app.light.*;
 import spix.app.material.*;
-import spix.app.material.hack.*;
-import spix.app.properties.*;
+import spix.app.material.hack.MatDefWrapper;
+import spix.app.material.hack.TechniqueDefWrapper;
+import spix.app.properties.LightPropertySetFactory;
+import spix.app.properties.SpatialPropertySetFactory;
+import spix.app.utils.IconPath;
 import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.core.Action;
 import spix.swing.ActionUtils;
 import spix.swing.*;
-import spix.swing.materialEditor.icons.Icons;
-import spix.swing.materialEditor.panels.*;
+import spix.swing.materialEditor.panels.DockPanel;
+import spix.swing.materialEditor.panels.PropPanel;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
 import spix.swing.sceneexplorer.SceneExplorerPanel;
 import spix.type.Type;
-import spix.ui.*;
+import spix.ui.ColorRequester;
+import spix.ui.MessageRequester;
 import spix.undo.*;
 import spix.undo.edit.LightAddEdit;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.prefs.Preferences;
 
 import static spix.app.DefaultConstants.*;
-
 
 /**
  * @author Paul Speed
@@ -150,7 +156,7 @@ public class Editor extends SimpleApplication {
         spix.registerPropertySetFactory(TechniqueDefWrapper.class, new TechniqueDefPropertySetFactory());
         spix.registerPropertySetFactory(ShaderNode.class, new ShaderNodePropertySetFactory());
         spix.registerPropertySetFactory(VariableMapping.class, new VariableMappingPropertySetFactory());
-        spix.registerPropertySetFactory(Material.class, new MaterialPropertySetFactory());
+        //spix.registerPropertySetFactory(Material.class, new MaterialPropertySetFactory());
 
         spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());
         spix.registerFormFactory(new Type(VariableMapping.class), new VariableMappingFormFactory());
@@ -209,7 +215,7 @@ public class Editor extends SimpleApplication {
                 sceneExplorerPanel.unDock();
 
                 PropPanel propertiesPanel = new PropPanel(centerPane);
-                propertiesPanel.setPreferredSize(new Dimension(250, 10));
+                propertiesPanel.setPreferredSize(new Dimension(300, 10));
                 propertiesPanel.unDock();
 
                 JToolBar eastToolBar = new JToolBar(JToolBar.VERTICAL);
@@ -232,10 +238,13 @@ public class Editor extends SimpleApplication {
                 gui.registerComponentFactory(Vector3f.class, new DefaultComponentFactory(new Vec3fStringFunction()));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Vector3f.class, new DefaultComponentFactory(Vector3fPanel.class));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Quaternion.class, new DefaultComponentFactory(QuaternionPanel.class));
+                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Material.class, new DefaultComponentFactory(MaterialPanel.class));
 
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");
                 objectEditor.setPreferredSize(new Dimension(250, 100));
-                propertiesPanel.setComponent(new JScrollPane(objectEditor));
+                JScrollPane scrollPane = new JScrollPane(objectEditor, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+                scrollPane.getVerticalScrollBar().setUnitIncrement(10);
+                propertiesPanel.setComponent(scrollPane);
 
                 JPanel scenePane = new JPanel(new BorderLayout());
                 centerPane.add(scenePane, BorderLayout.CENTER);
@@ -368,7 +377,7 @@ public class Editor extends SimpleApplication {
         sceneActions.add(null);
         sceneActions.add(null);
 
-        Action toggleLight = new NopToggleAction("Debug Light", Icons.lightBulbOff, Icons.lightBulb) {
+        Action toggleLight = new NopToggleAction("Debug Light", IconPath.lightBulbOff, IconPath.lightBulb) {
             @Override
             public void performAction(Spix spix) {
                 Boolean on = spix.getBlackboard().get("view.debug.lights", Boolean.class);
@@ -586,7 +595,7 @@ public class Editor extends SimpleApplication {
     }
 
     private void createTransformActions(ActionList transform) {
-        ToggleAction translate = transform.add(new NopToggleAction("Translate", Icons.translateOff, Icons.translate) {
+        ToggleAction translate = transform.add(new NopToggleAction("Translate", IconPath.translateOff, IconPath.translate) {
 
             public void performAction(Spix spix) {
                 spix.getBlackboard().set("transform.mode", "translate");
@@ -599,7 +608,7 @@ public class Editor extends SimpleApplication {
                 "enabled", Predicates.equalTo("translate"));
 
 
-        ToggleAction scale = transform.add(new NopToggleAction("Scale", Icons.scaleOff, Icons.scale) {
+        ToggleAction scale = transform.add(new NopToggleAction("Scale", IconPath.scaleOff, IconPath.scale) {
             public void performAction(Spix spix) {
                 spix.getBlackboard().set("transform.mode", "scale");
             }
@@ -611,7 +620,7 @@ public class Editor extends SimpleApplication {
         spix.getBlackboard().bind("transform.mode", stateManager.getState(ScaleWidgetState.class),
                 "enabled", Predicates.equalTo("scale"));
 
-        ToggleAction rotate = transform.add(new NopToggleAction("Rotate", Icons.rotateOff, Icons.rotate) {
+        ToggleAction rotate = transform.add(new NopToggleAction("Rotate", IconPath.rotateOff, IconPath.rotate) {
             public void performAction(Spix spix) {
                 spix.getBlackboard().set("transform.mode", "rotate");
             }
@@ -881,14 +890,13 @@ public class Editor extends SimpleApplication {
             super(name);
         }
 
-        public NopAction(String id, ImageIcon icon) {
-            super(id, "");
-            put(LARGE_ICON, icon);
-        }
 
-        public NopAction(String name, String accelerator) {
+        public NopAction(String name, String accelerator, String icon) {
             super(name);
             put(ACCELERATOR, accelerator);
+            if (icon != null) {
+                put(LARGE_ICON, new ImageIcon(this.getClass().getResource(icon)));
+            }
         }
 
         public void performAction(Spix spix) {
@@ -901,11 +909,11 @@ public class Editor extends SimpleApplication {
             super(name);
         }
 
-        public NopToggleAction(String id, ImageIcon icon, ImageIcon toggledIcon) {
+        public NopToggleAction(String id, String icon, String toggledIcon) {
             super(id);
             put(TOOLTIP, id);
-            put(LARGE_ICON, icon);
-            put(TOGGLED_LARGE_ICON, toggledIcon);
+            put(LARGE_ICON, new ImageIcon(this.getClass().getResource(icon)));
+            put(TOGGLED_LARGE_ICON, new ImageIcon(this.getClass().getResource(toggledIcon)));
         }
 
         public NopToggleAction(String name, String accelerator) {

@@ -48,4 +48,5 @@ public interface PropertySet extends Iterable<Property> {
     public Property getProperty( String name );
     public Type getType();
     public Thread getCreatingThread();
+    public String getIconPath();
 }

@@ -36,10 +36,9 @@
 
 package spix.swing;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 
 /**
  *
@@ -55,13 +54,16 @@ public class RollupPanel extends JPanel {
     private Component component;   
     
     public RollupPanel() {
-        this(null, null);
-    }    
+        this(null, null, null);
+    }
 
-    public RollupPanel( String title, Component component ) {
+    public RollupPanel(String title, Component component, Icon icon) {
         setLayout(new BorderLayout());
 
         titleButton = new JButton(action);
+        titleButton.setHorizontalAlignment(SwingConstants.LEFT);
+        titleButton.setIcon(icon);
+
         add(titleButton, BorderLayout.NORTH);
         
         setTitle(title);

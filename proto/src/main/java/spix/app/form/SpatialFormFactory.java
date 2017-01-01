@@ -36,12 +36,14 @@
 
 package spix.app.form;
 
-import java.util.*;
-
+import spix.app.utils.IconPath;
 import spix.core.Spix;
 import spix.form.*;
 import spix.props.Property;
 import spix.props.PropertySet;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -52,6 +54,7 @@ public class SpatialFormFactory extends DefaultFormFactory {
 
     private static final Set<String> LOCAL_XFORMS = new HashSet<>();
     private static final Set<String> WORLD_XFORMS = new HashSet<>();
+    private static final Set<String> MATERIAL = new HashSet<>();
     static {
         LOCAL_XFORMS.add("localTranslation");
         LOCAL_XFORMS.add("localScale");
@@ -59,6 +62,7 @@ public class SpatialFormFactory extends DefaultFormFactory {
         WORLD_XFORMS.add("worldTranslation");
         WORLD_XFORMS.add("worldScale");
         WORLD_XFORMS.add("worldRotation");
+        MATERIAL.add("material");
     }
 
     public SpatialFormFactory() {
@@ -73,6 +77,7 @@ public class SpatialFormFactory extends DefaultFormFactory {
         
         Form localTrans = new Form();        
         Form worldTrans = new Form();
+        Form material = new Form();
         
         Form result = new Form();
         for( Property property : properties ) {
@@ -83,6 +88,8 @@ public class SpatialFormFactory extends DefaultFormFactory {
                 localTrans.add(field);
             } else if( WORLD_XFORMS.contains(property.getId()) ) {
                 worldTrans.add(field);
+            } else if (MATERIAL.contains(property.getId())) {
+                material.add(field);
             } else {
                 // Default behavior           
                 result.add(field);
@@ -90,8 +97,11 @@ public class SpatialFormFactory extends DefaultFormFactory {
         }
 
         // After all of that, stick the subforms at the bottom
-        result.add(new FormField("Local Transform", localTrans));
-        result.add(new FormField("World Transform", worldTrans));
+        result.add(new FormField("Local Transform", localTrans, IconPath.attrib));
+        result.add(new FormField("World Transform", worldTrans, IconPath.world));
+        if (material.size() > 0) {
+            result.add(new FormField("Material", material, IconPath.material));
+        }
 
         return result;
     }

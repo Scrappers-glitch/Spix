@@ -36,13 +36,15 @@
 
 package spix.props;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import spix.type.Type;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.*;
-
-import org.slf4j.*;
-
-import spix.type.Type;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  *  Wraps property sets to allow subclasses to intercept the setting
@@ -149,5 +151,10 @@ public class PropertySetWrapper implements PropertySet {
             }
             updateWrapper(event.getPropertyName(), event.getNewValue());
         }
+    }
+
+    @Override
+    public String getIconPath() {
+        return delegate.getIconPath();
     }
 }

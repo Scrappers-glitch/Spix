@@ -60,7 +60,7 @@ public class DefaultFormFactory implements FormFactory {
         Object value = property.getValue();
         PropertySet wrapper = spix.getPropertySet(value);
         if( wrapper != null ) {
-            return new FormField(property.getName(), spix.createForm(wrapper, context));
+            return new FormField(property.getName(), spix.createForm(wrapper, context), wrapper.getIconPath());
         } else {
             return new PropertyField(property);
         }

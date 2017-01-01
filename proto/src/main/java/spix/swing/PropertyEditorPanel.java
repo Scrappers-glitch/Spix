@@ -36,16 +36,16 @@
 
 package spix.swing;
 
-import java.awt.*;
-import javax.swing.*;
-
 import com.google.common.base.MoreObjects;
-
-import org.slf4j.*;
-
-import spix.core.Spix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spix.form.*;
-import spix.props.*;
+import spix.props.PropertySet;
+import spix.props.PropertySetWrapper;
+import spix.swing.materialEditor.icons.Icons;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
  *  A UI that presents property value editors for a particular
@@ -62,7 +62,8 @@ public class PropertyEditorPanel extends JPanel {
     private Form form;
     private String context;
     private boolean nested;
-    private boolean isPeered;    
+    private boolean isPeered;
+    private Runnable onSetup;
 
     public PropertyEditorPanel( SwingGui gui ) {
         this(gui, null);
@@ -77,6 +78,10 @@ public class PropertyEditorPanel extends JPanel {
         this.gui = gui;
         this.context = context;
         this.nested = nested;
+    }
+
+    public void setOnSetupAction(Runnable runnable) {
+        this.onSetup = runnable;
     }
 
     public void setObject( PropertySet properties ) {
@@ -127,6 +132,19 @@ System.out.println(this.form.debugString());
         gui.runOnSwing(new Runnable() {
                 public void run() {
                     setupComponents();
+                    if (onSetup != null) {
+                        onSetup.run();
+                    }
+                    //This is a weird hack in order to have the GridBagLayout resize when its inner components are higher than its parent conatiner...
+                    //This is the only way I managed to have it to play well within a scrollPane...
+                    if (getParent() != null) {
+                        Component[] components = getComponents();
+                        int height = 0;
+                        for (Component component : components) {
+                            height += component.getPreferredSize().getHeight();
+                        }
+                        setPreferredSize(new Dimension(getParent().getWidth() - 25, height));
+                    }
                 }
             });
     }
@@ -178,9 +196,12 @@ System.out.println(this.form.debugString());
 
                     // It follows the normal name: value layout                 
                     JLabel label = new JLabel(pf.getName() + ":");
+                    label.setPreferredSize(new Dimension(50, 16));
+                    label.setMaximumSize(new Dimension(50, 16));
+                    label.setToolTipText(pf.getName());
                     gbc.gridwidth = 1;
                     gbc.gridx = 0;
-                    gbc.weightx = 0;
+                    gbc.weightx = 0.3;
                     gbc.anchor = GridBagConstraints.EAST;
                     gbc.fill = GridBagConstraints.HORIZONTAL;
                     add(label, gbc);
@@ -211,8 +232,8 @@ System.out.println(this.form.debugString());
                 gbc.anchor = GridBagConstraints.WEST;
                 gbc.fill = GridBagConstraints.HORIZONTAL;
                 //add(subpanel, gbc);
-                
-                RollupPanel rollup = new RollupPanel(ff.getName(), subpanel);
+
+                RollupPanel rollup = new RollupPanel(ff.getName(), subpanel, ff.getIconPath() == null ? Icons.attrib : new ImageIcon(this.getClass().getResource(ff.getIconPath())));
                 add(rollup, gbc);
                     
                 lastTwoColumn = false;
