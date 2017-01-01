@@ -36,16 +36,21 @@
 
 package spix.swing;
 
-import java.awt.*;
-import java.beans.PropertyChangeEvent;
+import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import spix.props.AbstractPropertySet;
+import spix.props.DefaultProperty;
+import spix.props.Property;
+import spix.type.NumberRangeType;
+
 import javax.swing.*;
-
-import org.slf4j.*;
-
-import com.jme3.math.*;
-
-import spix.props.*;
-import spix.type.*;
+import java.awt.*;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.beans.PropertyChangeEvent;
 
 /**
  *  Presents several tabs or subpanels for configuring a quaternion
@@ -77,7 +82,16 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         tabs.addTab("Euler", createEulerPanel());
         tabs.addTab("Angle/Axis", createAngleAxisPanel());
         tabs.addTab("Quaternion", createQuaternionPanel());
-        
+
+        //For some weird reason the tabbedPane eats up wheel scroll events,
+        //This listener redispatch them to the parent.
+        tabs.addMouseWheelListener(new MouseWheelListener() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                getParent().dispatchEvent(e);
+            }
+        });
+
         setView(tabs);
     }
     
