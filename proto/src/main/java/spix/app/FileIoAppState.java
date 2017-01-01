@@ -1,25 +1,25 @@
 package spix.app;
 
-import com.jme3.app.*;
+import com.jme3.app.Application;
+import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.asset.*;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.export.binary.BinaryExporter;
-import com.jme3.scene.*;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import spix.core.Blackboard;
 import spix.core.Spix;
-import spix.props.*;
-import spix.type.Type;
 import spix.undo.Edit;
 import spix.undo.UndoManager;
 import spix.undo.edit.SpatialAddEdit;
 
-import java.beans.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.*;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,7 +46,9 @@ public class FileIoAppState extends BaseAppState {
         this.rootNode = ((SimpleApplication) app).getRootNode();
         this.blackboard = getState(SpixState.class).getSpix().getBlackboard();
         blackboard.set(MAIN_ASSETS_FOLDER, "");
-        blackboard.set(SCENE_ROOT, new Node("Default Scene"));
+        Node n = new Node("Default Scene");
+        rootNode.attachChild(n);
+        blackboard.set(SCENE_ROOT, n);
         blackboard.set(SCENE_FILE_NAME, "defaultScene.j3o");
     }
 
