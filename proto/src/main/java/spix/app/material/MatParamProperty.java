@@ -43,8 +43,6 @@ import com.jme3.texture.*;
 import spix.props.AbstractProperty;
 import spix.type.Type;
 
-import java.util.ArrayList;
-
 /**
  * Created by bouquet on 05/10/16.
  */
@@ -129,7 +127,6 @@ public class MatParamProperty extends AbstractProperty {
             case Vector2Array:
             case Vector3Array:
             case Vector4Array:
-                return ArrayList.class;
             default:
                 return Object.class;
         }
