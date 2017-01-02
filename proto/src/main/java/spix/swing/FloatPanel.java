@@ -36,15 +36,14 @@
 
 package spix.swing;
 
-import javax.swing.*;                 
-import javax.swing.event.*;
-
-import com.google.common.base.*;
-
-import spix.core.ToStringFunction;
 import spix.props.Property;
-import spix.type.Type;
 import spix.type.NumberRangeType;
+import spix.type.Type;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
 
 /**
  *  A panel for editing float values.
@@ -71,7 +70,8 @@ public class FloatPanel extends AbstractPropertyPanel<JSpinner> {
         }        
         model.setValue(prop.getValue());
         model.addChangeListener(new ModelObserver());
-        setView(new JSpinner(model));                
+        setView(new JSpinner(model));
+        getView().setPreferredSize(new Dimension(50, 20));
     }
     
     protected void updateView( JSpinner label, Object value ) {
