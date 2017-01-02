@@ -36,16 +36,13 @@
 
 package spix.swing;
 
+import com.jme3.math.Vector3f;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import spix.props.*;
+
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
-import javax.swing.*;
-
-import org.slf4j.*;
-
-import com.jme3.math.*;
-
-import spix.props.*;
-import spix.type.*;
 
 /**
  *  Presents a general editor for Vector3f objects.
@@ -86,9 +83,9 @@ public class Vector3fPanel extends AbstractPropertyPanel<Component>
                     log.trace("propertyChange(" + e + ")");
                 }
                 super.propertyChange(e);
-            }                   
-        };       
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, true); 
+            }
+        };
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, true, PropertyEditorPanel.Orientation.Horizontal);
         panel.setObject(vecProps);
         setView(panel);
     }

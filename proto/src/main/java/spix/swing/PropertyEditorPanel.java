@@ -57,6 +57,13 @@ public class PropertyEditorPanel extends JPanel {
 
     static Logger log = LoggerFactory.getLogger(PropertyEditorPanel.class);
 
+    public enum Orientation {
+        Horizontal,
+        Vertical,
+    }
+
+    private Orientation orientation = Orientation.Vertical;
+
     private SwingGui gui;
     private PropertySet properties;
     private Form form;
@@ -64,6 +71,7 @@ public class PropertyEditorPanel extends JPanel {
     private boolean nested;
     private boolean isPeered;
     private Runnable onSetup;
+
 
     public PropertyEditorPanel( SwingGui gui ) {
         this(gui, null);
@@ -78,6 +86,14 @@ public class PropertyEditorPanel extends JPanel {
         this.gui = gui;
         this.context = context;
         this.nested = nested;
+    }
+
+    public PropertyEditorPanel(SwingGui gui, String context, boolean nested, Orientation orientation) {
+        super(new GridBagLayout());
+        this.gui = gui;
+        this.context = context;
+        this.nested = nested;
+        this.orientation = orientation;
     }
 
     public void setOnSetupAction(Runnable runnable) {
@@ -193,26 +209,42 @@ System.out.println(this.form.debugString());
                     lastTwoColumn = false;
                 } else {
                     gbc.insets = main;
+                    // It follows the normal name: value layout
 
-                    // It follows the normal name: value layout                 
-                    JLabel label = new JLabel(pf.getName() + ":");
-                    label.setPreferredSize(new Dimension(50, 16));
-                    label.setMaximumSize(new Dimension(50, 16));
-                    label.setToolTipText(pf.getName());
                     gbc.gridwidth = 1;
-                    gbc.gridx = 0;
-                    gbc.weightx = 0.3;
-                    gbc.anchor = GridBagConstraints.EAST;
-                    gbc.fill = GridBagConstraints.HORIZONTAL;
+                    JLabel label = new JLabel(pf.getName());
+                    label.setToolTipText(pf.getName());
+                    if (orientation == Orientation.Vertical) {
+                        label.setText(pf.getName() + ":");
+                        label.setPreferredSize(new Dimension(100, 16));
+                        label.setMaximumSize(new Dimension(100, 16));
+                        label.setToolTipText(pf.getName());
+                        gbc.gridx = 0;
+                        gbc.anchor = GridBagConstraints.EAST;
+                        gbc.weightx = 0.1;
+                        gbc.fill = GridBagConstraints.HORIZONTAL;
+                    } else {
+                        gbc.gridy = 0;
+                        gbc.anchor = GridBagConstraints.BASELINE;
+                        gbc.weightx = 0;
+                        gbc.fill = GridBagConstraints.VERTICAL;
+                    }
+
                     add(label, gbc);
-                
-                    gbc.gridx++;
+
+
+                    if (orientation == Orientation.Vertical) {
+                        gbc.gridx++;
+                    } else {
+                        gbc.gridy++;
+                    }
                     gbc.weightx = 1;
                     gbc.anchor = GridBagConstraints.WEST;
                     gbc.fill = GridBagConstraints.HORIZONTAL;
                     add(view, gbc);
-                    
+
                     lastTwoColumn = true;
+
                 }
             } else if( field instanceof FormField ) {
                 FormField ff = (FormField)field;
@@ -240,8 +272,13 @@ System.out.println(this.form.debugString());
             } else {
                 throw new UnsupportedOperationException("Field type not supported:" + field);
             }
-            
-            gbc.gridy++;            
+
+
+            if (orientation == Orientation.Vertical) {
+                gbc.gridy++;
+            } else {
+                gbc.gridx++;
+            }
         }
         
         if( !nested ) {

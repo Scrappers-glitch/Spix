@@ -36,14 +36,10 @@
 
 package spix.swing;
 
-import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
-import com.jme3.math.Vector3f;
+import com.jme3.math.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spix.props.AbstractPropertySet;
-import spix.props.DefaultProperty;
-import spix.props.Property;
+import spix.props.*;
 import spix.type.NumberRangeType;
 
 import javax.swing.*;
@@ -105,24 +101,24 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         eulerProps.updateValue(q);
         angleAxisProps.updateValue(q);
     }
-  
-    protected JComponent createEulerPanel() {    
-        eulerProps = new EulerProperties(getProperty());        
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, false); 
+
+    protected JComponent createEulerPanel() {
+        eulerProps = new EulerProperties(getProperty());
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, false, PropertyEditorPanel.Orientation.Horizontal);
         panel.setObject(eulerProps);        
         return panel;              
     }
 
     protected JComponent createAngleAxisPanel() {
-        angleAxisProps = new AngleAxisProperties(getProperty());        
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, false);  
+        angleAxisProps = new AngleAxisProperties(getProperty());
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, false, PropertyEditorPanel.Orientation.Horizontal);
         panel.setObject(angleAxisProps);        
         return panel;              
     }
     
     protected JComponent createQuaternionPanel() {    
         quatProps = new QuaternionProperties(getProperty());
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, false);  
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui, null, false, PropertyEditorPanel.Orientation.Horizontal);
         panel.setObject(quatProps);
         return panel;              
     }
@@ -182,9 +178,9 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         
         public EulerProperties( Property parent ) {
             super(parent, new Quaternion(),
-                  new DefaultProperty("yaw", new NumberRangeType(null, null, 0.01f), 0f),
-                  new DefaultProperty("pitch", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f), 0f),
-                  new DefaultProperty("roll", new NumberRangeType(-FastMath.HALF_PI, FastMath.HALF_PI, 0.01f), 0f));
+                    new DefaultProperty("Yaw (X)", new NumberRangeType(null, null, 5f), 0f),
+                    new DefaultProperty("Pitch (Y)", new NumberRangeType(-FastMath.HALF_PI * FastMath.RAD_TO_DEG, FastMath.HALF_PI * FastMath.RAD_TO_DEG, 5f), 0f),
+                    new DefaultProperty("Roll (Z)", new NumberRangeType(-FastMath.HALF_PI * FastMath.RAD_TO_DEG, FastMath.HALF_PI * FastMath.RAD_TO_DEG, 5f), 0f));
         }
  
         public void updateValue( Quaternion quat ) {
@@ -197,9 +193,9 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
             updating = true;
             try {           
                 // Just reset them all... it's easier
-                getProperty("pitch").setValue(angles[0]);
-                getProperty("yaw").setValue(angles[1]);
-                getProperty("roll").setValue(angles[2]);
+                getProperty("Yaw (X)").setValue(angles[0] * FastMath.RAD_TO_DEG);
+                getProperty("Pitch (Y)").setValue(angles[1] * FastMath.RAD_TO_DEG);
+                getProperty("Roll (Z)").setValue(angles[2] * FastMath.RAD_TO_DEG);
             } finally {
                 updating = false;
             }
@@ -215,9 +211,9 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
                 log.trace(getId() + ".EulerProperties: propertyChange(" + e + ")");
             }
             // Just reset them all... it's easier
-            angles[0] = (Float)getProperty("pitch").getValue();    
-            angles[1] = (Float)getProperty("yaw").getValue();   
-            angles[2] = (Float)getProperty("roll").getValue();
+            angles[0] = (Float) getProperty("Yaw (X)").getValue() * FastMath.DEG_TO_RAD;
+            angles[1] = (Float) getProperty("Pitch (Y)").getValue() * FastMath.DEG_TO_RAD;
+            angles[2] = (Float) getProperty("Roll (Z)").getValue() * FastMath.DEG_TO_RAD;
             Quaternion rotation = (Quaternion)getObject();             
             rotation.fromAngles(angles);
             updateProperty(rotation);              
@@ -234,7 +230,7 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         
         public AngleAxisProperties( Property parent ) {
             super(parent, new Quaternion(),
-                  new DefaultProperty("angle", new NumberRangeType(-FastMath.PI, FastMath.PI, 0.01f), 0f),
+                    new DefaultProperty("angle", new NumberRangeType(-FastMath.PI * FastMath.RAD_TO_DEG, FastMath.PI * FastMath.RAD_TO_DEG, 5f), 0f),
                   new DefaultProperty("x", Float.class, 0f),
                   new DefaultProperty("y", Float.class, 1f),
                   new DefaultProperty("z", Float.class, 0f));
@@ -264,7 +260,7 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
                 getProperty("x").setValue(axis.x);
                 getProperty("y").setValue(axis.y);
                 getProperty("z").setValue(axis.z);
-                getProperty("angle").setValue(angle);
+                getProperty("angle").setValue(angle * FastMath.RAD_TO_DEG);
             } finally {
                 updating = false;
             }
@@ -288,7 +284,7 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
             axis.z = (Float)getProperty("z").getValue();
             normalizedAxis.set(axis);
             normalizedAxis.normalizeLocal();
-            angle = (Float)getProperty("angle").getValue();   
+            angle = (Float) getProperty("angle").getValue() * FastMath.DEG_TO_RAD;
             Quaternion rotation = (Quaternion)getObject(); 
             rotation.fromAngleAxis(angle, axis);
             updateProperty(rotation);              
