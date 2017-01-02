@@ -51,6 +51,7 @@ import com.jme3.system.awt.AwtPanelsContext;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
+import org.yaml.snakeyaml.Yaml;
 import spix.app.action.*;
 import spix.app.action.file.*;
 import spix.app.form.SpatialFormFactory;
@@ -164,6 +165,14 @@ public class Editor extends SimpleApplication {
         SelectionModel selectionModel = new SelectionModel();
         spix.getBlackboard().set(SELECTION_PROPERTY, selectionModel);
         selectionModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");
+
+
+        //Stock Material meta data, maybe not the best place to have this. Change that when you refactor this class, future me.
+        Yaml yaml = new Yaml();
+        Object lightingConfig = yaml.load(this.getClass().getResourceAsStream("/lighting.yaml"));
+        spix.getBlackboard().set("material.metadata.Common/MatDefs/Light/Lighting.j3md", lightingConfig);
+        Object unshadedConfig = yaml.load(this.getClass().getResourceAsStream("/unshaded.yaml"));
+        spix.getBlackboard().set("material.metadata.Common/MatDefs/Misc/Unshaded.j3md", unshadedConfig);
 
 
         // Have to create the frame on the AWT EDT.

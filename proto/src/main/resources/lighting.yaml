@@ -1,0 +1,31 @@
+- Misc:
+  - VertexLighting
+  - UseVertexColor
+  - AlphaDiscardThreshold
+- Base Textures:
+  - DiffuseMap
+  - NormalMap
+- Specular:
+  - SpecularMap
+  - Shininess
+- Parallax:
+  - ParallaxMap
+  - ParallaxHeight
+  - SteepParallax
+  - PackedNormalParallax
+- Material Colors:
+  - UseMaterialColors
+  - Ambient
+  - Diffuse
+  - Specular
+- Misc Textures:
+  - AlphaMap
+  - ColorRamp
+  - GlowMap
+  - GlowColor
+  - LightMap
+  - SeparateTexCoord
+- Reflection:
+  - EnvMap
+  - EnvMapAsSphereMap
+  - FresnelParams

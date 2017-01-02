@@ -71,7 +71,6 @@ public class MaterialProperty extends AbstractProperty {
         Material newMat = (Material) value;
         if (changed(newMat)) {
             Object old = material.clone();
-            ;
 
             material.setName(newMat.getName());
 

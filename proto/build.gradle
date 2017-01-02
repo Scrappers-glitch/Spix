@@ -67,6 +67,7 @@ dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.4.4'
 
     compile 'com.google.guava:guava:19.0'
+    compile 'org.yaml:snakeyaml:1.17'
 
     compile "org.jmonkeyengine:jme3-core:$jmeVersion"
 

@@ -40,7 +40,7 @@ public class AddSpatialAction extends AddAction{
         if(toAdd instanceof Geometry){
             Geometry g = (Geometry)toAdd;
             if(g.getMaterial() == null){
-                g.setMaterial(getUnshadedMaterial(spix));
+                g.setMaterial(getDefaultMaterial(spix));
             }
         }
         node.attachChild(toAdd);
@@ -54,6 +54,7 @@ public class AddSpatialAction extends AddAction{
     private Material getDefaultMaterial(Spix spix){
         AssetManager assetManager = spix.getBlackboard().get(ASSET_MANAGER, AssetManager.class);
         Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+        mat.setName(mat.getMaterialDef().getName());
         mat.setBoolean("UseMaterialColors", true);
         mat.setColor("Diffuse", ColorRGBA.Gray.clone());
         mat.setColor("Ambient", ColorRGBA.DarkGray.clone());
@@ -63,8 +64,8 @@ public class AddSpatialAction extends AddAction{
     private Material getUnshadedMaterial(Spix spix) {
         AssetManager assetManager = spix.getBlackboard().get(ASSET_MANAGER, AssetManager.class);
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.setName(mat.getMaterialDef().getName());
         mat.setColor("Color", ColorRGBA.Blue.clone());
-
         return mat;
     }
 }
