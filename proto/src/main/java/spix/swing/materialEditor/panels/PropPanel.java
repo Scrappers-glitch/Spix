@@ -15,6 +15,7 @@ public class PropPanel extends DockPanel {
         setIcon(Icons.tech);
         button.setIcon(Icons.properties);
         button.setRolloverIcon(Icons.propertieseHover);
+        button.setRolloverSelectedIcon(Icons.propertieseHover);
 
     }
 }

@@ -1,11 +1,9 @@
 package spix.swing.sceneexplorer;
 
+import com.jme3.audio.AudioNode;
 import com.jme3.light.Light;
 import com.jme3.material.Material;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+import com.jme3.scene.*;
 import com.jme3.scene.control.Control;
 import spix.app.DefaultConstants;
 import spix.app.light.LightWrapper;
@@ -13,10 +11,7 @@ import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.panels.DockPanel;
-import spix.undo.CompositeEdit;
-import spix.undo.Edit;
-import spix.undo.SceneGraphStructureEdit;
-import spix.undo.UndoManager;
+import spix.undo.*;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
@@ -100,8 +95,10 @@ public class SceneExplorerPanel extends DockPanel {
         });
         tb.add(b);
 
-        getButton().setIcon(Icons.shaderCode);
-        setIcon(Icons.output);
+        getButton().setIcon(Icons.sceneExplorer);
+        getButton().setRolloverIcon(Icons.sceneExplorerHover);
+        getButton().setRolloverSelectedIcon(Icons.sceneExplorerHover);
+        setIcon(Icons.sceneGraph);
         setTitle("Scene Explorer");
 
         //register blackboard bindings
@@ -216,7 +213,11 @@ public class SceneExplorerPanel extends DockPanel {
             label.setIcon(Icons.errorGray);
             label.setText(o.toString());
 
-            if (o instanceof Node) {
+            if (o instanceof AudioNode) {
+                AudioNode node = (AudioNode) o;
+                label.setIcon(Icons.audio);
+                label.setText(node.getName());
+            } else if (o instanceof Node) {
                 Node node = (Node) o;
                 label.setIcon(Icons.jmeNode);
                 label.setText(node.getName());
@@ -226,7 +227,7 @@ public class SceneExplorerPanel extends DockPanel {
                 label.setText(g.getName());
             } else if (o instanceof Material) {
                 Material m = (Material) o;
-                label.setIcon(Icons.mat);
+                label.setIcon(Icons.material);
                 label.setText("Material: " + m.getMaterialDef().getName());
             } else if (o instanceof Mesh) {
                 Mesh m = (Mesh) o;

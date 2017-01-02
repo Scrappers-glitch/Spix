@@ -68,6 +68,7 @@ import spix.core.*;
 import spix.core.Action;
 import spix.swing.ActionUtils;
 import spix.swing.*;
+import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.panels.DockPanel;
 import spix.swing.materialEditor.panels.PropPanel;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
@@ -83,6 +84,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.prefs.Preferences;
 
 import static spix.app.DefaultConstants.*;
@@ -179,7 +181,9 @@ public class Editor extends SimpleApplication {
         SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
                 mainFrame = new JFrame("jMonkeyEngine Tool Suite");
-                mainFrame.setIconImage(Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/icons/model.gif")));
+
+                //mainFrame.setIconImage(Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/icons/LogoIcon.png")));
+                mainFrame.setIconImages(Arrays.asList(new Image[]{Icons.logo16.getImage(), Icons.logo32.getImage(), Icons.logo64.getImage(), Icons.logo128.getImage()}));
                 mainFrame.addComponentListener(new ComponentAdapter() {
                     @Override
                     public void componentResized(ComponentEvent e) {

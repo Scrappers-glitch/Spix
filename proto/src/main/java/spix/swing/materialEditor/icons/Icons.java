@@ -11,8 +11,15 @@ import javax.swing.*;
  */
 public class Icons {
 
+    public final static ImageIcon logo16 = new ImageIcon(Icons.class.getResource("/icons/LogoIconx16.png"));
+    public final static ImageIcon logo32 = new ImageIcon(Icons.class.getResource("/icons/LogoIconx32.png"));
+    public final static ImageIcon logo64 = new ImageIcon(Icons.class.getResource("/icons/LogoIconx64.png"));
+    public final static ImageIcon logo128 = new ImageIcon(Icons.class.getResource("/icons/LogoIconx128.png"));
+
     public final static ImageIcon node = new ImageIcon(Icons.class.getResource("/icons/node.png"));
-    public final static ImageIcon jmeNode = new ImageIcon(Icons.class.getResource("/icons/node.gif"));
+    public final static ImageIcon jmeNode = new ImageIcon(Icons.class.getResource("/icons/jmeNode.png"));
+    public final static ImageIcon audio = new ImageIcon(Icons.class.getResource("/icons/audio.png"));
+    public final static ImageIcon sceneGraph = new ImageIcon(Icons.class.getResource("/icons/node.gif"));
     public final static ImageIcon model = new ImageIcon(Icons.class.getResource("/icons/model.gif"));
     public final static ImageIcon mesh = new ImageIcon(Icons.class.getResource("/icons/mesh.gif"));
     public final static ImageIcon material = new ImageIcon(Icons.class.getResource("/icons/material.gif"));
@@ -56,6 +63,9 @@ public class Icons {
     public final static ImageIcon dockRightHover = new ImageIcon(Icons.class.getResource("/icons/dock-right-hover.png"));
     public final static ImageIcon properties = new ImageIcon(Icons.class.getResource("/icons/properties.png"));
     public final static ImageIcon propertieseHover = new ImageIcon(Icons.class.getResource("/icons/properties-hover.png"));
+    public final static ImageIcon sceneExplorer = new ImageIcon(Icons.class.getResource("/icons/SceneExplorer.png"));
+    public final static ImageIcon sceneExplorerHover = new ImageIcon(Icons.class.getResource("/icons/SceneExplorer-hover.png"));
+
     public final static ImageIcon reload = new ImageIcon(Icons.class.getResource("/icons/reload.png"));
     public final static ImageIcon rotateOff = new ImageIcon(Icons.class.getResource("/icons/rotate_off.png"));
     public final static ImageIcon scaleOff = new ImageIcon(Icons.class.getResource("/icons/scale_off.png"));
