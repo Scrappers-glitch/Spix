@@ -36,14 +36,14 @@
 
 package spix.app.action;
 
-import java.util.*;
-
-import com.google.common.collect.*;
-
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.jme3.animation.*;
-import com.jme3.scene.*;
-
+import com.jme3.scene.SceneGraphVisitor;
+import com.jme3.scene.Spatial;
 import spix.core.*;
+
+import java.util.TreeSet;
 
 /**
  *  A (maybe temporary) action list that autoconfigures itself with
@@ -130,6 +130,9 @@ public class AnimationActionList extends DefaultActionList {
             System.out.println(" *** Anim:" + anim);
             for( String s : anim.getAnimationNames() ) {
                 System.out.println("   animation:" + s);
+                if (s.trim().toLowerCase().contains("idle")) {
+                    anim.createChannel().setAnim(s);
+                }
                 animControls.put(s, anim);
             }
         }
