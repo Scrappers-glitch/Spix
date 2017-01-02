@@ -9,8 +9,7 @@ import com.jme3.bounding.BoundingBox;
 import com.jme3.export.binary.BinaryExporter;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import spix.core.Blackboard;
-import spix.core.Spix;
+import spix.core.*;
 import spix.undo.Edit;
 import spix.undo.UndoManager;
 import spix.undo.edit.SpatialAddEdit;
@@ -96,6 +95,8 @@ public class FileIoAppState extends BaseAppState {
         }
         assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
         blackboard.set(SCENE_ROOT, newScene);
+        //Select the new scene
+        blackboard.get(SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(newScene);
         save();
     }
 
@@ -164,6 +165,8 @@ public class FileIoAppState extends BaseAppState {
             rootNode.attachChild(scene);
 
             blackboard.set(SCENE_ROOT, scene);
+            //Select the new scene
+            blackboard.get(SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(scene);
         } catch (AssetLoadException | AssetNotFoundException e) {
             e.printStackTrace();
             //TODO here we should report in an error log.
@@ -266,6 +269,8 @@ public class FileIoAppState extends BaseAppState {
 
                 UndoManager um = getSpix().getService(UndoManager.class);
                 um.addEdit(new SpatialAddEdit((Node)rootScene, scene));
+                //Select the imported scene
+                blackboard.get(SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(scene);
             }
 
         } catch (AssetLoadException | AssetNotFoundException e) {
