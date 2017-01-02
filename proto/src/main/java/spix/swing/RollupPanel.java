@@ -63,6 +63,7 @@ public class RollupPanel extends JPanel {
         titleButton = new JButton(action);
         titleButton.setHorizontalAlignment(SwingConstants.LEFT);
         titleButton.setIcon(icon);
+        titleButton.setBackground(new Color(25, 25, 50));
 
         add(titleButton, BorderLayout.NORTH);
         
