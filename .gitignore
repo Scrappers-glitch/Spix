@@ -6,3 +6,4 @@ proto/.gradle/
 *.iml
 proto/logs/
 proto/spix.log
+proto/.nb-gradle/

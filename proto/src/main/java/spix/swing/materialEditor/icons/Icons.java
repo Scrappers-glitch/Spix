@@ -16,6 +16,11 @@ public class Icons {
     public final static ImageIcon logo64 = new ImageIcon(Icons.class.getResource("/icons/LogoIconx64.png"));
     public final static ImageIcon logo128 = new ImageIcon(Icons.class.getResource("/icons/LogoIconx128.png"));
 
+    public final static ImageIcon test = new ImageIcon(Icons.class.getResource("/icons/test.gif"));
+
+    public final static ImageIcon menu = new ImageIcon(Icons.class.getResource("/icons/menu.png"));
+    public final static ImageIcon menuHover = new ImageIcon(Icons.class.getResource("/icons/menu-hover.png"));
+
     public final static ImageIcon node = new ImageIcon(Icons.class.getResource("/icons/node.png"));
     public final static ImageIcon jmeNode = new ImageIcon(Icons.class.getResource("/icons/jmeNode.png"));
     public final static ImageIcon audio = new ImageIcon(Icons.class.getResource("/icons/audio.png"));

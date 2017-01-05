@@ -48,6 +48,7 @@ import com.jme3.shader.ShaderNode;
 import com.jme3.shader.VariableMapping;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
+import com.jme3.texture.Texture;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
@@ -73,6 +74,7 @@ import spix.swing.materialEditor.panels.DockPanel;
 import spix.swing.materialEditor.panels.PropPanel;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
 import spix.swing.sceneexplorer.SceneExplorerPanel;
+import spix.swing.texture.TexturePanel;
 import spix.type.Type;
 import spix.ui.ColorRequester;
 import spix.ui.MessageRequester;
@@ -252,6 +254,7 @@ public class Editor extends SimpleApplication {
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Vector3f.class, new DefaultComponentFactory(Vector3fPanel.class));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Quaternion.class, new DefaultComponentFactory(QuaternionPanel.class));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Material.class, new DefaultComponentFactory(MaterialPanel.class));
+                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Texture.class, new DefaultComponentFactory(TexturePanel.class));
 
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");
                 objectEditor.setPreferredSize(new Dimension(250, 100));

@@ -36,7 +36,6 @@
 
 package spix.swing;
 
-import com.google.common.base.Function;
 import spix.props.Property;
 
 import javax.swing.*;
@@ -49,8 +48,6 @@ import java.awt.event.ActionListener;
  * @author Rémy Bouquet
  */
 public class BooleanPanel extends AbstractPropertyPanel<JCheckBox> {
-
-    private Function<Object, String> toString;
 
     public BooleanPanel(Property prop) {
         super(prop);
