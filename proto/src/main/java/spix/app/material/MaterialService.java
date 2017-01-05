@@ -1,8 +1,6 @@
 package spix.app.material;
 
-import com.jme3.material.Material;
-import com.jme3.material.MaterialDef;
-import com.jme3.material.TechniqueDef;
+import com.jme3.material.*;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.RendererException;
 import com.jme3.shader.Shader;
@@ -13,14 +11,9 @@ import spix.swing.SwingGui;
 import spix.swing.materialEditor.preview.PreviewRequest;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.awt.image.WritableRaster;
+import java.awt.image.*;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,13 +26,10 @@ public class MaterialService {
     private SwingGui gui;
     private RendererExceptionHandler logHandler = new RendererExceptionHandler();
 
-
     public MaterialService(MaterialAppState state, SwingGui gui) {
         this.state = state;
         this.gui = gui;
-
     }
-
 
     public void requestPreview(PreviewRequest request, RequestCallback<BufferedImage> callback, RequestCallback<CompilationError> error){
         gui.runOnRender(new Runnable() {

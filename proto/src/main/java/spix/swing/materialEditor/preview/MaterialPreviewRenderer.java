@@ -4,19 +4,21 @@
  */
 package spix.swing.materialEditor.preview;
 
-import com.jme3.material.*;
+import com.jme3.material.MaterialDef;
+import com.jme3.material.TechniqueDef;
 import com.jme3.shader.ShaderNodeVariable;
 import spix.app.material.MaterialService;
 import spix.core.RequestCallback;
 import spix.swing.SwingGui;
-import spix.swing.materialEditor.panels.ErrorLog;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.OutPanel;
+import spix.swing.materialEditor.panels.ErrorLog;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Nehon
@@ -46,7 +48,7 @@ public class MaterialPreviewRenderer {
                     new RequestCallback<BufferedImage>() {
                         @Override
                         public void done(BufferedImage result) {
-                            request.getTargetLabel().setIcon(new ImageIcon(result));
+                            out.updatePreview(new ImageIcon(result));
                             errorLog.noError();
                             closeRequest(outs, errorLog);
                         }
@@ -54,7 +56,7 @@ public class MaterialPreviewRenderer {
                         @Override
                         public void done(MaterialService.CompilationError result) {
                             errors.add(result);
-                            request.getTargetLabel().setIcon(Icons.error);
+                            out.updatePreview(Icons.error);
                             closeRequest(outs, errorLog);
                         }
                     });

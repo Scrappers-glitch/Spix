@@ -1,15 +1,17 @@
 package spix.swing.materialEditor.nodes;
 
-import com.jme3.shader.*;
+import com.jme3.shader.Shader;
+import com.jme3.shader.ShaderNodeVariable;
 import spix.app.material.MaterialAppState;
-import spix.swing.materialEditor.*;
+import spix.swing.materialEditor.Dot;
+import spix.swing.materialEditor.OutToolBar;
 import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.preview.PreviewRequest;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -64,7 +66,11 @@ public abstract class OutPanel extends NodePanel {
     public PreviewRequest makePreviewRequest() {
 
         String nodeName = getForNodeName();
-        return new PreviewRequest(getShaderType(), nodeName, previewLabel, displayType);
+        return new PreviewRequest(getShaderType(), nodeName, displayType);
+    }
+
+    public void updatePreview(ImageIcon icon) {
+        previewLabel.setIcon(icon);
     }
 
     @Override
