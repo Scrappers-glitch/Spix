@@ -2,23 +2,26 @@ package spix.app.material;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.asset.*;
+import com.jme3.asset.AssetNotFoundException;
+import com.jme3.asset.ShaderNodeDefinitionKey;
 import com.jme3.light.PointLight;
-import com.jme3.material.*;
+import com.jme3.material.Material;
+import com.jme3.material.TechniqueDef;
 import com.jme3.math.*;
 import com.jme3.renderer.*;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.*;
 import com.jme3.shader.*;
 import com.jme3.texture.*;
-import com.jme3.util.*;
+import com.jme3.util.BufferUtils;
+import com.jme3.util.TangentBinormalGenerator;
 
 import java.lang.reflect.Field;
-import java.nio.*;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.*;
-import java.util.logging.*;
-
-import static spix.swing.materialEditor.icons.Icons.mat;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by Nehon on 24/05/2016.
@@ -33,19 +36,22 @@ public class MaterialAppState extends BaseAppState {
     private Geometry sphere;
     private Geometry box;
     private Geometry quad;
+    private Geometry fullScreenQuad;
     private Node previewNode = new Node("PreviewNode");
     private FrameBuffer offBuffer;
-    private ByteBuffer cpuBuf = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
+    /// private ByteBuffer cpuBuf = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
     private ShaderNode dummySN;
     private Glsl150ShaderGenerator glsl15;
     private Glsl100ShaderGenerator glsl10;
     private Texture2D[] texs;
+    private Material texPreviewMaterial;
 
     public enum DisplayType {
 
         Sphere,
         Box,
-        Quad
+        Quad,
+        FullScreenQuad
     }
 
     @Override
@@ -70,6 +76,10 @@ public class MaterialAppState extends BaseAppState {
         setColorToMesh(quadMesh);
         quad = new Geometry("previewQuad", quadMesh);
         quad.setLocalTranslation(new Vector3f(-2.25f, -2.25f, 0));
+
+        Quad quadMesh2 = new Quad(1, 1);
+        TangentBinormalGenerator.generate(quadMesh2);
+        fullScreenQuad = new Geometry("fullScreenQuad", quadMesh2);
 
         cam = new Camera(SIZE,SIZE);
         cam.setFrustumPerspective(45f,1,1,100);
@@ -113,6 +123,10 @@ public class MaterialAppState extends BaseAppState {
             texs[i] = new Texture2D(SIZE,SIZE, Image.Format.RGBA8);
         }
 
+        texPreviewMaterial = new Material(getApplication().getAssetManager(), "Common/MatDefs/Post/Overlay.j3md");
+        texPreviewMaterial.setColor("Color", ColorRGBA.White);
+        fullScreenQuad.setMaterial(texPreviewMaterial);
+
     }
 
     public ShaderNode getDummySN() {
@@ -126,10 +140,14 @@ public class MaterialAppState extends BaseAppState {
 
     public ByteBuffer requestPreview(Material mat, String techniqueName, DisplayType displayType, int index) throws RendererException {
         setupScene(displayType, mat);
+        ByteBuffer cpuBuf = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
         RenderManager rm = getApplication().getRenderManager();
         mat.selectTechnique(techniqueName, rm);
 
-        int nbOut = mat.getActiveTechnique().getDef().getShaderGenerationInfo().getFragmentGlobals().size();
+        int nbOut = 1;
+        if (displayType != DisplayType.FullScreenQuad) {
+            nbOut = mat.getActiveTechnique().getDef().getShaderGenerationInfo().getFragmentGlobals().size();
+        }
         offBuffer.resetObject();
         offBuffer.setMultiTarget(nbOut > 1);
         offBuffer.clearColorTargets();
@@ -159,13 +177,21 @@ public class MaterialAppState extends BaseAppState {
             }
             r.readFrameBufferWithFormat(offBuffer, cpuBuf, Image.Format.BGRA8);
 
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
 
         return cpuBuf;
+    }
+
+    public ByteBuffer previewTexture(String texturePath) {
+        Texture tex = getApplication().getAssetManager().loadTexture(texturePath);
+        return previewTexture(tex);
+    }
+
+    public ByteBuffer previewTexture(Texture texture) {
+        texPreviewMaterial.setTexture("Texture", texture);
+        return requestPreview(texPreviewMaterial, "Default", DisplayType.FullScreenQuad, 0);
     }
 
     public Map<String, Shader> generateCode(TechniqueDef def){
@@ -211,6 +237,9 @@ public class MaterialAppState extends BaseAppState {
                 break;
             case Sphere:
                 previewNode.attachChild(sphere);
+                break;
+            case FullScreenQuad:
+                previewNode.attachChild(fullScreenQuad);
                 break;
         }
         previewNode.setMaterial(mat);

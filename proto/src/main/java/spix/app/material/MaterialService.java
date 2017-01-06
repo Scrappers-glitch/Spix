@@ -11,7 +11,6 @@ import spix.swing.SwingGui;
 import spix.swing.materialEditor.preview.PreviewRequest;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
-import java.awt.image.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -31,7 +30,7 @@ public class MaterialService {
         this.gui = gui;
     }
 
-    public void requestPreview(PreviewRequest request, RequestCallback<BufferedImage> callback, RequestCallback<CompilationError> error){
+    public void requestPreview(PreviewRequest request, RequestCallback<ByteBuffer> callback, RequestCallback<CompilationError> error) {
         gui.runOnRender(new Runnable() {
             @Override
             public void run() {
@@ -52,7 +51,7 @@ public class MaterialService {
                 m.setColor("Color", ColorRGBA.Yellow);
 
                 try {
-                    BufferedImage image = convert(state.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex()));
+                    ByteBuffer image = state.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex());
                     gui.runOnSwing(new Runnable() {
                         @Override
                         public void run() {
@@ -102,6 +101,21 @@ public class MaterialService {
             }
         });
 
+    }
+
+    public void requestTexturePreview(String texturePath, RequestCallback<ByteBuffer> callback) {
+        gui.runOnRender(new Runnable() {
+            @Override
+            public void run() {
+                ByteBuffer image = state.previewTexture(texturePath);
+                gui.runOnSwing(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.done(image);
+                    }
+                });
+            }
+        });
     }
 
 
@@ -162,37 +176,6 @@ public class MaterialService {
 
         return def;
     }
-
-    private BufferedImage convert(ByteBuffer cpuBuf){
-        int size = 128 * 128 * 4;
-        // copy native memory to java memory
-        byte[] cpuArray = new byte[size];
-        cpuBuf.clear();
-        cpuBuf.get(cpuArray);
-        cpuBuf.clear();
-
-        // flip the components the way AWT likes them
-        for (int i = 0; i < size; i += 4) {
-            byte b = cpuArray[i + 0];
-            byte g = cpuArray[i + 1];
-            byte r = cpuArray[i + 2];
-            byte a = cpuArray[i + 3];
-
-            cpuArray[i + 0] = a;
-            cpuArray[i + 1] = b;
-            cpuArray[i + 2] = g;
-            cpuArray[i + 3] = r;
-        }
-
-        BufferedImage image = new BufferedImage(128, 128,
-                BufferedImage.TYPE_4BYTE_ABGR);
-        WritableRaster wr = image.getRaster();
-        DataBufferByte db = (DataBufferByte) wr.getDataBuffer();
-        System.arraycopy(cpuArray, 0, db.getData(), 0, cpuArray.length);
-
-        return image;
-    }
-
 
     public static class CompilationError{
         private String shaderSource;

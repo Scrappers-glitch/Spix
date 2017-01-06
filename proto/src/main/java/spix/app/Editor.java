@@ -284,7 +284,7 @@ public class Editor extends SimpleApplication {
 //                    }
 //                });
 //
-//                spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), gui));
+                spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), gui));
             }
         });
 

@@ -38,15 +38,19 @@ package spix.swing.texture;
 
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture3D;
+import spix.app.material.MaterialService;
+import spix.core.RequestCallback;
 import spix.props.*;
 import spix.swing.AbstractPropertyPanel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
+import spix.swing.materialEditor.preview.MaterialPreviewRenderer;
 import spix.type.Type;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,6 +62,7 @@ import java.util.List;
 public class TexturePanel extends AbstractPropertyPanel<Component> {
 
     private SwingGui gui;
+    private ImageIcon icon;
 
     public TexturePanel(SwingGui gui, Property prop) {
         super(prop);
@@ -74,8 +79,8 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
         JButton textureButton = new JButton("Add Texture") {
             @Override
             protected void paintComponent(Graphics g) {
-                if (texture.getKey() != null) {
-                    g.drawImage(Icons.test.getImage(), 1, 1, this.getWidth() - 2, this.getWidth(), null);
+                if (icon != null) {
+                    g.drawImage(icon.getImage(), 1, 1, this.getWidth() - 2, this.getWidth(), null);
                 }
                 super.paintComponent(g);
             }
@@ -107,6 +112,14 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
             textureButton.setToolTipText(assetText);
             textureButton.setContentAreaFilled(false);
             rollOverTexturePanel.update(Icons.test);
+            gui.getSpix().getService(MaterialService.class).requestTexturePreview(assetText, new RequestCallback<ByteBuffer>() {
+                @Override
+                public void done(ByteBuffer result) {
+                    icon = new ImageIcon(MaterialPreviewRenderer.convert(result));
+                    rollOverTexturePanel.update(icon);
+                    textureButton.repaint();
+                }
+            });
         }
 
 

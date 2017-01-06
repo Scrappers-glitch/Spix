@@ -16,7 +16,8 @@ import spix.swing.materialEditor.panels.ErrorLog;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import javax.swing.*;
-import java.awt.image.BufferedImage;
+import java.awt.image.*;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,10 +46,10 @@ public class MaterialPreviewRenderer {
                 }
             }
             gui.getSpix().getService(MaterialService.class).requestPreview(request,
-                    new RequestCallback<BufferedImage>() {
+                    new RequestCallback<ByteBuffer>() {
                         @Override
-                        public void done(BufferedImage result) {
-                            out.updatePreview(new ImageIcon(result));
+                        public void done(ByteBuffer result) {
+                            out.updatePreview(new ImageIcon(MaterialPreviewRenderer.convert(result)));
                             errorLog.noError();
                             closeRequest(outs, errorLog);
                         }
@@ -83,5 +84,34 @@ public class MaterialPreviewRenderer {
         }
     }
 
+    public static BufferedImage convert(ByteBuffer cpuBuf) {
+        int size = 128 * 128 * 4;
+        // copy native memory to java memory
+        byte[] cpuArray = new byte[size];
+        cpuBuf.clear();
+        cpuBuf.get(cpuArray);
+        cpuBuf.clear();
+
+        // flip the components the way AWT likes them
+        for (int i = 0; i < size; i += 4) {
+            byte b = cpuArray[i + 0];
+            byte g = cpuArray[i + 1];
+            byte r = cpuArray[i + 2];
+            byte a = cpuArray[i + 3];
+
+            cpuArray[i + 0] = a;
+            cpuArray[i + 1] = b;
+            cpuArray[i + 2] = g;
+            cpuArray[i + 3] = r;
+        }
+
+        BufferedImage image = new BufferedImage(128, 128,
+                BufferedImage.TYPE_4BYTE_ABGR);
+        WritableRaster wr = image.getRaster();
+        DataBufferByte db = (DataBufferByte) wr.getDataBuffer();
+        System.arraycopy(cpuArray, 0, db.getData(), 0, cpuArray.length);
+
+        return image;
+    }
 
 }
