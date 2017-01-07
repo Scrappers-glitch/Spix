@@ -36,24 +36,19 @@
 
 package spix.app;
 
-import com.jme3.app.*;
-import com.jme3.app.state.*;
+import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.input.KeyInput;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.material.RenderState.FaceCullMode;
 import com.jme3.math.*;
-import com.jme3.renderer.Camera;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.debug.Grid;
-import com.jme3.scene.*;
 import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
-
 import com.simsilica.lemur.GuiGlobals;
-import com.simsilica.lemur.event.*;
-import com.simsilica.lemur.input.*;
 
 /**
  *  A standard app state for displaying a local-relative x,z grid at y=0.
@@ -77,12 +72,17 @@ public class GridState extends BaseAppState {
     protected void initialize( Application app ) {
  
         this.grid = new Node("grid");
+        boolean gammaCorrection = getState(SpixState.class).getSpix().getBlackboard().get("settings.gammaCorrection", Boolean.class);
  
         GuiGlobals globals = GuiGlobals.getInstance();       
         {
             Grid mesh = new Grid(11, 11, 1);
             this.grid1 = new Geometry("grid-lines", mesh);
-            Material mat = globals.createMaterial(new ColorRGBA(0.5f, 0.5f, 0.5f, 1), false).getMaterial();
+            ColorRGBA color = new ColorRGBA(0.5f, 0.5f, 0.5f, 1);
+            if (gammaCorrection) {
+                color.setAsSrgb(0.5f, 0.5f, 0.5f, 1);
+            }
+            Material mat = globals.createMaterial(color, false).getMaterial();
             grid1.setMaterial(mat);
             grid1.setLocalTranslation(-5, 0, -5);
             grid.attachChild(grid1);
@@ -94,7 +94,11 @@ public class GridState extends BaseAppState {
             Texture gridTexture = globals.loadTexture("Interface/grid-cell.png", true, false);
             Material mat = globals.createMaterial(gridTexture, false).getMaterial();
             this.grid2 = new Geometry("grid-quads", mesh);
-            mat.setColor("Color", new ColorRGBA(0.5f, 0.45f, 0.45f, 0.25f));
+            ColorRGBA color = new ColorRGBA(0.5f, 0.45f, 0.45f, 0.25f);
+            if (gammaCorrection) {
+                color.setAsSrgb(0.5f, 0.45f, 0.45f, 0.25f);
+            }
+            mat.setColor("Color", color);
             mat.getAdditionalRenderState().setFaceCullMode(FaceCullMode.Off);
             mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
             grid2.setMaterial(mat);

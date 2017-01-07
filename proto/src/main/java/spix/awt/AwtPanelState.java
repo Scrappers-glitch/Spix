@@ -38,15 +38,13 @@ package spix.awt;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.system.awt.AwtPanel;
-import com.jme3.system.awt.AwtPanelsContext;
-import com.jme3.system.awt.PaintMode;
+import com.jme3.system.awt.*;
 
+import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import javax.swing.*;
 
 
 /**
@@ -59,14 +57,16 @@ public class AwtPanelState extends BaseAppState {
     // Other than initial setup these fields are _only_ accessed
     // from the swing thread except Viewport attachment
     private final Container container;
-    private final Object constraints;   
+    private final Object constraints;
+    private boolean gammaCorrection;
     private volatile AwtPanel panel;
- 
-    private List<Runnable> enabledCommands = new CopyOnWriteArrayList<>(); 
-    
-    public AwtPanelState( Container container, Object constraints ) {
+
+    private List<Runnable> enabledCommands = new CopyOnWriteArrayList<>();
+
+    public AwtPanelState(Container container, Object constraints, boolean gammaCorrection) {
         this.container = container;
-        this.constraints = constraints;               
+        this.constraints = constraints;
+        this.gammaCorrection = gammaCorrection;
     }
  
     public void addEnabledCommand( Runnable cmd ) {
@@ -99,7 +99,7 @@ public class AwtPanelState extends BaseAppState {
         public void run() {
  
             AwtPanelsContext ctx = (AwtPanelsContext)getApplication().getContext();
-            panel = ctx.createPanel(PaintMode.Accelerated);
+            panel = ctx.createPanel(PaintMode.Accelerated, AwtPanelState.this.gammaCorrection);
             panel.setPreferredSize(new Dimension(1280, 720));
             panel.setMinimumSize(new Dimension(400, 300));
             panel.setBackground(Color.black);

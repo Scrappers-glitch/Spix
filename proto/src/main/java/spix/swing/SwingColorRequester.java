@@ -36,16 +36,13 @@
 
 package spix.swing;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.io.File;
-import javax.swing.JFileChooser;
-import javax.swing.SwingUtilities;
-
 import com.jme3.math.ColorRGBA;
+import spix.app.Editor;
+import spix.core.RequestCallback;
+import spix.ui.ColorRequester;
 
-import spix.core.*;
-import spix.ui.*;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  *
@@ -74,6 +71,9 @@ public class SwingColorRequester implements ColorRequester {
         if( color == null ) {
             return null;
         }
+        if (Editor.GAMMA_CORRECTION) {
+            color = color.getAsSrgb();
+        }
         return new Color(clamp(color.r), clamp(color.g), clamp(color.b), clamp(color.a));
     }
 
@@ -82,7 +82,11 @@ public class SwingColorRequester implements ColorRequester {
             return null;
         }
         float[] comps = color.getComponents(null);
-        return new ColorRGBA(comps[0], comps[1], comps[2], comps[3]);
+        ColorRGBA finalColor = new ColorRGBA(comps[0], comps[1], comps[2], comps[3]);
+        if (Editor.GAMMA_CORRECTION) {
+            finalColor.setAsSrgb(comps[0], comps[1], comps[2], comps[3]);
+        }
+        return finalColor;
     }
 
     @Override

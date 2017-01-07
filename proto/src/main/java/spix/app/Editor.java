@@ -99,6 +99,7 @@ public class Editor extends SimpleApplication {
     private volatile JFrame mainFrame;
     private Spix spix;
     private SwingGui gui;
+    public static final boolean GAMMA_CORRECTION = true;
 
     public static final String EDITOR_WIDTH = "Editor.width";
     public static final String EDITOR_HEIGHT = "Editor.height";
@@ -118,15 +119,15 @@ public class Editor extends SimpleApplication {
         AppSettings settings = new AppSettings(true);
         settings.setCustomRenderer(AwtPanelsContext.class);
         settings.setFrameRate(30);
+        settings.setGammaCorrection(GAMMA_CORRECTION);
         app.setSettings(settings);
         app.start();
     }
 
     public Editor() throws Exception {
-        super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
+        super(new SpixState(new Spix()), new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
                 new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(true),
                 new GridState(), new BackgroundColorState(),
-                new SpixState(new Spix()),
                 new FileIoAppState(),
                 new SelectionHighlightState(),
                 new TransformState(),
@@ -154,6 +155,7 @@ public class Editor extends SimpleApplication {
         });
 
         this.spix = stateManager.getState(SpixState.class).getSpix();
+        spix.getBlackboard().set("settings.gammaCorrection", GAMMA_CORRECTION);
 
         spix.registerPropertySetFactory(Spatial.class, new SpatialPropertySetFactory());
         spix.registerPropertySetFactory(LightWrapper.class, new LightPropertySetFactory());
@@ -265,7 +267,7 @@ public class Editor extends SimpleApplication {
                 JPanel scenePane = new JPanel(new BorderLayout());
                 centerPane.add(scenePane, BorderLayout.CENTER);
                 scenePane.add(createSceneToolbar(), BorderLayout.NORTH);
-                stateManager.attach(new AwtPanelState(scenePane, BorderLayout.CENTER));
+                stateManager.attach(new AwtPanelState(scenePane, BorderLayout.CENTER, GAMMA_CORRECTION));
 
 
                 // Bind the selection to the editor panel, converting objects to

@@ -53,10 +53,16 @@ public class BackgroundColorState extends BaseAppState {
     ColorRGBA backgroundColor = new ColorRGBA(ColorRGBA.DarkGray);
 
     public BackgroundColorState() {
+        //swingGui.getSpix().getBlackboard().get("settings.gammaCorrection", Boolean.class);
+
     }
 
     @Override   
     protected void initialize( Application app ) {
+        boolean gammaCorrection = getState(SpixState.class).getSpix().getBlackboard().get("settings.gammaCorrection", Boolean.class);
+        if (gammaCorrection) {
+            backgroundColor.setAsSrgb(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0f);
+        }
     }
     
     @Override   
