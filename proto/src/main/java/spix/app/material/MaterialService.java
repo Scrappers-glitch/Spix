@@ -1,5 +1,6 @@
 package spix.app.material;
 
+import com.jme3.asset.TextureKey;
 import com.jme3.material.*;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.RendererException;
@@ -30,7 +31,7 @@ public class MaterialService {
         this.gui = gui;
     }
 
-    public void requestPreview(PreviewRequest request, RequestCallback<ByteBuffer> callback, RequestCallback<CompilationError> error) {
+    public void requestPreview(PreviewRequest request, RequestCallback<PreviewResult> callback, RequestCallback<CompilationError> error) {
         gui.runOnRender(new Runnable() {
             @Override
             public void run() {
@@ -51,11 +52,11 @@ public class MaterialService {
                 m.setColor("Color", ColorRGBA.Yellow);
 
                 try {
-                    ByteBuffer image = state.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex());
+                    PreviewResult res = state.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex());
                     gui.runOnSwing(new Runnable() {
                         @Override
                         public void run() {
-                            callback.done(image);
+                            callback.done(res);
                         }
                     });
                 } catch (RendererException e){
@@ -103,17 +104,34 @@ public class MaterialService {
 
     }
 
-    public void requestTexturePreview(String texturePath, RequestCallback<ByteBuffer> callback) {
+    public void requestTexturePreview(TextureKey textureKey, RequestCallback<PreviewResult> callback) {
         gui.runOnRender(new Runnable() {
             @Override
             public void run() {
-                ByteBuffer image = state.previewTexture(texturePath);
+                PreviewResult result = state.previewTexture(textureKey);
                 gui.runOnSwing(new Runnable() {
                     @Override
                     public void run() {
-                        callback.done(image);
+                        callback.done(result);
                     }
                 });
+
+            }
+        });
+    }
+
+    public void requestTexturePreview(String texturePath, RequestCallback<PreviewResult> callback) {
+        gui.runOnRender(new Runnable() {
+            @Override
+            public void run() {
+                PreviewResult result = state.previewTexture(texturePath);
+                gui.runOnSwing(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.done(result);
+                    }
+                });
+
             }
         });
     }
@@ -228,5 +246,30 @@ public class MaterialService {
             return res;
 
         }
+    }
+
+    public static class PreviewResult {
+
+        public PreviewResult(ByteBuffer imageData, int size) {
+            this.imageData = imageData;
+            this.width = size;
+            this.height = size;
+            this.originalWidth = size;
+            this.originalHeight = size;
+        }
+
+        public PreviewResult(ByteBuffer imageData, int width, int height, int originalWidth, int originalHeight) {
+            this.imageData = imageData;
+            this.width = width;
+            this.height = height;
+            this.originalWidth = originalWidth;
+            this.originalHeight = originalHeight;
+        }
+
+        public ByteBuffer imageData;
+        public int width;
+        public int height;
+        public int originalWidth;
+        public int originalHeight;
     }
 }

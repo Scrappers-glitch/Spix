@@ -2,8 +2,8 @@ package spix.app.material;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.asset.AssetNotFoundException;
-import com.jme3.asset.ShaderNodeDefinitionKey;
+import com.jme3.asset.*;
+import com.jme3.asset.plugins.FileLocator;
 import com.jme3.light.PointLight;
 import com.jme3.material.Material;
 import com.jme3.material.TechniqueDef;
@@ -16,9 +16,10 @@ import com.jme3.texture.*;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.TangentBinormalGenerator;
 
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -138,7 +139,7 @@ public class MaterialAppState extends BaseAppState {
 
     }
 
-    public ByteBuffer requestPreview(Material mat, String techniqueName, DisplayType displayType, int index) throws RendererException {
+    public MaterialService.PreviewResult requestPreview(Material mat, String techniqueName, DisplayType displayType, int index) throws RendererException {
         setupScene(displayType, mat);
         ByteBuffer cpuBuf = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
         RenderManager rm = getApplication().getRenderManager();
@@ -152,10 +153,7 @@ public class MaterialAppState extends BaseAppState {
         offBuffer.setMultiTarget(nbOut > 1);
         offBuffer.clearColorTargets();
         for (int i = 0; i < nbOut; i++) {
-            //textures here are useless, I never use them because I read directly from the framebuffer.
-            //However they are needed because you can't add multiple render target in the frame buffer class otherwise.
-            // TODO: 04/06/2016 add support in the FrameBuffer class for adding more render buffer with out a texture.
-            offBuffer.addColorTexture(texs[i]);
+            offBuffer.addColorBuffer(Image.Format.RGBA8);
         }
 
         Renderer r = rm.getRenderer();
@@ -163,33 +161,56 @@ public class MaterialAppState extends BaseAppState {
         r.clearBuffers(true, true, true);
         rm.renderViewPortRaw(vp);
 
-        try {
-            // this is a shameful hack.
-            // readFrameBufferWithFormat only read from the first render buffer.
-            // to read the relevant buffer, I access the list with reflection and remove the first buffers until the one I need is the first one.
-            // TODO: 04/06/2016 Add support in the renderer for reading all the buffers of a framebuffer or/and a specified one.
-            Field colorBufField = offBuffer.getClass().getDeclaredField("colorBufs");
-            colorBufField.setAccessible(true);
-            List<FrameBuffer.RenderBuffer> buffers = (List<FrameBuffer.RenderBuffer>)colorBufField.get(offBuffer);
-            for (int i = 0; i < index; i++) {
-                FrameBuffer.RenderBuffer rb = buffers.remove(0);
-                rb.resetObject();
-            }
-            r.readFrameBufferWithFormat(offBuffer, cpuBuf, Image.Format.BGRA8);
+        offBuffer.setTargetIndex(index);
+        r.readFrameBufferWithFormat(offBuffer, cpuBuf, Image.Format.BGRA8);
 
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
+//  THIS PART IS NOT NEEDED ANYMORE, I KEEP IT FOR NOW
+//        try {
+//            // this is a shameful hack.
+//            // readFrameBufferWithFormat only read from the first render buffer.
+//            // to read the relevant buffer, I access the list with reflection and remove the first buffers until the one I need is the first one.//
+//            Field colorBufField = offBuffer.getClass().getDeclaredField("colorBufs");
+//            colorBufField.setAccessible(true);
+//            List<FrameBuffer.RenderBuffer> buffers = (List<FrameBuffer.RenderBuffer>)colorBufField.get(offBuffer);
+//            for (int i = 0; i < index; i++) {
+//                FrameBuffer.RenderBuffer rb = buffers.remove(0);
+//                rb.resetObject();
+//            }
+//            r.readFrameBufferWithFormat(offBuffer, cpuBuf, Image.Format.BGRA8);
+//
+//        } catch (NoSuchFieldException | IllegalAccessException e) {
+//            e.printStackTrace();
+//        }
 
-        return cpuBuf;
+        return new MaterialService.PreviewResult(cpuBuf, SIZE);
     }
 
-    public ByteBuffer previewTexture(String texturePath) {
-        Texture tex = getApplication().getAssetManager().loadTexture(texturePath);
-        return previewTexture(tex);
+
+    public MaterialService.PreviewResult previewTexture(TextureKey key) {
+
+        //This... can take a long time. and depending on the size of the texture, requesting a preview can freeze JME thread for almost a second sometimes, making it stutter.
+        //TODO we should probably defer the loading to another thread and give back the loaded texture to JME thread when done.
+        Texture tex = getApplication().getAssetManager().loadTexture(key);
+
+        MaterialService.PreviewResult res = previewTexture(tex);
+        res.originalWidth = tex.getImage().getWidth();
+        res.originalHeight = tex.getImage().getHeight();
+        return res;
     }
 
-    public ByteBuffer previewTexture(Texture texture) {
+    public MaterialService.PreviewResult previewTexture(String texturePath) {
+
+        Path path = Paths.get(texturePath);
+        Path parent = path.getParent();
+        getApplication().getAssetManager().registerLocator(parent.toString(), FileLocator.class);
+        TextureKey key = new TextureKey(path.getFileName().toString(), false);
+        MaterialService.PreviewResult result = previewTexture(key);
+        getApplication().getAssetManager().unregisterLocator(parent.toString(), FileLocator.class);
+        return result;
+
+    }
+
+    public MaterialService.PreviewResult previewTexture(Texture texture) {
         texPreviewMaterial.setTexture("Texture", texture);
         return requestPreview(texPreviewMaterial, "Default", DisplayType.FullScreenQuad, 0);
     }

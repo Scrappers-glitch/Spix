@@ -36,8 +36,10 @@
 
 package spix.swing.texture;
 
+import com.jme3.asset.TextureKey;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture3D;
+import spix.app.FileLoadingService;
 import spix.app.material.MaterialService;
 import spix.core.RequestCallback;
 import spix.props.*;
@@ -50,7 +52,6 @@ import spix.type.Type;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,6 +103,19 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
                 }
             }
         });
+
+        textureButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.getSpix().getService(FileLoadingService.class).requestTexture(new RequestCallback<Texture>() {
+                    @Override
+                    public void done(Texture result) {
+                        System.err.println("Got it... " + result.toString());
+                        prop.setValue(result);
+                    }
+                });
+            }
+        });
         textureButton.setFont(textureButton.getFont().deriveFont(Font.BOLD));
         textureButton.setHorizontalTextPosition(JButton.CENTER);
         textureButton.setVerticalTextPosition(JButton.CENTER);
@@ -112,10 +126,10 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
             textureButton.setToolTipText(assetText);
             textureButton.setContentAreaFilled(false);
             rollOverTexturePanel.update(Icons.test);
-            gui.getSpix().getService(MaterialService.class).requestTexturePreview(assetText, new RequestCallback<ByteBuffer>() {
+            gui.getSpix().getService(MaterialService.class).requestTexturePreview((TextureKey) texture.getKey(), new RequestCallback<MaterialService.PreviewResult>() {
                 @Override
-                public void done(ByteBuffer result) {
-                    icon = new ImageIcon(MaterialPreviewRenderer.convert(result));
+                public void done(MaterialService.PreviewResult result) {
+                    icon = new ImageIcon(MaterialPreviewRenderer.convert(result.imageData, result.width, result.height));
                     rollOverTexturePanel.update(icon);
                     textureButton.repaint();
                 }

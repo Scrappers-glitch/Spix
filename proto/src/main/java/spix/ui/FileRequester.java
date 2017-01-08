@@ -47,10 +47,10 @@ import java.io.File;
  *  @author    Paul Speed
  */
 public interface FileRequester {
-    
-    public void requestFile( String title, String typeDescription, String extensions,
-                             File initialValue, boolean forOpen,
-                             RequestCallback<File> callback );
+
+    public void requestFile(String title, String typeDescription, String extensions,
+                            File initialValue, boolean forOpen, boolean forImport, boolean withPreview,
+                            RequestCallback<File> callback);
 
     public void requestDirectory(String title, String typeDescription, File initialValue, boolean forOpen,
                                  RequestCallback<File> callback);

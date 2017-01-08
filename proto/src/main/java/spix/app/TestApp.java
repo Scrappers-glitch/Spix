@@ -42,7 +42,7 @@ import com.jme3.app.state.ScreenshotAppState;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.light.*;
-import com.jme3.material.*;
+import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
@@ -52,13 +52,16 @@ import com.jme3.system.awt.AwtPanelsContext;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
-
 import spix.app.action.AnimationActionList;
-import spix.app.form.*;
-import spix.app.light.*;
+import spix.app.form.SpatialFormFactory;
+import spix.app.form.VariableMappingFormFactory;
+import spix.app.light.LightWidgetState;
+import spix.app.light.LightWrapper;
 import spix.app.material.*;
-import spix.app.material.hack.*;
-import spix.app.properties.*;
+import spix.app.material.hack.MatDefWrapper;
+import spix.app.material.hack.TechniqueDefWrapper;
+import spix.app.properties.LightPropertySetFactory;
+import spix.app.properties.SpatialPropertySetFactory;
 import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.core.Action;
@@ -71,12 +74,10 @@ import spix.undo.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.prefs.Preferences;
-
-import static com.sun.glass.ui.Cursor.setVisible;
-import static javax.swing.WindowConstants.DISPOSE_ON_CLOSE;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
 
 
 /**
@@ -205,7 +206,7 @@ public class TestApp extends SimpleApplication {
                 objectEditor.setPreferredSize(new Dimension(250, 100));
                 rightSplit.add(objectEditor, JSplitPane.RIGHT);
 
-                stateManager.attach(new AwtPanelState(rightSplit, JSplitPane.LEFT));
+                stateManager.attach(new AwtPanelState(rightSplit, JSplitPane.LEFT, false));
 
 
 
@@ -280,7 +281,7 @@ public class TestApp extends SimpleApplication {
             public void performAction( Spix spix ) {
                 // Uses the alternate requester service approach
                 spix.getService(FileRequester.class).requestFile("Open Scene",
-                                                                 "JME Object", "j3o", null, true,
+                        "JME Object", "j3o", null, true, false, false,
                              new RequestCallback<File>() {
                                 public void done( File f ) {
                                     System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());

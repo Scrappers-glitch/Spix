@@ -41,6 +41,8 @@ import spix.ui.FileRequester;
 
 import javax.swing.*;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -54,15 +56,23 @@ public class SwingFileRequester implements FileRequester {
     public SwingFileRequester( SwingGui swingGui ) {
         this.swingGui = swingGui;
     }
- 
-    @Override   
-    public void requestFile( final String title, final String typeDescription, final String extensions,
-                             final File initialValue, final boolean forOpen,
-                             final RequestCallback<File> callback ) {
+
+    @Override
+    public void requestFile(final String title, final String typeDescription, final String extensions,
+                            final File initialValue, final boolean forOpen, final boolean forImport, final boolean withPreview,
+                            final RequestCallback<File> callback) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
+
+                List<FileChooserAccessory> accessories = new ArrayList<FileChooserAccessory>();
+                if (withPreview) {
+                    accessories.add(new PreviewFileChooserAccessory(swingGui));
+                }
+
+
+
                 File f = FileChooser.getFile(swingGui.getRootWindow(), title, typeDescription, extensions,
-                                             initialValue, forOpen, JFileChooser.FILES_ONLY);
+                        initialValue, forOpen, JFileChooser.FILES_ONLY, accessories);
                 //If the user did not cancel we load the file.
                 if (f != null) {
                     swingGui.getSpix().sendResponse(callback, f);
@@ -78,7 +88,7 @@ public class SwingFileRequester implements FileRequester {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 File f = FileChooser.getFile(swingGui.getRootWindow(), title, typeDescription, "",
-                        initialValue, forOpen, JFileChooser.DIRECTORIES_ONLY);
+                        initialValue, forOpen, JFileChooser.DIRECTORIES_ONLY, null);
                 //If the user did not cancel we load the file.
                 if (f != null) {
                     swingGui.getSpix().sendResponse(callback, f);

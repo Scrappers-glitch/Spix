@@ -9,6 +9,7 @@ import com.jme3.bounding.BoundingBox;
 import com.jme3.export.binary.BinaryExporter;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.texture.Texture;
 import spix.core.*;
 import spix.undo.Edit;
 import spix.undo.UndoManager;
@@ -120,9 +121,9 @@ public class FileIoAppState extends BaseAppState {
         BinaryExporter exporter = BinaryExporter.getInstance();
         File file = new File(fileName);
         Spatial scene = (Spatial) blackboard.get(SCENE_ROOT);
-        getState(SpixState.class).getSpix().getBlackboard().set(SCENE_DIRTY, false);
         try {
             exporter.save(scene, file);
+            getState(SpixState.class).getSpix().getBlackboard().set(SCENE_DIRTY, false);
         } catch (IOException ex) {
             ex.printStackTrace();
             return;
@@ -224,12 +225,55 @@ public class FileIoAppState extends BaseAppState {
         return model;
     }
 
-    private FilePath getFilePath(File f) {
+    public Texture loadTexture(File file, String relocateIn) {
+        FilePath fp = getFilePath(file);
+
+        String assetRoot = blackboard.get(MAIN_ASSETS_FOLDER, String.class);
+        if (!fp.assetRoot.getPath().equals(assetRoot)) {
+            //we need to relocate the file
+            fp = relocateFile(fp, relocateIn);
+        }
+        TextureKey key = new TextureKey(fp.modelPath, false);
+        Texture tex = getApplication().getAssetManager().loadTexture(key);
+        tex.setKey(key);
+        return tex;
+    }
+
+    private FilePath relocateFile(FilePath fp, String localPath) {
+        Path source = Paths.get(fp.assetRoot + File.separator + fp.modelPath);
+        //check if the source file exists in the source folder (could be stock assets that doesn't need to be copied)
+        if (Files.exists(source)) {
+            Path target = Paths.get(blackboard.get(MAIN_ASSETS_FOLDER) + File.separator + localPath + File.separator + fp.fileName);
+            try {
+                //THe file exists in the target dir, let's find a suitable new name.
+                while (Files.exists(target)) {
+                    String newName = getUnusedName(target.getParent().toString(), target.getFileName().toString());
+                    target = Paths.get(blackboard.get(MAIN_ASSETS_FOLDER) + File.separator + localPath + File.separator + newName);
+                }
+
+                //create the parent dir if needed.
+                if (!Files.exists(target.getParent())) {
+                    Files.createDirectories(target.getParent());
+                }
+                //copy the file.
+                System.err.println("copying " + source + " to " + target);
+                Files.copy(source, target);
+                return getFilePath(target.toFile());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+
+    public FilePath getFilePath(File f) {
         // JME doesn't really make this easy... so we cheat a little and make some
         // assumptions.
         FilePath fp = new FilePath();
         fp.assetRoot = f.getParentFile();
         fp.modelPath = f.getName();
+        fp.fileName = f.getName();
         while (fp.assetRoot.getParentFile() != null && !("assets".equals(fp.assetRoot.getName()) || "resources".equals(fp.assetRoot.getName()))) {
             fp.modelPath = fp.assetRoot.getName() + "/" + fp.modelPath;
             fp.assetRoot = fp.assetRoot.getParentFile();
@@ -308,8 +352,9 @@ public class FileIoAppState extends BaseAppState {
         }
     }
 
-    private class FilePath{
+    public static class FilePath {
         File assetRoot;
         String modelPath;
+        String fileName;
     }
 }

@@ -46,10 +46,10 @@ public class MaterialPreviewRenderer {
                 }
             }
             gui.getSpix().getService(MaterialService.class).requestPreview(request,
-                    new RequestCallback<ByteBuffer>() {
+                    new RequestCallback<MaterialService.PreviewResult>() {
                         @Override
-                        public void done(ByteBuffer result) {
-                            out.updatePreview(new ImageIcon(MaterialPreviewRenderer.convert(result)));
+                        public void done(MaterialService.PreviewResult result) {
+                            out.updatePreview(new ImageIcon(MaterialPreviewRenderer.convert(result.imageData, result.width, result.height)));
                             errorLog.noError();
                             closeRequest(outs, errorLog);
                         }
@@ -84,8 +84,8 @@ public class MaterialPreviewRenderer {
         }
     }
 
-    public static BufferedImage convert(ByteBuffer cpuBuf) {
-        int size = 128 * 128 * 4;
+    public static BufferedImage convert(ByteBuffer cpuBuf, int width, int height) {
+        int size = width * height * 4;
         // copy native memory to java memory
         byte[] cpuArray = new byte[size];
         cpuBuf.clear();
@@ -105,7 +105,7 @@ public class MaterialPreviewRenderer {
             cpuArray[i + 3] = r;
         }
 
-        BufferedImage image = new BufferedImage(128, 128,
+        BufferedImage image = new BufferedImage(width, height,
                 BufferedImage.TYPE_4BYTE_ABGR);
         WritableRaster wr = image.getRaster();
         DataBufferByte db = (DataBufferByte) wr.getDataBuffer();

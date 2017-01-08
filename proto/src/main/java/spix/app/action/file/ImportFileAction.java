@@ -1,9 +1,7 @@
 package spix.app.action.file;
 
 import spix.app.FileIoAppState;
-import spix.core.AbstractAction;
-import spix.core.RequestCallback;
-import spix.core.Spix;
+import spix.core.*;
 import spix.ui.FileRequester;
 
 import java.io.File;
@@ -23,7 +21,7 @@ public class ImportFileAction extends AbstractAction {
     @Override
     public void performAction(Spix spix) {
         spix.getService(FileRequester.class).requestFile("Open asset",
-                "JME Object", "j3o", null, true,
+                "JME Object", "j3o", null, true, false, false,
                 new RequestCallback<File>() {
                     public void done(File f) {
                         System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());

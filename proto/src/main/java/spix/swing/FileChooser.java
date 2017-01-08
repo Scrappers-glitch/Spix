@@ -36,12 +36,11 @@
 
 package spix.swing;
 
-import java.awt.Component;
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.util.*;
-import javax.swing.*;
-
-import spix.ui.*;
+import java.util.List;
 
 /**
  *  Utility methods for calling a JFileChooser in various ways.
@@ -74,17 +73,17 @@ public class FileChooser {
     /**
      *  Pops up a file dialog requesting selection of the specified type of file.
      */
-    public static File getFile( Component owner, String title, String typeDescription, String extension,
-                                File initialValue, boolean forOpen, int mode ) {
+    public static File getFile(Component owner, String title, String typeDescription, String extension,
+                               File initialValue, boolean forOpen, int mode, List<FileChooserAccessory> accessories) {
         return getFile(owner, title, new ExtensionFileFilter(typeDescription, extension),
-                       initialValue, forOpen, mode);
+                initialValue, forOpen, mode, accessories);
     }
 
     /**
      *  Pops up a file dialog requesting selection of the specified type of file.
      */
-    public static File getFile( Component owner, String title, javax.swing.filechooser.FileFilter filter,
-                                File initialValue, boolean forOpen, int mode ) {
+    public static File getFile(Component owner, String title, javax.swing.filechooser.FileFilter filter,
+                               File initialValue, boolean forOpen, int mode, List<FileChooserAccessory> accessories) {
         File f = (File)filePaths.get(String.valueOf(filter));
         if( f == null ) {
             f = lastDir;
@@ -105,6 +104,22 @@ public class FileChooser {
         fileChooser.setDialogTitle(title);
         fileChooser.setFileSelectionMode(mode);
         fileChooser.setMultiSelectionEnabled(false);
+
+
+        if (accessories != null && accessories.size() > 0) {
+            JPanel panel = new JPanel(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+
+            for (FileChooserAccessory accessory : accessories) {
+                accessory.setFileChooser(fileChooser);
+                panel.add(accessory, gbc);
+                gbc.gridy++;
+            }
+            panel.setPreferredSize(new Dimension(250, 100));
+            fileChooser.setAccessory(panel);
+        }
 
         if( initialValue != null ) {
             fileChooser.setSelectedFile(initialValue);
