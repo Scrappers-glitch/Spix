@@ -73,7 +73,7 @@ public class MatParamProperty extends AbstractProperty {
            old = param.getValue();
         }
         this.material.setParam(getId(), varType, value);
-        firePropertyChange(old, value, true);
+        firePropertyChange(old, value, false);
     }
 
     public Material getMaterial() {

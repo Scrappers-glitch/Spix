@@ -1,5 +1,10 @@
 package spix.swing.texture;
 
+import com.jme3.asset.AssetKey;
+import com.jme3.texture.Texture;
+import com.jme3.util.clone.Cloner;
+import spix.props.BeanProperty;
+import spix.props.Property;
 import spix.props.PropertySet;
 import spix.swing.PropertyEditorPanel;
 import spix.swing.SwingGui;
@@ -9,6 +14,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -18,12 +25,14 @@ import java.lang.reflect.Method;
  */
 public class TextureAttributesPopupPanel extends JPanel {
 
-
     private Popup popup;
     private Component lastLostFocusComponent;
+    private Property textureProp;
 
-    public TextureAttributesPopupPanel(SwingGui gui, PropertySet mainProps, PropertySet wrapProps) {
+    public TextureAttributesPopupPanel(SwingGui gui, PropertySet mainProps, PropertySet wrapProps, Property textureProp) {
         super();
+
+        this.textureProp = textureProp;
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(40, 40, 40)), BorderFactory.createEmptyBorder(3, 3, 3, 3)));
 
@@ -123,4 +132,6 @@ public class TextureAttributesPopupPanel extends JPanel {
             close();
         }
     }
+
+
 }

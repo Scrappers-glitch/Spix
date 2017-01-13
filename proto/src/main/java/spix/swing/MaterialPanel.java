@@ -230,7 +230,7 @@ public class MaterialPanel extends AbstractPropertyPanel<Component> implements M
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            System.err.println(evt.getNewValue());
+            //System.err.println(evt.getNewValue());
             MatParamProperty mpp = (MatParamProperty) evt.getSource();
             prop.setValue(mpp.getMaterial());
         }
@@ -245,7 +245,7 @@ public class MaterialPanel extends AbstractPropertyPanel<Component> implements M
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            System.err.println(evt.getNewValue());
+           // System.err.println(evt.getNewValue());
             if (evt.getSource() instanceof BeanProperty) {
                 BeanProperty bp = (BeanProperty) evt.getSource();
                 prop.setValue(bp.getObject());
