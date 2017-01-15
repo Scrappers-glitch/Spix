@@ -38,6 +38,7 @@ package spix.swing;
 
 import com.jme3.math.Vector3f;
 import com.jme3.shader.ShaderNodeVariable;
+import com.jme3.util.clone.Cloner;
 import org.slf4j.*;
 import spix.props.*;
 
@@ -61,6 +62,7 @@ public class ShaderNodeVariablePanel extends AbstractPropertyPanel<Component>
     public ShaderNodeVariablePanel(SwingGui gui, Property prop ) {
         super(prop);
         this.gui = gui;
+        Cloner cloner = new Cloner();
  
         // So Vector3f is pretty easy... we could even move this
         // definition to be more global.
@@ -68,7 +70,7 @@ public class ShaderNodeVariablePanel extends AbstractPropertyPanel<Component>
         // Make a clone for our local property reference so that we can
         // properly check old values against new for property changes
         // and stuff.
-        ShaderNodeVariable var = ((ShaderNodeVariable)prop.getValue()).clone();
+        ShaderNodeVariable var = cloner.clone((ShaderNodeVariable) prop.getValue());
 
         Property condition = BeanProperty.create(var, "condition");
         Property multiplicity = BeanProperty.create(var, "multiplicity");
