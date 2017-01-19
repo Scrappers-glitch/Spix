@@ -39,9 +39,7 @@ package spix.swing.texture;
 import com.jme3.asset.TextureKey;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture3D;
-import com.jme3.util.clone.Cloner;
 import spix.app.FileLoadingService;
-import spix.app.material.MatParamProperty;
 import spix.app.material.MaterialService;
 import spix.core.RequestCallback;
 import spix.props.*;
@@ -66,13 +64,13 @@ import java.util.List;
  */
 public class TexturePanel extends AbstractPropertyPanel<Component> {
 
-    private Cloner cloner = new Cloner();
     private SwingGui gui;
     private ImageIcon icon;
     private RollOverTexturePanel rollOverTexturePanel;
     private JButton textureButton;
     private TextureAttributesPopupPanel texturePopup;
     private JButton menuButton;
+    private RolloverObserver rolloverObserver = new RolloverObserver();
 
     public TexturePanel(SwingGui gui, Property prop) {
         super(prop);
@@ -84,6 +82,29 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
         JPanel panel = new JPanel(new BorderLayout());
         rollOverTexturePanel = new RollOverTexturePanel();
 
+        createTextureButton(gui, prop, panel);
+
+        menuButton = new JButton();
+        menuButton.setIcon(Icons.menu);
+        menuButton.setRolloverIcon(Icons.menuHover);
+        menuButton.setPreferredSize(new Dimension(20, 20));
+        menuButton.setMaximumSize(new Dimension(20, 20));
+        menuButton.setMinimumSize(new Dimension(20, 20));
+        menuButton.setEnabled(texture.getKey() != null);
+        menuButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (texturePopup != null) {
+                    texturePopup.popupFrom(menuButton);
+                }
+            }
+        });
+
+        panel.add(menuButton, BorderLayout.EAST);
+        setView(panel);
+    }
+
+    public void createTextureButton(final SwingGui gui, final Property prop, JPanel panel) {
         textureButton = new JButton("Add Texture") {
             @Override
             protected void paintComponent(Graphics g) {
@@ -93,25 +114,7 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
                 super.paintComponent(g);
             }
         };
-        textureButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                Texture tex = (Texture) getMatParamProperty().getValue();
-                if (tex.getKey() != null) {
-                    textureButton.setContentAreaFilled(true);
-                    rollOverTexturePanel.popupFrom(textureButton);
-                }
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                Texture tex = (Texture) getMatParamProperty().getValue();
-                if (tex.getKey() != null) {
-                    textureButton.setContentAreaFilled(false);
-                    rollOverTexturePanel.close();
-                }
-            }
-        });
+        textureButton.addMouseListener(rolloverObserver);
 
         textureButton.addActionListener(new ActionListener() {
             @Override
@@ -124,37 +127,28 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
                 });
             }
         });
+        textureButton.setToolTipText("Click to add a texture");
         textureButton.setFont(textureButton.getFont().deriveFont(Font.BOLD));
         textureButton.setHorizontalTextPosition(JButton.CENTER);
         textureButton.setVerticalTextPosition(JButton.CENTER);
-
         textureButton.setPreferredSize(new Dimension(120, 20));
         panel.add(textureButton, BorderLayout.CENTER);
-        
 
-        menuButton = new JButton();
-        menuButton.setIcon(Icons.menu);
-        menuButton.setRolloverIcon(Icons.menuHover);
-        menuButton.setPreferredSize(new Dimension(20, 20));
-        menuButton.setMaximumSize(new Dimension(20, 20));
-        menuButton.setMinimumSize(new Dimension(20, 20));
-        menuButton.setEnabled(texture.getKey() != null);
-        menuButton.addActionListener(new ActionListener() {
+        JPopupMenu buttonPopup = new JPopupMenu();
+        JMenuItem deleteItem = new JMenuItem("Delete");
+        deleteItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(texturePopup != null) {
-                    texturePopup.popupFrom(menuButton);
-                }
+                prop.setValue(null);
             }
         });
-
-        panel.add(menuButton, BorderLayout.EAST);
-        setView(panel);
+        buttonPopup.add(deleteItem);
+        textureButton.setComponentPopupMenu(buttonPopup);
     }
 
     private void createTextureAttributePopup() {
         Property prop = getProperty();
-        Texture texture = (Texture) getMatParamProperty().getValue();
+        Texture texture = (Texture) prop.getValue();
 
         List<Property> mainProps = new ArrayList<>();
         List<Property> wrapProps = new ArrayList<>();
@@ -187,13 +181,18 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
         });
     }
 
-    private MatParamProperty getMatParamProperty(){
-        return (MatParamProperty)getProperty();
-    }
-
     protected void updateView(Component component, Object value) {
         System.err.println("update me");
         Texture tex = (Texture)value;
+        if (tex == null) {
+
+            textureButton.setContentAreaFilled(true);
+            textureButton.setText("Add Texture");
+            textureButton.setToolTipText("Click to add a texture");
+            //       textureButton.removeMouseListener(rolloverObserver);
+            menuButton.setEnabled(false);
+            return;
+        }
 
         if(tex.getKey() != null){
             String assetText = tex.getKey().getName();
@@ -201,7 +200,7 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
             textureButton.setToolTipText(assetText);
             textureButton.setContentAreaFilled(false);
             rollOverTexturePanel.update(Icons.test);
-
+            //       textureButton.addMouseListener(rolloverObserver);
             updatePreview(tex);
             if(texturePopup == null){
                 createTextureAttributePopup();
@@ -243,9 +242,38 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            MatParamProperty textureProp = getMatParamProperty();
+            Property textureProp = getProperty();
             if(evt.getPropertyName().equals("Vertical Flip")){
                 textureProp.setValue(textureProp.getValue());
+            }
+        }
+    }
+
+    private class RolloverObserver extends MouseAdapter {
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            Texture tex = (Texture) getProperty().getValue();
+            if (tex != null && tex.getKey() != null) {
+                textureButton.setContentAreaFilled(true);
+                rollOverTexturePanel.popupFrom(textureButton);
+            }
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            Texture tex = (Texture) getProperty().getValue();
+            if (rollOverTexturePanel != null && rollOverTexturePanel.isVisible()
+                    && tex != null && tex.getKey() != null) {
+                textureButton.setContentAreaFilled(false);
+                rollOverTexturePanel.close();
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (rollOverTexturePanel != null && rollOverTexturePanel.isVisible()) {
+                textureButton.setContentAreaFilled(false);
+                rollOverTexturePanel.close();
             }
         }
     }

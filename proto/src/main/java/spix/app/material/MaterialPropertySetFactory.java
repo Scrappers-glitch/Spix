@@ -66,6 +66,7 @@ public class MaterialPropertySetFactory implements PropertySetFactory<Material>{
 
         props.add(BeanProperty.create(material, "name"));
         props.add(BeanProperty.create(material.getMaterialDef(), "name", "matDefName", false, null));
+        props.add(BeanProperty.create(material, "key", "j3m path", false, null));
 
         for (MatParam matParam : material.getMaterialDef().getMaterialParams()) {
             props.add(new MatParamProperty(matParam.getName(), matParam.getVarType(), material));

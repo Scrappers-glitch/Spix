@@ -31,7 +31,9 @@ public class RollOverTexturePanel extends JPanel {
     }
 
     public void close() {
-        popup.hide();
-        popup = null;
+        if (popup != null) {
+            popup.hide();
+            popup = null;
+        }
     }
 }

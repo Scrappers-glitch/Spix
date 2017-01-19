@@ -65,14 +65,22 @@ public class MatParamProperty extends AbstractProperty {
         return type;
     }
 
+    public VarType getVarType() {
+        return varType;
+    }
+
     @Override
     public void setValue(Object value) {
-        MatParam param = material.getParam(getId());
         Object old = null;
+        MatParam param = material.getParam(getId());
         if (param != null) {
-           old = param.getValue();
+            old = param.getValue();
         }
-        this.material.setParam(getId(), varType, value);
+        if (value == null) {
+            material.clearParam(getId());
+        } else {
+            this.material.setParam(getId(), varType, value);
+        }
         firePropertyChange(old, value, false);
     }
 
@@ -88,6 +96,7 @@ public class MatParamProperty extends AbstractProperty {
                 return getNewInstance(varType);
             } catch (InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
+                return null;
             }
         }
         return param.getValue();
@@ -127,6 +136,7 @@ public class MatParamProperty extends AbstractProperty {
             case Vector2Array:
             case Vector3Array:
             case Vector4Array:
+                return Object[].class;
             default:
                 return Object.class;
         }

@@ -111,7 +111,10 @@ public class PropertyWrapper extends AbstractProperty {
             firePropertyChange(old, this.value, false);            
         }
     }
-    
+
+    public Property getDelegateProperty() {
+        return delegate;
+    }
     @Override
     public Object getValue() {
         return value;

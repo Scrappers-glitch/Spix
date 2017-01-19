@@ -163,7 +163,7 @@ public class Editor extends SimpleApplication {
         spix.registerPropertySetFactory(TechniqueDefWrapper.class, new TechniqueDefPropertySetFactory());
         spix.registerPropertySetFactory(ShaderNode.class, new ShaderNodePropertySetFactory());
         spix.registerPropertySetFactory(VariableMapping.class, new VariableMappingPropertySetFactory());
-        //spix.registerPropertySetFactory(Material.class, new MaterialPropertySetFactory());
+        spix.registerPropertySetFactory(Material.class, new MaterialPropertySetFactory());
 
         spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());
         spix.registerFormFactory(new Type(VariableMapping.class), new VariableMappingFormFactory());
@@ -255,7 +255,7 @@ public class Editor extends SimpleApplication {
                 gui.registerComponentFactory(Vector3f.class, new DefaultComponentFactory(new Vec3fStringFunction()));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Vector3f.class, new DefaultComponentFactory(Vector3fPanel.class));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Quaternion.class, new DefaultComponentFactory(QuaternionPanel.class));
-                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Material.class, new DefaultComponentFactory(MaterialPanel.class));
+                // gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Material.class, new DefaultComponentFactory(MaterialPanel.class));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Texture.class, new DefaultComponentFactory(TexturePanel.class));
 
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");

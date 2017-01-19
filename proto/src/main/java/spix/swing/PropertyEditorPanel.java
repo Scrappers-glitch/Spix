@@ -265,8 +265,15 @@ System.out.println(this.form.debugString());
                 gbc.fill = GridBagConstraints.HORIZONTAL;
                 //add(subpanel, gbc);
 
-                RollupPanel rollup = new RollupPanel(ff.getName(), subpanel, ff.getIconPath() == null ? Icons.attrib : new ImageIcon(this.getClass().getResource(ff.getIconPath())));
-                add(rollup, gbc);
+                if (nested) {
+                    subpanel.setBorder(BorderFactory.createTitledBorder(ff.getName()));
+                    add(subpanel, gbc);
+                } else {
+                    RollupPanel rollup = new RollupPanel(ff.getName(), subpanel, ff.getIconPath() == null ? Icons.attrib : new ImageIcon(this.getClass().getResource(ff.getIconPath())));
+                    add(rollup, gbc);
+                }
+
+
                     
                 lastTwoColumn = false;
             } else {

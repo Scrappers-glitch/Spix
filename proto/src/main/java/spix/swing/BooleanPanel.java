@@ -66,6 +66,6 @@ public class BooleanPanel extends AbstractPropertyPanel<JCheckBox> {
 
 
     protected void updateView(JCheckBox checkBox, Object value) {
-        checkBox.setSelected((Boolean) value);
+        checkBox.setSelected(value == null ? false : (Boolean) value);
     }
 }

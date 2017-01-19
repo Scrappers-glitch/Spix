@@ -36,15 +36,21 @@
 
 package spix.app.properties;
 
+import com.jme3.material.MatParam;
+import com.jme3.material.Material;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
+import com.jme3.shader.VarType;
+import spix.app.material.MatParamProperty;
 import spix.app.material.MaterialProperty;
 import spix.core.PropertySetFactory;
 import spix.core.Spix;
 import spix.props.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.beans.PropertyChangeListener;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -53,6 +59,8 @@ import java.util.List;
  *  @author    Paul Speed
  */
 public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
+
+    private final static Logger logger = Logger.getLogger(SpatialPropertySetFactory.class.getName());
 
     public SpatialPropertySetFactory() {
     }
@@ -87,11 +95,18 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
 
         if(spatial instanceof Geometry){
             Geometry g = (Geometry) spatial;
-            props.add(new MaterialProperty(g, g.getMaterial()));
+
+            Material material = g.getMaterial();
+
+            props.add(BeanProperty.create(material, "name", "materialName", false, null));
+            props.add(BeanProperty.create(material.getMaterialDef(), "assetName", "matDefFile", false, null));
+            props.add(BeanProperty.create(material, "key", "matKey", false, null));
+
+            for (MatParam matParam : material.getMaterialDef().getMaterialParams()) {
+                props.add(new MatParamProperty(matParam.getName(), matParam.getVarType(), material));
+            }
         }
 
         return new DefaultPropertySet(spatial, props);
     }
-
-
 }
