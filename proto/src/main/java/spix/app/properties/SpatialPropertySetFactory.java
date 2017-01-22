@@ -36,16 +36,15 @@
 
 package spix.app.properties;
 
-import com.jme3.material.MatParam;
-import com.jme3.material.Material;
+import com.jme3.material.*;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.shader.VarType;
-import spix.app.material.MatParamProperty;
-import spix.app.material.MaterialProperty;
+import spix.app.material.*;
 import spix.core.PropertySetFactory;
 import spix.core.Spix;
 import spix.props.*;
+import spix.type.NumberRangeType;
 
 import java.beans.PropertyChangeListener;
 import java.util.*;
@@ -113,6 +112,49 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
                     props.add(new MatParamProperty(matParam.getName(), matParam.getVarType(), material));
                 }
             }
+            RenderState rs = material.getAdditionalRenderState();
+
+            props.add(BeanProperty.create(rs, "blendMode"));
+            props.add(BeanProperty.create(rs, "blendEquation"));
+            props.add(BeanProperty.create(rs, "blendEquationAlpha"));
+
+            props.add(BeanProperty.create(rs, "colorWrite"));
+            props.add(BeanProperty.create(rs, "faceCullMode"));
+            props.add(BeanProperty.create(rs, "wireframe"));
+            props.add(BeanProperty.create(rs, "lineWidth", new NumberRangeType<>(1.0f, 10.0f, 1.0f)));
+
+            props.add(BeanProperty.create(rs, "depthWrite"));
+            props.add(BeanProperty.create(rs, "depthTest"));
+            props.add(BeanProperty.create(rs, "depthFunc"));
+
+            //Custom property for the PolyOffset as the getters and setters do not follow java bean standard.
+            props.add(new PolyOffsetProperty(rs, "offsetFactor"));
+            props.add(new PolyOffsetProperty(rs, "offsetUnits"));
+
+
+            //This will also need a custom property
+            //Not sure this is useful to edit this in an editor. IMO those are used for forced render states, or forced material
+            //keeping that on hold for now.
+            //Stencil
+//            props.add(BeanProperty.create(rs, "stencilTest"));
+//
+//            props.add(BeanProperty.create(rs, "frontStencilFunction"));
+//            props.add(BeanProperty.create(rs, "backStencilFunction"));
+//
+//            props.add(BeanProperty.create(rs, "frontStencilStencilFailOperation"));
+//            props.add(BeanProperty.create(rs, "frontStencilDepthFailOperation"));
+//            props.add(BeanProperty.create(rs, "frontStencilDepthPassOperation"));
+//
+//            props.add(BeanProperty.create(rs, "backStencilStencilFailOperation"));
+//            props.add(BeanProperty.create(rs, "backStencilDepthFailOperation"));
+//            props.add(BeanProperty.create(rs, "backStencilDepthPassOperation"));
+//
+//            props.add(BeanProperty.create(rs, "sfactorRGB"));
+//            props.add(BeanProperty.create(rs, "dfactorRGB"));
+//            props.add(BeanProperty.create(rs, "sfactorAlpha"));
+//            props.add(BeanProperty.create(rs, "dfactorAlpha"));
+
+
         }
 
         return new DefaultPropertySet(spatial, props);

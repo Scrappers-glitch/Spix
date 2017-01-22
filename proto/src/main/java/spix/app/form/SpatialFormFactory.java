@@ -36,14 +36,11 @@
 
 package spix.app.form;
 
-import com.jme3.shader.VarType;
 import spix.app.material.MatParamProperty;
 import spix.app.utils.IconPath;
 import spix.core.Spix;
 import spix.form.*;
 import spix.props.*;
-import spix.type.Type;
-import spix.util.NameUtils;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -61,7 +58,11 @@ public class SpatialFormFactory extends DefaultFormFactory {
     private static final Set<String> DEFAULT_XFORMS = new HashSet<>();
     private static final Set<String> LOCAL_XFORMS = new HashSet<>();
     private static final Set<String> WORLD_XFORMS = new HashSet<>();
-    private static final Set<String> MATERIAL = new HashSet<>();
+    private static final Set<String> TREANSPARENCY = new HashSet<>();
+    private static final Set<String> RENDER = new HashSet<>();
+    private static final Set<String> DEPTH = new HashSet<>();
+    private static final Set<String> POLYOFFSET = new HashSet<>();
+    private static final Set<String> STENCIL = new HashSet<>();
 
     static {
         LOCAL_XFORMS.add("localTranslation");
@@ -73,6 +74,39 @@ public class SpatialFormFactory extends DefaultFormFactory {
         DEFAULT_XFORMS.add("name");
         DEFAULT_XFORMS.add("cullHint");
         DEFAULT_XFORMS.add("queueBucket");
+
+        TREANSPARENCY.add("blendMode");
+        TREANSPARENCY.add("blendEquation");
+        TREANSPARENCY.add("blendEquationAlpha");
+
+        RENDER.add("colorWrite");
+        RENDER.add("faceCullMode");
+        RENDER.add("wireframe");
+        RENDER.add("lineWidth");
+
+        DEPTH.add("depthWrite");
+        DEPTH.add("depthTest");
+        DEPTH.add("depthFunc");
+
+        POLYOFFSET.add("offsetFactor");
+        POLYOFFSET.add("offsetUnits");
+
+        STENCIL.add("stencilTest");
+
+        STENCIL.add("frontStencilFunction");
+        STENCIL.add("backStencilFunction");
+        STENCIL.add("frontStencilStencilFailOperation");
+        STENCIL.add("frontStencilDepthFailOperation");
+        STENCIL.add("frontStencilDepthPassOperation");
+        STENCIL.add("backStencilStencilFailOperation");
+        STENCIL.add("backStencilDepthFailOperation");
+        STENCIL.add("backStencilDepthPassOperation");
+        STENCIL.add("sfactorRGB");
+        STENCIL.add("dfactorRGB");
+        STENCIL.add("sfactorAlpha");
+        STENCIL.add("dfactorAlpha");
+
+
     }
 
     public SpatialFormFactory() {
@@ -88,8 +122,17 @@ public class SpatialFormFactory extends DefaultFormFactory {
         Form localTrans = new Form();        
         Form worldTrans = new Form();
         Form materialForm = new Form();
+
+
+        Form renderStateForm = new Form();
+        Form transparencyForm = new Form();
+        Form renderForm = new Form();
+        Form depthForm = new Form();
+        Form polyOffsetForm = new Form();
+        Form stencilForm = new Form();
         
         Form result = new Form();
+
         for( Property property : properties ) {
  
             Field field = createField(spix, property, context);
@@ -100,7 +143,18 @@ public class SpatialFormFactory extends DefaultFormFactory {
                 worldTrans.add(field);
             } else if (DEFAULT_XFORMS.contains(property.getId())) {
                 result.add(field);
+            } else if (TREANSPARENCY.contains(property.getId())) {
+                transparencyForm.add(field);
+            } else if (RENDER.contains(property.getId())) {
+                renderForm.add(field);
+            } else if (DEPTH.contains(property.getId())) {
+                depthForm.add(field);
+            } else if (POLYOFFSET.contains(property.getId())) {
+                polyOffsetForm.add(field);
+            } else if (STENCIL.contains(property.getId())) {
+                stencilForm.add(field);
             }
+
         }
 
         // After all of that, stick the subforms at the bottom
@@ -136,6 +190,14 @@ public class SpatialFormFactory extends DefaultFormFactory {
                 }
             }
             result.add(new FormField("Material", materialForm, IconPath.material));
+
+            //renderstate
+            renderStateForm.add(new FormField("Render", renderForm));
+            renderStateForm.add(new FormField("Depth", depthForm));
+            renderStateForm.add(new FormField("Transparency", transparencyForm));
+            renderStateForm.add(new FormField("Polygon Offset", polyOffsetForm));
+            //renderStateForm.add(new FormField("Stencil", stencilForm));
+            result.add(new FormField("Render State", renderStateForm));
         }
 
         return result;
