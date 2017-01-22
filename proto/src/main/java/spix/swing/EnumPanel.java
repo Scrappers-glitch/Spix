@@ -37,6 +37,9 @@
 package spix.swing;
 
 import java.awt.event.*;
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.List;
 import javax.swing.*;                 
 import javax.swing.event.*;
 
@@ -73,7 +76,32 @@ public class EnumPanel extends AbstractPropertyPanel<JComboBox> {
             getView().setRenderer(new StringListCellRenderer(toString)); 
         }         
     }
-    
+
+    public EnumPanel(Property prop, Function<Object, String> toString, String... allowedValues) {
+        super(prop);
+        this.toString = toString;
+
+        Object[] enumValues = prop.getType().getJavaType().getEnumConstants();
+        if (allowedValues == null) {
+            setView(new JComboBox(enumValues));
+        } else {
+            setView(new JComboBox());
+            List<String> av = Arrays.asList(allowedValues);
+            for (Object enumValue : enumValues) {
+                if (av.contains(enumValue.toString())) {
+                    getView().addItem(enumValue);
+                }
+            }
+        }
+
+        getView().addItemListener(new ComboObserver());
+
+        if (toString != null) {
+            // Setup a custom renderer
+            getView().setRenderer(new StringListCellRenderer(toString));
+        }
+    }
+
     protected void updateView( JComboBox combo, Object value ) {
         combo.setSelectedItem(value);
     }

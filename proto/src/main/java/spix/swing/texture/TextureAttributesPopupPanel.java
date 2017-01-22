@@ -27,21 +27,24 @@ public class TextureAttributesPopupPanel extends JPanel {
 
     private Popup popup;
     private Component lastLostFocusComponent;
-    private Property textureProp;
 
-    public TextureAttributesPopupPanel(SwingGui gui, PropertySet mainProps, PropertySet wrapProps, Property textureProp) {
+
+    public TextureAttributesPopupPanel(SwingGui gui, PropertySet mainProps, PropertySet wrapProps, JComponent flipY) {
         super();
 
-        this.textureProp = textureProp;
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(40, 40, 40)), BorderFactory.createEmptyBorder(3, 3, 3, 3)));
 
-        PropertyEditorPanel panel = new PropertyEditorPanel(gui);
+        flipY.setAlignmentX(Component.CENTER_ALIGNMENT);
+        flipY.setPreferredSize(new Dimension(200, 25));
+        this.add(flipY);
+
+        PropertyEditorPanel panel = new PropertyEditorPanel(gui, SwingGui.EDIT_CONTEXT);
         panel.setObject(mainProps);
         panel.setBorder(BorderFactory.createEmptyBorder());
         this.add(panel);
 
-        panel = new PropertyEditorPanel(gui);
+        panel = new PropertyEditorPanel(gui, SwingGui.EDIT_CONTEXT);
         panel.setObject(wrapProps);
         panel.setBorder(BorderFactory.createTitledBorder("Wrap Mode"));
         this.add(panel);
@@ -135,3 +138,4 @@ public class TextureAttributesPopupPanel extends JPanel {
 
 
 }
+

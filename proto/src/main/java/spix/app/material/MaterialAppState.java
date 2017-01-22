@@ -188,14 +188,22 @@ public class MaterialAppState extends BaseAppState {
 
     public MaterialService.PreviewResult previewTexture(TextureKey key) {
 
-        //This... can take a long time. and depending on the size of the texture, requesting a preview can freeze JME thread for almost a second sometimes, making it stutter.
-        //TODO we should probably defer the loading to another thread and give back the loaded texture to JME thread when done.
-        Texture tex = getApplication().getAssetManager().loadTexture(key);
+        Texture tex = loadTexture(key);
 
         MaterialService.PreviewResult res = previewTexture(tex);
         res.originalWidth = tex.getImage().getWidth();
         res.originalHeight = tex.getImage().getHeight();
         return res;
+    }
+
+    public Texture loadTexture(TextureKey key) {
+        //This... can take a long time. and depending on the size of the texture, requesting a preview can freeze JME thread for almost a second sometimes, making it stutter.
+        //TODO we should probably defer the loading to another thread and give back the loaded texture to JME thread when done.
+        return getApplication().getAssetManager().loadTexture(key);
+    }
+
+    public void clearfromCache(AssetKey key) {
+        getApplication().getAssetManager().deleteFromCache(key);
     }
 
     public MaterialService.PreviewResult previewTexture(String texturePath) {

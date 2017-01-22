@@ -129,14 +129,6 @@ public class MatParamProperty extends AbstractProperty {
                 return Matrix3f.class;
             case Matrix4:
                 return Matrix4f.class;
-            case Matrix4Array:
-            case Matrix3Array:
-            case FloatArray:
-            case IntArray:
-            case Vector2Array:
-            case Vector3Array:
-            case Vector4Array:
-                return Object[].class;
             default:
                 return Object.class;
         }
@@ -152,6 +144,7 @@ public class MatParamProperty extends AbstractProperty {
                 return new Integer(0);
             default:
                 return getJavaType(type).newInstance();
+
         }
     }
 }

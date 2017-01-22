@@ -103,7 +103,15 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
             props.add(BeanProperty.create(material, "key", "matKey", false, null));
 
             for (MatParam matParam : material.getMaterialDef().getMaterialParams()) {
-                props.add(new MatParamProperty(matParam.getName(), matParam.getVarType(), material));
+                if (matParam.getVarType() != VarType.Matrix4Array
+                        && matParam.getVarType() != VarType.Matrix3Array
+                        && matParam.getVarType() != VarType.FloatArray
+                        && matParam.getVarType() != VarType.IntArray
+                        && matParam.getVarType() != VarType.Vector4Array
+                        && matParam.getVarType() != VarType.Vector3Array
+                        && matParam.getVarType() != VarType.Vector2Array) {
+                    props.add(new MatParamProperty(matParam.getName(), matParam.getVarType(), material));
+                }
             }
         }
 

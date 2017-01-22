@@ -37,6 +37,7 @@
 package spix.swing;
 
 import com.jme3.math.ColorRGBA;
+import com.jme3.texture.Texture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spix.core.Spix;
@@ -82,7 +83,6 @@ public class SwingGui {
     }
     
     public SwingGui( Spix spix, Component rootWindow, Class... requestHandlers ) {
-    
         if( log.isDebugEnabled() ) {
             log.debug("Creating SwingGui on thread:" + Thread.currentThread());
         }    
@@ -106,7 +106,8 @@ public class SwingGui {
         editFactories.register(Boolean.TYPE, booleanFactory);
 
         editFactories.register(ColorRGBA.class, new DefaultComponentFactory(ColorPanel.class));
-        editFactories.register(Enum.class, new DefaultComponentFactory(EnumPanel.class));  
+        editFactories.register(Texture.WrapMode.class, new DefaultComponentFactory(WrapModePanel.class));
+        editFactories.register(Enum.class, new DefaultComponentFactory(EnumPanel.class));
         editFactories.register(String.class, new DefaultComponentFactory(StringPanel.class));
         
         // If this is the AWT thread then save it.

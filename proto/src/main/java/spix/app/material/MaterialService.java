@@ -4,10 +4,14 @@ import com.jme3.asset.TextureKey;
 import com.jme3.material.*;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.RendererException;
+import com.jme3.scene.Geometry;
 import com.jme3.shader.Shader;
 import com.jme3.shader.ShaderNode;
+import com.jme3.texture.Texture;
+import spix.app.DefaultConstants;
 import spix.app.utils.CloneUtils;
 import spix.core.RequestCallback;
+import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.preview.PreviewRequest;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
@@ -136,6 +140,22 @@ public class MaterialService {
         });
     }
 
+    public void reloadTexture(Texture texture, RequestCallback<Texture> callback) {
+        TextureKey key = (TextureKey) texture.getKey();
+        state.clearfromCache(key);
+        Texture tex = state.loadTexture(key);
+
+        tex.setWrap(Texture.WrapAxis.S, texture.getWrap(Texture.WrapAxis.S));
+        tex.setWrap(Texture.WrapAxis.T, texture.getWrap(Texture.WrapAxis.T));
+        if (tex.getType() == Texture.Type.CubeMap || tex.getType() == Texture.Type.ThreeDimensional) {
+            tex.setWrap(Texture.WrapAxis.R, texture.getWrap(Texture.WrapAxis.R));
+        }
+
+        tex.setMagFilter(texture.getMagFilter());
+        tex.setMinFilter(texture.getMinFilter());
+
+        callback.done(tex);
+    }
 
     /**
      * Create a custom material definition with a technique that only goes to the output that requested the preview.
