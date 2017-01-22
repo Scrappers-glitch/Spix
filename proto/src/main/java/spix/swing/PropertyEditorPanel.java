@@ -105,7 +105,7 @@ public class PropertyEditorPanel extends JPanel {
     }
     
     public void setObject( PropertySet properties, Form form ) {
-System.out.println("PropertyEditorPanel.setObject(" + properties + ", " + form + ")");
+//System.out.println("PropertyEditorPanel.setObject(" + properties + ", " + form + ")");
 
         if( this.properties == properties ) {        
             return;
@@ -143,7 +143,7 @@ System.out.println("PropertyEditorPanel.setObject(" + properties + ", " + form +
         } else {
             this.form = form;
         }
-System.out.println(this.form.debugString());
+//System.out.println(this.form.debugString());
         
         gui.runOnSwing(new Runnable() {
                 public void run() {

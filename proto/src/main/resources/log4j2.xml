@@ -19,8 +19,8 @@
     <!--       
     <Logger name="spix" level="TRACE"/>
     -->
- 
-    <Root level="DEBUG">
+
+    <Root level="INFO">
       <AppenderRef ref="RollingFile"/>
       <AppenderRef ref="STDOUT"/>
     </Root>

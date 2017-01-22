@@ -137,25 +137,25 @@ public class BlenderCameraState extends BaseAppState {
 
         // See if there are already mappings for these functions.
         if( !inputMapper.hasMappings(F_VERTICAL_ROTATE) && !inputMapper.hasMappings(F_HORIZONTAL_ROTATE)) {
-            System.out.println("Initializing default mappings for:" + F_VERTICAL_ROTATE + " and " + F_HORIZONTAL_ROTATE);
+            //System.out.println("Initializing default mappings for:" + F_VERTICAL_ROTATE + " and " + F_HORIZONTAL_ROTATE);
             inputMapper.map(F_HORIZONTAL_ROTATE, Axis.MOUSE_X, Button.MOUSE_BUTTON3);
             inputMapper.map(F_VERTICAL_ROTATE, Axis.MOUSE_Y, Button.MOUSE_BUTTON3);
         }
 
         if( !inputMapper.hasMappings(F_VERTICAL_MOVE) && ! inputMapper.hasMappings(F_HORIZONTAL_MOVE)) {
-            System.out.println("Initializing default mappings for:" + F_VERTICAL_MOVE + " and " + F_HORIZONTAL_MOVE);
+            //System.out.println("Initializing default mappings for:" + F_VERTICAL_MOVE + " and " + F_HORIZONTAL_MOVE);
             inputMapper.map(F_HORIZONTAL_MOVE, Axis.MOUSE_X, Button.MOUSE_BUTTON3, KeyInput.KEY_LSHIFT);
             inputMapper.map(F_VERTICAL_MOVE, Axis.MOUSE_Y, Button.MOUSE_BUTTON3, KeyInput.KEY_LSHIFT);
             inputMapper.map(F_START_PAN,Button.MOUSE_BUTTON3, KeyInput.KEY_LSHIFT);
         }
 
         if( !inputMapper.hasMappings(F_ZOOM)) {
-            System.out.println("Initializing default mappings for:" + F_ZOOM);
+            //System.out.println("Initializing default mappings for:" + F_ZOOM);
             inputMapper.map(F_ZOOM, Axis.MOUSE_WHEEL);
         }
 
         if( !inputMapper.hasMappings(F_CENTER)) {
-            System.out.println("Initializing default mappings for:" + F_CENTER);
+            //System.out.println("Initializing default mappings for:" + F_CENTER);
             inputMapper.map(F_CENTER, KeyInput.KEY_NUMPAD0);
         }
 

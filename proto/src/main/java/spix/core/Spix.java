@@ -43,6 +43,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.google.common.cache.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spix.form.*;
 import spix.props.*;
 import spix.type.*;
@@ -61,6 +63,8 @@ public class Spix {
     private final Map<Class, Object> services = new ConcurrentHashMap<>();
 
     private final HandlerRegistry<PropertySetFactory> propertySetFactories = new HandlerRegistry<>();
+
+    Logger log = LoggerFactory.getLogger(Spix.class.getName());
 
     /**
      *  Special marker value indicating that an object has no property set wrapper.
@@ -209,7 +213,10 @@ public class Spix {
     private class PropertySetCacheLoader extends CacheLoader<Object, PropertySet> {
 
         public PropertySet load( Object value ) {
-System.out.println("Creating a property set for:" + value);
+            if (log.isDebugEnabled()) {
+                log.debug("Creating a property set for:" + value);
+            }
+
             PropertySetFactory factory = getPropertySetFactory(value.getClass());
             if( factory == null ) {
                 // Have to return something or the loading cache gets unhappy
