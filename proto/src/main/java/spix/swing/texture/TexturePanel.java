@@ -236,7 +236,7 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
     }
 
     protected void updateView(Component component, Object value) {
-        if (value.equals(lastValue) && checkFlip((Texture) value)) {
+        if (value != null && value.equals(lastValue) && checkFlip((Texture) value)) {
             return;
         }
         cloner.clearIndex();

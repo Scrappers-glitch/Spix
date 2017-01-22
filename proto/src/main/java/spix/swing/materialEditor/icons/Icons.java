@@ -20,6 +20,8 @@ public class Icons {
 
     public final static ImageIcon menu = new ImageIcon(Icons.class.getResource("/icons/menu.png"));
     public final static ImageIcon menuHover = new ImageIcon(Icons.class.getResource("/icons/menu-hover.png"));
+    public final static ImageIcon plus = new ImageIcon(Icons.class.getResource("/icons/plus.png"));
+    public final static ImageIcon plusHover = new ImageIcon(Icons.class.getResource("/icons/plusHover.png"));
 
     public final static ImageIcon node = new ImageIcon(Icons.class.getResource("/icons/node.png"));
     public final static ImageIcon jmeNode = new ImageIcon(Icons.class.getResource("/icons/jmeNode.png"));

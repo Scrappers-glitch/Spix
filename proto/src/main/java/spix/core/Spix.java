@@ -133,6 +133,13 @@ public class Spix {
         return result != NULL_PROPERTIES ? result : null;
     }
 
+    public void refresh(Object value) {
+        if (value == null) {
+            return;
+        }
+        propertySetCache.refresh(value);
+    }
+
     public FormFactory registerFormFactory( Type type, FormFactory factory ) {
         return registerFormFactory(null, type, factory);
     }

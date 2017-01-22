@@ -36,19 +36,21 @@
 
 package spix.app.properties;
 
+import com.jme3.asset.AssetKey;
 import com.jme3.material.*;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.shader.VarType;
+import spix.app.DefaultConstants;
 import spix.app.material.*;
 import spix.core.PropertySetFactory;
 import spix.core.Spix;
 import spix.props.*;
 import spix.type.NumberRangeType;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
@@ -97,9 +99,11 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
 
             Material material = g.getMaterial();
 
+            int matPropStartIndex = props.size();
+
             props.add(BeanProperty.create(material, "name", "materialName", false, null));
             props.add(BeanProperty.create(material.getMaterialDef(), "assetName", "matDefFile", false, null));
-            props.add(BeanProperty.create(material, "key", "matKey", false, null));
+            props.add(BeanProperty.create(material, "key", "j3m File", false, null));
 
             for (MatParam matParam : material.getMaterialDef().getMaterialParams()) {
                 if (matParam.getVarType() != VarType.Matrix4Array
@@ -154,9 +158,28 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
 //            props.add(BeanProperty.create(rs, "sfactorAlpha"));
 //            props.add(BeanProperty.create(rs, "dfactorAlpha"));
 
+            if (material.getKey() != null) {
+                PropertyChangeListener observer = new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(PropertyChangeEvent evt) {
+                        Map<Object, String> files = spix.getBlackboard().get(DefaultConstants.MODIFIED_DEPENDENCIES, Map.class);
+                        if (files == null) {
+                            files = new HashMap<>();
+                            spix.getBlackboard().set(DefaultConstants.MODIFIED_DEPENDENCIES, files);
+                        }
+                        files.put(material, material.getKey().getName());
+                    }
+                };
+                for (int i = matPropStartIndex; i < props.size(); i++) {
+                    Property p = props.get(i);
+                    p.addPropertyChangeListener(observer);
+                }
+            }
 
         }
 
         return new DefaultPropertySet(spatial, props);
     }
+
+
 }

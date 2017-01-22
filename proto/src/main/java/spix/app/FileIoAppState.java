@@ -7,10 +7,15 @@ import com.jme3.asset.*;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.export.binary.BinaryExporter;
+import com.jme3.material.Material;
+import com.jme3.material.plugin.export.material.J3MExporter;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spix.core.*;
+import spix.ui.MessageRequester;
 import spix.undo.Edit;
 import spix.undo.UndoManager;
 import spix.undo.edit.SpatialAddEdit;
@@ -18,8 +23,7 @@ import spix.undo.edit.SpatialAddEdit;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +39,7 @@ public class FileIoAppState extends BaseAppState {
     private Node rootNode;
     private Blackboard blackboard;
     private AssetLoadingListener assetListener = new AssetLoadingListener();
+    private Logger log = LoggerFactory.getLogger(FileIoAppState.class.getName());
 
     public FileIoAppState() {
 
@@ -123,14 +128,62 @@ public class FileIoAppState extends BaseAppState {
         Spatial scene = (Spatial) blackboard.get(SCENE_ROOT);
         try {
             exporter.save(scene, file);
-            getState(SpixState.class).getSpix().getBlackboard().set(SCENE_DIRTY, false);
         } catch (IOException ex) {
             ex.printStackTrace();
             return;
         }
+
+        //dependencies
+        Map<Object, String> files = blackboard.get(MODIFIED_DEPENDENCIES, Map.class);
+        if (files != null) {
+            String message = "Some dependencies have been modified, do you want to save tham too?\n";
+            for (String s : files.values()) {
+                message += s + "\n";
+            }
+
+            getSpix().getService(MessageRequester.class).confirm("Save dependencies", message, new RequestCallback<Boolean>() {
+                @Override
+                public void done(Boolean save) {
+                    if (save) {
+                        for (Object o : files.keySet()) {
+
+                            if (o instanceof Material) {
+                                saveMaterial((Material) o, files.get(o));
+                            }
+                        }
+                        //clear unsaved dependencies
+                        blackboard.set(MODIFIED_DEPENDENCIES, null);
+                        blackboard.set(SCENE_DIRTY, false);
+                    }
+                }
+            });
+
+        } else {
+            blackboard.set(SCENE_DIRTY, false);
+        }
         FilePath fp = getFilePath(file);
         blackboard.set(MAIN_ASSETS_FOLDER, fp.assetRoot.toString());
         blackboard.set(SCENE_FILE_NAME, fp.modelPath);
+    }
+
+    public void saveMaterial(Material mat, String path) {
+        if (log.isDebugEnabled()) {
+            log.debug("Savind material: " + path);
+        }
+        J3MExporter ex = new J3MExporter();
+
+        try {
+            ex.save(mat, new File(blackboard.get(MAIN_ASSETS_FOLDER) + File.separator + path));
+            if (mat.getKey() != null) {
+                assetManager.deleteFromCache(mat.getKey());
+            } else {
+                mat.setKey(new MaterialKey(path));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     public String getUnusedName(String basePath, String filePath) {
@@ -168,6 +221,8 @@ public class FileIoAppState extends BaseAppState {
             blackboard.set(SCENE_ROOT, scene);
             //Select the new scene
             blackboard.get(SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(scene);
+            //clear unsaved dependencies
+            blackboard.set(MODIFIED_DEPENDENCIES, null);
         } catch (AssetLoadException | AssetNotFoundException e) {
             e.printStackTrace();
             //TODO here we should report in an error log.
@@ -237,6 +292,19 @@ public class FileIoAppState extends BaseAppState {
         Texture tex = getApplication().getAssetManager().loadTexture(key);
         tex.setKey(key);
         return tex;
+    }
+
+    public Material loadMaterial(File file, String relocateIn) {
+        FilePath fp = getFilePath(file);
+
+        String assetRoot = blackboard.get(MAIN_ASSETS_FOLDER, String.class);
+        if (!fp.assetRoot.getPath().equals(assetRoot)) {
+            //we need to relocate the file
+            fp = relocateFile(fp, relocateIn);
+        }
+
+        Material mat = getApplication().getAssetManager().loadMaterial(fp.modelPath);
+        return mat;
     }
 
     private FilePath relocateFile(FilePath fp, String localPath) {

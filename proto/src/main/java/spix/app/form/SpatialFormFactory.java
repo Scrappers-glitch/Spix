@@ -166,10 +166,12 @@ public class SpatialFormFactory extends DefaultFormFactory {
             Field name = createField(spix, properties.getProperty("materialName"), context);
             materialForm.add(name);
 
+            Field key = createField(spix, properties.getProperty("j3m File"), context);
+            materialForm.add(key);
+
             Field assetName = createField(spix, an, context);
             materialForm.add(assetName);
-            Field key = createField(spix, properties.getProperty("matKey"), context);
-            materialForm.add(key);
+
 
             ArrayList params = spix.getBlackboard().get("material.metadata." + an.getValue(), ArrayList.class);
 

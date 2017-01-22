@@ -58,7 +58,7 @@ public class ExtensionFileFilter extends javax.swing.filechooser.FileFilter
         StringTokenizer st = new StringTokenizer(extensions, ",");
         List<String> list = new ArrayList<String>();
         while( st.hasMoreTokens() ) {
-            String extension = st.nextToken();
+            String extension = st.nextToken().trim();
             while( extension.startsWith(".") )
                 extension = extension.substring(1);
             list.add("." + extension.toLowerCase());

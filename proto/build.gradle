@@ -80,6 +80,7 @@ dependencies {
     compile "org.jmonkeyengine:jme3-lwjgl:$jmeVersion"
     compile "org.jmonkeyengine:jme3-jogg:$jmeVersion"
     compile "org.jmonkeyengine:jme3-effects:$jmeVersion"
+    compile "org.jmonkeyengine:jme3-plugins:$jmeVersion"
 
     compile "com.github.insubstantial:substance:[7.3,)"
 

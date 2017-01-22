@@ -53,4 +53,5 @@ public class DefaultConstants {
 
     public static final String VIEW_DEBUG_LIGHTS= "view.debug.lights";
 
+    public static final String MODIFIED_DEPENDENCIES = "files.dependencies.modified";
 }

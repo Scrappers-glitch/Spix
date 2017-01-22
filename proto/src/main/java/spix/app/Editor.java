@@ -39,6 +39,8 @@ package spix.app;
 import com.google.common.base.Predicates;
 import com.jme3.app.*;
 import com.jme3.app.state.ScreenshotAppState;
+import com.jme3.asset.AssetKey;
+import com.jme3.asset.MaterialKey;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.light.*;
 import com.jme3.material.Material;
@@ -74,6 +76,7 @@ import spix.swing.materialEditor.panels.DockPanel;
 import spix.swing.materialEditor.panels.PropPanel;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
 import spix.swing.sceneexplorer.SceneExplorerPanel;
+import spix.swing.texture.MaterialKeyPanel;
 import spix.swing.texture.TexturePanel;
 import spix.type.Type;
 import spix.ui.ColorRequester;
@@ -255,8 +258,9 @@ public class Editor extends SimpleApplication {
                 gui.registerComponentFactory(Vector3f.class, new DefaultComponentFactory(new Vec3fStringFunction()));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Vector3f.class, new DefaultComponentFactory(Vector3fPanel.class));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Quaternion.class, new DefaultComponentFactory(QuaternionPanel.class));
-                // gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Material.class, new DefaultComponentFactory(MaterialPanel.class));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Texture.class, new DefaultComponentFactory(TexturePanel.class));
+                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, AssetKey.class, new DefaultComponentFactory(MaterialKeyPanel.class));
+
 
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");
                 objectEditor.setPreferredSize(new Dimension(250, 100));
