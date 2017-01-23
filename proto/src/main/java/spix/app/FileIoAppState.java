@@ -14,6 +14,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spix.app.material.MaterialService;
 import spix.core.*;
 import spix.ui.MessageRequester;
 import spix.undo.Edit;
@@ -134,21 +135,20 @@ public class FileIoAppState extends BaseAppState {
         }
 
         //dependencies
-        Map<Object, String> files = blackboard.get(MODIFIED_DEPENDENCIES, Map.class);
+        Set<AssetKey> files = blackboard.get(MODIFIED_DEPENDENCIES, Set.class);
         if (files != null) {
             String message = "Some dependencies have been modified, do you want to save tham too?\n";
-            for (String s : files.values()) {
-                message += s + "\n";
+            for (AssetKey s : files) {
+                message += s.getName() + "\n";
             }
 
             getSpix().getService(MessageRequester.class).confirm("Save dependencies", message, new RequestCallback<Boolean>() {
                 @Override
                 public void done(Boolean save) {
                     if (save) {
-                        for (Object o : files.keySet()) {
-
-                            if (o instanceof Material) {
-                                saveMaterial((Material) o, files.get(o));
+                        for (AssetKey key : files) {
+                            if (key instanceof MaterialKey) {
+                                saveMaterial(key);
                             }
                         }
                         //clear unsaved dependencies
@@ -166,7 +166,9 @@ public class FileIoAppState extends BaseAppState {
         blackboard.set(SCENE_FILE_NAME, fp.modelPath);
     }
 
-    public void saveMaterial(Material mat, String path) {
+    public void saveMaterial(AssetKey key) {
+        Material mat = getSpix().getService(MaterialService.class).getMaterialForPath(key.getName());
+        String path = key.getName();
         if (log.isDebugEnabled()) {
             log.debug("Savind material: " + path);
         }
@@ -277,6 +279,8 @@ public class FileIoAppState extends BaseAppState {
 
         Spatial model = assetManager.loadModel(fp.modelPath);
 
+        getSpix().getService(MaterialService.class).gatherMaterialsForSync(model);
+
         return model;
     }
 
@@ -304,6 +308,7 @@ public class FileIoAppState extends BaseAppState {
         }
 
         Material mat = getApplication().getAssetManager().loadMaterial(fp.modelPath);
+        getSpix().getService(MaterialService.class).registerMaterialForSync(fp.modelPath, mat);
         return mat;
     }
 
@@ -398,7 +403,6 @@ public class FileIoAppState extends BaseAppState {
 
         @Override
         public void assetLoaded(AssetKey key) {
-
         }
 
         @Override

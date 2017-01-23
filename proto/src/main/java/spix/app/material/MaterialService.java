@@ -4,7 +4,7 @@ import com.jme3.asset.TextureKey;
 import com.jme3.material.*;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.RendererException;
-import com.jme3.scene.Geometry;
+import com.jme3.scene.*;
 import com.jme3.shader.Shader;
 import com.jme3.shader.ShaderNode;
 import com.jme3.texture.Texture;
@@ -12,6 +12,8 @@ import spix.app.DefaultConstants;
 import spix.app.utils.CloneUtils;
 import spix.core.RequestCallback;
 import spix.core.SelectionModel;
+import spix.props.BeanProperty;
+import spix.props.Property;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.preview.PreviewRequest;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
@@ -29,6 +31,7 @@ public class MaterialService {
     private MaterialAppState state;
     private SwingGui gui;
     private RendererExceptionHandler logHandler = new RendererExceptionHandler();
+    private Map<String, List<Material>> materialSyncMap = new HashMap<>();
 
     public MaterialService(MaterialAppState state, SwingGui gui) {
         this.state = state;
@@ -291,5 +294,87 @@ public class MaterialService {
         public int height;
         public int originalWidth;
         public int originalHeight;
+    }
+
+
+    public void gatherMaterialsForSync(Spatial scene) {
+        SceneGraphVisitor sgv = new SceneGraphVisitor() {
+            @Override
+            public void visit(Spatial spatial) {
+                if (spatial instanceof Geometry) {
+                    Geometry g = (Geometry) spatial;
+                    Material m = g.getMaterial();
+                    if (m.getKey() != null) {
+                        registerMaterialForSync(m.getKey().getName(), m);
+                    }
+                }
+            }
+        };
+        scene.depthFirstTraversal(sgv);
+    }
+
+    public void registerMaterialForSync(String path, Material mat) {
+        List<Material> mats = materialSyncMap.get(path);
+        if (mats == null) {
+            mats = new ArrayList<>();
+            materialSyncMap.put(path, mats);
+        }
+        mats.add(mat);
+    }
+
+    public void unregisterMaterialForSync(String path, Material mat) {
+        List<Material> mats = materialSyncMap.get(path);
+        if (mats == null) {
+            return;
+        }
+        mats.remove(mat);
+    }
+
+    public Material getMaterialForPath(String path) {
+        List<Material> mats = materialSyncMap.get(path);
+        if (mats == null || mats.isEmpty()) {
+            return null;
+        }
+        return mats.get(0);
+    }
+
+    public void syncMatsForPath(String path, Material mat, Property prop) {
+        if (prop == null) {
+            return;
+        }
+        List<Material> mats = materialSyncMap.get(path);
+        if (mats == null) {
+            return;
+        }
+        for (Material material : mats) {
+            if (material == mat) {
+                continue;
+            }
+            Property p = null;
+            if (prop instanceof BeanProperty) {
+                Object obj = material;
+                if (((BeanProperty) prop).getObject() instanceof RenderState) {
+                    obj = material.getAdditionalRenderState();
+                }
+                String id = prop.getId();
+                if (id.equals("materialName")) {
+                    id = "name";
+                }
+                p = BeanProperty.create(obj, id, prop.getName(), false, null);
+            } else if (prop instanceof MatParamProperty) {
+                MatParamProperty matProp = (MatParamProperty) prop;
+                p = new MatParamProperty(matProp.getId(), matProp.getVarType(), material);
+                if (prop.getValue() instanceof Texture) {
+                    Texture t = (Texture) prop.getValue();
+                    if (t.getImage() == null) {
+                        p.setValue(null);
+                        return;
+                    }
+                }
+            } else if (prop instanceof PolyOffsetProperty) {
+                p = new PolyOffsetProperty(material.getAdditionalRenderState(), prop.getName());
+            }
+            p.setValue(prop.getValue());
+        }
     }
 }

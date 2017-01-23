@@ -139,6 +139,7 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
             //This will also need a custom property
             //Not sure this is useful to edit this in an editor. IMO those are used for forced render states, or forced material
             //keeping that on hold for now.
+            // if ever it's added later special treatment will have to be done in MaterialService.syncMatsForPath
             //Stencil
 //            props.add(BeanProperty.create(rs, "stencilTest"));
 //
@@ -162,12 +163,21 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
                 PropertyChangeListener observer = new PropertyChangeListener() {
                     @Override
                     public void propertyChange(PropertyChangeEvent evt) {
-                        Map<Object, String> files = spix.getBlackboard().get(DefaultConstants.MODIFIED_DEPENDENCIES, Map.class);
-                        if (files == null) {
-                            files = new HashMap<>();
-                            spix.getBlackboard().set(DefaultConstants.MODIFIED_DEPENDENCIES, files);
+                        Set<AssetKey> files = spix.getBlackboard().get(DefaultConstants.MODIFIED_DEPENDENCIES, Set.class);
+                        MaterialService matService = spix.getService(MaterialService.class);
+                        if (evt.getPropertyName().equals("j3m File") && evt.getNewValue() == null) {
+                            matService.unregisterMaterialForSync(evt.getOldValue().toString(), material);
+                            return;
                         }
-                        files.put(material, material.getKey().getName());
+                        if (material.getKey() != null) {
+                            if (files == null) {
+                                files = new HashSet<>();
+                                spix.getBlackboard().set(DefaultConstants.MODIFIED_DEPENDENCIES, files);
+                            }
+                            files.add(material.getKey());
+                            matService.syncMatsForPath(material.getKey().getName(), material, findProp(props, evt.getPropertyName()));
+                        }
+
                     }
                 };
                 for (int i = matPropStartIndex; i < props.size(); i++) {
@@ -181,5 +191,13 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
         return new DefaultPropertySet(spatial, props);
     }
 
+    private Property findProp(List<Property> props, String id) {
+        for (Property prop : props) {
+            if (prop.getId().equals(id)) {
+                return prop;
+            }
+        }
+        return null;
+    }
 
 }
