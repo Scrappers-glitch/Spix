@@ -93,8 +93,8 @@ public class MaterialKeyPanel extends AbstractPropertyPanel<Component> {
         newButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //call a service to add a j3m
-                //create a new file, save the current material as j3m, set the material key
+                //create a J3M
+                gui.getSpix().getService(FileLoadingService.class).createJ3mForSelection();
             }
         });
 

@@ -1,9 +1,11 @@
 package spix.app;
 
+import com.jme3.asset.MaterialKey;
 import com.jme3.material.Material;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
+import spix.app.material.MaterialService;
 import spix.core.*;
 import spix.ui.FileRequester;
 import spix.undo.SceneGraphStructureEdit;
@@ -74,7 +76,45 @@ public class FileLoadingService {
         }
     }
 
-    public void checkRelocateAndDo(final File result, String defaultFolder, RequestCallback<String> callback) {
+    public void createJ3mForSelection() {
+        SelectionModel model = spix.getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+        if (model.getSingleSelection() != null && model.getSingleSelection() instanceof Geometry) {
+            Geometry geom = (Geometry) model.getSingleSelection();
+            File assetRoot = new File(spix.getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
+            File defaultFile = new File(assetRoot.getPath() + File.separator + "Materials/material");
+            spix.getService(FileRequester.class).requestFile("Create a J3m file", "j3m material file", "j3m",
+                    defaultFile, false, false, false,
+                    new RequestCallback<File>() {
+                        @Override
+                        public void done(File result) {
+                            Path path = assetRoot.toPath().relativize(result.toPath());
+                            String assetPath = path.toString().replaceAll("\\\\", "/");
+                            MaterialService matService = spix.getService(MaterialService.class);
+                            Material mat = geom.getMaterial();
+                            Material oldMat = mat.clone();
+                            if (mat.getKey() != null) {
+                                matService.unregisterMaterialForSync(mat.getKey().getName(), mat);
+                            }
+
+                            MaterialKey key = new MaterialKey(assetPath);
+                            mat.setKey(key);
+                            spix.getService(MaterialService.class).registerMaterialForSync(assetPath, mat);
+                            fileState.saveMaterial(key);
+
+                            spix.refresh(geom);
+                            UndoManager um = spix.getService(UndoManager.class);
+                            MaterialSetEdit edit = new MaterialSetEdit(geom, oldMat, mat);
+                            um.addEdit(edit);
+                            model.setSingleSelection(null);
+                            model.setSingleSelection(geom);
+
+                        }
+                    });
+        }
+    }
+
+
+    private void checkRelocateAndDo(final File result, String defaultFolder, RequestCallback<String> callback) {
         FileIoAppState.FilePath fp = fileState.getFilePath(result);
         File assetRoot = new File(spix.getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
         if (!fp.assetRoot.equals(assetRoot)) {

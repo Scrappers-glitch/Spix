@@ -21,7 +21,7 @@ public class NewFileAction extends AbstractAction {
     @Override
     public void performAction(Spix spix) {
         spix.getService(FileRequester.class).requestFile("New Scene",
-                "JME Object", "jpg,j3o", new File(System.getProperty("user.home") + File.separator + "newScene.j3o"), true, false, true,
+                "JME Object", "j3o", new File(System.getProperty("user.home") + File.separator + "newScene.j3o"), true, false, true,
                 new RequestCallback<File>() {
                     public void done(File f) {
                         System.out.println("New scene in " + f + "   Thread:" + Thread.currentThread());
