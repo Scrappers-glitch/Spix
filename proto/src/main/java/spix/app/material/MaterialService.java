@@ -8,10 +8,9 @@ import com.jme3.scene.*;
 import com.jme3.shader.Shader;
 import com.jme3.shader.ShaderNode;
 import com.jme3.texture.Texture;
-import spix.app.DefaultConstants;
+import spix.app.FileIoAppState;
 import spix.app.utils.CloneUtils;
 import spix.core.RequestCallback;
-import spix.core.SelectionModel;
 import spix.props.BeanProperty;
 import spix.props.Property;
 import spix.swing.SwingGui;
@@ -28,13 +27,15 @@ import java.util.regex.Pattern;
  */
 public class MaterialService {
 
-    private MaterialAppState state;
+    private MaterialAppState materialState;
+    private FileIoAppState ioState;
     private SwingGui gui;
     private RendererExceptionHandler logHandler = new RendererExceptionHandler();
     private Map<String, List<Material>> materialSyncMap = new HashMap<>();
 
-    public MaterialService(MaterialAppState state, SwingGui gui) {
-        this.state = state;
+    public MaterialService(MaterialAppState materialState, FileIoAppState ioState, SwingGui gui) {
+        this.materialState = materialState;
+        this.ioState = ioState;
         this.gui = gui;
     }
 
@@ -59,7 +60,7 @@ public class MaterialService {
                 m.setColor("Color", ColorRGBA.Yellow);
 
                 try {
-                    PreviewResult res = state.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex());
+                    PreviewResult res = materialState.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex());
                     gui.runOnSwing(new Runnable() {
                         @Override
                         public void run() {
@@ -89,7 +90,7 @@ public class MaterialService {
             @Override
             public void run() {
                 if(def.isUsingShaderNodes()) {
-                    Map<String, Shader> shaders = state.generateCode(def);
+                    Map<String, Shader> shaders = materialState.generateCode(def);
                     gui.runOnSwing(new Runnable() {
                         @Override
                         public void run() {
@@ -97,7 +98,7 @@ public class MaterialService {
                         }
                     });
                 } else {
-                    Map<String, Shader> shaders = state.getCode(def);
+                    Map<String, Shader> shaders = materialState.getCode(def);
                     gui.runOnSwing(new Runnable() {
                         @Override
                         public void run() {
@@ -115,14 +116,18 @@ public class MaterialService {
         gui.runOnRender(new Runnable() {
             @Override
             public void run() {
-                PreviewResult result = state.previewTexture(textureKey);
-                gui.runOnSwing(new Runnable() {
+                ioState.loadTexture(textureKey, new RequestCallback<Texture>() {
                     @Override
-                    public void run() {
-                        callback.done(result);
+                    public void done(Texture texture) {
+                        PreviewResult result = materialState.previewTexture(texture);
+                        gui.runOnSwing(new Runnable() {
+                            @Override
+                            public void run() {
+                                callback.done(result);
+                            }
+                        });
                     }
                 });
-
             }
         });
     }
@@ -131,33 +136,42 @@ public class MaterialService {
         gui.runOnRender(new Runnable() {
             @Override
             public void run() {
-                PreviewResult result = state.previewTexture(texturePath);
-                gui.runOnSwing(new Runnable() {
+                ioState.loadTexture(texturePath, new RequestCallback<Texture>() {
                     @Override
-                    public void run() {
-                        callback.done(result);
+                    public void done(Texture texture) {
+
+                        PreviewResult result = materialState.previewTexture(texture);
+                        gui.runOnSwing(new Runnable() {
+                            @Override
+                            public void run() {
+                                callback.done(result);
+                            }
+                        });
                     }
                 });
-
             }
         });
     }
 
     public void reloadTexture(Texture texture, RequestCallback<Texture> callback) {
         TextureKey key = (TextureKey) texture.getKey();
-        state.clearfromCache(key);
-        Texture tex = state.loadTexture(key);
+        materialState.clearfromCache(key);
+        ioState.loadTexture(key, new RequestCallback<Texture>() {
+            @Override
+            public void done(Texture tex) {
+                tex.setWrap(Texture.WrapAxis.S, texture.getWrap(Texture.WrapAxis.S));
+                tex.setWrap(Texture.WrapAxis.T, texture.getWrap(Texture.WrapAxis.T));
+                if (tex.getType() == Texture.Type.CubeMap || tex.getType() == Texture.Type.ThreeDimensional) {
+                    tex.setWrap(Texture.WrapAxis.R, texture.getWrap(Texture.WrapAxis.R));
+                }
 
-        tex.setWrap(Texture.WrapAxis.S, texture.getWrap(Texture.WrapAxis.S));
-        tex.setWrap(Texture.WrapAxis.T, texture.getWrap(Texture.WrapAxis.T));
-        if (tex.getType() == Texture.Type.CubeMap || tex.getType() == Texture.Type.ThreeDimensional) {
-            tex.setWrap(Texture.WrapAxis.R, texture.getWrap(Texture.WrapAxis.R));
-        }
+                tex.setMagFilter(texture.getMagFilter());
+                tex.setMinFilter(texture.getMinFilter());
 
-        tex.setMagFilter(texture.getMagFilter());
-        tex.setMinFilter(texture.getMinFilter());
+                callback.done(tex);
+            }
+        });
 
-        callback.done(tex);
     }
 
     /**
@@ -194,7 +208,7 @@ public class MaterialService {
                     newNodes.add(node);
                 }
             }
-            newNodes.add(state.getDummySN());
+            newNodes.add(materialState.getDummySN());
         } else {
             //we gather the nodes up to the outputForNode node.
             //this is the node which the output that requested the preview belongs to.
@@ -202,7 +216,7 @@ public class MaterialService {
                 newNodes.add(node);
                 if (node.getName().equals(request.getOutputForNode())){
                     if(node.getDefinition().getType() == Shader.ShaderType.Vertex){
-                        newNodes.add(state.getDummySN());
+                        newNodes.add(materialState.getDummySN());
                     }
                     break;
                 }

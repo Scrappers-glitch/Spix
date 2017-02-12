@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +42,7 @@ public class FileIoAppState extends BaseAppState {
     private Blackboard blackboard;
     private AssetLoadingListener assetListener = new AssetLoadingListener();
     private Logger log = LoggerFactory.getLogger(FileIoAppState.class.getName());
+    private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(4);
 
     public FileIoAppState() {
 
@@ -64,7 +66,7 @@ public class FileIoAppState extends BaseAppState {
 
     @Override
     protected void cleanup(Application app) {
-
+        executor.shutdownNow();
     }
 
     @Override
@@ -215,87 +217,158 @@ public class FileIoAppState extends BaseAppState {
     }
 
     public void loadFile(File f) {
-        try {
-            Spatial scene = loadScene(f, true);
-            rootNode.detachAllChildren();
-            rootNode.attachChild(scene);
 
-            blackboard.set(SCENE_ROOT, scene);
-            //Select the new scene
-            blackboard.get(SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(scene);
-            //clear unsaved dependencies
-            blackboard.set(MODIFIED_DEPENDENCIES, null);
-        } catch (AssetLoadException | AssetNotFoundException e) {
-            e.printStackTrace();
-            //TODO here we should report in an error log.
-        }
+        loadScene(f, true, new RequestCallback<Spatial>() {
+            @Override
+            public void done(Spatial scene) {
+                rootNode.detachAllChildren();
+                rootNode.attachChild(scene);
 
-    }
-
-    public Spatial loadScene(File f, boolean changeAssetFolder) throws AssetLoadException, AssetNotFoundException {
-
-        FilePath fp = getFilePath(f);
-
-        //System.out.println("Asset root:" + assetRoot + "   modelPath:" + modelPath);
-        assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
-
-        if (changeAssetFolder) {
-            blackboard.set(MAIN_ASSETS_FOLDER, fp.assetRoot.toString());
-            blackboard.set(SCENE_FILE_NAME, fp.modelPath);
-
-        } else if (!blackboard.get(MAIN_ASSETS_FOLDER).equals(fp.assetRoot.toString())) {
-            //This asset is not in the main asset root, meaning that if we add it in the scene as is the resulting j3o will be broken and will miss some assets.
-            //We have to relocate them in the main asset folder.
-
-            assetListener.clear();
-            assetManager.addAssetEventListener(assetListener);
-            Spatial model = assetManager.loadModel(fp.modelPath);
-
-            for (String dependency : assetListener.getDependencies()) {
-                Path source = Paths.get(fp.assetRoot + File.separator + dependency);
-                //check if the source file exists in the source folder (could be stock assets that doesn't need to be copied)
-                if (Files.exists(source)) {
-                    Path target = Paths.get(blackboard.get(MAIN_ASSETS_FOLDER) + File.separator + dependency);
-                    try {
-                        System.err.println("copying " + source + " to " + target);
-                        if (!Files.exists(target)) {
-                            //create the parent dir if needed.
-                            if (!Files.exists(target.getParent())) {
-                                Files.createDirectories(target.getParent());
-                            }
-                            //copy the file.
-                            Files.copy(source, target);
-                        }
-                        //maybe if the file already exists in the target dir throw a warning...
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+                blackboard.set(SCENE_ROOT, scene);
+                //Select the new scene
+                blackboard.get(SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(scene);
+                //clear unsaved dependencies
+                blackboard.set(MODIFIED_DEPENDENCIES, null);
             }
-            assetManager.deleteFromCache(model.getKey());
-            assetManager.unregisterLocator(fp.assetRoot.toString(), FileLocator.class);
-            assetManager.removeAssetEventListener(assetListener);
-        }
-
-        Spatial model = assetManager.loadModel(fp.modelPath);
-
-        getSpix().getService(MaterialService.class).gatherMaterialsForSync(model);
-
-        return model;
+        });
     }
 
-    public Texture loadTexture(File file, String relocateIn) {
-        FilePath fp = getFilePath(file);
+    public void loadScene(File f, boolean changeAssetFolder, RequestCallback<Spatial> callback) throws AssetLoadException, AssetNotFoundException {
+        String id = getSpix().getService(MessageRequester.class).displayLoading("Loading " + f.getName() + "...");
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                FilePath fp = getFilePath(f);
 
-        String assetRoot = blackboard.get(MAIN_ASSETS_FOLDER, String.class);
-        if (!fp.assetRoot.getPath().equals(assetRoot)) {
-            //we need to relocate the file
-            fp = relocateFile(fp, relocateIn);
-        }
-        TextureKey key = new TextureKey(fp.modelPath, false);
-        Texture tex = getApplication().getAssetManager().loadTexture(key);
-        tex.setKey(key);
-        return tex;
+                //System.out.println("Asset root:" + assetRoot + "   modelPath:" + modelPath);
+                assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
+                try {
+
+
+                    if (changeAssetFolder) {
+                        blackboard.set(MAIN_ASSETS_FOLDER, fp.assetRoot.toString());
+                        blackboard.set(SCENE_FILE_NAME, fp.modelPath);
+
+                    } else if (!blackboard.get(MAIN_ASSETS_FOLDER).equals(fp.assetRoot.toString())) {
+                        //This asset is not in the main asset root, meaning that if we add it in the scene as is the resulting j3o will be broken and will miss some assets.
+                        //We have to relocate them in the main asset folder.
+
+                        assetListener.clear();
+                        assetManager.addAssetEventListener(assetListener);
+                        Spatial model = assetManager.loadModel(fp.modelPath);
+
+                        for (String dependency : assetListener.getDependencies()) {
+                            Path source = Paths.get(fp.assetRoot + File.separator + dependency);
+                            //check if the source file exists in the source folder (could be stock assets that doesn't need to be copied)
+                            if (Files.exists(source)) {
+                                Path target = Paths.get(blackboard.get(MAIN_ASSETS_FOLDER) + File.separator + dependency);
+                                try {
+                                    System.err.println("copying " + source + " to " + target);
+                                    if (!Files.exists(target)) {
+                                        //create the parent dir if needed.
+                                        if (!Files.exists(target.getParent())) {
+                                            Files.createDirectories(target.getParent());
+                                        }
+                                        //copy the file.
+                                        Files.copy(source, target);
+                                    }
+                                    //maybe if the file already exists in the target dir throw a warning...
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                        assetManager.deleteFromCache(model.getKey());
+                        assetManager.unregisterLocator(fp.assetRoot.toString(), FileLocator.class);
+                        assetManager.removeAssetEventListener(assetListener);
+                    }
+
+                    Spatial model = assetManager.loadModel(fp.modelPath);
+
+                    getSpix().getService(MaterialService.class).gatherMaterialsForSync(model);
+                    getApplication().enqueue(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.done(model);
+                            getSpix().getService(MessageRequester.class).hideLoading(id);
+                        }
+                    });
+                } catch (AssetLoadException | AssetNotFoundException e) {
+                    e.printStackTrace();
+                    getSpix().getService(MessageRequester.class).hideLoading(id);
+                    getSpix().getService(MessageRequester.class).showMessage("Error Loading File " + f.getName(), e.getMessage(), MessageRequester.Type.Error);
+                }
+
+            }
+        };
+        executor.execute(task);
+
+    }
+
+    public void loadTexture(File file, String relocateIn, RequestCallback<Texture> done) {
+        loadTexture(file, relocateIn, false, done);
+    }
+
+    public void loadTexture(File file, String relocateIn, boolean flip, RequestCallback<Texture> done) {
+        String id = getSpix().getService(MessageRequester.class).displayLoading("Loading " + file.getName() + "...");
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                FilePath fp = getFilePath(file);
+
+                String assetRoot = blackboard.get(MAIN_ASSETS_FOLDER, String.class);
+                if (!fp.assetRoot.getPath().equals(assetRoot)) {
+                    //we need to relocate the file
+                    fp = relocateFile(fp, relocateIn);
+                }
+                TextureKey key = new TextureKey(fp.modelPath, flip);
+                Texture tex = getApplication().getAssetManager().loadTexture(key);
+                tex.setKey(key);
+                getApplication().enqueue(new Runnable() {
+                    @Override
+                    public void run() {
+                        done.done(tex);
+                        getSpix().getService(MessageRequester.class).hideLoading(id);
+                    }
+                });
+
+            }
+        };
+        executor.execute(task);
+    }
+
+    public void loadTexture(TextureKey key, RequestCallback<Texture> done) {
+        String id = getSpix().getService(MessageRequester.class).displayLoading("Loading " + key.getName() + "...");
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                Texture tex = getApplication().getAssetManager().loadTexture(key);
+                tex.setKey(key);
+                getApplication().enqueue(new Runnable() {
+                    @Override
+                    public void run() {
+                        done.done(tex);
+                        getSpix().getService(MessageRequester.class).hideLoading(id);
+                    }
+                });
+
+            }
+        };
+        executor.execute(task);
+    }
+
+    public void loadTexture(String texturePath, RequestCallback<Texture> done) {
+        Path path = Paths.get(texturePath);
+        Path parent = path.getParent();
+        getApplication().getAssetManager().registerLocator(parent.toString(), FileLocator.class);
+        TextureKey key = new TextureKey(path.getFileName().toString(), false);
+        loadTexture(key, new RequestCallback<Texture>() {
+            @Override
+            public void done(Texture result) {
+                done.done(result);
+                getApplication().getAssetManager().unregisterLocator(parent.toString(), FileLocator.class);
+            }
+        });
     }
 
     public Material loadMaterial(File file, String relocateIn) {
@@ -362,38 +435,36 @@ public class FileIoAppState extends BaseAppState {
 
 
     public void AppendFile(File f) {
-        try {
-            Spatial scene = loadScene(f, false);
 
-            // For now, find out where to put the scene so that it is next to whatever
-            // is currently loaded
-            BoundingBox currentBounds = (BoundingBox) rootNode.getWorldBound();
-            BoundingBox modelBounds = (BoundingBox) scene.getWorldBound();
+        loadScene(f, false, new RequestCallback<Spatial>() {
+            @Override
+            public void done(Spatial scene) {
+                // For now, find out where to put the scene so that it is next to whatever
+                // is currently loaded
+                BoundingBox currentBounds = (BoundingBox) rootNode.getWorldBound();
+                BoundingBox modelBounds = (BoundingBox) scene.getWorldBound();
 
-            float x = 0;
-            float extent = 0;
-            if (currentBounds != null) {
-                x = currentBounds.getCenter().x;
-                extent = currentBounds.getXExtent();
+                float x = 0;
+                float extent = 0;
+                if (currentBounds != null) {
+                    x = currentBounds.getCenter().x;
+                    extent = currentBounds.getXExtent();
+                }
+                float worldRight = x + extent;
+                float modelLeft = -modelBounds.getCenter().x + modelBounds.getXExtent();
+
+                scene.setLocalTranslation(worldRight + modelLeft, 0, 0);
+                Spatial rootScene = (Spatial) blackboard.get(SCENE_ROOT);
+                if (rootScene instanceof Node) {
+                    ((Node) rootScene).attachChild(scene);
+
+                    UndoManager um = getSpix().getService(UndoManager.class);
+                    um.addEdit(new SpatialAddEdit((Node) rootScene, scene));
+                    //Select the imported scene
+                    blackboard.get(SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(scene);
+                }
             }
-            float worldRight = x + extent;
-            float modelLeft = -modelBounds.getCenter().x + modelBounds.getXExtent();
-
-            scene.setLocalTranslation(worldRight + modelLeft, 0, 0);
-            Spatial rootScene = (Spatial) blackboard.get(SCENE_ROOT);
-            if (rootScene instanceof Node){
-                ((Node)rootScene).attachChild(scene);
-
-                UndoManager um = getSpix().getService(UndoManager.class);
-                um.addEdit(new SpatialAddEdit((Node)rootScene, scene));
-                //Select the imported scene
-                blackboard.get(SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(scene);
-            }
-
-        } catch (AssetLoadException | AssetNotFoundException e) {
-            e.printStackTrace();
-            //TODO here we should report in an error log.
-        }
+        });
     }
 
 

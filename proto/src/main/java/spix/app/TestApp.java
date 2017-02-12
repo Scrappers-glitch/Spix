@@ -81,9 +81,7 @@ import java.io.IOException;
 
 
 /**
- *
- *
- *  @author    Paul Speed
+ * @author Paul Speed
  */
 public class TestApp extends SimpleApplication {
 
@@ -108,22 +106,22 @@ public class TestApp extends SimpleApplication {
 
     public TestApp() throws Exception {
         super(new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
-              new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(true),
-              new GridState(), new BackgroundColorState(),
-              new SelectionHighlightState(),
-              new TransformState(),
-              new TranslationWidgetState(false),
-              new ScaleWidgetState(false),
+                new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(true),
+                new GridState(), new BackgroundColorState(),
+                new SelectionHighlightState(),
+                new TransformState(),
+                new TranslationWidgetState(false),
+                new ScaleWidgetState(false),
                 new RotationWidgetState(true),
                 new LightWidgetState(),
                 new NodeWidgetState(),
-              new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
-              new SpixState(new Spix()),
+                new DecoratorViewPortState(), // Put this last because of some dodgy update vs render stuff
+                new SpixState(new Spix()),
                 new MaterialAppState());
 
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
-            protected void writeImageFile( final File file ) throws IOException {
+            protected void writeImageFile(final File file) throws IOException {
                 super.writeImageFile(file);
                 System.out.println("Wrote file:" + file);
                 SwingUtilities.invokeLater(new Runnable() {
@@ -143,7 +141,7 @@ public class TestApp extends SimpleApplication {
         spix.registerPropertySetFactory(ShaderNode.class, new ShaderNodePropertySetFactory());
         spix.registerPropertySetFactory(VariableMapping.class, new VariableMappingPropertySetFactory());
         spix.registerPropertySetFactory(Material.class, new MaterialPropertySetFactory());
-        
+
         spix.registerFormFactory(new Type(Spatial.class), new SpatialFormFactory());
         spix.registerFormFactory(new Type(VariableMapping.class), new VariableMappingFormFactory());
 
@@ -189,15 +187,15 @@ public class TestApp extends SimpleApplication {
                 // for which it is capable.
                 SwingGui gui = spix.registerService(SwingGui.class, new SwingGui(spix, mainFrame));
 
-                
+
                 // Register a custom read-only display for Vector3fs that formats the values
                 // a little better.
-                gui.registerComponentFactory(Vector3f.class,  
-                                             new DefaultComponentFactory(new Vec3fStringFunction()));
-                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Vector3f.class,                                                                                           
-                                             new DefaultComponentFactory(Vector3fPanel.class)); 
-                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Quaternion.class, 
-                                             new DefaultComponentFactory(QuaternionPanel.class));
+                gui.registerComponentFactory(Vector3f.class,
+                        new DefaultComponentFactory(new Vec3fStringFunction()));
+                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Vector3f.class,
+                        new DefaultComponentFactory(Vector3fPanel.class));
+                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Quaternion.class,
+                        new DefaultComponentFactory(QuaternionPanel.class));
 
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, ShaderNodeVariable.class,
                         new DefaultComponentFactory(ShaderNodeVariablePanel.class));
@@ -221,13 +219,13 @@ public class TestApp extends SimpleApplication {
 
                 // Setup a selection test to change the test label
                 spix.getBlackboard().bind("main.selection.singleSelect",
-                                           testLabel, "text", ToStringFunction.INSTANCE);
+                        testLabel, "text", ToStringFunction.INSTANCE);
 
                 // Bind the selection to the editor panel, converting objects to
                 // property set wrappers if appropriate.
                 spix.getBlackboard().bind("main.selection.singleSelect",
-                                          objectEditor, "object",
-                                          new ToPropertySetFunction(spix));
+                        objectEditor, "object",
+                        new ToPropertySetFunction(spix));
 
                 /*spix.getBlackboard().bind("main.selection.singleSelect",
                                            testLabel2, "text",
@@ -247,14 +245,14 @@ public class TestApp extends SimpleApplication {
                     }
                 });
 
-                spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), gui));
+                //        spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), gui));
             }
         });
 
 
         stateManager.getState(AwtPanelState.class).addEnabledCommand(new Runnable() {
             public void run() {
-                if( !mainFrame.isVisible() ) {
+                if (!mainFrame.isVisible()) {
                     // By now we should have the panel inside
                     mainFrame.pack();
                     mainFrame.setLocationRelativeTo(null);
@@ -264,7 +262,6 @@ public class TestApp extends SimpleApplication {
         });
 
     }
-
 
 
     private JMenuBar createMainMenu() {
@@ -278,28 +275,28 @@ public class TestApp extends SimpleApplication {
         file.add(new NopAction("New"));
         file.add(null); // separator
         file.add(new NopAction("Open") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 // Uses the alternate requester service approach
                 spix.getService(FileRequester.class).requestFile("Open Scene",
                         "JME Object", "j3o", null, true, false, false,
-                             new RequestCallback<File>() {
-                                public void done( File f ) {
-                                    System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
-                                    loadFile(f);
-                                }
-                             });
+                        new RequestCallback<File>() {
+                            public void done(File f) {
+                                System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());
+                                loadFile(f);
+                            }
+                        });
             }
         });
         file.add(new NopAction("Save"));
         file.add(null); // separator
         file.add(new NopAction("Take Screenshot") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 stateManager.getState(ScreenshotAppState.class).takeScreenshot();
             }
         });
         file.add(null); // separator
         file.add(new NopAction("Exit") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 // Need to tell the app to shutdown... this is one case where
                 // we need some back chain.  We'll cheat for now.
                 // FIXME
@@ -325,7 +322,7 @@ public class TestApp extends SimpleApplication {
         ActionList transform = edit.add(new DefaultActionList("Transform"));
 
         ToggleAction translate = transform.add(new AbstractToggleAction("Translate") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 spix.getBlackboard().set("transform.mode", "translate");
             }
         });
@@ -333,11 +330,11 @@ public class TestApp extends SimpleApplication {
 
         // Bind it to the translation widget app state also
         spix.getBlackboard().bind("transform.mode", stateManager.getState(TranslationWidgetState.class),
-                                  "enabled", Predicates.equalTo("translate"));
+                "enabled", Predicates.equalTo("translate"));
 
 
         ToggleAction scale = transform.add(new AbstractToggleAction("Scale") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 spix.getBlackboard().set("transform.mode", "scale");
             }
         });
@@ -349,7 +346,7 @@ public class TestApp extends SimpleApplication {
                 "enabled", Predicates.equalTo("scale"));
 
         ToggleAction rotate = transform.add(new AbstractToggleAction("Rotate") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 spix.getBlackboard().set("transform.mode", "rotate");
             }
         });
@@ -365,7 +362,7 @@ public class TestApp extends SimpleApplication {
 
         ActionList camera = main.add(new DefaultActionList("Camera"));
         final ToggleAction fly = camera.add(new AbstractToggleAction("Fly") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 System.out.println("camera.mode=fly");
                 spix.getBlackboard().set("camera.mode", "fly");
             }
@@ -374,11 +371,11 @@ public class TestApp extends SimpleApplication {
 
         // Bind it to the flycam app state also
         spix.getBlackboard().bind("camera.mode", stateManager.getState(FlyCamAppState.class),
-                                  "enabled", Predicates.equalTo("fly"));
+                "enabled", Predicates.equalTo("fly"));
 
 
         final ToggleAction orbit = camera.add(new AbstractToggleAction("Orbit") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 System.out.println("camera.mode=orbit");
                 spix.getBlackboard().set("camera.mode", "orbit");
             }
@@ -387,10 +384,10 @@ public class TestApp extends SimpleApplication {
 
         // Bind it to the orbit app state
         spix.getBlackboard().bind("camera.mode", stateManager.getState(OrbitCameraState.class),
-                                  "enabled", Predicates.equalTo("orbit"));
+                "enabled", Predicates.equalTo("orbit"));
 
         final ToggleAction blenderCam = camera.add(new AbstractToggleAction("Blender") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 System.out.println("camera.mode=blender");
                 spix.getBlackboard().set("camera.mode", "blender");
             }
@@ -411,9 +408,9 @@ public class TestApp extends SimpleApplication {
 
         ActionList view = main.add(new DefaultActionList("View"));
         ToggleAction showGrid = view.add(new AbstractToggleAction("Grid") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 Boolean on = spix.getBlackboard().get("view.grid", Boolean.class);
-                if( on == null ) {
+                if (on == null) {
                     on = Boolean.FALSE;
                 }
                 spix.getBlackboard().set("view.grid", !on);
@@ -426,14 +423,14 @@ public class TestApp extends SimpleApplication {
 
         // Bind it to the grid app state
         spix.getBlackboard().bind("view.grid", stateManager.getState(GridState.class),
-                                  "enabled");
+                "enabled");
 
         view.add(new NopAction("Viewport Color") {
-            public void performAction( final Spix spix ) {
+            public void performAction(final Spix spix) {
                 ColorRGBA initialColor = spix.getBlackboard().get("viewport.color", ColorRGBA.class);
                 spix.getService(ColorRequester.class).requestColor("Select the viewport color", initialColor, true,
                         new RequestCallback<ColorRGBA>() {
-                            public void done( ColorRGBA color ) {
+                            public void done(ColorRGBA color) {
                                 spix.getBlackboard().set("viewport.color", color);
                             }
                         });
@@ -444,7 +441,7 @@ public class TestApp extends SimpleApplication {
 
         ActionList highlight = view.add(new DefaultActionList("Highlight"));
         ToggleAction highlightWireframe = highlight.add(new AbstractToggleAction("Wireframe") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 spix.getBlackboard().set("highlight.mode", SelectionHighlightState.HighlightMode.Wireframe);
             }
         });
@@ -452,7 +449,7 @@ public class TestApp extends SimpleApplication {
 
 
         ToggleAction highlighOutLine = highlight.add(new AbstractToggleAction("Outline") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 spix.getBlackboard().set("highlight.mode", SelectionHighlightState.HighlightMode.Outline);
             }
         });
@@ -460,7 +457,7 @@ public class TestApp extends SimpleApplication {
 
         // Bind the highlight.mode blackboard property to the state's property
         spix.getBlackboard().bind("highlight.mode", stateManager.getState(SelectionHighlightState.class),
-                                  "highlightMode");
+                "highlightMode");
 
         // Set the mode default
         spix.getBlackboard().set("highlight.mode", SelectionHighlightState.HighlightMode.Outline);
@@ -501,11 +498,10 @@ public class TestApp extends SimpleApplication {
 
         ActionList help = main.add(new DefaultActionList("Help"));
         help.add(new NopAction("About") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 spix.getService(MessageRequester.class).showMessage("About", "What's it all about?", null);
             }
         });
-
 
 
         return main;
@@ -514,54 +510,54 @@ public class TestApp extends SimpleApplication {
     private void initPovMenus(ActionList camera) {
         ActionList povMenu = camera.add(new DefaultActionList("Point of view"));
         povMenu.add(new NopAction("Front") {
-            public void performAction( final Spix spix ) {
+            public void performAction(final Spix spix) {
                 BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
-                if(bcs == null){
+                if (bcs == null) {
                     return;
                 }
                 bcs.switchToFront();
             }
         });
         povMenu.add(new NopAction("Back") {
-            public void performAction( final Spix spix ) {
+            public void performAction(final Spix spix) {
                 BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
-                if(bcs == null){
+                if (bcs == null) {
                     return;
                 }
                 bcs.switchToBack();
             }
         });
         povMenu.add(new NopAction("Left") {
-            public void performAction( final Spix spix ) {
+            public void performAction(final Spix spix) {
                 BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
-                if(bcs == null){
+                if (bcs == null) {
                     return;
                 }
                 bcs.switchToLeft();
             }
         });
         povMenu.add(new NopAction("Right") {
-            public void performAction( final Spix spix ) {
+            public void performAction(final Spix spix) {
                 BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
-                if(bcs == null){
+                if (bcs == null) {
                     return;
                 }
                 bcs.switchToRight();
             }
         });
         povMenu.add(new NopAction("Top") {
-            public void performAction( final Spix spix ) {
+            public void performAction(final Spix spix) {
                 BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
-                if(bcs == null){
+                if (bcs == null) {
                     return;
                 }
                 bcs.switchToTop();
             }
         });
         povMenu.add(new NopAction("Bottom") {
-            public void performAction( final Spix spix ) {
+            public void performAction(final Spix spix) {
                 BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);
-                if(bcs == null){
+                if (bcs == null) {
                     return;
                 }
                 bcs.switchToBottom();
@@ -574,31 +570,31 @@ public class TestApp extends SimpleApplication {
 
         AnimationActionList animation = objects.add(new AnimationActionList("Animation"));
         spix.getBlackboard().bind("main.selection.singleSelect",
-                                  animation, "selection");
+                animation, "selection");
 
         NopAction test1 = objects.add(new NopAction("Clone Test 1") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 cloneTest1();
             }
         });
         spix.getBlackboard().bind("main.selection.singleSelect",
-                                  test1, "enabled", Predicates.instanceOf(Spatial.class));
+                test1, "enabled", Predicates.instanceOf(Spatial.class));
 
         NopAction test2 = objects.add(new NopAction("Clone Test 2") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 cloneTest2();
             }
         });
         spix.getBlackboard().bind("main.selection.singleSelect",
-                                  test2, "enabled", Predicates.instanceOf(Spatial.class));
+                test2, "enabled", Predicates.instanceOf(Spatial.class));
 
         NopAction test3 = objects.add(new NopAction("Clone Test 3") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 cloneTest3();
             }
         });
         spix.getBlackboard().bind("main.selection.singleSelect",
-                                  test3, "enabled", Predicates.instanceOf(Spatial.class));
+                test3, "enabled", Predicates.instanceOf(Spatial.class));
 
         return objects;
     }
@@ -608,24 +604,24 @@ public class TestApp extends SimpleApplication {
         final ActionList testActions2 = new DefaultActionList("Test");
 
         testActions.add(new NopAction("Select Color") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 spix.getService(ColorRequester.class).requestColor("Select a Test Color", null, false,
-                                                                   new RequestCallback<ColorRGBA>() {
-                    public void done( ColorRGBA color ) {
-                        System.out.println("Selected color:" + color);
-                    }
-                });
+                        new RequestCallback<ColorRGBA>() {
+                            public void done(ColorRGBA color) {
+                                System.out.println("Selected color:" + color);
+                            }
+                        });
             }
         });
 
         testActions.add(new NopAction("Select Color Interactive") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 spix.getService(ColorRequester.class).requestColor("Select a Test Color", null, true,
-                                                                   new RequestCallback<ColorRGBA>() {
-                    public void done( ColorRGBA color ) {
-                        System.out.println("Selected color:" + color);
-                    }
-                });
+                        new RequestCallback<ColorRGBA>() {
+                            public void done(ColorRGBA color) {
+                                System.out.println("Selected color:" + color);
+                            }
+                        });
             }
         });
 
@@ -633,7 +629,7 @@ public class TestApp extends SimpleApplication {
         final Action testAction = testActions.add(new spix.core.AbstractAction("Test") {
             private int count = 1;
 
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 System.out.println("A test spix action.  Thread:" + Thread.currentThread());
                 put(Action.NAME, "Test " + (++count));
             }
@@ -641,7 +637,7 @@ public class TestApp extends SimpleApplication {
 
         // An add test
         Action addAction = testActions.add(new spix.core.AbstractAction("Add") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 testActions.add(testAction);
                 testActions2.add(testAction);
             }
@@ -649,7 +645,7 @@ public class TestApp extends SimpleApplication {
 
         // A remove test
         Action removeAction = testActions.add(new spix.core.AbstractAction("Remove") {
-            public void performAction( Spix spix ) {
+            public void performAction(Spix spix) {
                 testActions.remove(testAction);
                 testActions2.remove(testAction);
             }
@@ -688,12 +684,12 @@ public class TestApp extends SimpleApplication {
 
 
         geom = new Geometry("Box", b);
-     //  mat = new Material(assetManager, "Common/MatDefs/Misc/UnshadedNodes.j3md");
+        //  mat = new Material(assetManager, "Common/MatDefs/Misc/UnshadedNodes.j3md");
         //mat = new Material(assetManager, "MatDefs/circle/circle.j3md");
         mat = new Material(assetManager, "MatDefs/default/default.j3md");
         mat.setColor("Color", ColorRGBA.Yellow);
         geom.setMaterial(mat);
-        geom.setLocalTranslation(3,0,0);
+        geom.setLocalTranslation(3, 0, 0);
         rootNode.attachChild(geom);
 
 
@@ -705,10 +701,10 @@ public class TestApp extends SimpleApplication {
         ambient.setColor(new ColorRGBA(0.25f, 0.25f, 0.25f, 1));
         rootNode.addLight(ambient);
 
-        PointLight pl = new PointLight(new Vector3f(-2,0,-2), 4);
+        PointLight pl = new PointLight(new Vector3f(-2, 0, -2), 4);
         rootNode.addLight(pl);
 
-        SpotLight sl = new SpotLight(new Vector3f(3,3,-3),new Vector3f(-1f, -1, 1f).normalizeLocal(), 10, ColorRGBA.White.mult(2));
+        SpotLight sl = new SpotLight(new Vector3f(3, 3, -3), new Vector3f(-1f, -1, 1f).normalizeLocal(), 10, ColorRGBA.White.mult(2));
         sl.setSpotOuterAngle(FastMath.DEG_TO_RAD * 15);
         sl.setSpotInnerAngle(FastMath.DEG_TO_RAD * 10);
         rootNode.addLight(sl);
@@ -723,13 +719,13 @@ public class TestApp extends SimpleApplication {
 
             private CursorMotionEvent lastMotion;
 
-            public void cursorButtonEvent( CursorButtonEvent event, Spatial target, Spatial capture ) {
+            public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
                 System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
 
-                if( !event.isPressed() && lastMotion != null ) {
+                if (!event.isPressed() && lastMotion != null) {
                     // Set the selection
                     Geometry selected = null;
-                    if( lastMotion.getCollision() != null ) {
+                    if (lastMotion.getCollision() != null) {
                         selected = lastMotion.getCollision().getGeometry();
                     }
                     System.out.println("Setting selection to:" + selected);
@@ -737,15 +733,15 @@ public class TestApp extends SimpleApplication {
                 }
             }
 
-            public void cursorEntered( CursorMotionEvent event, Spatial target, Spatial capture ) {
+            public void cursorEntered(CursorMotionEvent event, Spatial target, Spatial capture) {
                 System.out.println("cursorEntered(" + event + ", " + target + ", " + capture + ")");
             }
 
-            public void cursorExited( CursorMotionEvent event, Spatial target, Spatial capture ) {
+            public void cursorExited(CursorMotionEvent event, Spatial target, Spatial capture) {
                 System.out.println("cursorExited(" + event + ", " + target + ", " + capture + ")");
             }
 
-            public void cursorMoved( CursorMotionEvent event, Spatial target, Spatial capture ) {
+            public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
                 //System.out.println("cursorMoved(" + event + ", " + target + ", " + capture + ")");
                 this.lastMotion = event;
             }
@@ -755,17 +751,17 @@ public class TestApp extends SimpleApplication {
     }
 
     @Override
-    public void simpleUpdate( float tpf ) {
+    public void simpleUpdate(float tpf) {
 //System.out.println("-----------frame-------------");
     }
 
 
-    private void loadFile( File f ) {
+    private void loadFile(File f) {
         // JME doesn't really make this easy... so we cheat a little and make some
         // assumptions.
         File assetRoot = f.getParentFile();
         String modelPath = f.getName();
-        while( assetRoot.getParentFile() != null && !"assets".equals(assetRoot.getName()) ) {
+        while (assetRoot.getParentFile() != null && !"assets".equals(assetRoot.getName())) {
             modelPath = assetRoot.getName() + "/" + modelPath;
             assetRoot = assetRoot.getParentFile();
         }
@@ -779,8 +775,8 @@ public class TestApp extends SimpleApplication {
 
         // For now, find out where to put the scene so that it is next to whatever
         // is currently loaded
-        BoundingBox currentBounds = (BoundingBox)rootNode.getWorldBound();
-        BoundingBox modelBounds = (BoundingBox)scene.getWorldBound();
+        BoundingBox currentBounds = (BoundingBox) rootNode.getWorldBound();
+        BoundingBox modelBounds = (BoundingBox) scene.getWorldBound();
 
         System.out.println("root bounds:" + currentBounds);
         System.out.println("model bounds:" + modelBounds);
@@ -792,14 +788,14 @@ public class TestApp extends SimpleApplication {
         rootNode.attachChild(scene);
     }
 
-    private void addSpatial( Spatial spatial ) {
+    private void addSpatial(Spatial spatial) {
 
         spatial.setLocalTranslation(0, 0, 0);
 
         // For now, find out where to put the scene so that it is next to whatever
         // is currently loaded
-        BoundingBox currentBounds = (BoundingBox)rootNode.getWorldBound();
-        BoundingBox modelBounds = (BoundingBox)spatial.getWorldBound();
+        BoundingBox currentBounds = (BoundingBox) rootNode.getWorldBound();
+        BoundingBox modelBounds = (BoundingBox) spatial.getWorldBound();
 
         System.out.println("root bounds:" + currentBounds);
         System.out.println("model bounds:" + modelBounds);
@@ -813,15 +809,15 @@ public class TestApp extends SimpleApplication {
 
     private Spatial getSelectedModel() {
         Spatial selected = spix.getBlackboard().get("main.selection.singleSelect", Spatial.class);
-        if( selected == null ) {
+        if (selected == null) {
             return null;
         }
 
         // We need to traverse up and find the spatial that was actually loaded...
         // the 'node' that contained us.  This is a bit of a hack but we keep
         // going up until we find a node with an asset key.
-        for( Spatial parent = selected.getParent(); parent != null; parent = parent.getParent() ) {
-            if( parent.getKey() != null ) {
+        for (Spatial parent = selected.getParent(); parent != null; parent = parent.getParent()) {
+            if (parent.getKey() != null) {
                 selected = parent;
                 break;
             }
@@ -831,40 +827,40 @@ public class TestApp extends SimpleApplication {
 
     private void cloneTest1() {
         Spatial selected = getSelectedModel();
-        if( selected == null ) {
+        if (selected == null) {
             return;
         }
-System.out.println("Cloning, cloning materials.");        
+        System.out.println("Cloning, cloning materials.");
         addSpatial(selected.clone());
     }
 
     private void cloneTest2() {
         Spatial selected = getSelectedModel();
-        if( selected == null ) {
+        if (selected == null) {
             return;
         }
-System.out.println("Cloning, sharing materials.");        
+        System.out.println("Cloning, sharing materials.");
         addSpatial(selected.clone(false));
     }
 
     private void cloneTest3() {
         Spatial selected = getSelectedModel();
-        if( selected == null ) {
+        if (selected == null) {
             return;
         }
-System.out.println("Deep cloning.");
+        System.out.println("Deep cloning.");
         addSpatial(selected.deepClone());
     }
 
-    private void addLight(Class<? extends Light> lightClass){
+    private void addLight(Class<? extends Light> lightClass) {
         Spatial selected = getSelectedSpatial();
         Spatial anchor;
-        if(selected != null){
+        if (selected != null) {
             anchor = selected;
-            while(anchor != null && !(anchor instanceof Node)){
+            while (anchor != null && !(anchor instanceof Node)) {
                 anchor = anchor.getParent();
             }
-        }else {
+        } else {
             anchor = rootNode;
         }
 
@@ -883,7 +879,7 @@ System.out.println("Deep cloning.");
     private Spatial getSelectedSpatial() {
         SelectionModel model = getStateManager().getState(SpixState.class).getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         Object obj = model.getSingleSelection();
-        if( obj != null && obj instanceof Spatial){
+        if (obj != null && obj instanceof Spatial) {
             return (Spatial) obj;
         }
         return null;
@@ -891,11 +887,11 @@ System.out.println("Deep cloning.");
 
     public static class NopAction extends spix.core.AbstractAction {
 
-        public NopAction( String name ) {
+        public NopAction(String name) {
             super(name);
         }
 
-        public void performAction( Spix spix ) {
+        public void performAction(Spix spix) {
         }
     }
 }

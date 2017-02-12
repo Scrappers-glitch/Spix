@@ -39,8 +39,34 @@ public class FileLoadingService {
                         checkRelocateAndDo(result, "Textures", new RequestCallback<String>() {
                             @Override
                             public void done(String relocateTo) {
-                                Texture tex = fileState.loadTexture(result, relocateTo);
-                                callback.done(tex);
+                                fileState.loadTexture(result, relocateTo, new RequestCallback<Texture>() {
+                                    @Override
+                                    public void done(Texture result) {
+                                        callback.done(result);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+    }
+
+    public void requestTexture(String description, String extensions, boolean flip, RequestCallback<Texture> callback) {
+        File assetRoot = new File(spix.getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
+        spix.getService(FileRequester.class).requestFile("Select an image file", description, extensions,
+                assetRoot, true, true, true,
+                new RequestCallback<File>() {
+                    @Override
+                    public void done(File result) {
+                        checkRelocateAndDo(result, "Textures", new RequestCallback<String>() {
+                            @Override
+                            public void done(String relocateTo) {
+                                fileState.loadTexture(result, relocateTo, flip, new RequestCallback<Texture>() {
+                                    @Override
+                                    public void done(Texture result) {
+                                        callback.done(result);
+                                    }
+                                });
                             }
                         });
                     }

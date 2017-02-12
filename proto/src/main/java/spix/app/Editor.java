@@ -71,6 +71,7 @@ import spix.core.*;
 import spix.core.Action;
 import spix.swing.ActionUtils;
 import spix.swing.*;
+import spix.swing.materialEditor.MatDefEditorWindow;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.panels.DockPanel;
 import spix.swing.materialEditor.panels.PropPanel;
@@ -290,7 +291,7 @@ public class Editor extends SimpleApplication {
 //                    }
 //                });
 //
-                spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), gui));
+                spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), stateManager.getState(FileIoAppState.class), gui));
                 spix.registerService(FileLoadingService.class, new FileLoadingService(gui.getSpix(), stateManager.getState(FileIoAppState.class)));
             }
         });
@@ -337,7 +338,8 @@ public class Editor extends SimpleApplication {
 
     //maybe extract this in another class later...
     private boolean sceneDirty = false;
-    public void setSceneIsDirty(boolean dirty){
+
+    public void setSceneIsDirty(boolean dirty) {
         gui.runOnSwing(new Runnable() {
             @Override
             public void run() {
@@ -355,7 +357,8 @@ public class Editor extends SimpleApplication {
             }
         });
     }
-    public void setSceneFileName(String fileName){
+
+    public void setSceneFileName(String fileName) {
         gui.runOnSwing(new Runnable() {
             @Override
             public void run() {
@@ -380,6 +383,7 @@ public class Editor extends SimpleApplication {
 
         ActionList addSpatialAction = new DefaultActionList("Spatial");
         addSpatialAction.add(new AddSpatialAction("Node", AddSpatialAction.DEFAULT_NODE, spix));
+        addSpatialAction.add(new AddSkyBoxAction("SkyBox"));
         addSpatialAction.add(null);
         addSpatialAction.add(new AddSpatialAction("Box", AddSpatialAction.DEFAULT_BOX, spix));
         addSpatialAction.add(new AddSpatialAction("Quad", AddSpatialAction.DEFAULT_QUAD, spix));
@@ -755,6 +759,7 @@ public class Editor extends SimpleApplication {
 
         return objects;
     }
+
     @Override
     public void simpleInitApp() {
 

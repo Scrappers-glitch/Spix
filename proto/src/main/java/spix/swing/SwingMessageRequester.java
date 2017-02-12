@@ -40,6 +40,8 @@ import spix.core.RequestCallback;
 import spix.ui.MessageRequester;
 
 import javax.swing.*;
+import java.awt.*;
+import java.util.*;
 
 /**
  *
@@ -49,6 +51,7 @@ import javax.swing.*;
 public class SwingMessageRequester implements MessageRequester {
  
     private SwingGui swingGui;
+    private Map<String, Popup> popups = new HashMap<>();
  
     public SwingMessageRequester( SwingGui swingGui ) {
         this.swingGui = swingGui;
@@ -80,5 +83,45 @@ public class SwingMessageRequester implements MessageRequester {
                 swingGui.getSpix().sendResponse(callback, result == JOptionPane.YES_OPTION);
             }
         });
+    }
+
+    @Override
+    public String displayLoading(String message) {
+        String id = UUID.randomUUID().toString();
+        swingGui.runOnSwing(new Runnable() {
+            @Override
+            public void run() {
+                JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEADING));
+                JLabel label = new JLabel(message);
+                panel.add(label);
+                JProgressBar bar = new JProgressBar();
+                bar.setPreferredSize(new Dimension(75, 15));
+                bar.setIndeterminate(true);
+                panel.add(bar);
+                Rectangle bound = swingGui.getRootWindow().getBounds();
+                double x = bound.getX() + bound.getWidth() - panel.getPreferredSize().getWidth();
+                double y = bound.getY() + bound.getHeight() - panel.getPreferredSize().getHeight() - popups.size() * panel.getPreferredSize().getHeight();
+                Popup p = PopupFactory.getSharedInstance().getPopup(swingGui.getRootWindow(), panel, (int) x, (int) y);
+                p.show();
+                popups.put(id, p);
+                System.err.println(id);
+            }
+        });
+        return id;
+    }
+
+    @Override
+    public void hideLoading(String key) {
+        swingGui.runOnSwing(new Runnable() {
+            @Override
+            public void run() {
+                Popup p = popups.get(key);
+                if (p != null) {
+                    p.hide();
+                    popups.remove(key);
+                }
+            }
+        });
+
     }
 }

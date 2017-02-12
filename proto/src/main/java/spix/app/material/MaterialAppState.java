@@ -185,42 +185,16 @@ public class MaterialAppState extends BaseAppState {
         return new MaterialService.PreviewResult(cpuBuf, SIZE);
     }
 
-
-    public MaterialService.PreviewResult previewTexture(TextureKey key) {
-
-        Texture tex = loadTexture(key);
-
-        MaterialService.PreviewResult res = previewTexture(tex);
-        res.originalWidth = tex.getImage().getWidth();
-        res.originalHeight = tex.getImage().getHeight();
-        return res;
-    }
-
-    public Texture loadTexture(TextureKey key) {
-        //This... can take a long time. and depending on the size of the texture, requesting a preview can freeze JME thread for almost a second sometimes, making it stutter.
-        //TODO we should probably defer the loading to another thread and give back the loaded texture to JME thread when done.
-        return getApplication().getAssetManager().loadTexture(key);
-    }
-
     public void clearfromCache(AssetKey key) {
         getApplication().getAssetManager().deleteFromCache(key);
     }
 
-    public MaterialService.PreviewResult previewTexture(String texturePath) {
-
-        Path path = Paths.get(texturePath);
-        Path parent = path.getParent();
-        getApplication().getAssetManager().registerLocator(parent.toString(), FileLocator.class);
-        TextureKey key = new TextureKey(path.getFileName().toString(), false);
-        MaterialService.PreviewResult result = previewTexture(key);
-        getApplication().getAssetManager().unregisterLocator(parent.toString(), FileLocator.class);
-        return result;
-
-    }
-
     public MaterialService.PreviewResult previewTexture(Texture texture) {
         texPreviewMaterial.setTexture("Texture", texture);
-        return requestPreview(texPreviewMaterial, "Default", DisplayType.FullScreenQuad, 0);
+        MaterialService.PreviewResult res = requestPreview(texPreviewMaterial, "Default", DisplayType.FullScreenQuad, 0);
+        res.originalWidth = texture.getImage().getWidth();
+        res.originalHeight = texture.getImage().getHeight();
+        return res;
     }
 
     public Map<String, Shader> generateCode(TechniqueDef def){
