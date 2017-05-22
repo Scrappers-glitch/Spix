@@ -105,7 +105,7 @@ public class FileChooser {
         fileChooser.setFileSelectionMode(mode);
         fileChooser.setMultiSelectionEnabled(false);
 
-
+        fileChooser.setAccessory(null);
         if (accessories != null && accessories.size() > 0) {
             JPanel panel = new JPanel(new GridBagLayout());
             GridBagConstraints gbc = new GridBagConstraints();

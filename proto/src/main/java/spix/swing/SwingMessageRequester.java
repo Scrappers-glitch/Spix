@@ -44,25 +44,23 @@ import java.awt.*;
 import java.util.*;
 
 /**
- *
- *
- *  @author    Paul Speed
+ * @author Paul Speed
  */
 public class SwingMessageRequester implements MessageRequester {
- 
+
     private SwingGui swingGui;
     private Map<String, Popup> popups = new HashMap<>();
- 
-    public SwingMessageRequester( SwingGui swingGui ) {
+
+    public SwingMessageRequester(SwingGui swingGui) {
         this.swingGui = swingGui;
-    } 
-       
-    public void showMessage( final String title, final String message, final Type type ) {
- 
+    }
+
+    public void showMessage(final String title, final String message, final Type type) {
+
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 int msgType = JOptionPane.PLAIN_MESSAGE;
-                switch( type == null ? Type.Information : type ) {
+                switch (type == null ? Type.Information : type) {
                     case Information:
                         msgType = JOptionPane.INFORMATION_MESSAGE;
                         break;
@@ -104,7 +102,6 @@ public class SwingMessageRequester implements MessageRequester {
                 Popup p = PopupFactory.getSharedInstance().getPopup(swingGui.getRootWindow(), panel, (int) x, (int) y);
                 p.show();
                 popups.put(id, p);
-                System.err.println(id);
             }
         });
         return id;

@@ -36,6 +36,7 @@
 
 package spix.app.form;
 
+import com.jme3.material.MaterialDef;
 import spix.app.material.MatParamProperty;
 import spix.app.utils.IconPath;
 import spix.core.Spix;
@@ -160,7 +161,7 @@ public class SpatialFormFactory extends DefaultFormFactory {
         // After all of that, stick the subforms at the bottom
         result.add(new FormField("Local Transform", localTrans, IconPath.attrib));
         result.add(new FormField("World Transform", worldTrans, IconPath.world));
-        Property an = properties.getProperty("matDefFile");
+        Property an = properties.getProperty("matDef");
         if (an != null) {
 
             Field name = createField(spix, properties.getProperty("materialName"), context);
@@ -172,8 +173,9 @@ public class SpatialFormFactory extends DefaultFormFactory {
             Field assetName = createField(spix, an, context);
             materialForm.add(assetName);
 
+            MaterialDef def = (MaterialDef) an.getValue();
 
-            ArrayList params = spix.getBlackboard().get("material.metadata." + an.getValue(), ArrayList.class);
+            ArrayList params = spix.getBlackboard().get("material.metadata." + def.getAssetName(), ArrayList.class);
 
 
             if (params == null) {
@@ -183,7 +185,7 @@ public class SpatialFormFactory extends DefaultFormFactory {
 
             } else {
                 try {
-                    handleConfig(params, properties, materialForm, null, spix, context, (String) an.getValue());
+                    handleConfig(params, properties, materialForm, null, spix, context, def.getAssetName());
                 } catch (Exception e) {
                     //catch anything that could go wrong (this might be a user input at some point) and fall back to the noConfig layout.
                     logger.log(Level.SEVERE, "Failed to setup property layout for materialForm definition " + an.getValue());

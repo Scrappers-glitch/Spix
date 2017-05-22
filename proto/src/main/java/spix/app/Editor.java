@@ -44,6 +44,7 @@ import com.jme3.asset.MaterialKey;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.light.*;
 import com.jme3.material.Material;
+import com.jme3.material.MaterialDef;
 import com.jme3.math.*;
 import com.jme3.scene.*;
 import com.jme3.shader.ShaderNode;
@@ -77,8 +78,7 @@ import spix.swing.materialEditor.panels.DockPanel;
 import spix.swing.materialEditor.panels.PropPanel;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
 import spix.swing.sceneexplorer.SceneExplorerPanel;
-import spix.swing.texture.MaterialKeyPanel;
-import spix.swing.texture.TexturePanel;
+import spix.swing.texture.*;
 import spix.type.Type;
 import spix.ui.ColorRequester;
 import spix.ui.MessageRequester;
@@ -183,6 +183,8 @@ public class Editor extends SimpleApplication {
         spix.getBlackboard().set("material.metadata.Common/MatDefs/Light/Lighting.j3md", lightingConfig);
         Object unshadedConfig = yaml.load(this.getClass().getResourceAsStream("/unshaded.yaml"));
         spix.getBlackboard().set("material.metadata.Common/MatDefs/Misc/Unshaded.j3md", unshadedConfig);
+        Object unshadedNodesConfig = yaml.load(this.getClass().getResourceAsStream("/unshadedNodes.yaml"));
+        spix.getBlackboard().set("material.metadata.Common/MatDefs/Misc/UnshadedNodes.j3md", unshadedNodesConfig);
 
 
         // Have to create the frame on the AWT EDT.
@@ -261,6 +263,7 @@ public class Editor extends SimpleApplication {
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Quaternion.class, new DefaultComponentFactory(QuaternionPanel.class));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, Texture.class, new DefaultComponentFactory(TexturePanel.class));
                 gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, AssetKey.class, new DefaultComponentFactory(MaterialKeyPanel.class));
+                gui.registerComponentFactory(SwingGui.EDIT_CONTEXT, MaterialDef.class, new DefaultComponentFactory(MaterialDefPanel.class));
 
 
                 PropertyEditorPanel objectEditor = new PropertyEditorPanel(gui, "ui.editor");
@@ -282,14 +285,14 @@ public class Editor extends SimpleApplication {
                         new ToPropertySetFunction(spix));
 
 
-//                final MatDefEditorWindow matDefEditorWindow = new MatDefEditorWindow(gui);
-//                matDefEditorWindow.setVisible(true);
-//                mainFrame.addWindowListener(new WindowAdapter() {
-//                    @Override
-//                    public void windowClosing(WindowEvent e) {
-//                        matDefEditorWindow.dispose();
-//                    }
-//                });
+                final MatDefEditorWindow matDefEditorWindow = new MatDefEditorWindow(gui);
+                matDefEditorWindow.setVisible(true);
+                mainFrame.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        matDefEditorWindow.dispose();
+                    }
+                });
 //
                 spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), stateManager.getState(FileIoAppState.class), gui));
                 spix.registerService(FileLoadingService.class, new FileLoadingService(gui.getSpix(), stateManager.getState(FileIoAppState.class)));
@@ -617,6 +620,12 @@ public class Editor extends SimpleApplication {
             @Override
             public void performAction(Spix spix) {
                 addLight(new AmbientLight());
+            }
+        });
+        actionList.add(new NopAction("Light Probe") {
+            @Override
+            public void performAction(Spix spix) {
+                addLight(new LightProbe());
             }
         });
     }

@@ -20,7 +20,7 @@ import java.util.*;
  */
 public class ShaderCodePanel extends DockPanel {
 
-    //maybe I should try this for the glsl editor http://bobbylight.github.io/RSyntaxTextArea/ with a custom kit
+    //maybe I should try this for the glsl editor http://bobbylight.github.io/RSyntaxTextArea/ with a custom kit or with C
     private ShaderCodeEditor editor;
     private SwingGui gui;
     private Map<Shader.ShaderType, JToggleButton> buttons = new HashMap<>();
@@ -89,7 +89,9 @@ public class ShaderCodePanel extends DockPanel {
                 }
                 shaders = result;
                 Shader s = shaders.get(currentShaderVersion);
-
+                if (s == null) {
+                    return;
+                }
                 for (JToggleButton b : buttons.values()) {
                     toolbar.remove(b);
                 }
@@ -142,6 +144,9 @@ public class ShaderCodePanel extends DockPanel {
 
     private void updateText(){
         Shader shader = shaders.get(currentShaderVersion);
+        if (shader == null) {
+            return;
+        }
         for (Shader.ShaderSource shaderSource : shader.getSources()) {
             if(shaderSource.getType() == currentShaderType){
                 editor.setText(shaderSource.getSource());

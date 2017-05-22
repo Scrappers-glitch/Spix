@@ -51,4 +51,8 @@ public interface MessageRequester {
     public void showMessage(String title, String message, Type type);
 
     public void confirm(String title, String message, RequestCallback<Boolean> callback);
+
+    public String displayLoading(String message);
+
+    public void hideLoading(String key);
 }

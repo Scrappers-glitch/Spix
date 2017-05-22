@@ -7,10 +7,12 @@ import com.jme3.asset.*;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.export.binary.BinaryExporter;
-import com.jme3.material.Material;
+import com.jme3.material.*;
 import com.jme3.material.plugin.export.material.J3MExporter;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.shader.Shader;
+import com.jme3.shader.ShaderNodeDefinition;
 import com.jme3.texture.Texture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,48 +241,19 @@ public class FileIoAppState extends BaseAppState {
             @Override
             public void run() {
                 FilePath fp = getFilePath(f);
-
-                //System.out.println("Asset root:" + assetRoot + "   modelPath:" + modelPath);
-                assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
                 try {
 
 
                     if (changeAssetFolder) {
+                        assetManager.unregisterLocator(blackboard.get(MAIN_ASSETS_FOLDER, String.class), FileLocator.class);
+                        assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
                         blackboard.set(MAIN_ASSETS_FOLDER, fp.assetRoot.toString());
                         blackboard.set(SCENE_FILE_NAME, fp.modelPath);
 
                     } else if (!blackboard.get(MAIN_ASSETS_FOLDER).equals(fp.assetRoot.toString())) {
                         //This asset is not in the main asset root, meaning that if we add it in the scene as is the resulting j3o will be broken and will miss some assets.
                         //We have to relocate them in the main asset folder.
-
-                        assetListener.clear();
-                        assetManager.addAssetEventListener(assetListener);
-                        Spatial model = assetManager.loadModel(fp.modelPath);
-
-                        for (String dependency : assetListener.getDependencies()) {
-                            Path source = Paths.get(fp.assetRoot + File.separator + dependency);
-                            //check if the source file exists in the source folder (could be stock assets that doesn't need to be copied)
-                            if (Files.exists(source)) {
-                                Path target = Paths.get(blackboard.get(MAIN_ASSETS_FOLDER) + File.separator + dependency);
-                                try {
-                                    System.err.println("copying " + source + " to " + target);
-                                    if (!Files.exists(target)) {
-                                        //create the parent dir if needed.
-                                        if (!Files.exists(target.getParent())) {
-                                            Files.createDirectories(target.getParent());
-                                        }
-                                        //copy the file.
-                                        Files.copy(source, target);
-                                    }
-                                    //maybe if the file already exists in the target dir throw a warning...
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                        assetManager.deleteFromCache(model.getKey());
-                        assetManager.unregisterLocator(fp.assetRoot.toString(), FileLocator.class);
-                        assetManager.removeAssetEventListener(assetListener);
+                        relocateAsset(fp, new ModelKey(fp.modelPath));
                     }
 
                     Spatial model = assetManager.loadModel(fp.modelPath);
@@ -303,6 +276,93 @@ public class FileIoAppState extends BaseAppState {
         };
         executor.execute(task);
 
+    }
+
+    private void relocateAsset(FilePath fp, AssetKey key) {
+        assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
+        assetListener.clear();
+        assetManager.addAssetEventListener(assetListener);
+
+        try {
+            assetManager.loadAsset(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        assetManager.removeAssetEventListener(assetListener);
+        relocateDependencies(fp);
+        assetManager.deleteFromCache(key);
+        assetManager.unregisterLocator(fp.assetRoot.toString(), FileLocator.class);
+    }
+
+    private void relocateDependencies(FilePath fp) {
+        List<String> dependencies = new ArrayList<>();
+        dependencies.addAll(assetListener.getDependencies());
+        List<String> deps = new ArrayList<>();
+        for (String dependency : dependencies) {
+            //j3sn and j3md needs to be loaded so that associated shader files are copied over
+            if (dependency.endsWith(".j3sn")) {
+                ShaderNodeDefinitionKey sndKey = new ShaderNodeDefinitionKey(dependency);
+                List<ShaderNodeDefinition> defs = (List<ShaderNodeDefinition>) assetManager.loadAsset(sndKey);
+                for (ShaderNodeDefinition def : defs) {
+                    for (String path : def.getShadersPath()) {
+                        addShaderDependencies(deps, path);
+                    }
+                }
+            }
+            if (dependency.endsWith(".j3md")) {
+                AssetKey<MaterialDef> defKey = new AssetKey<>(dependency);
+                MaterialDef def = assetManager.loadAsset(defKey);
+                for (String techName : def.getTechniqueDefsNames()) {
+                    List<TechniqueDef> tds = def.getTechniqueDefs(techName);
+                    for (TechniqueDef td : tds) {
+                        EnumMap<Shader.ShaderType, String> shaders = td.getShaderProgramNames();
+                        for (String path : shaders.values()) {
+                            addShaderDependencies(deps, path);
+                        }
+                    }
+                }
+            }
+            //Needs to handle glsllib from shaders...
+            //load the shader source, parse it to find #import directives.
+            deps.add(dependency);
+        }
+        final StringBuilder message = new StringBuilder("The following files have been imported in the asset folder: \n");
+        for (String dependency : deps) {
+            Path source = Paths.get(fp.assetRoot + File.separator + dependency);
+            //check if the source file exists in the source folder (could be stock assets that doesn't need to be copied)
+            if (Files.exists(source)) {
+                Path target = Paths.get(blackboard.get(MAIN_ASSETS_FOLDER) + File.separator + dependency);
+                try {
+                    message.append(dependency).append("\n");
+                    System.err.println("copying " + source + " to " + target);
+                    if (!Files.exists(target)) {
+                        //create the parent dir if needed.
+                        if (!Files.exists(target.getParent())) {
+                            Files.createDirectories(target.getParent());
+                        }
+                        //copy the file.
+                        Files.copy(source, target);
+                    }
+                    //maybe if the file already exists in the target dir throw a warning...
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        getApplication().enqueue(new Runnable() {
+            @Override
+            public void run() {
+                getSpix().getService(MessageRequester.class).showMessage("Asset Imported successfully", message.toString(), MessageRequester.Type.Information);
+            }
+        });
+    }
+
+    private void addShaderDependencies(List<String> deps, String path) {
+        assetListener.clear();
+        assetManager.addAssetEventListener(assetListener);
+        assetManager.loadAsset(path);
+        assetManager.removeAssetEventListener(assetListener);
+        deps.addAll(assetListener.getDependencies());
     }
 
     public void loadTexture(File file, String relocateIn, RequestCallback<Texture> done) {
@@ -377,10 +437,23 @@ public class FileIoAppState extends BaseAppState {
         String assetRoot = blackboard.get(MAIN_ASSETS_FOLDER, String.class);
         if (!fp.assetRoot.getPath().equals(assetRoot)) {
             //we need to relocate the file
-            fp = relocateFile(fp, relocateIn);
+            relocateAsset(fp, new MaterialKey(fp.modelPath));
         }
 
         Material mat = getApplication().getAssetManager().loadMaterial(fp.modelPath);
+        getSpix().getService(MaterialService.class).registerMaterialForSync(fp.modelPath, mat);
+        return mat;
+    }
+
+    public Material makeMaterialFromMatDef(File file) {
+        FilePath fp = getFilePath(file);
+
+        String assetRoot = blackboard.get(MAIN_ASSETS_FOLDER, String.class);
+        if (!fp.assetRoot.getPath().equals(assetRoot)) {
+            //we need to relocate the file
+            relocateAsset(fp, new AssetKey(fp.modelPath));
+        }
+        Material mat = new Material(getApplication().getAssetManager(), fp.modelPath);
         getSpix().getService(MaterialService.class).registerMaterialForSync(fp.modelPath, mat);
         return mat;
     }

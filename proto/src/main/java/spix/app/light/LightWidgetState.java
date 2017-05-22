@@ -136,6 +136,9 @@ public class LightWidgetState extends BaseAppState {
             case Spot:
                 wrappers.add(new SpotLightWrapper(widget,(SpotLight)light, parent, getApplication().getAssetManager()));
                 break;
+            case Probe:
+                wrappers.add(new LightProbeWrapper(widget, (LightProbe) light, parent, getApplication().getAssetManager()));
+                break;
             default:
                 widget.setLocalTranslation(Vector3f.ZERO);
                 break;

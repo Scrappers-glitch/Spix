@@ -102,7 +102,7 @@ public class SpatialPropertySetFactory implements PropertySetFactory<Spatial> {
             int matPropStartIndex = props.size();
 
             props.add(BeanProperty.create(material, "name", "materialName", false, null));
-            props.add(BeanProperty.create(material.getMaterialDef(), "assetName", "matDefFile", false, null));
+            props.add(BeanProperty.create(material, "materialDef", "matDef", false, null));
             props.add(BeanProperty.create(material, "key", "j3m File", false, null));
 
             for (MatParam matParam : material.getMaterialDef().getMaterialParams()) {

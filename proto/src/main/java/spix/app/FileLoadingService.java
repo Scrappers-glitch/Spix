@@ -140,6 +140,30 @@ public class FileLoadingService {
     }
 
 
+    public void loadJ3mdForSelection() {
+        SelectionModel model = spix.getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+        if (model.getSingleSelection() != null && model.getSingleSelection() instanceof Geometry) {
+            Geometry geom = (Geometry) model.getSingleSelection();
+            File assetRoot = new File(spix.getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
+            spix.getService(FileRequester.class).requestFile("Load a J3md file", "material definition file", ".j3md",
+                    assetRoot, true, false, false,
+                    new RequestCallback<File>() {
+                        @Override
+                        public void done(File result) {
+                            Material mat = fileState.makeMaterialFromMatDef(result);
+                            Material oldMat = geom.getMaterial();
+                            geom.setMaterial(mat);
+                            spix.refresh(geom);
+                            UndoManager um = spix.getService(UndoManager.class);
+                            MaterialSetEdit edit = new MaterialSetEdit(geom, oldMat, mat);
+                            um.addEdit(edit);
+                            model.setSingleSelection(null);
+                            model.setSingleSelection(geom);
+                        }
+                    });
+        }
+    }
+
     private void checkRelocateAndDo(final File result, String defaultFolder, RequestCallback<String> callback) {
         FileIoAppState.FilePath fp = fileState.getFilePath(result);
         File assetRoot = new File(spix.getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));

@@ -100,7 +100,7 @@ public abstract class LightWrapper<L extends Light> {
         return 0;
     }
 
-    private void initMaterials(AssetManager assetManager) {
+    protected void initMaterials(AssetManager assetManager) {
         GuiGlobals globals = GuiGlobals.getInstance();
 
         Texture texture = globals.loadTexture("Interface/small-circle.png", false, false);

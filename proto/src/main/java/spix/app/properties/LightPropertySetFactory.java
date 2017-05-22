@@ -36,6 +36,7 @@
 
 package spix.app.properties;
 
+import com.jme3.bounding.BoundingVolume;
 import com.jme3.light.*;
 import com.jme3.math.FastMath;
 import spix.app.light.LightWrapper;
@@ -89,8 +90,20 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
             props.add(BeanProperty.create(wrapper.getLight(), "direction"));
             props.add(new WorldTranslationProperty(wrapper.getWidget(), null));
         } else if (type == Light.Type.Point){
-            props.add(BeanProperty.create(wrapper.getLight(), "radius", 
-                                          new NumberRangeType(0f, null, 0.1f)));
+            props.add(BeanProperty.create(wrapper.getLight(), "radius",
+                    new NumberRangeType(0f, null, 0.1f)));
+
+            //props.add(new WorldRotationProperty(wrapper.getWidget(), null));
+            //HACK Alert: We create a property on the position attribute of the light and pass it as if it was the local translation of the widget
+            //so that it's updated along with the worldTranslation of the widget,
+            //That's probably utterly wrong and we should probably do as suggested in the
+            //WorldTranslationProperty and have a central dispatcher.
+            Property position = BeanProperty.create(wrapper.getLight(), "position", true);
+            props.add(new WorldTranslationProperty(wrapper.getWidget(), position));
+            props.add(new WorldScaleProperty(wrapper.getWidget(), null, false));
+        } else if (type == Light.Type.Probe) {
+            props.add(BeanProperty.create(((LightProbe) wrapper.getLight()).getBounds(), "radius",
+                    new NumberRangeType(0f, null, 0.1f)));
 
             //props.add(new WorldRotationProperty(wrapper.getWidget(), null));
             //HACK Alert: We create a property on the position attribute of the light and pass it as if it was the local translation of the widget
