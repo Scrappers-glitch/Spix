@@ -75,6 +75,7 @@ public class SwingGui {
 
     private Spix spix;
     private Component rootWindow;
+    private Component matDefEditorWindow;
     private ContextHandlerRegistry<ComponentFactory> componentFactories = new ContextHandlerRegistry<>();
     private Thread edt; 
 
@@ -137,9 +138,17 @@ public class SwingGui {
  
     public Component getRootWindow() {
         return rootWindow;
-    } 
- 
-    public void setupSwingService( Class type ) {
+    }
+
+    public void setMatDefEditorWindow(Component matDefEditorWindow) {
+        this.matDefEditorWindow = matDefEditorWindow;
+    }
+
+    public Component getMatDefEditorWindow() {
+        return matDefEditorWindow;
+    }
+
+    public void setupSwingService(Class type) {
         if( FileRequester.class.isAssignableFrom(type) ) {
             spix.registerService(type, new SwingFileRequester(this));
         } else if( MessageRequester.class.isAssignableFrom(type) ) { 

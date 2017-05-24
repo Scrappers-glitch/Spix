@@ -55,10 +55,7 @@ import java.awt.event.ActionListener;
  * @author Rémy Bouquet
  */
 public class MaterialDefPanel extends AbstractPropertyPanel<Component> {
-
-    public static final String ASSET_BUTTON_TEXT = "Load j3m";
-    public static final String ASSET_BUTTON_TOOLTIP = "Click to load a j3m file for this material ";
-    public static final String NEW_BUTTON_TOOLTIP = "Create a new j3m file for this material";
+    public static final String EDIT_BUTTON_TOOLTIP = "Edit this material definition";
     private SwingGui gui;
 
     private JButton newButton;
@@ -79,17 +76,17 @@ public class MaterialDefPanel extends AbstractPropertyPanel<Component> {
         createMatDefCombo(gui, prop, panel, def);
 
         newButton = new JButton();
-        newButton.setIcon(Icons.plus);
-        newButton.setToolTipText(NEW_BUTTON_TOOLTIP);
-        newButton.setRolloverIcon(Icons.plusHover);
+        newButton.setIcon(Icons.edit);
+        newButton.setToolTipText(EDIT_BUTTON_TOOLTIP);
+        newButton.setRolloverIcon(Icons.editHover);
         newButton.setPreferredSize(new Dimension(20, 20));
         newButton.setMaximumSize(new Dimension(20, 20));
         newButton.setMinimumSize(new Dimension(20, 20));
         newButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //create a J3M
-                gui.getSpix().getService(FileLoadingService.class).createJ3mForSelection();
+                //popup the editor window
+                gui.getMatDefEditorWindow().setVisible(true);
             }
         });
 
@@ -137,12 +134,12 @@ public class MaterialDefPanel extends AbstractPropertyPanel<Component> {
                 System.out.println(selEntry.label);
                 if (selEntry == separator) {
                     matDefsCombo.setSelectedItem(selected);
-                }
-                if (selEntry == more) {
+                } else if (selEntry == more) {
                     gui.getSpix().getService(FileLoadingService.class).loadJ3mdForSelection();
-                }
-                if (selEntry == newMD) {
-                    //create one from default.
+                } else if (selEntry == newMD) {
+                    gui.getSpix().getService(FileLoadingService.class).createJ3mdForSelection();
+                } else {
+                    gui.getSpix().getService(FileLoadingService.class).loadStockJ3mdForSelection(selEntry.value);
                 }
 
             }
