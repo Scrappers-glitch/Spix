@@ -23,8 +23,7 @@ import spix.undo.Edit;
 import spix.undo.UndoManager;
 import spix.undo.edit.SpatialAddEdit;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -188,8 +187,27 @@ public class FileIoAppState extends BaseAppState {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    public Material createMaterialFromDefault(File file) {
+        Path filePath = file.toPath();
+        try {
 
+            String fileName = filePath.getFileName().toString();
+            filePath = filePath.getParent();
+            fileName = getUnusedName(filePath.toString(), fileName);
+            filePath = filePath.resolve(fileName);
+            Files.copy(getClass().getResourceAsStream("/templates/default.j3md"), filePath);
+            Path root = Paths.get(blackboard.get(MAIN_ASSETS_FOLDER, String.class));
+            filePath = root.relativize(filePath);
+            Material mat = new Material(assetManager, filePath.toString());
+            return mat;
+        } catch (IOException e) {
+            getSpix().getService(MessageRequester.class).showMessage("Error creating File " + filePath.toString(), e.getMessage(), MessageRequester.Type.Error);
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public String getUnusedName(String basePath, String filePath) {
@@ -322,8 +340,6 @@ public class FileIoAppState extends BaseAppState {
                     }
                 }
             }
-            //Needs to handle glsllib from shaders...
-            //load the shader source, parse it to find #import directives.
             deps.add(dependency);
         }
         final StringBuilder message = new StringBuilder("The following files have been imported in the asset folder: \n");
@@ -454,7 +470,11 @@ public class FileIoAppState extends BaseAppState {
             relocateAsset(fp, new AssetKey(fp.modelPath));
         }
         Material mat = new Material(getApplication().getAssetManager(), fp.modelPath);
-        getSpix().getService(MaterialService.class).registerMaterialForSync(fp.modelPath, mat);
+        return mat;
+    }
+
+    public Material makeMaterialFromStockMatDef(String matDefPath) {
+        Material mat = new Material(getApplication().getAssetManager(), matDefPath);
         return mat;
     }
 
@@ -464,7 +484,7 @@ public class FileIoAppState extends BaseAppState {
         if (Files.exists(source)) {
             Path target = Paths.get(blackboard.get(MAIN_ASSETS_FOLDER) + File.separator + localPath + File.separator + fp.fileName);
             try {
-                //THe file exists in the target dir, let's find a suitable new name.
+                //Te file exists in the target dir, let's find a suitable new name.
                 while (Files.exists(target)) {
                     String newName = getUnusedName(target.getParent().toString(), target.getFileName().toString());
                     target = Paths.get(blackboard.get(MAIN_ASSETS_FOLDER) + File.separator + localPath + File.separator + newName);

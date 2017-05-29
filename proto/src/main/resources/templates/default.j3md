@@ -1,7 +1,6 @@
 MaterialDef Simple {
     MaterialParameters {
         Color Color
-        Float Factor
     }
     Technique {
         WorldParameters {
@@ -13,7 +12,6 @@ MaterialDef Simple {
                 InputMappings {
                     worldViewProjectionMatrix = WorldParam.WorldViewProjectionMatrix
                     modelPosition = Attr.inPosition
-                    vertColor = Attr.inColor
                 }
                 OutputMappings {
                     Global.position = projPosition
@@ -24,19 +22,8 @@ MaterialDef Simple {
             ShaderNode ColorMult {
                 Definition : ColorMult : Common/MatDefs/ShaderNodes/Basic/ColorMult.j3sn
                 InputMappings {
-                    color1 = CommonVert.vertColor
+                    color1 = Global.color
                     color2 = MatParam.Color
-                }
-                OutputMappings {
-                    Global.color = outColor
-                }
-            }
-            ShaderNode ColorMix {
-                Definition : ColorMix : Common/MatDefs/ShaderNodes/Basic/ColorMix.j3sn
-                InputMappings {
-                    color1 = CommonVert.vertColor
-                    color2 = Global.color
-                    factor = MatParam.Factor
                 }
                 OutputMappings {
                     Global.color = outColor

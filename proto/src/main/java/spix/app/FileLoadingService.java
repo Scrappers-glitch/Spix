@@ -6,6 +6,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
 import spix.app.material.MaterialService;
+import spix.app.utils.MaterialUtils;
 import spix.core.*;
 import spix.ui.FileRequester;
 import spix.undo.SceneGraphStructureEdit;
@@ -87,19 +88,25 @@ public class FileLoadingService {
                                 @Override
                                 public void done(String relocateTo) {
                                     Material mat = fileState.loadMaterial(result, relocateTo);
-                                    Material oldMat = geom.getMaterial();
-                                    geom.setMaterial(mat);
-                                    spix.refresh(geom);
-                                    UndoManager um = spix.getService(UndoManager.class);
-                                    MaterialSetEdit edit = new MaterialSetEdit(geom, oldMat, mat);
-                                    um.addEdit(edit);
-                                    model.setSingleSelection(null);
-                                    model.setSingleSelection(geom);
+                                    changeMaterial(mat, geom, model);
                                 }
                             });
                         }
                     });
         }
+    }
+
+    private void changeMaterial(Material mat, Geometry geom, SelectionModel model) {
+        Material oldMat = geom.getMaterial();
+        //copy params over new mat if relevant
+        MaterialUtils.copyParams(oldMat, mat);
+        geom.setMaterial(mat);
+        spix.refresh(geom);
+        UndoManager um = spix.getService(UndoManager.class);
+        MaterialSetEdit edit = new MaterialSetEdit(geom, oldMat, mat);
+        um.addEdit(edit);
+        model.setSingleSelection(null);
+        model.setSingleSelection(geom);
     }
 
     public void createJ3mForSelection() {
@@ -151,17 +158,80 @@ public class FileLoadingService {
                         @Override
                         public void done(File result) {
                             Material mat = fileState.makeMaterialFromMatDef(result);
-                            Material oldMat = geom.getMaterial();
-                            geom.setMaterial(mat);
-                            spix.refresh(geom);
-                            UndoManager um = spix.getService(UndoManager.class);
-                            MaterialSetEdit edit = new MaterialSetEdit(geom, oldMat, mat);
-                            um.addEdit(edit);
-                            model.setSingleSelection(null);
-                            model.setSingleSelection(geom);
+                            changeMaterial(mat, geom, model);
                         }
                     });
         }
+    }
+
+    public void createJ3mdForSelection() {
+        Geometry geom = getSelectedGeometry();
+        if (geom == null) {
+            return;
+        }
+        File assetRoot = getAssetRoot();
+        File defaultFile = new File(assetRoot.getPath() + File.separator + "MatDefs/matdef");
+        spix.getService(FileRequester.class).requestFile("Create a J3md file", "j3md material definition file", "j3md",
+                defaultFile, false, false, false,
+                new RequestCallback<File>() {
+                    @Override
+                    public void done(File result) {
+                        MaterialService matService = spix.getService(MaterialService.class);
+
+                        Material oldMat = geom.getMaterial();
+                        if (oldMat.getKey() != null) {
+                            matService.unregisterMaterialForSync(oldMat.getKey().getName(), oldMat);
+                        }
+
+                        Material mat = fileState.createMaterialFromDefault(result);
+                        if (mat == null) {
+                            return;
+                        }
+                        geom.setMaterial(mat);
+                        spix.refresh(geom);
+
+                        UndoManager um = spix.getService(UndoManager.class);
+                        MaterialSetEdit edit = new MaterialSetEdit(geom, oldMat, mat);
+                        um.addEdit(edit);
+                        SelectionModel model = getSelectionModel();
+                        model.setSingleSelection(null);
+                        model.setSingleSelection(geom);
+
+                    }
+                });
+
+    }
+
+    private Geometry getSelectedGeometry() {
+        SelectionModel model = getSelectionModel();
+        if (model.getSingleSelection() != null && model.getSingleSelection() instanceof Geometry) {
+            return (Geometry) model.getSingleSelection();
+        }
+        return null;
+    }
+
+    private SelectionModel getSelectionModel() {
+        return spix.getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+    }
+
+    private File getAssetRoot() {
+        return new File(spix.getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
+    }
+
+    public void loadStockJ3mdForSelection(String matDefPath) {
+        SelectionModel model = spix.getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+        if (model.getSingleSelection() != null && model.getSingleSelection() instanceof Geometry) {
+            Geometry geom = (Geometry) model.getSingleSelection();
+            spix.enqueueTask(new Runnable() {
+                @Override
+                public void run() {
+                    Material mat = fileState.makeMaterialFromStockMatDef(matDefPath);
+                    changeMaterial(mat, geom, model);
+
+                }
+            });
+        }
+
     }
 
     private void checkRelocateAndDo(final File result, String defaultFolder, RequestCallback<String> callback) {
