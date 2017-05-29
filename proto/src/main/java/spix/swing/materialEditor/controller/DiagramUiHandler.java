@@ -28,6 +28,8 @@ public class DiagramUiHandler {
     //A convenience map to easy access to the output nodes;
     private Map<Shader.ShaderType, Map<String, List<OutPanel>>> outPanels = new HashMap<>();
     protected List<Connection> connections = new ArrayList<>();
+    private MaterialPreviewRenderer previewRenderer = new MaterialPreviewRenderer();
+
 
     public DiagramUiHandler(Diagram diagram) {
         this.diagram = diagram;
@@ -291,8 +293,9 @@ public class DiagramUiHandler {
             }
 
         }
-        diagram.fitContent();
         refreshDiagram();
+        diagram.fitContent();
+
     }
 
     private int getNodeTop(NodePanel node) {
@@ -325,7 +328,7 @@ public class DiagramUiHandler {
     }
 
     public void refreshPreviews(SwingGui gui, ErrorLog errorLog, MaterialDef matDef) {
-        MaterialPreviewRenderer previewRenderer = new MaterialPreviewRenderer();
+
         previewRenderer.batchRequests(gui, errorLog, getOutPanelsForPreviews(), matDef, currentTechniqueName);
     }
 

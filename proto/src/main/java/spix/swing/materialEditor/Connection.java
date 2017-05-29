@@ -81,6 +81,9 @@ public class Connection extends JPanel implements Selectable {
 
     @Override
     protected void paintComponent(Graphics g) {
+        if (!points[0].getLocation().equals(this.start.getStartLocation())) {
+            resize(this.start, this.end);
+        }
 
         Graphics2D g2 = ((Graphics2D) g);
         g2.setRenderingHint(
@@ -94,7 +97,6 @@ public class Connection extends JPanel implements Selectable {
         } else {
             g.setColor(VERY_DARK_GREY);
         }
-
 
         if (pointsSize < 4) {
             translate(points[0], p1);

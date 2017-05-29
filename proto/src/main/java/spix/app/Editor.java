@@ -286,14 +286,15 @@ public class Editor extends SimpleApplication {
 
 
                 final MatDefEditorWindow matDefEditorWindow = new MatDefEditorWindow(gui);
-                matDefEditorWindow.setVisible(true);
+
                 mainFrame.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {
                         matDefEditorWindow.dispose();
                     }
                 });
-//
+                gui.setMatDefEditorWindow(matDefEditorWindow);
+
                 spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), stateManager.getState(FileIoAppState.class), gui));
                 spix.registerService(FileLoadingService.class, new FileLoadingService(gui.getSpix(), stateManager.getState(FileIoAppState.class)));
             }
