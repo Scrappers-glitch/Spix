@@ -189,10 +189,10 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
     @Override
     public void onMouseReleased(MouseEvent e) {
         controller.onNodeMoved(this);
-        if (svdx != getLocation().x) {
-//            firePropertyChange(ShaderNodeBlock.POSITION, svdx, getLocation().x);
-//            getDiagram().getEditorParent().savePositionToMetaData(getKey(), getLocation().x, getLocation().y);
-        }
+//        if (svdx != getLocation().x) {
+////            firePropertyChange(ShaderNodeBlock.POSITION, svdx, getLocation().x);
+////            getDiagram().getEditorParent().savePositionToMetaData(getKey(), getLocation().x, getLocation().y);
+//        }
     }
 
     protected void showToolBar() {

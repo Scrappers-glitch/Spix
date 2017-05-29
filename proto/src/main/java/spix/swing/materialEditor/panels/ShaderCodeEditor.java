@@ -1,21 +1,33 @@
 package spix.swing.materialEditor.panels;
 
+import org.fife.ui.rsyntaxtextarea.*;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 
 /**
  * Created by Nehon on 04/06/2016.
  */
-public class ShaderCodeEditor extends JEditorPane {
+public class ShaderCodeEditor extends RSyntaxTextArea {
 
     private int textWidth;
     private boolean textChanged;
 
 
     public ShaderCodeEditor() {
-        super();
-        setFont(new Font("Monospaced", Font.PLAIN, 14));
+        super(20, 60);
+        setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_C);
+        setCodeFoldingEnabled(true);
+        try {
+            Theme theme = Theme.load(getClass().getResourceAsStream(
+                    "/org/fife/ui/rsyntaxtextarea/themes/monokai.xml"));
+            theme.apply(this);
+        } catch (IOException ioe) { // Never happens
+            ioe.printStackTrace();
+        }
+        setEditable(false);
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
