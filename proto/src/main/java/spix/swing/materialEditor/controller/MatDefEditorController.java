@@ -6,6 +6,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.shader.*;
 import groovy.util.ObservableList;
 import spix.app.DefaultConstants;
+import spix.app.material.MaterialService;
 import spix.app.material.hack.*;
 import spix.app.utils.CloneUtils;
 import spix.awt.AwtPanelState;
@@ -16,6 +17,7 @@ import spix.swing.materialEditor.dialog.*;
 import spix.swing.materialEditor.nodes.*;
 import spix.swing.materialEditor.panels.*;
 import spix.swing.materialEditor.icons.Icons;
+import spix.swing.materialEditor.sort.Node;
 import spix.swing.materialEditor.utils.*;
 
 import javax.swing.*;
@@ -47,7 +49,7 @@ public class MatDefEditorController {
     private ErrorLog errorLog;
     private ShaderCodePanel shaderCodePanel;
     private PropPanel propertiesPanel;
-    private Deque<String> sortedNodes;
+    private Deque<Node> sortedNodes;
     private TitledBorder selectionBorder;
 
 
@@ -61,8 +63,17 @@ public class MatDefEditorController {
         Diagram diagram = initUi(gui, editor);
         diagramUiHandler = new DiagramUiHandler(diagram);
 
-
-
+        //todo fix this
+        JToolBar tb = new JToolBar();
+        JButton b = new JButton("save debug");
+        b.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gui.getSpix().getService(MaterialService.class).saveJ3md(matDef);
+            }
+        });
+        tb.add(b);
+        editor.getContentPane().add(tb, BorderLayout.NORTH);
 
         PropertyEditorPanel matDefProps = new PropertyEditorPanel(gui, "ui.matdef.editor");
         JPanel p = new JPanel(new GridLayout(1,1));
@@ -233,7 +244,7 @@ public class MatDefEditorController {
     public void refreshPreviews(){
         if(dataHandler.getCurrentTechnique().isUsingShaderNodes()) {
             sortedNodes = dataHandler.sortNodes(diagramUiHandler.getNodesForSort());
-            diagramUiHandler.refreshPreviews(gui, errorLog, matDef);
+            diagramUiHandler.refreshPreviews(gui, errorLog, matDef, sortedNodes);
         }
 
         shaderCodePanel.refreshCode(dataHandler.getCurrentTechnique());

@@ -2,6 +2,8 @@ package spix.swing.materialEditor.panels;
 
 import com.jme3.material.TechniqueDef;
 import com.jme3.shader.*;
+import org.fife.ui.rtextarea.Gutter;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import spix.app.material.MaterialService;
 import spix.core.RequestCallback;
 import spix.swing.SwingGui;
@@ -37,7 +39,8 @@ public class ShaderCodePanel extends DockPanel {
         editor = new ShaderCodeEditor();
 
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JScrollPane(editor), BorderLayout.CENTER);
+        RTextScrollPane scrollPane = new RTextScrollPane(editor);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
         setComponent(panel);
 

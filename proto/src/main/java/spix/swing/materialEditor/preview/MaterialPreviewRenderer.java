@@ -6,6 +6,7 @@ package spix.swing.materialEditor.preview;
 
 import com.jme3.material.MaterialDef;
 import com.jme3.material.TechniqueDef;
+import com.jme3.material.plugin.export.materialdef.J3mdExporter;
 import com.jme3.shader.ShaderNodeVariable;
 import spix.app.material.MaterialService;
 import spix.core.RequestCallback;
@@ -13,13 +14,14 @@ import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.OutPanel;
 import spix.swing.materialEditor.panels.ErrorLog;
+import spix.swing.materialEditor.sort.Node;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 
 import javax.swing.*;
 import java.awt.image.*;
+import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Nehon
@@ -29,14 +31,14 @@ public class MaterialPreviewRenderer {
     private List<MaterialService.CompilationError> errors = new ArrayList<>();
     private int nbRequestsDone = 0;
 
-    public void batchRequests(SwingGui gui, ErrorLog errorLog, final List<OutPanel> outs, MaterialDef matDef, String techniqueName) {
+    public void batchRequests(SwingGui gui, ErrorLog errorLog, final List<OutPanel> outs, MaterialDef matDef, String techniqueName, Deque<Node> sortedNodes) {
 
         TechniqueDef techDef = matDef.getTechniqueDefs(techniqueName).get(0);
         MaterialDefUtils.computeShaderNodeGenerationInfo(techDef);
-
+        nbRequestsDone = 0;
         for (OutPanel out : outs) {
 
-            PreviewRequest request = out.makePreviewRequest();
+            PreviewRequest request = out.makePreviewRequest(sortedNodes);
             request.setMaterialDef(matDef);
             request.setTechniqueName(techniqueName);
             for (int i = 0; i < techDef.getShaderGenerationInfo().getFragmentGlobals().size(); i++) {

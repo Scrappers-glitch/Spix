@@ -134,10 +134,10 @@ public class CloneUtils {
 
     public static VariableMapping cloneVariableMapping(VariableMapping m) {
         ShaderNodeVariable l = m.getLeftVariable();
-        ShaderNodeVariable left = new ShaderNodeVariable(l.getType(), l.getNameSpace(), l.getName(), l.getMultiplicity());
+        ShaderNodeVariable left = new ShaderNodeVariable(l.getType(), l.getNameSpace(), l.getName(), l.getMultiplicity(), l.getPrefix());
 
         ShaderNodeVariable r = m.getRightVariable();
-        ShaderNodeVariable right = new ShaderNodeVariable(r.getType(), r.getNameSpace(), r.getName(), r.getMultiplicity());
+        ShaderNodeVariable right = new ShaderNodeVariable(r.getType(), r.getNameSpace(), r.getName(), r.getMultiplicity(), r.getPrefix());
 
         return new VariableMapping(left,m.getLeftSwizzling(),right,m.getRightSwizzling(),m.getCondition());
     }

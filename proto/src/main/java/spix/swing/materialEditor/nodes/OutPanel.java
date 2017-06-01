@@ -8,10 +8,11 @@ import spix.swing.materialEditor.OutToolBar;
 import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.preview.PreviewRequest;
+import spix.swing.materialEditor.sort.Node;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 /**
@@ -63,10 +64,27 @@ public abstract class OutPanel extends NodePanel {
         controller.refreshPreviews();
     }
 
-    public PreviewRequest makePreviewRequest() {
+    public PreviewRequest makePreviewRequest(Deque<Node> sortedNodes) {
 
-        String nodeName = getForNodeName();
-        return new PreviewRequest(getShaderType(), nodeName, displayType);
+        String stopNodeName = getStopNodeName();
+        List<String> nodeGraph = new ArrayList<>();
+        if (stopNodeName != null) {
+            Node stopNode = null;
+            for (Node sortedNode : sortedNodes) {
+                if (sortedNode.getName().equals(stopNodeName)) {
+                    stopNode = sortedNode;
+                    break;
+                }
+            }
+
+            for (Node sortedNode : sortedNodes) {
+                if (sortedNode == stopNode || stopNode.hasParent(sortedNode)) {
+                    nodeGraph.add(sortedNode.getName());
+                }
+            }
+        }
+        System.err.println(nodeGraph);
+        return new PreviewRequest(getShaderType(), nodeGraph, displayType);
     }
 
     public void updatePreview(ImageIcon icon) {
@@ -96,7 +114,7 @@ public abstract class OutPanel extends NodePanel {
         outToolBar.getParent().remove(outToolBar);
     }
 
-    public String getForNodeName() {
+    public String getStopNodeName() {
         String nodeName = null;
         for (Dot dot : getInputConnectPoint().getConnectedDots()) {
             nodeName = dot.getNode().getName();

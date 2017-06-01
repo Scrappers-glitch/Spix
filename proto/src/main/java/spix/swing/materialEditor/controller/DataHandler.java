@@ -129,37 +129,44 @@ public class DataHandler {
         this.currentMatDef = currentMatDef;
     }
 
-    public Deque<String> sortNodes(List<Node> nodeList){
+    public Deque<Node> sortNodes(List<Node> nodeList) {
         for (Node node : nodeList) {
-            ShaderNode sn = nodes.get(node.getKey());
-            //if the node has no output it should be as soon as possible ins the node list
-            //so we set it as parent to any node that is not in his parent line.
-            //vertex nodes must be befor any fragment node, so we add precedence
+            //if the node has high priority it should be as soon as possible in the node list
+            //so we set it as parent to any node that is not in his parent line in the same shader.
+            if (node.isHighPriority()) {
+                for (Node node1 : nodeList) {
+                    if (node1.getType() == node.getType() && !node.hasParent(node1)) {
+                        node.addChild(node1);
+                        node1.addParent(node);
+                    }
+                }
+            }
+            //vertex nodes must be before any fragment node, so we add precedence
             if(node.getType() == Vertex){
                 for (Node node1 : nodeList) {
-                    if(node1.getType() == Fragment){
+                    if (node1.getType() != Vertex) {
                         node.addChild(node1);
+                        node1.addParent(node);
                     }
                 }
             }
         }
 
-//        for (Node sortNode : nodeList) {
-//            System.err.println(sortNode);
-//        }
+        for (Node sortNode : nodeList) {
+            System.err.println(sortNode);
+        }
 
-        Deque<String> sortedStack = TopologicalSort.sort(nodeList);
+        Deque<Node> sortedStack = TopologicalSort.sort(nodeList);
 
         List<ShaderNode> sortedNodes = new ArrayList<>();
         //System.err.println("----------------Node Order------------------");
-        for (String key : sortedStack) {
-            ShaderNode n = nodes.get(key);
+        for (Node node : sortedStack) {
+            ShaderNode n = nodes.get(node.getKey());
             if(n != null){
                 sortedNodes.add(n);
-          //      System.err.println(n.getName());
+                //     System.err.println(n.getName());
             }
         }
-
         currentTechnique.setShaderNodes(sortedNodes);
         return sortedStack;
     }

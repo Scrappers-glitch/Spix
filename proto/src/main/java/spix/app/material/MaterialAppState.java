@@ -145,23 +145,24 @@ public class MaterialAppState extends BaseAppState {
         RenderManager rm = getApplication().getRenderManager();
         mat.selectTechnique(techniqueName, rm);
 
-        int nbOut = 1;
-        if (displayType != DisplayType.FullScreenQuad) {
-            nbOut = mat.getActiveTechnique().getDef().getShaderGenerationInfo().getFragmentGlobals().size();
-        }
+        //int nbOut = 1;
+//        if (displayType != DisplayType.FullScreenQuad) {
+//            nbOut = mat.getActiveTechnique().getDef().getShaderGenerationInfo().getFragmentGlobals().size();
+//        }
+//        if (index >= nbOut) {
+//            throw new RendererException("color" + index + " cannot be previewed");
+//        }
         offBuffer.resetObject();
-        offBuffer.setMultiTarget(nbOut > 1);
         offBuffer.clearColorTargets();
-        for (int i = 0; i < nbOut; i++) {
-            offBuffer.addColorBuffer(Image.Format.RGBA8);
-        }
+        offBuffer.addColorBuffer(Image.Format.RGBA8);
+
 
         Renderer r = rm.getRenderer();
         r.setFrameBuffer(offBuffer);
         r.clearBuffers(true, true, true);
         rm.renderViewPortRaw(vp);
 
-        offBuffer.setTargetIndex(index);
+        //offBuffer.setTargetIndex(index);
         r.readFrameBufferWithFormat(offBuffer, cpuBuf, Image.Format.BGRA8);
 
 //  THIS PART IS NOT NEEDED ANYMORE, I KEEP IT FOR NOW

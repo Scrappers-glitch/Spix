@@ -9,6 +9,7 @@ import com.jme3.bounding.BoundingBox;
 import com.jme3.export.binary.BinaryExporter;
 import com.jme3.material.*;
 import com.jme3.material.plugin.export.material.J3MExporter;
+import com.jme3.material.plugin.export.materialdef.J3mdExporter;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.shader.Shader;
@@ -210,6 +211,17 @@ public class FileIoAppState extends BaseAppState {
         return null;
     }
 
+    //todo implement real save for now it's debug
+    public void writeJ3md(MaterialDef def) {
+        J3mdExporter exporter = new J3mdExporter();
+
+        try (FileOutputStream stream = new FileOutputStream(new File("e:/test.j3md"))) {
+            exporter.save(def, stream);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public String getUnusedName(String basePath, String filePath) {
         Path path = Paths.get(basePath + File.separator + filePath);
         Path fileName = path.getFileName();
@@ -296,16 +308,12 @@ public class FileIoAppState extends BaseAppState {
 
     }
 
-    private void relocateAsset(FilePath fp, AssetKey key) {
+    private void relocateAsset(FilePath fp, AssetKey key) throws AssetNotFoundException {
         assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
         assetListener.clear();
         assetManager.addAssetEventListener(assetListener);
 
-        try {
-            assetManager.loadAsset(key);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        loadAsset(key);
         assetManager.removeAssetEventListener(assetListener);
         relocateDependencies(fp);
         assetManager.deleteFromCache(key);
@@ -320,7 +328,7 @@ public class FileIoAppState extends BaseAppState {
             //j3sn and j3md needs to be loaded so that associated shader files are copied over
             if (dependency.endsWith(".j3sn")) {
                 ShaderNodeDefinitionKey sndKey = new ShaderNodeDefinitionKey(dependency);
-                List<ShaderNodeDefinition> defs = (List<ShaderNodeDefinition>) assetManager.loadAsset(sndKey);
+                List<ShaderNodeDefinition> defs = (List<ShaderNodeDefinition>) loadAsset(sndKey);
                 for (ShaderNodeDefinition def : defs) {
                     for (String path : def.getShadersPath()) {
                         addShaderDependencies(deps, path);
@@ -329,10 +337,13 @@ public class FileIoAppState extends BaseAppState {
             }
             if (dependency.endsWith(".j3md")) {
                 AssetKey<MaterialDef> defKey = new AssetKey<>(dependency);
-                MaterialDef def = assetManager.loadAsset(defKey);
+                MaterialDef def = (MaterialDef) loadAsset(defKey);
                 for (String techName : def.getTechniqueDefsNames()) {
                     List<TechniqueDef> tds = def.getTechniqueDefs(techName);
                     for (TechniqueDef td : tds) {
+                        if (td.isUsingShaderNodes()) {
+                            continue;
+                        }
                         EnumMap<Shader.ShaderType, String> shaders = td.getShaderProgramNames();
                         for (String path : shaders.values()) {
                             addShaderDependencies(deps, path);
@@ -376,9 +387,18 @@ public class FileIoAppState extends BaseAppState {
     private void addShaderDependencies(List<String> deps, String path) {
         assetListener.clear();
         assetManager.addAssetEventListener(assetListener);
-        assetManager.loadAsset(path);
+        loadAsset(new AssetKey(path));
         assetManager.removeAssetEventListener(assetListener);
         deps.addAll(assetListener.getDependencies());
+    }
+
+    private Object loadAsset(AssetKey key) {
+        try {
+            return assetManager.loadAsset(key);
+        } catch (AssetNotFoundException e) {
+            getSpix().getService(MessageRequester.class).showMessage("Error Loading File " + key.getName(), e.getMessage(), MessageRequester.Type.Error);
+        }
+        return null;
     }
 
     public void loadTexture(File file, String relocateIn, RequestCallback<Texture> done) {

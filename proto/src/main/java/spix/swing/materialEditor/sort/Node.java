@@ -11,12 +11,15 @@ public class Node {
 
     String key;
     Shader.ShaderType type;
+    String name;
     Set<Node> children = new HashSet<>();
     Set<Node> parents = new HashSet<>();
+    boolean highPriority = false;
 
     public Node(String key, Shader.ShaderType type) {
         this.key = key;
         this.type = type;
+        this.name = key.substring(key.lastIndexOf(".") + 1);
     }
 
     public void addParent(Node node){
@@ -31,6 +34,11 @@ public class Node {
         return key;
     }
 
+    public String getName() {
+        return name;
+    }
+
+
     public Shader.ShaderType getType() {
         return type;
     }
@@ -39,15 +47,17 @@ public class Node {
         return children;
     }
 
+    public boolean isHighPriority() {
+        return highPriority;
+    }
+
+    public void setHighPriority(boolean highPriority) {
+        this.highPriority = highPriority;
+    }
+
     public boolean hasParent(Node n){
-        for (Node parent : parents) {
-            if(parent == n){
-                return true;
-            } else {
-                return parent.hasParent(n);
-            }
-        }
-        return false;
+        return parents.contains(n);
+        
     }
 
     @Override

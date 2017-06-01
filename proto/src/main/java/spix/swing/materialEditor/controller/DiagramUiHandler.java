@@ -250,7 +250,7 @@ public class DiagramUiHandler {
         return null;
     }
 
-    public void autoLayout(Deque<String> sortedNodes) {
+    public void autoLayout(Deque<Node> sortedNodes) {
         if(sortedNodes == null) {
             return;
         }
@@ -258,8 +258,8 @@ public class DiagramUiHandler {
         int offset = 200;
         final int wMargin = 25;
         final int hMargin = 10;
-        for (String key : sortedNodes) {
-            NodePanel p = nodes.get(key);
+        for (Node node : sortedNodes) {
+            NodePanel p = nodes.get(node.getKey());
 
             if (p instanceof ShaderNodePanel) {
                 int heightOffset = 0;
@@ -327,9 +327,8 @@ public class DiagramUiHandler {
         return panels;
     }
 
-    public void refreshPreviews(SwingGui gui, ErrorLog errorLog, MaterialDef matDef) {
-
-        previewRenderer.batchRequests(gui, errorLog, getOutPanelsForPreviews(), matDef, currentTechniqueName);
+    public void refreshPreviews(SwingGui gui, ErrorLog errorLog, MaterialDef matDef, Deque<Node> sortedNodes) {
+        previewRenderer.batchRequests(gui, errorLog, getOutPanelsForPreviews(), matDef, currentTechniqueName, sortedNodes);
     }
 
     public List<Node> getNodesForSort() {
@@ -339,12 +338,21 @@ public class DiagramUiHandler {
             NodePanel p = nodes.get(key);
             if (isNodeForSort(p)) {
                 Node n = getNode(nodeMap, key, p.getShaderType());
-                for (Dot dot : p.getOutputConnectPoints().values()) {
-                    for (Dot pair : dot.getConnectedDots()) {
-                        if (isNodeForSort(pair.getNode())) {
-                            Node n2 = getNode(nodeMap, pair.getNode().getKey(), pair.getNode().getShaderType());
-                            n.addChild(n2);
-                            n2.addParent(n);
+                if (p.getOutputConnectPoints().values().isEmpty()) {
+                    //node has no output
+                    if (!(p instanceof OutPanel)) {
+                        //the node is not an output but has no output, it has to be placed as soon as possible in the node graph
+                        //for example a discard pixel node is best done as soon as possible.
+                        n.setHighPriority(true);
+                    }
+                } else {
+                    for (Dot dot : p.getOutputConnectPoints().values()) {
+                        for (Dot pair : dot.getConnectedDots()) {
+                            if (isNodeForSort(pair.getNode())) {
+                                Node n2 = getNode(nodeMap, pair.getNode().getKey(), pair.getNode().getShaderType());
+                                n.addChild(n2);
+                                n2.addParent(n);
+                            }
                         }
                     }
                 }

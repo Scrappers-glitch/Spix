@@ -84,6 +84,8 @@ public class MaterialService {
     }
 
     public void requestCode(TechniqueDef def, RequestCallback<Map<String, Shader>> callback){
+        //re computing the shader generation information
+        MaterialDefUtils.computeShaderNodeGenerationInfo(def);
 
         //Not really needed as it should be thread safe.
         gui.runOnRender(new Runnable() {
@@ -171,7 +173,11 @@ public class MaterialService {
                 callback.done(tex);
             }
         });
+    }
 
+    //todo fix this
+    public void saveJ3md(MaterialDef def) {
+        ioState.writeJ3md(def);
     }
 
     /**
@@ -198,11 +204,11 @@ public class MaterialService {
         //a list of node that will contain the techniques node but only up to the output that requested the preview.
         List<ShaderNode> newNodes = new ArrayList<>();
 
-        //if the outputForNode is null, this means the outputPanel that requested the preview is actually an input
+        //if the nodeGraph is empty, this means the outputPanel that requested the preview is actually an input
         //This can happen and is valid in term of shader nodes generation.
         //In this case, we only use the vertex nodes, and add a dummy node that output a white color for the fragment shader.
         // TODO: 28/05/2016 we may want something better for the vertex shader different stages.
-        if(request.getOutputForNode() == null){
+        if (request.getNodeGraph().isEmpty()) {
             for (ShaderNode node : techDef.getShaderNodes()) {
                 if(node.getDefinition().getType() == Shader.ShaderType.Vertex) {
                     newNodes.add(node);
@@ -210,24 +216,27 @@ public class MaterialService {
             }
             newNodes.add(materialState.getDummySN());
         } else {
-            //we gather the nodes up to the outputForNode node.
-            //this is the node which the output that requested the preview belongs to.
+            boolean hasFragment = false;
+            //we only keep the nodes in the nodeGraph to make a specific matDef
             for (ShaderNode node : techDef.getShaderNodes()) {
-                newNodes.add(node);
-                if (node.getName().equals(request.getOutputForNode())){
-                    if(node.getDefinition().getType() == Shader.ShaderType.Vertex){
-                        newNodes.add(materialState.getDummySN());
+                if (request.getNodeGraph().contains(node.getName())) {
+                    newNodes.add(node);
+                    if (node.getDefinition().getType() == Shader.ShaderType.Fragment) {
+                        hasFragment = true;
                     }
-                    break;
                 }
+            }
+            //there is no fragment shader, adding the dummy one
+            if (!hasFragment) {
+                newNodes.add(materialState.getDummySN());
             }
         }
         //setting the new shaderNodes to the technique definition
         techDef.setShaderNodes(newNodes);
-        //re computing the sahder generation information
+        //re computing the shader generation information
         MaterialDefUtils.computeShaderNodeGenerationInfo(techDef);
         //fixing the world and mat param g_ and m_ names.
-        MaterialDefUtils.fixUniformNames(techDef.getShaderGenerationInfo());
+        //MaterialDefUtils.fixUniformNames(techDef.getShaderGenerationInfo());
 
         return def;
     }

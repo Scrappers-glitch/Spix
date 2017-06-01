@@ -10,13 +10,12 @@ import static spix.swing.materialEditor.icons.Icons.node;
 public class TopologicalSort {
 
 
-
-    public static Deque<String> sort(List<Node> allNodes) {
-        Set<String> visited = new HashSet<>();
-        Deque<String> stack = new ArrayDeque<>();
+    public static Deque<Node> sort(List<Node> allNodes) {
+        Set<Node> visited = new HashSet<>();
+        Deque<Node> stack = new ArrayDeque<>();
 
         for (Node node : allNodes) {
-            if(!visited.contains(node.getKey())){
+            if (!visited.contains(node)) {
                 sortNodeGraph(node, visited, stack);
             }
         }
@@ -24,15 +23,15 @@ public class TopologicalSort {
         return stack;
     }
 
-    private static void sortNodeGraph(Node root,Set<String> visited, Deque<String> stack){
-        visited.add(root.getKey());
+    private static void sortNodeGraph(Node root, Set<Node> visited, Deque<Node> stack) {
+        visited.add(root);
 
         for (Node node : root.getChildren()) {
-            if(! visited.contains(node.getKey())){
+            if (!visited.contains(node)) {
                 sortNodeGraph(node, visited, stack);
             }
         }
-        stack.offerFirst(root.getKey());
+        stack.offerFirst(root);
 
     }
 

@@ -4,6 +4,8 @@ import com.jme3.material.MaterialDef;
 import com.jme3.shader.Shader;
 import spix.app.material.MaterialAppState;
 
+import java.util.List;
+
 /**
  * Created by Nehon on 26/05/2016.
  */
@@ -11,14 +13,14 @@ public class PreviewRequest {
 
     private Shader.ShaderType shaderType;
     private MaterialAppState.DisplayType displayType;
-    private String outputForNode;
+    private List<String> nodeGraph;
     private MaterialDef materialDef;
     private String techniqueName;
     private int outIndex = 0;
 
-    public PreviewRequest(Shader.ShaderType shaderType, String outputForNode, MaterialAppState.DisplayType displayType) {
+    public PreviewRequest(Shader.ShaderType shaderType, List<String> nodeGraph, MaterialAppState.DisplayType displayType) {
         this.shaderType = shaderType;
-        this.outputForNode = outputForNode;
+        this.nodeGraph = nodeGraph;
         this.displayType = displayType;
     }
 
@@ -30,8 +32,8 @@ public class PreviewRequest {
         return displayType;
     }
 
-    public String getOutputForNode() {
-        return outputForNode;
+    public List<String> getNodeGraph() {
+        return nodeGraph;
     }
 
     public int getOutIndex() {

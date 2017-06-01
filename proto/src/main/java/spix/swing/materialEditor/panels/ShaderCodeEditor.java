@@ -1,6 +1,7 @@
 package spix.swing.materialEditor.panels;
 
 import org.fife.ui.rsyntaxtextarea.*;
+import org.fife.ui.rtextarea.Gutter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,6 +21,7 @@ public class ShaderCodeEditor extends RSyntaxTextArea {
         super(20, 60);
         setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_C);
         setCodeFoldingEnabled(true);
+        setAntiAliasingEnabled(true);
         try {
             Theme theme = Theme.load(getClass().getResourceAsStream(
                     "/org/fife/ui/rsyntaxtextarea/themes/monokai.xml"));
@@ -28,6 +30,7 @@ public class ShaderCodeEditor extends RSyntaxTextArea {
             ioe.printStackTrace();
         }
         setEditable(false);
+
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {

@@ -57,8 +57,6 @@ public class MaterialDefUtils {
                     } else if (var.getNameSpace().equals("Attr")) {
                         addUnique(attributes, var);
                     } else if (var.getNameSpace().equals("MatParam") || var.getNameSpace().equals("WorldParam")){
-                        //Remove the g_ and the m_ form the uniform name
-                        var.setName(var.getName().replaceFirst("g_","").replaceAll("m_",""));
                         if(def.getType() == Shader.ShaderType.Fragment){
                             addUnique(fragmentUniforms, var);
                         } else {
@@ -319,6 +317,12 @@ public class MaterialDefUtils {
     public static VariableMapping createVariableMapping(Dot start, Dot end){
         ShaderNodeVariable leftVariable = new ShaderNodeVariable(end.getType(), end.getNode().getName(), end.getText());
         ShaderNodeVariable rightVariable = new ShaderNodeVariable(start.getType(), start.getNode().getName(), start.getText());
+
+        if (rightVariable.getNameSpace().equals("MatParam")) {
+            rightVariable.setPrefix("m_");
+        } else if (rightVariable.getNameSpace().equals("WorldParam")) {
+            rightVariable.setPrefix("g_");
+        }
 
         int endCard = ShaderUtils.getCardinality(end.getType(), "");
         int startCard = ShaderUtils.getCardinality(start.getType(), "");
