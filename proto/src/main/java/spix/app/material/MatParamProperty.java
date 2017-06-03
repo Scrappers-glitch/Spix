@@ -142,6 +142,8 @@ public class MatParamProperty extends AbstractProperty {
                 return new Float(0);
             case Int:
                 return new Integer(0);
+            case Vector4:
+                return new ColorRGBA(0, 0, 0, 1);
             default:
                 return getJavaType(type).newInstance();
 

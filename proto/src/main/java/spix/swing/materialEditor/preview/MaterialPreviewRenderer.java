@@ -73,7 +73,7 @@ public class MaterialPreviewRenderer {
         if (nbRequestsDone == outs.size()) {
             //we're done lets handle errors if any
             if(!errors.isEmpty()) {
-                //We are looking for the error that occured on the shader woth the most nodes as it will have the most information
+                //We are looking for the error that occurred on the shader with the most nodes as it will have the most information
                 MaterialService.CompilationError errorToDisplay = null;
                 for (MaterialService.CompilationError error : errors) {
                     if (errorToDisplay == null || error.getNbRenderedNodes() > errorToDisplay.getNbRenderedNodes()) {

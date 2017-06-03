@@ -2,10 +2,12 @@ package spix.swing.materialEditor;
 
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.controller.MatDefEditorController;
+import spix.swing.materialEditor.icons.Icons;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Arrays;
 import java.util.prefs.Preferences;
 
 /**
@@ -25,6 +27,7 @@ public class MatDefEditorWindow extends JFrame {
         super("Material definition editor");
         setDefaultCloseOperation(HIDE_ON_CLOSE);
         controller = new MatDefEditorController(gui, this);
+        setIconImages(Arrays.asList(new Image[]{Icons.logo16.getImage(), Icons.logo32.getImage(), Icons.logo64.getImage(), Icons.logo128.getImage()}));
 
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -38,8 +41,12 @@ public class MatDefEditorWindow extends JFrame {
                 prefs.putInt(MAT_DEF_EDITOR_X, e.getComponent().getX());
                 prefs.putInt(MAT_DEF_EDITOR_Y, e.getComponent().getY());
             }
-        });
 
+            @Override
+            public void componentShown(ComponentEvent e) {
+                controller.initialize();
+            }
+        });
 
     }
 

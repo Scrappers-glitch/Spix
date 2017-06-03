@@ -75,7 +75,10 @@ public class ColorPanel extends AbstractPropertyPanel<JButton> {
     }
     
     protected void updateView( JButton button, Object value ) {
-        ColorRGBA jmeColor = (ColorRGBA)value; 
+        ColorRGBA jmeColor = (ColorRGBA) value;
+        if (jmeColor == null) {
+            jmeColor = ColorRGBA.Black;
+        }
         button.setText(toString.apply(jmeColor));
         Color c = SwingColorRequester.toSwing(jmeColor);
         button.setBackground(c);

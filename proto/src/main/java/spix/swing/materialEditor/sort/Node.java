@@ -22,11 +22,11 @@ public class Node {
         this.name = key.substring(key.lastIndexOf(".") + 1);
     }
 
-    public void addParent(Node node){
+    public void addParent(Node node) {
         parents.add(node);
     }
 
-    public void addChild(Node node){
+    public void addChild(Node node) {
         children.add(node);
     }
 
@@ -55,9 +55,9 @@ public class Node {
         this.highPriority = highPriority;
     }
 
-    public boolean hasParent(Node n){
+    public boolean hasParent(Node n) {
         return parents.contains(n);
-        
+
     }
 
     @Override
@@ -69,7 +69,7 @@ public class Node {
         for (Node node : children) {
             res += node.getKey() + ", ";
         }
-         res += ",\n parents=";
+        res += ",\n parents=";
         for (Node node : parents) {
             res += node.getKey() + ", ";
         }

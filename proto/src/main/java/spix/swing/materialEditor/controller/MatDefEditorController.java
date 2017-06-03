@@ -195,6 +195,9 @@ public class MatDefEditorController {
     }
 
     void initTechnique(TechniqueDef technique, MaterialDef matDef) {
+        if (!technique.isUsingShaderNodes()) {
+            return;
+        }
         diagramUiHandler.setCurrentTechniqueName(technique.getName());
         dataHandler.setCurrentTechnique(technique);
         dataHandler.setCurrentMatDef(matDef);
@@ -439,30 +442,58 @@ public class MatDefEditorController {
                 return;
             }
 
-            if (evt.getNewValue() instanceof Geometry) {
-                Geometry g = (Geometry) evt.getNewValue();
-                try {
-                    matDef = CloneUtils.cloneMatDef(g.getMaterial().getMaterialDef(), techniques);
-                    gui.getSpix().getBlackboard().set("matdDefEditor.selection.matdef.singleSelect",new MatDefWrapper(matDef));
-                    gui.getSpix().getBlackboard().set("matdDefEditor.selection.technique.singleSelect",new TechniqueDefWrapper(techniques.get(0)));
-
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (NoSuchFieldException e) {
-                    e.printStackTrace();
-                }
-
-
-                gui.runOnSwing(new Runnable() {
-                    @Override
-                    public void run() {
-                        editor.setTitle(matDef.getName());
-                        initTechnique(techniques.get(0), matDef);
-                    }
-                });
-
-            }
+//            if (evt.getNewValue() instanceof Geometry) {
+//                Geometry g = (Geometry) evt.getNewValue();
+//                try {
+//                    matDef = CloneUtils.cloneMatDef(g.getMaterial().getMaterialDef(), techniques);
+//                    gui.getSpix().getBlackboard().set("matdDefEditor.selection.matdef.singleSelect",new MatDefWrapper(matDef));
+//                    gui.getSpix().getBlackboard().set("matdDefEditor.selection.technique.singleSelect",new TechniqueDefWrapper(techniques.get(0)));
+//
+//                } catch (IllegalAccessException e) {
+//                    e.printStackTrace();
+//                } catch (NoSuchFieldException e) {
+//                    e.printStackTrace();
+//                }
+//
+//
+//                gui.runOnSwing(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        editor.setTitle(matDef.getName());
+//                        initTechnique(techniques.get(0), matDef);
+//                    }
+//                });
+//
+//            }
         }
+    }
+
+    public void initialize() {
+        try {
+            Blackboard blackboard = gui.getSpix().getBlackboard();
+            SelectionModel m = blackboard.get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+            if (!(m.getSingleSelection() instanceof Geometry)) {
+                return;
+            }
+            Geometry g = (Geometry) m.getSingleSelection();
+            matDef = CloneUtils.cloneMatDef(g.getMaterial().getMaterialDef(), techniques);
+            blackboard.set("matdDefEditor.selection.matdef.singleSelect", new MatDefWrapper(matDef));
+            blackboard.set("matdDefEditor.selection.technique.singleSelect", new TechniqueDefWrapper(techniques.get(0)));
+
+            gui.runOnSwing(new Runnable() {
+                @Override
+                public void run() {
+                    editor.setTitle("Material Definition Editor - " + matDef.getAssetName());
+                    initTechnique(techniques.get(0), matDef);
+                }
+            });
+
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private class DiagramSelectionChangeListener implements PropertyChangeListener {
