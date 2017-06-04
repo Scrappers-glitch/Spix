@@ -152,15 +152,16 @@ public class DataHandler {
             }
         }
 
-        for (Node sortNode : nodeList) {
-            System.err.println(sortNode);
-        }
+//        for (Node sortNode : nodeList) {
+//            System.err.println(sortNode);
+//        }
 
         Deque<Node> sortedStack = TopologicalSort.sort(nodeList);
 
         List<ShaderNode> sortedNodes = new ArrayList<>();
         //System.err.println("----------------Node Order------------------");
         for (Node node : sortedStack) {
+            node.flattenParents();
             ShaderNode n = nodes.get(node.getKey());
             if(n != null){
                 sortedNodes.add(n);

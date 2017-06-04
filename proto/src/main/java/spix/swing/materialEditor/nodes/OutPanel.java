@@ -83,7 +83,6 @@ public abstract class OutPanel extends NodePanel {
                 }
             }
         }
-        System.err.println(nodeGraph);
         return new PreviewRequest(getShaderType(), nodeGraph, displayType);
     }
 
@@ -94,7 +93,7 @@ public abstract class OutPanel extends NodePanel {
     @Override
     protected void paintComponent(Graphics g1) {
         super.paintComponent(g1);
-        if(!selected) {
+        if (!selected) {
             if (outToolBar.isVisible()) {
                 outToolBar.setVisible(false);
             }

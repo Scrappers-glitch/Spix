@@ -1,8 +1,12 @@
 package spix.swing.materialEditor;
 
+import com.jme3.scene.Geometry;
+import spix.app.DefaultConstants;
+import spix.core.SelectionModel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
+import spix.undo.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +23,7 @@ public class MatDefEditorWindow extends JFrame {
     public static final String MAT_DEF_EDITOR_HEIGHT = "MatDefEditor.height";
     public static final String MAT_DEF_EDITOR_X = "MatDefEditor.x";
     public static final String MAT_DEF_EDITOR_Y = "MatDefEditor.y";
+    private SwingGui gui;
     private Preferences prefs = Preferences.userNodeForPackage(MatDefEditorWindow.class);
     private MatDefEditorController controller;
 
@@ -27,6 +32,7 @@ public class MatDefEditorWindow extends JFrame {
         super("Material definition editor");
         setDefaultCloseOperation(HIDE_ON_CLOSE);
         controller = new MatDefEditorController(gui, this);
+        this.gui = gui;
         setIconImages(Arrays.asList(new Image[]{Icons.logo16.getImage(), Icons.logo32.getImage(), Icons.logo64.getImage(), Icons.logo128.getImage()}));
 
         addComponentListener(new ComponentAdapter() {
@@ -47,6 +53,34 @@ public class MatDefEditorWindow extends JFrame {
                 controller.initialize();
             }
         });
+
+        //register blackboard bindings
+        gui.getSpix().getBlackboard().bind(UndoManager.LAST_EDIT, this, "lastEdit");
+
+    }
+
+    public void setLastEdit(Edit edit) {
+        if (!isVisible()) {
+            return;
+        }
+
+        SelectionModel m = gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+        if (!(m.getSingleSelection() instanceof Geometry)) {
+            return;
+        }
+
+        PropertyEdit pe = null;
+        if (edit instanceof CompositeEdit) {
+            pe = ((CompositeEdit) edit).getEditWithType(PropertyEdit.class);
+        } else if (edit instanceof PropertyEdit) {
+            pe = (PropertyEdit) edit;
+        }
+        if (pe == null) {
+            return;
+        }
+
+        controller.onSelectionPropertyChange((Geometry) m.getSingleSelection());
+
 
     }
 

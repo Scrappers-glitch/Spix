@@ -4,8 +4,7 @@
  */
 package spix.swing.materialEditor.preview;
 
-import com.jme3.material.MaterialDef;
-import com.jme3.material.TechniqueDef;
+import com.jme3.material.*;
 import com.jme3.material.plugin.export.materialdef.J3mdExporter;
 import com.jme3.shader.ShaderNodeVariable;
 import spix.app.material.MaterialService;
@@ -31,15 +30,17 @@ public class MaterialPreviewRenderer {
     private List<MaterialService.CompilationError> errors = new ArrayList<>();
     private int nbRequestsDone = 0;
 
-    public void batchRequests(SwingGui gui, ErrorLog errorLog, final List<OutPanel> outs, MaterialDef matDef, String techniqueName, Deque<Node> sortedNodes) {
+    public void batchRequests(SwingGui gui, ErrorLog errorLog, final List<OutPanel> outs, MaterialDef matDef, String techniqueName, Deque<Node> sortedNodes, Map<String, MatParam> params) {
 
         TechniqueDef techDef = matDef.getTechniqueDefs(techniqueName).get(0);
         MaterialDefUtils.computeShaderNodeGenerationInfo(techDef);
         nbRequestsDone = 0;
+        errors.clear();
         for (OutPanel out : outs) {
 
             PreviewRequest request = out.makePreviewRequest(sortedNodes);
             request.setMaterialDef(matDef);
+            request.setMatParams(params);
             request.setTechniqueName(techniqueName);
             for (int i = 0; i < techDef.getShaderGenerationInfo().getFragmentGlobals().size(); i++) {
                 ShaderNodeVariable var = techDef.getShaderGenerationInfo().getFragmentGlobals().get(i);

@@ -327,8 +327,8 @@ public class DiagramUiHandler {
         return panels;
     }
 
-    public void refreshPreviews(SwingGui gui, ErrorLog errorLog, MaterialDef matDef, Deque<Node> sortedNodes) {
-        previewRenderer.batchRequests(gui, errorLog, getOutPanelsForPreviews(), matDef, currentTechniqueName, sortedNodes);
+    public void refreshPreviews(SwingGui gui, ErrorLog errorLog, MaterialDef matDef, Deque<Node> sortedNodes, Map<String, MatParam> params) {
+        previewRenderer.batchRequests(gui, errorLog, getOutPanelsForPreviews(), matDef, currentTechniqueName, sortedNodes, params);
     }
 
     public List<Node> getNodesForSort() {

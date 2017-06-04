@@ -56,8 +56,12 @@ public class MaterialService {
                 boolean wire = request.getShaderType() == Shader.ShaderType.Vertex;
                 m.getAdditionalRenderState().setWireframe(wire);
 
-
-                m.setColor("Color", ColorRGBA.Yellow);
+                for (MatParam matParam : def.getMaterialParams()) {
+                    MatParam param = request.getMatParams().get(matParam.getName());
+                    if (param != null) {
+                        m.setParam(param.getName(), param.getVarType(), param.getValue());
+                    }
+                }
 
                 try {
                     PreviewResult res = materialState.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex());

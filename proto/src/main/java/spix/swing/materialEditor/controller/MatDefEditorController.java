@@ -52,6 +52,7 @@ public class MatDefEditorController {
     private Deque<Node> sortedNodes;
     private TitledBorder selectionBorder;
 
+    private Map<String, MatParam> matParams = new HashMap<>();
 
     public MatDefEditorController(SwingGui gui, MatDefEditorWindow editor) {
         this.gui = gui;
@@ -244,10 +245,26 @@ public class MatDefEditorController {
         diagramUiHandler.autoLayout(sortedNodes);
     }
 
+    public void onSelectionPropertyChange(Geometry selection) {
+        populateMatParams(selection);
+        refreshPreviews();
+    }
+
+    private void populateMatParams(Geometry g) {
+        Material mat = g.getMaterial();
+        if (mat.getMaterialDef().getAssetName() != matDef.getAssetName()) {
+            return;
+        }
+        matParams.clear();
+        for (MatParam matParam : mat.getParams()) {
+            matParams.put(matParam.getName(), matParam);
+        }
+    }
+
     public void refreshPreviews(){
         if(dataHandler.getCurrentTechnique().isUsingShaderNodes()) {
             sortedNodes = dataHandler.sortNodes(diagramUiHandler.getNodesForSort());
-            diagramUiHandler.refreshPreviews(gui, errorLog, matDef, sortedNodes);
+            diagramUiHandler.refreshPreviews(gui, errorLog, matDef, sortedNodes, matParams);
         }
 
         shaderCodePanel.refreshCode(dataHandler.getCurrentTechnique());
@@ -436,35 +453,20 @@ public class MatDefEditorController {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
 
+            if (!editor.isVisible()) {
+                return;
+            }
+
             //I receive this event before the property change.
             //Ask Paul about this as it seems it's intentional.
             if (evt instanceof ObservableList.ElementUpdatedEvent) {
                 return;
             }
 
-//            if (evt.getNewValue() instanceof Geometry) {
-//                Geometry g = (Geometry) evt.getNewValue();
-//                try {
-//                    matDef = CloneUtils.cloneMatDef(g.getMaterial().getMaterialDef(), techniques);
-//                    gui.getSpix().getBlackboard().set("matdDefEditor.selection.matdef.singleSelect",new MatDefWrapper(matDef));
-//                    gui.getSpix().getBlackboard().set("matdDefEditor.selection.technique.singleSelect",new TechniqueDefWrapper(techniques.get(0)));
-//
-//                } catch (IllegalAccessException e) {
-//                    e.printStackTrace();
-//                } catch (NoSuchFieldException e) {
-//                    e.printStackTrace();
-//                }
-//
-//
-//                gui.runOnSwing(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        editor.setTitle(matDef.getName());
-//                        initTechnique(techniques.get(0), matDef);
-//                    }
-//                });
-//
-//            }
+            if (evt.getNewValue() instanceof Geometry) {
+                Geometry g = (Geometry) evt.getNewValue();
+                populateMatParams(g);
+            }
         }
     }
 
@@ -477,6 +479,7 @@ public class MatDefEditorController {
             }
             Geometry g = (Geometry) m.getSingleSelection();
             matDef = CloneUtils.cloneMatDef(g.getMaterial().getMaterialDef(), techniques);
+            populateMatParams(g);
             blackboard.set("matdDefEditor.selection.matdef.singleSelect", new MatDefWrapper(matDef));
             blackboard.set("matdDefEditor.selection.technique.singleSelect", new TechniqueDefWrapper(techniques.get(0)));
 

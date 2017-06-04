@@ -14,6 +14,7 @@ public class Node {
     String name;
     Set<Node> children = new HashSet<>();
     Set<Node> parents = new HashSet<>();
+    Set<Node> tmpParents = new HashSet<>();
     boolean highPriority = false;
 
     public Node(String key, Shader.ShaderType type) {
@@ -36,6 +37,22 @@ public class Node {
 
     public String getName() {
         return name;
+    }
+
+    public void flattenParents() {
+        tmpParents.clear();
+        for (Node parent : parents) {
+            tmpParents.addAll(parent.parents);
+        }
+        parents.addAll(tmpParents);
+    }
+
+    public void dumpParents() {
+
+        for (Node node : parents) {
+            System.err.print(node.getName() + ", ");
+        }
+        System.err.println("");
     }
 
 
