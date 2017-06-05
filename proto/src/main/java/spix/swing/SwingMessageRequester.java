@@ -89,16 +89,18 @@ public class SwingMessageRequester implements MessageRequester {
         swingGui.runOnSwing(new Runnable() {
             @Override
             public void run() {
-                JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEADING));
+                JPanel panel = new JPanel();
+                panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+                panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
                 JLabel label = new JLabel(message);
                 panel.add(label);
                 JProgressBar bar = new JProgressBar();
-                bar.setPreferredSize(new Dimension(75, 15));
+                bar.setPreferredSize(new Dimension(100, 15));
                 bar.setIndeterminate(true);
                 panel.add(bar);
                 Rectangle bound = swingGui.getRootWindow().getBounds();
-                double x = bound.getX() + bound.getWidth() - panel.getPreferredSize().getWidth();
-                double y = bound.getY() + bound.getHeight() - panel.getPreferredSize().getHeight() - popups.size() * panel.getPreferredSize().getHeight();
+                double x = bound.getX() + bound.getWidth() / 2.0 - panel.getPreferredSize().getWidth() / 2.0;
+                double y = bound.getY() + bound.getHeight() - panel.getPreferredSize().getHeight() * 2 - popups.size() * panel.getPreferredSize().getHeight();
                 Popup p = PopupFactory.getSharedInstance().getPopup(swingGui.getRootWindow(), panel, (int) x, (int) y);
                 p.show();
                 popups.put(id, p);
