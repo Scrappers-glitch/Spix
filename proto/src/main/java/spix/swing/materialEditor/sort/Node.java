@@ -14,7 +14,7 @@ public class Node {
     String name;
     Set<Node> children = new HashSet<>();
     Set<Node> parents = new HashSet<>();
-    Set<Node> tmpParents = new HashSet<>();
+    Set<Node> flattenParents = new HashSet<>();
     boolean highPriority = false;
 
     public Node(String key, Shader.ShaderType type) {
@@ -40,21 +40,30 @@ public class Node {
     }
 
     public void flattenParents() {
-        tmpParents.clear();
-        for (Node parent : parents) {
-            tmpParents.addAll(parent.parents);
+        flattenParents.clear();
+        visitParents(this);
+    }
+
+    private void visitParents(Node node) {
+        for (Node parent : node.parents) {
+            if (flattenParents.contains(parent)) {
+                return;
+            }
+            flattenParents.add(parent);
+            visitParents(parent);
         }
-        parents.addAll(tmpParents);
     }
 
     public void dumpParents() {
-
         for (Node node : parents) {
             System.err.print(node.getName() + ", ");
         }
         System.err.println("");
+        for (Node node : flattenParents) {
+            System.err.print(node.getName() + ", ");
+        }
+        System.err.println("");
     }
-
 
     public Shader.ShaderType getType() {
         return type;
@@ -73,12 +82,11 @@ public class Node {
     }
 
     public boolean hasParent(Node n) {
-        return parents.contains(n);
+        return flattenParents.contains(n) || parents.contains(n);
 
     }
 
-    @Override
-    public String toString() {
+    public String toString2() {
         String res = "Node : \n" +
                 "key='" + key + '\'' +
                 ", type=" + type +
@@ -89,6 +97,16 @@ public class Node {
         res += ",\n parents=";
         for (Node node : parents) {
             res += node.getKey() + ", ";
+        }
+        return res;
+    }
+
+    @Override
+    public String toString() {
+        String res = key;
+        res += "\n parents=";
+        for (Node node : children) {
+            res += node.getName() + ", ";
         }
         return res;
     }

@@ -131,20 +131,24 @@ public class DataHandler {
 
     public Deque<Node> sortNodes(List<Node> nodeList) {
         for (Node node : nodeList) {
-            //if the node has high priority it should be as soon as possible in the node list
-            //so we set it as parent to any node that is not in his parent line in the same shader.
-            if (node.isHighPriority()) {
+            node.flattenParents();
+        }
+
+        for (Node node : nodeList) {
+            //vertex nodes must be before any fragment node, so we add precedence
+            if (node.getType() == Vertex) {
                 for (Node node1 : nodeList) {
-                    if (node1.getType() == node.getType() && !node.hasParent(node1)) {
+                    if (node1.getType() != Vertex) {
                         node.addChild(node1);
                         node1.addParent(node);
                     }
                 }
             }
-            //vertex nodes must be before any fragment node, so we add precedence
-            if(node.getType() == Vertex){
+            //if the node has high priority it should be as soon as possible in the node list
+            //so we set it as parent to any node that is not in his parent line in the same shader.
+            if (node.isHighPriority()) {
                 for (Node node1 : nodeList) {
-                    if (node1.getType() != Vertex) {
+                    if (node1.getType() == node.getType() && !node.hasParent(node1)) {
                         node.addChild(node1);
                         node1.addParent(node);
                     }
@@ -165,7 +169,7 @@ public class DataHandler {
             ShaderNode n = nodes.get(node.getKey());
             if(n != null){
                 sortedNodes.add(n);
-                //     System.err.println(n.getName());
+                //  System.err.println(node.getName());
             }
         }
         currentTechnique.setShaderNodes(sortedNodes);
