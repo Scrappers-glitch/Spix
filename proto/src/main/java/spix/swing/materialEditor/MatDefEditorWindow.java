@@ -69,18 +69,10 @@ public class MatDefEditorWindow extends JFrame {
             return;
         }
 
-        PropertyEdit pe = null;
-        if (edit instanceof CompositeEdit) {
-            pe = ((CompositeEdit) edit).getEditWithType(PropertyEdit.class);
-        } else if (edit instanceof PropertyEdit) {
-            pe = (PropertyEdit) edit;
+        if ((edit instanceof CompositeEdit && ((CompositeEdit) edit).hasTypes(PropertyEdit.class))
+                || (edit instanceof PropertyEdit)) {
+            controller.onSelectionPropertyChange((Geometry) m.getSingleSelection());
         }
-        if (pe == null) {
-            return;
-        }
-
-        controller.onSelectionPropertyChange((Geometry) m.getSingleSelection());
-
 
     }
 

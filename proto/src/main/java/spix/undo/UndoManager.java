@@ -100,7 +100,6 @@ public class UndoManager {
         getTransaction(true).addEdit(edit);
         lastEditFrame = frame;
         redoStack.clear();
-        spix.getBlackboard().set(LAST_EDIT, transaction);
     }
  
     public void undo() {
@@ -158,6 +157,7 @@ public class UndoManager {
     public void nextFrame() {
         frame++;
         if( frame > lastEditFrame + frameDelay ) {
+            spix.getBlackboard().set(LAST_EDIT, transaction);
             // The last transaction is 'done'
             transaction = null;
         }
