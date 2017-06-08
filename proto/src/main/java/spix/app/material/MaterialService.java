@@ -10,6 +10,7 @@ import com.jme3.shader.ShaderNode;
 import com.jme3.texture.Texture;
 import spix.app.FileIoAppState;
 import spix.app.utils.CloneUtils;
+import spix.app.utils.MaterialUtils;
 import spix.core.RequestCallback;
 import spix.props.BeanProperty;
 import spix.props.Property;
@@ -32,6 +33,8 @@ public class MaterialService {
     private SwingGui gui;
     private RendererExceptionHandler logHandler = new RendererExceptionHandler();
     private Map<String, List<Material>> materialSyncMap = new HashMap<>();
+
+    private ReplaceMatDefVisitor replaceMatDefVisitor = new ReplaceMatDefVisitor();
 
     public MaterialService(MaterialAppState materialState, FileIoAppState ioState, SwingGui gui) {
         this.materialState = materialState;
@@ -179,11 +182,6 @@ public class MaterialService {
         });
     }
 
-    //todo fix this
-    public void saveJ3md(MaterialDef def) {
-        ioState.writeJ3md(def);
-    }
-
     /**
      * Create a custom material definition with a technique that only goes to the output that requested the preview.
      * This allow to have a preview for the different stages of the shader.
@@ -243,6 +241,11 @@ public class MaterialService {
         //MaterialDefUtils.fixUniformNames(techDef.getShaderGenerationInfo());
 
         return def;
+    }
+
+    public void replaceMatDef(Spatial spatial, MaterialDef def) {
+        replaceMatDefVisitor.init(def);
+        spatial.depthFirstTraversal(replaceMatDefVisitor);
     }
 
     public static class CompilationError{
@@ -402,6 +405,25 @@ public class MaterialService {
                 p = new PolyOffsetProperty(material.getAdditionalRenderState(), prop.getName());
             }
             p.setValue(prop.getValue());
+        }
+    }
+
+    private class ReplaceMatDefVisitor extends SceneGraphVisitorAdapter {
+        MaterialDef def;
+
+        public void init(MaterialDef def) {
+            this.def = def;
+        }
+
+        @Override
+        public void visit(Geometry geom) {
+            if (!(geom.getMaterial().getMaterialDef().getAssetName().equals(def.getAssetName()))) {
+                return;
+            }
+            Material oldMat = geom.getMaterial();
+            Material newMat = new Material(def);
+            MaterialUtils.copyParams(oldMat, newMat);
+            geom.setMaterial(newMat);
         }
     }
 }

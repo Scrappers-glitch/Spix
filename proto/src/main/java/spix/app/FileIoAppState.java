@@ -212,14 +212,19 @@ public class FileIoAppState extends BaseAppState {
     }
 
     //todo implement real save for now it's debug
-    public void writeJ3md(MaterialDef def) {
+    public void saveMaterialdef(MaterialDef def) {
         J3mdExporter exporter = new J3mdExporter();
-
-        try (FileOutputStream stream = new FileOutputStream(new File("e:/test.j3md"))) {
+        String root = getSpix().getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class);
+        try (FileOutputStream stream = new FileOutputStream(new File(root + File.separator + def.getAssetName()))) {
             exporter.save(def, stream);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public MaterialDef loadMaterialDef(String path) {
+        assetManager.deleteFromCache(new AssetKey<>(path));
+        return (MaterialDef) assetManager.loadAsset(path);
     }
 
     public String getUnusedName(String basePath, String filePath) {

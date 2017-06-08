@@ -40,7 +40,6 @@ import com.google.common.base.Predicates;
 import com.jme3.app.*;
 import com.jme3.app.state.ScreenshotAppState;
 import com.jme3.asset.AssetKey;
-import com.jme3.asset.MaterialKey;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.light.*;
 import com.jme3.material.Material;
@@ -296,7 +295,7 @@ public class Editor extends SimpleApplication {
                 gui.setMatDefEditorWindow(matDefEditorWindow);
 
                 spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), stateManager.getState(FileIoAppState.class), gui));
-                spix.registerService(FileLoadingService.class, new FileLoadingService(gui.getSpix(), stateManager.getState(FileIoAppState.class)));
+                spix.registerService(FileIoService.class, new FileIoService(gui.getSpix(), stateManager.getState(FileIoAppState.class)));
             }
         });
 

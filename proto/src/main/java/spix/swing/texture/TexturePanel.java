@@ -39,7 +39,7 @@ package spix.swing.texture;
 import com.jme3.asset.TextureKey;
 import com.jme3.texture.Texture;
 import com.jme3.util.clone.Cloner;
-import spix.app.FileLoadingService;
+import spix.app.FileIoService;
 import spix.app.material.MaterialService;
 import spix.core.RequestCallback;
 import spix.props.*;
@@ -119,7 +119,7 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
         textureButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                gui.getSpix().getService(FileLoadingService.class).requestTexture(new RequestCallback<Texture>() {
+                gui.getSpix().getService(FileIoService.class).requestTexture(new RequestCallback<Texture>() {
                     @Override
                     public void done(Texture result) {
                         System.err.println("Loaded change: " + System.identityHashCode(result));

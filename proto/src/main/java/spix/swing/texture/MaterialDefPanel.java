@@ -37,7 +37,7 @@
 package spix.swing.texture;
 
 import com.jme3.material.MaterialDef;
-import spix.app.FileLoadingService;
+import spix.app.FileIoService;
 import spix.props.Property;
 import spix.swing.AbstractPropertyPanel;
 import spix.swing.SwingGui;
@@ -135,11 +135,11 @@ public class MaterialDefPanel extends AbstractPropertyPanel<Component> {
                 if (selEntry == separator) {
                     matDefsCombo.setSelectedItem(selected);
                 } else if (selEntry == more) {
-                    gui.getSpix().getService(FileLoadingService.class).loadJ3mdForSelection();
+                    gui.getSpix().getService(FileIoService.class).loadJ3mdForSelection();
                 } else if (selEntry == newMD) {
-                    gui.getSpix().getService(FileLoadingService.class).createJ3mdForSelection();
+                    gui.getSpix().getService(FileIoService.class).createJ3mdForSelection();
                 } else {
-                    gui.getSpix().getService(FileLoadingService.class).loadStockJ3mdForSelection(selEntry.value);
+                    gui.getSpix().getService(FileIoService.class).loadStockJ3mdForSelection(selEntry.value);
                 }
 
             }

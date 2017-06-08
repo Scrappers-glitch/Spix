@@ -2,14 +2,13 @@ package spix.app;
 
 import com.jme3.asset.MaterialKey;
 import com.jme3.material.Material;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Spatial;
+import com.jme3.material.MaterialDef;
+import com.jme3.scene.*;
 import com.jme3.texture.Texture;
 import spix.app.material.MaterialService;
 import spix.app.utils.MaterialUtils;
 import spix.core.*;
 import spix.ui.FileRequester;
-import spix.undo.SceneGraphStructureEdit;
 import spix.undo.UndoManager;
 import spix.undo.edit.MaterialSetEdit;
 
@@ -19,12 +18,12 @@ import java.nio.file.Path;
 /**
  * Created by Nehon on 08/01/2017.
  */
-public class FileLoadingService {
+public class FileIoService {
 
     private FileIoAppState fileState;
     private Spix spix;
 
-    public FileLoadingService(Spix spix, FileIoAppState fileState) {
+    public FileIoService(Spix spix, FileIoAppState fileState) {
         this.fileState = fileState;
         this.spix = spix;
     }
@@ -231,7 +230,26 @@ public class FileLoadingService {
                 }
             });
         }
+    }
 
+    public void saveMaterialDef(MaterialDef matDef) {
+        fileState.saveMaterialdef(matDef);
+        spix.enqueueTask(new Runnable() {
+            @Override
+            public void run() {
+                MaterialDef newDef = fileState.loadMaterialDef(matDef.getAssetName());
+                Node rootNode = (Node) spix.getBlackboard().get(DefaultConstants.SCENE_ROOT, Spatial.class);
+                spix.getService(MaterialService.class).replaceMatDef(rootNode, newDef);
+                SelectionModel model = spix.getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+                if (model.getSingleSelection() instanceof Geometry) {
+                    Geometry geom = (Geometry) model.getSingleSelection();
+                    spix.refresh(geom);
+                    model.setSingleSelection(null);
+                    model.setSingleSelection(geom);
+                }
+
+            }
+        });
     }
 
     private void checkRelocateAndDo(final File result, String defaultFolder, RequestCallback<String> callback) {

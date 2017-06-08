@@ -7,8 +7,8 @@ import com.jme3.material.TechniqueDef;
 import com.jme3.shader.*;
 import spix.swing.materialEditor.Dot;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.util.*;
 
 /**
  * Created by bouquet on 14/05/16.
@@ -336,5 +336,18 @@ public class MaterialDefUtils {
         }
 
         return new VariableMapping(leftVariable, leftVarSwizzle, rightVariable, rightVarSwizzle, null);
+    }
+
+    public static void removeParam(MaterialDef matDef, String paramName) {
+        try {
+            Field matParams = matDef.getClass().getDeclaredField("matParams");
+            matParams.setAccessible(true);
+            Map<String, MatParam> params = (Map<String, MatParam>) matParams.get(matDef);
+            params.remove(paramName);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 }

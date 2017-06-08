@@ -35,6 +35,7 @@ public class SceneExplorerPanel extends DockPanel {
 
     private JTree sceneTree;
     private SwingGui gui;
+    private Object lastSelected;
 
     public SceneExplorerPanel(Slot slot, Container container, SwingGui gui) {
         super(slot, container);
@@ -196,6 +197,10 @@ public class SceneExplorerPanel extends DockPanel {
                     sceneTree.expandRow(0);
                 }
 
+                if (lastSelected != null) {
+                    updateSelection(lastSelected);
+                }
+
             }
         });
     }
@@ -282,10 +287,7 @@ public class SceneExplorerPanel extends DockPanel {
                                 LightWrapper lw = (LightWrapper) o;
                                 o = lw.getLight();
                             }
-                            DefaultMutableTreeNode node = searchNode(o);
-                            if(sceneTree.getLastSelectedPathComponent() != node) {
-                                sceneTree.getSelectionModel().setSelectionPath(new TreePath(node.getPath()));
-                            }
+                            updateSelection(o);
                         }
                     }
                 });
@@ -293,6 +295,18 @@ public class SceneExplorerPanel extends DockPanel {
             }
 
         }
+    }
+
+    private void updateSelection(Object o) {
+        DefaultMutableTreeNode node = searchNode(o);
+        if (node == null) {
+            lastSelected = o;
+            return;
+        }
+        if (sceneTree.getLastSelectedPathComponent() != node) {
+            sceneTree.getSelectionModel().setSelectionPath(new TreePath(node.getPath()));
+        }
+        lastSelected = null;
     }
 
     public DefaultMutableTreeNode searchNode(Object userObject) {

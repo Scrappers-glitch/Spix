@@ -73,6 +73,10 @@ public class DataHandler {
         currentTechnique.getWorldBindings().add(binding);
     }
 
+    public void removeWorldParm(UniformBinding binding) {
+        currentTechnique.getWorldBindings().remove(binding);
+    }
+
     public void addMatParam(ShaderNodeVariable var, String strType){
         if(strType.equals("Color")){
             strType = "Vector4";
@@ -85,6 +89,12 @@ public class DataHandler {
             // TODO: 23/05/2016 We should ask the user for the default value.
             currentMatDef.addMaterialParam(type, var.getName(), null);
         }
+    }
+
+    public void removeMatParam(String key) {
+        key = key.substring(key.lastIndexOf(".") + 1);
+        System.err.println(key);
+        MaterialDefUtils.removeParam(currentMatDef, key);
     }
 
     public void addShaderNode(ShaderNode node){

@@ -1,20 +1,13 @@
 package spix.app.action;
 
 import com.jme3.asset.AssetManager;
-import com.jme3.material.Material;
-import com.jme3.math.ColorRGBA;
 import com.jme3.scene.*;
-import com.jme3.scene.shape.*;
 import com.jme3.texture.Texture;
 import com.jme3.util.SkyFactory;
-import spix.app.FileIoAppState;
-import spix.app.FileLoadingService;
+import spix.app.FileIoService;
 import spix.core.*;
-import spix.ui.FileRequester;
 import spix.undo.UndoManager;
 import spix.undo.edit.SpatialAddEdit;
-
-import java.io.File;
 
 import static spix.app.DefaultConstants.ASSET_MANAGER;
 import static spix.app.DefaultConstants.SCENE_ROOT;
@@ -32,7 +25,7 @@ public class AddSkyBoxAction extends AddAction {
 
     @Override
     public void performAction(Spix spix) {
-        spix.getService(FileLoadingService.class).requestTexture("HDR Equirect file", ".hdr", true, new RequestCallback<Texture>() {
+        spix.getService(FileIoService.class).requestTexture("HDR Equirect file", ".hdr", true, new RequestCallback<Texture>() {
             @Override
             public void done(Texture result) {
                 Spatial skyBox = SkyFactory.createSky(spix.getBlackboard().get(ASSET_MANAGER, AssetManager.class), result, SkyFactory.EnvMapType.EquirectMap);

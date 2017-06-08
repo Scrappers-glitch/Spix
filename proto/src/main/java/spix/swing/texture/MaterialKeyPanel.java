@@ -37,23 +37,16 @@
 package spix.swing.texture;
 
 import com.jme3.asset.*;
-import com.jme3.texture.Texture;
 import com.jme3.util.clone.Cloner;
-import spix.app.FileLoadingService;
-import spix.app.material.MaterialService;
-import spix.core.RequestCallback;
+import spix.app.FileIoService;
 import spix.props.*;
 import spix.swing.AbstractPropertyPanel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.icons.Icons;
-import spix.swing.materialEditor.preview.MaterialPreviewRenderer;
-import spix.type.Type;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A Texture Property view that uses custom swing components
@@ -94,7 +87,7 @@ public class MaterialKeyPanel extends AbstractPropertyPanel<Component> {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //create a J3M
-                gui.getSpix().getService(FileLoadingService.class).createJ3mForSelection();
+                gui.getSpix().getService(FileIoService.class).createJ3mForSelection();
             }
         });
 
@@ -109,7 +102,7 @@ public class MaterialKeyPanel extends AbstractPropertyPanel<Component> {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //Load a J3M
-                gui.getSpix().getService(FileLoadingService.class).loadJ3mForSelection();
+                gui.getSpix().getService(FileIoService.class).loadJ3mForSelection();
             }
         });
         assetButton.setToolTipText(ASSET_BUTTON_TOOLTIP);

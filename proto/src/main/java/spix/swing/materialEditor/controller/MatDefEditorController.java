@@ -6,21 +6,21 @@ import com.jme3.scene.Geometry;
 import com.jme3.shader.*;
 import groovy.util.ObservableList;
 import spix.app.DefaultConstants;
-import spix.app.material.MaterialService;
+import spix.app.FileIoService;
 import spix.app.material.hack.*;
 import spix.app.utils.CloneUtils;
-import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.swing.*;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.dialog.*;
 import spix.swing.materialEditor.nodes.*;
 import spix.swing.materialEditor.panels.*;
-import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.sort.Node;
 import spix.swing.materialEditor.utils.*;
 
 import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
@@ -66,13 +66,21 @@ public class MatDefEditorController {
 
         //todo fix this
         JToolBar tb = new JToolBar();
-        JButton b = new JButton("save debug");
-        b.addActionListener(new ActionListener() {
+
+        Action save = new AbstractAction("Save") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                gui.getSpix().getService(MaterialService.class).saveJ3md(matDef);
+                gui.getSpix().getService(FileIoService.class).saveMaterialDef(matDef);
             }
-        });
+        };
+        save.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control S"));
+        // create a button, configured with the Action
+        JButton b = new JButton(save);
+        // manually register the accelerator in the button's component input map
+        b.getActionMap().put("save", save);
+        b.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                (KeyStroke) save.getValue(Action.ACCELERATOR_KEY), "save");
+
         tb.add(b);
         editor.getContentPane().add(tb, BorderLayout.NORTH);
 
@@ -125,9 +133,6 @@ public class MatDefEditorController {
         gui.getSpix().getBlackboard().bind("matdDefEditor.selection.item.singleSelect",
                 shaderNodeProp, "object",
                 new ToPropertySetFunction(gui.getSpix()));
-
-
-
     }
 
     public Diagram initUi(SwingGui gui, MatDefEditorWindow editor) {
@@ -299,7 +304,12 @@ public class MatDefEditorController {
             coming from this node
         */
         diagramUiHandler.removeNode(this, key);
-        dataHandler.removeShaderNodeForKey(key);
+        if (key.contains("MatParam")) {
+            dataHandler.removeMatParam(key);
+        } else {
+            dataHandler.removeShaderNodeForKey(key);
+        }
+
         refreshPreviews();
     }
 
