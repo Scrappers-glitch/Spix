@@ -22,13 +22,13 @@ public class DataHandler {
     private Map<String, ShaderNode> nodes = new HashMap<>();
     private Map<String, VariableMapping> mappings = new HashMap<>();
 
-    void addMapping(VariableMapping mapping){
+    void addMapping(VariableMapping mapping) {
         getMappingList(mapping).add(mapping);
         registerMapping(mapping);
-     //   System.err.println("new Mapping: " + mapping.toString());
+        //   System.err.println("new Mapping: " + mapping.toString());
     }
 
-    public void registerMapping(VariableMapping mapping){
+    public void registerMapping(VariableMapping mapping) {
         String key = MaterialDefUtils.makeConnectionKey(
                 mapping.getRightVariable().getNameSpace(),
                 mapping.getRightVariable().getName(),
@@ -38,21 +38,21 @@ public class DataHandler {
         mappings.put(key, mapping);
     }
 
-    void removeMappingForKey(String key){
+    void removeMappingForKey(String key) {
         VariableMapping mapping = getMappingForKey(key);
         getMappingList(mapping).remove(mapping);
         mappings.remove(key);
-     //   System.err.println("removed Mapping: " + mapping.toString());
+        //   System.err.println("removed Mapping: " + mapping.toString());
     }
 
     private List<VariableMapping> getMappingList(VariableMapping mapping) {
         ShaderNodeVariable lv = mapping.getLeftVariable();
         ShaderNodeVariable rv = mapping.getRightVariable();
 
-        if(lv.getNameSpace().equals("Global")){
+        if (lv.getNameSpace().equals("Global")) {
             String key = MaterialDefUtils.makeShaderNodeKey(currentTechnique.getName(), rv.getNameSpace());
             ShaderNode node = nodes.get(key);
-            if(node == null){
+            if (node == null) {
                 throw new IllegalArgumentException("Can't find node for key " + key);
             }
 
@@ -60,7 +60,7 @@ public class DataHandler {
         } else {
             String key = MaterialDefUtils.makeShaderNodeKey(currentTechnique.getName(), lv.getNameSpace());
             ShaderNode node = nodes.get(key);
-            if(node == null){
+            if (node == null) {
                 throw new IllegalArgumentException("Can't find node for key " + key);
             }
 
@@ -69,20 +69,22 @@ public class DataHandler {
         }
     }
 
-    public void addWorldParm(UniformBinding binding){
+    public void addWorldParm(UniformBinding binding) {
         currentTechnique.getWorldBindings().add(binding);
     }
 
-    public void removeWorldParm(UniformBinding binding) {
-        currentTechnique.getWorldBindings().remove(binding);
+    public void removeWorldParam(String key) {
+        key = key.substring(key.lastIndexOf(".") + 1);
+        System.err.println(key);
+        currentTechnique.getWorldBindings().remove(UniformBinding.valueOf(key));
     }
 
-    public void addMatParam(ShaderNodeVariable var, String strType){
-        if(strType.equals("Color")){
+    public void addMatParam(ShaderNodeVariable var, String strType) {
+        if (strType.equals("Color")) {
             strType = "Vector4";
         }
         VarType type = VarType.valueOf(strType);
-        if(type.isTextureType()){
+        if (type.isTextureType()) {
             // TODO: 23/05/2016 We should ask the user for the color space (linear or srgb)
             currentMatDef.addMaterialParamTexture(type, var.getName(), ColorSpace.sRGB);
         } else {
@@ -97,31 +99,31 @@ public class DataHandler {
         MaterialDefUtils.removeParam(currentMatDef, key);
     }
 
-    public void addShaderNode(ShaderNode node){
+    public void addShaderNode(ShaderNode node) {
         currentTechnique.getShaderNodes().add(node);
         registerShaderNode(node);
     }
 
-    public void registerShaderNode(ShaderNode node){
+    public void registerShaderNode(ShaderNode node) {
         String key = MaterialDefUtils.makeShaderNodeKey(currentTechnique.getName(), node.getName());
         nodes.put(key, node);
     }
 
-    public void removeShaderNodeForKey(String key){
+    public void removeShaderNodeForKey(String key) {
         ShaderNode node = getShaderNodeForKey(key);
         nodes.remove(key);
         currentTechnique.getShaderNodes().remove(node);
     }
 
-    public VariableMapping getMappingForKey(String key){
+    public VariableMapping getMappingForKey(String key) {
         return mappings.get(key);
     }
 
-    public ShaderNode getShaderNodeForKey(String key){
+    public ShaderNode getShaderNodeForKey(String key) {
         return nodes.get(key);
     }
 
-    public void clear(){
+    public void clear() {
         nodes.clear();
         mappings.clear();
     }
@@ -177,7 +179,7 @@ public class DataHandler {
         for (Node node : sortedStack) {
             node.flattenParents();
             ShaderNode n = nodes.get(node.getKey());
-            if(n != null){
+            if (n != null) {
                 sortedNodes.add(n);
                 //  System.err.println(node.getName());
             }

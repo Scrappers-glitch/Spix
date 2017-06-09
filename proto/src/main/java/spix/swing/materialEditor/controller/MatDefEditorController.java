@@ -304,7 +304,10 @@ public class MatDefEditorController {
             coming from this node
         */
         diagramUiHandler.removeNode(this, key);
-        if (key.contains("MatParam")) {
+
+        if (key.contains("WorldParam")) {
+            dataHandler.removeWorldParam(key);
+        } else if (key.contains("MatParam")) {
             dataHandler.removeMatParam(key);
         } else {
             dataHandler.removeShaderNodeForKey(key);
