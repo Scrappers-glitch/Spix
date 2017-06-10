@@ -62,6 +62,14 @@ public class SelectionHandler {
         }
     }
 
+    public void multiStopDrag(MatDefEditorController controller) {
+        for (Selectable selectedItem : selectedItems) {
+            if (selectedItem instanceof NodePanel) {
+                controller.onNodeMoved(((NodePanel) selectedItem));
+            }
+        }
+    }
+
     /**
      * do select the item and repaint the diagram
      *

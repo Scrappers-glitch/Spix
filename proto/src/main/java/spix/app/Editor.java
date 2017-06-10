@@ -54,7 +54,6 @@ import com.jme3.texture.Texture;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
-import org.yaml.snakeyaml.Yaml;
 import spix.app.action.*;
 import spix.app.action.file.*;
 import spix.app.form.SpatialFormFactory;
@@ -66,6 +65,7 @@ import spix.app.material.hack.TechniqueDefWrapper;
 import spix.app.properties.LightPropertySetFactory;
 import spix.app.properties.SpatialPropertySetFactory;
 import spix.app.utils.IconPath;
+import spix.app.metadata.MetadataService;
 import spix.awt.AwtPanelState;
 import spix.core.*;
 import spix.core.Action;
@@ -175,17 +175,6 @@ public class Editor extends SimpleApplication {
         spix.getBlackboard().set(SELECTION_PROPERTY, selectionModel);
         selectionModel.setupHack(spix.getBlackboard(), "main.selection.singleSelect");
 
-
-        //Stock Material meta data, maybe not the best place to have this. Change that when you refactor this class, future me.
-        Yaml yaml = new Yaml();
-        Object lightingConfig = yaml.load(this.getClass().getResourceAsStream("/lighting.yaml"));
-        spix.getBlackboard().set("material.metadata.Common/MatDefs/Light/Lighting.j3md", lightingConfig);
-        Object unshadedConfig = yaml.load(this.getClass().getResourceAsStream("/unshaded.yaml"));
-        spix.getBlackboard().set("material.metadata.Common/MatDefs/Misc/Unshaded.j3md", unshadedConfig);
-        Object unshadedNodesConfig = yaml.load(this.getClass().getResourceAsStream("/unshadedNodes.yaml"));
-        spix.getBlackboard().set("material.metadata.Common/MatDefs/Misc/UnshadedNodes.j3md", unshadedNodesConfig);
-
-
         // Have to create the frame on the AWT EDT.
         SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
@@ -294,8 +283,11 @@ public class Editor extends SimpleApplication {
                 });
                 gui.setMatDefEditorWindow(matDefEditorWindow);
 
-                spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), stateManager.getState(FileIoAppState.class), gui));
-                spix.registerService(FileIoService.class, new FileIoService(gui.getSpix(), stateManager.getState(FileIoAppState.class)));
+
+                FileIoAppState fileIoAppState = stateManager.getState(FileIoAppState.class);
+                spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), fileIoAppState, gui));
+                spix.registerService(FileIoService.class, new FileIoService(gui.getSpix(), fileIoAppState));
+                spix.registerService(MetadataService.class, new MetadataService(spix, fileIoAppState));
             }
         });
 

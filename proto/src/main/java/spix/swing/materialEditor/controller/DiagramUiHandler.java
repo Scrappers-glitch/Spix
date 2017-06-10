@@ -2,6 +2,7 @@ package spix.swing.materialEditor.controller;
 
 import com.jme3.material.*;
 import com.jme3.shader.*;
+import spix.app.metadata.ShaderNodeMetadata;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.panels.ErrorLog;
@@ -29,6 +30,8 @@ public class DiagramUiHandler {
     private Map<Shader.ShaderType, Map<String, List<OutPanel>>> outPanels = new HashMap<>();
     protected List<Connection> connections = new ArrayList<>();
     private MaterialPreviewRenderer previewRenderer = new MaterialPreviewRenderer();
+    private Map<String, Object> matDefMetadata;
+    private int outCursor = 0;
 
 
     public DiagramUiHandler(Diagram diagram) {
@@ -40,6 +43,7 @@ public class DiagramUiHandler {
         outPanels.clear();
         connections.clear();
         diagram.removeAll();
+        outCursor = 0;
     }
 
     void refreshDiagram() {
@@ -65,6 +69,14 @@ public class DiagramUiHandler {
     void setCurrentTechniqueName(String currentTechniqueName) {
         clear();
         this.currentTechniqueName = currentTechniqueName;
+    }
+
+    public void setMatDefMetadata(Map<String, Object> matDefMetadata) {
+        this.matDefMetadata = matDefMetadata;
+    }
+
+    public Map<String, Object> getMatDefMetadata() {
+        return matDefMetadata;
     }
 
     void makeConnection(MatDefEditorController controller, VariableMapping mapping, TechniqueDef technique, String nodeName) {
@@ -194,7 +206,7 @@ public class DiagramUiHandler {
 
     NodePanel makeOutPanel(MatDefEditorController controller, Shader.ShaderType type, ShaderNodeVariable var) {
         List<OutPanel> panelList = getOutPanelList(type, var);
-        String key = MaterialDefUtils.makeGlobalOutKey(currentTechniqueName, var.getName(), UUID.randomUUID().toString());
+        String key = MaterialDefUtils.makeGlobalOutKey(currentTechniqueName, var.getName(), outCursor++ + "");
         OutPanel node = OutPanel.create(controller, key, type, var);
         panelList.add(node);
         nodes.put(key, node);
@@ -254,24 +266,57 @@ public class DiagramUiHandler {
         if(sortedNodes == null) {
             return;
         }
-        //diagram.autoLayout();
+        //first layout from metadata
+        boolean needsAutoLayout = false;
+        for (NodePanel p : nodes.values()) {
+            ShaderNodeMetadata nodeMD = getNodeMetadata(p);
+            p.setLocation(nodeMD.getX(), nodeMD.getY());
+            if (nodeMD.getX() < 0) {
+                needsAutoLayout = true;
+            }
+        }
+        for (Map<String, List<OutPanel>> map : outPanels.values()) {
+            for (List<OutPanel> list : map.values()) {
+                for (OutPanel p : list) {
+                    ShaderNodeMetadata nodeMD = getNodeMetadata(p);
+                    p.setLocation(nodeMD.getX(), nodeMD.getY());
+                    if (nodeMD.getX() < 0) {
+                        needsAutoLayout = true;
+                    }
+                }
+            }
+        }
+
+        if (!needsAutoLayout) {
+            return;
+        }
+
+        //diagram autoLayout
         int offset = 200;
         final int wMargin = 25;
         final int hMargin = 10;
         for (Node node : sortedNodes) {
             NodePanel p = nodes.get(node.getKey());
-
+            ShaderNodeMetadata nodeMD = getNodeMetadata(p);
+            if (nodeMD.getX() > 0) {
+                p.setLocation(nodeMD.getX(), nodeMD.getY());
+                continue;
+            }
             if (p instanceof ShaderNodePanel) {
                 int heightOffset = 0;
                 p.setLocation(offset, getNodeTop(p));
+                nodeMD.setX(offset);
+                nodeMD.setY(getNodeTop(p));
                 for (Dot dot : p.getInputConnectPoints().values()) {
                     for (Dot pair : dot.getConnectedDots()) {
                         NodePanel p2 = pair.getNode();
+                        ShaderNodeMetadata nodeMD2 = getNodeMetadata(p2);
                         if (!(p2 instanceof ShaderNodePanel)) {
                             int x = p.getX() - p2.getWidth() - wMargin;
                             int y = p.getY() + heightOffset;
                             p2.setLocation(x, y);
-
+                            nodeMD2.setX(x);
+                            nodeMD2.setY(y);
                             heightOffset += p2.getHeight() + hMargin;
                         }
                     }
@@ -280,11 +325,13 @@ public class DiagramUiHandler {
                 for (Dot dot : p.getOutputConnectPoints().values()) {
                     for (Dot pair : dot.getConnectedDots()) {
                         NodePanel p2 = pair.getNode();
+                        ShaderNodeMetadata nodeMD2 = getNodeMetadata(p2);
                         if (p2 instanceof OutPanel) {
                             int x = p.getX() + p.getWidth() + wMargin;
                             int y = p.getY() + heightOffset;
                             p2.setLocation(x, y);
-
+                            nodeMD2.setX(x);
+                            nodeMD2.setY(y);
                             heightOffset += p2.getHeight() + hMargin;
                         }
                     }
@@ -296,6 +343,34 @@ public class DiagramUiHandler {
         refreshDiagram();
         diagram.fitContent();
 
+    }
+
+    public void onNodeMoved(NodePanel node) {
+        ShaderNodeMetadata nodeMD = getNodeMetadata(node);
+        Point p = node.getLocation();
+        nodeMD.setX((int) p.getX());
+        nodeMD.setY((int) p.getY());
+        fitContent();
+    }
+
+    private ShaderNodeMetadata getNodeMetadata(NodePanel node) {
+        Map<String, Map<String, ShaderNodeMetadata>> nodeLayout = (Map<String, Map<String, ShaderNodeMetadata>>) matDefMetadata.get("NodesLayout");
+        if (nodeLayout == null) {
+            nodeLayout = new LinkedHashMap<>();
+            matDefMetadata.put("NodesLayout", nodeLayout);
+        }
+        Map<String, ShaderNodeMetadata> techLayout = nodeLayout.get(currentTechniqueName);
+        if (techLayout == null) {
+            techLayout = new LinkedHashMap<>();
+            nodeLayout.put(currentTechniqueName, techLayout);
+        }
+        ShaderNodeMetadata nodeMD = techLayout.get(node.getKey());
+        if (nodeMD == null) {
+            nodeMD = new ShaderNodeMetadata();
+            techLayout.put(node.getKey(), nodeMD);
+        }
+
+        return nodeMD;
     }
 
     private int getNodeTop(NodePanel node) {

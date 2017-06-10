@@ -17,6 +17,8 @@ import com.jme3.shader.ShaderNodeDefinition;
 import com.jme3.texture.Texture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 import spix.app.material.MaterialService;
 import spix.core.*;
 import spix.ui.MessageRequester;
@@ -45,9 +47,12 @@ public class FileIoAppState extends BaseAppState {
     private AssetLoadingListener assetListener = new AssetLoadingListener();
     private Logger log = LoggerFactory.getLogger(FileIoAppState.class.getName());
     private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(4);
+    private Yaml yaml;
 
     public FileIoAppState() {
-
+        DumperOptions opt = new DumperOptions();
+        opt.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        yaml = new Yaml(opt);
     }
 
     @Override
@@ -583,6 +588,33 @@ public class FileIoAppState extends BaseAppState {
                 }
             }
         });
+    }
+
+    public Object loadMaterialDefMetadata(MaterialDef matDef) {
+
+        String path = blackboard.get(MAIN_ASSETS_FOLDER, String.class) + File.separator + matDef.getAssetName() + ".mtdt";
+
+        try {
+            InputStream input = new FileInputStream(new File(path));
+            return yaml.load(input);
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+
+    }
+
+    public void saveMaterialDefMetadata(Object metadata, String path) {
+
+        String filePath = blackboard.get(MAIN_ASSETS_FOLDER, String.class) + File.separator + path + ".mtdt";
+        File f = new File(filePath);
+        try {
+            if (!f.exists()) {
+                f.createNewFile();
+            }
+            yaml.dump(metadata, new FileWriter(f));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 

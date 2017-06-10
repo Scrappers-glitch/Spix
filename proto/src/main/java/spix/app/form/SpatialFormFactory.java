@@ -39,6 +39,7 @@ package spix.app.form;
 import com.jme3.material.MaterialDef;
 import spix.app.material.MatParamProperty;
 import spix.app.utils.IconPath;
+import spix.app.metadata.MetadataService;
 import spix.core.Spix;
 import spix.form.*;
 import spix.props.*;
@@ -175,8 +176,8 @@ public class SpatialFormFactory extends DefaultFormFactory {
 
             MaterialDef def = (MaterialDef) an.getValue();
 
-            ArrayList params = spix.getBlackboard().get("material.metadata." + def.getAssetName(), ArrayList.class);
-
+            Map<String, Object> configMap = spix.getService(MetadataService.class).getMetadata(def);
+            ArrayList params = (ArrayList) configMap.get("ParamsLayout");
 
             if (params == null) {
                 //no meta data config, let's try to sort things up a bit.
