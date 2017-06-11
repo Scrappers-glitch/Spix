@@ -221,6 +221,26 @@ public class DiagramUiHandler {
         return node;
     }
 
+    void renameShaderNode(String oldName, String newName) {
+        String oldKey = MaterialDefUtils.makeShaderNodeKey(currentTechniqueName, oldName);
+        String newKey = MaterialDefUtils.makeShaderNodeKey(currentTechniqueName, newName);
+        ShaderNodePanel node = (ShaderNodePanel) nodes.remove(oldKey);
+        Map<String, ShaderNodeMetadata> techMD = getTechMetadata();
+        ShaderNodeMetadata nodeMD = techMD.remove(oldKey);
+        node.refresh(newName);
+        node.setKey(newKey);
+        techMD.put(newKey, nodeMD);
+        nodes.put(newKey, node);
+
+        //refresh connection keys
+        for (Connection connection : connections) {
+            String key = MaterialDefUtils.makeConnectionKey(connection.getStart().getNode().getName(), connection.getStart().getText(),
+                    connection.getEnd().getNode().getName(), connection.getEnd().getText(), currentTechniqueName);
+            connection.setKey(key);
+        }
+    }
+
+
     NodePanel addInputPanel(MatDefEditorController controller, ShaderNodeVariable shaderNodeVariable) {
         String key = MaterialDefUtils.makeInputKey(currentTechniqueName, shaderNodeVariable.getNameSpace(), shaderNodeVariable.getName());
         NodePanel node = nodes.get(key);
@@ -371,6 +391,21 @@ public class DiagramUiHandler {
         }
 
         return nodeMD;
+    }
+
+    private Map<String, ShaderNodeMetadata> getTechMetadata() {
+        Map<String, Map<String, ShaderNodeMetadata>> nodeLayout = (Map<String, Map<String, ShaderNodeMetadata>>) matDefMetadata.get("NodesLayout");
+        if (nodeLayout == null) {
+            nodeLayout = new LinkedHashMap<>();
+            matDefMetadata.put("NodesLayout", nodeLayout);
+        }
+        Map<String, ShaderNodeMetadata> techLayout = nodeLayout.get(currentTechniqueName);
+        if (techLayout == null) {
+            techLayout = new LinkedHashMap<>();
+            nodeLayout.put(currentTechniqueName, techLayout);
+        }
+
+        return techLayout;
     }
 
     private int getNodeTop(NodePanel node) {

@@ -10,9 +10,9 @@ import spix.app.FileIoService;
 import spix.app.material.hack.MatDefWrapper;
 import spix.app.material.hack.TechniqueDefWrapper;
 import spix.app.metadata.MetadataService;
-import spix.app.metadata.ShaderNodeMetadata;
 import spix.app.utils.CloneUtils;
 import spix.core.*;
+import spix.props.PropertySet;
 import spix.swing.PropertyEditorPanel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
@@ -63,6 +63,8 @@ public class MatDefEditorController {
     public MatDefEditorController(SwingGui gui, MatDefEditorWindow editor) {
         this.gui = gui;
         this.editor = editor;
+
+        setupSpixListener(gui);
 
         sceneSelection = gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         sceneSelection.addPropertyChangeListener(sceneSelectionChangeListener);
@@ -138,6 +140,26 @@ public class MatDefEditorController {
         gui.getSpix().getBlackboard().bind("matdDefEditor.selection.item.singleSelect",
                 shaderNodeProp, "object",
                 new ToPropertySetFunction(gui.getSpix()));
+    }
+
+    private void setupSpixListener(SwingGui gui) {
+        gui.getSpix().addSpixListener(new SpixListener() {
+
+            @Override
+            public PropertySet propertySetCreated(Object wrapped, PropertySet newSet) {
+
+                if (wrapped instanceof ShaderNode) {
+                    newSet.getProperty("name").addPropertyChangeListener(new PropertyChangeListener() {
+                        @Override
+                        public void propertyChange(PropertyChangeEvent evt) {
+                            diagramUiHandler.renameShaderNode((String) evt.getOldValue(), (String) evt.getNewValue());
+                            dataHandler.renameShaderNode((String) evt.getOldValue(), (String) evt.getNewValue());
+                        }
+                    });
+                }
+                return newSet;
+            }
+        });
     }
 
     public Diagram initUi(SwingGui gui, MatDefEditorWindow editor) {

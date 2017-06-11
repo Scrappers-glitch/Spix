@@ -151,7 +151,10 @@ public class MaterialAppState extends BaseAppState {
         }
         if (index >= nbOut) {
             index = nbOut - 1;
-            //throw new RendererException("color" + index + " cannot be previewed");
+
+            if (index < 0 || index > 16) {
+                throw new RendererException("color" + index + " cannot be previewed");
+            }
         }
         offBuffer.setTargetIndex(0);
         offBuffer.resetObject();

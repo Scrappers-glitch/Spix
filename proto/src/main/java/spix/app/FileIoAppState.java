@@ -228,8 +228,9 @@ public class FileIoAppState extends BaseAppState {
     }
 
     public MaterialDef loadMaterialDef(String path) {
-        assetManager.deleteFromCache(new AssetKey<>(path));
-        return (MaterialDef) assetManager.loadAsset(path);
+        AssetKey key = new AssetKey<>(path);
+        assetManager.deleteFromCache(key);
+        return (MaterialDef) loadAsset(key);
     }
 
     public String getUnusedName(String basePath, String filePath) {

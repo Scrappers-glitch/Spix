@@ -65,24 +65,4 @@ public class ShaderNodePropertySetFactory implements PropertySetFactory<ShaderNo
         return new DefaultPropertySet(shaderNode, props);
     }
 
-    public static class MappingsListProperty extends AbstractProperty{
-        public MappingsListProperty(String id) {
-            super(id);
-        }
-
-        @Override
-        public Type getType() {
-            return new Type(List.class);
-        }
-
-        @Override
-        public void setValue(Object value) {
-
-        }
-
-        @Override
-        public Object getValue() {
-            return null;
-        }
-    }
 }

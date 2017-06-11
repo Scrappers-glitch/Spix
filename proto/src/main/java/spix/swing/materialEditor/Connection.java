@@ -74,6 +74,10 @@ public class Connection extends JPanel implements Selectable {
         return key;
     }
 
+    public void setKey(String key) {
+        this.key = key;
+    }
+
     @Override
     public void setSelected(boolean selected) {
         this.selected = selected;

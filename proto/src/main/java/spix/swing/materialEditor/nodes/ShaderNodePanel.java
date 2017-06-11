@@ -21,9 +21,6 @@ public abstract class ShaderNodePanel extends NodePanel implements Editable {
         super(controller, key, color, icon);
         ShaderNodeDefinition def = shaderNode.getDefinition();
 
-//        node.addPropertyChangeListener(WeakListeners.propertyChange(this, node));
-//        this.addPropertyChangeListener(WeakListeners.propertyChange(node, this));
-       // refresh(node);
         setNodeName(shaderNode.getName());
         this.filePaths.addAll(def.getShadersPath());
         String defPath = def.getPath();
@@ -53,12 +50,10 @@ public abstract class ShaderNodePanel extends NodePanel implements Editable {
         return editionAllowed;
     }
 
-    //    public final void refresh(ShaderNode node) {
-//        nodeName = node.getName();
-//        header.setText(node.getName());
-//        header.setToolTipText(node.getName());
-//
-//    }
+    public final void refresh(String name) {
+        setNodeName(name);
+        setTitle(name);
+    }
 
     public static ShaderNodePanel create(MatDefEditorController controller, String key,  ShaderNode shaderNode){
         Color color = new Color(0,0,0);

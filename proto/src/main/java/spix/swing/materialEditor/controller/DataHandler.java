@@ -115,6 +115,31 @@ public class DataHandler {
         currentTechnique.getShaderNodes().remove(node);
     }
 
+    public void renameShaderNode(String oldName, String newName) {
+        String key = MaterialDefUtils.makeShaderNodeKey(currentTechnique.getName(), oldName);
+        ShaderNode node = nodes.remove(key);
+        key = MaterialDefUtils.makeShaderNodeKey(currentTechnique.getName(), newName);
+        nodes.put(key, node);
+        Set<String> replaceKeys = new HashSet<>();
+        for (VariableMapping variableMapping : mappings.values()) {
+
+            if (variableMapping.getLeftVariable().getNameSpace().equals(oldName)) {
+                replaceKeys.add(MaterialDefUtils.makeConnectionKey(variableMapping, currentTechnique.getName()));
+                variableMapping.getLeftVariable().setNameSpace(newName);
+            }
+            if (variableMapping.getRightVariable().getNameSpace().equals(oldName)) {
+                replaceKeys.add(MaterialDefUtils.makeConnectionKey(variableMapping, currentTechnique.getName()));
+                variableMapping.getRightVariable().setNameSpace(newName);
+            }
+        }
+
+        for (String replaceKey : replaceKeys) {
+            VariableMapping mapping = mappings.remove(replaceKey);
+            registerMapping(mapping);
+        }
+
+    }
+
     public VariableMapping getMappingForKey(String key) {
         return mappings.get(key);
     }
