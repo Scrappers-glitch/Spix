@@ -1,5 +1,6 @@
 package spix.swing.materialEditor.panels;
 
+import com.jme3.material.MaterialDef;
 import com.jme3.material.TechniqueDef;
 import com.jme3.shader.*;
 import org.fife.ui.rtextarea.Gutter;
@@ -83,8 +84,8 @@ public class ShaderCodePanel extends DockPanel {
 
     }
 
-    public void refreshCode(TechniqueDef def){
-        gui.getSpix().getService(MaterialService.class).requestCode(def, new RequestCallback<Map<String, Shader>>() {
+    public void refreshCode(TechniqueDef def, MaterialDef matDef) {
+        gui.getSpix().getService(MaterialService.class).requestCode(def, matDef, new RequestCallback<Map<String, Shader>>() {
             @Override
             public void done(Map<String, Shader> result) {
                 if(result == null){

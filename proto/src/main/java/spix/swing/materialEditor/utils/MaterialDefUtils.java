@@ -4,6 +4,7 @@ import com.jme3.material.MatParam;
 import com.jme3.material.MaterialDef;
 import com.jme3.material.ShaderGenerationInfo;
 import com.jme3.material.TechniqueDef;
+import com.jme3.material.plugins.ConditionParser;
 import com.jme3.shader.*;
 import spix.swing.materialEditor.Dot;
 
@@ -23,7 +24,7 @@ public class MaterialDefUtils {
      * @param technique
 
      */
-    public static void computeShaderNodeGenerationInfo(TechniqueDef technique) {
+    public static void computeShaderNodeGenerationInfo(TechniqueDef technique, MaterialDef matDef) {
 
 
         List<ShaderNodeVariable> attributes = technique.getShaderGenerationInfo().getAttributes();
@@ -103,15 +104,15 @@ public class MaterialDefUtils {
                 }
             }
         }
-        computeConditions(technique);
+        computeConditions(technique, matDef);
     }
 
-    private static void computeConditions(TechniqueDef techniqueDef) {
+    private static void computeConditions(TechniqueDef techniqueDef, MaterialDef matDef) {
 
         ShaderGenerationInfo info = techniqueDef.getShaderGenerationInfo();
-        updateConditions(info.getVertexUniforms(), techniqueDef.getShaderNodes());
-        updateConditions(info.getFragmentUniforms(), techniqueDef.getShaderNodes());
-        updateConditions(info.getVaryings(), techniqueDef.getShaderNodes());
+        updateConditions(info.getVertexUniforms(), techniqueDef, matDef);
+        updateConditions(info.getFragmentUniforms(), techniqueDef, matDef);
+        updateConditions(info.getVaryings(), techniqueDef, matDef);
 
         for (ShaderNodeVariable v : info.getVaryings()) {
             for (ShaderNode sn : techniqueDef.getShaderNodes()) {
@@ -129,13 +130,32 @@ public class MaterialDefUtils {
             }
         }
 
-        updateConditions(info.getAttributes(), techniqueDef.getShaderNodes());
+        updateConditions(info.getAttributes(), techniqueDef, matDef);
     }
 
-    private static void updateConditions(List<ShaderNodeVariable> vars, List<ShaderNode> allNodes) {
+    private static void updateConditions(List<ShaderNodeVariable> vars, TechniqueDef techniqueDef, MaterialDef matDef) {
         for (ShaderNodeVariable shaderNodeVariable : vars) {
-            makeCondition(shaderNodeVariable, allNodes);
+            makeCondition(shaderNodeVariable, techniqueDef.getShaderNodes());
+            if (shaderNodeVariable.getCondition() != null) {
+                ConditionParser parser = new ConditionParser();
+                List<String> defines = parser.extractDefines(shaderNodeVariable.getCondition());
+                for (String define : defines) {
+                    MatParam param = findMatParam(define, matDef);
+                    if (param != null && techniqueDef.getShaderParamDefine(param.getName()) == null) {
+                        techniqueDef.addShaderParamDefine(param.getName(), param.getVarType(), param.getName().toUpperCase());
+                    }
+                }
+            }
         }
+    }
+
+    public static MatParam findMatParam(String varName, MaterialDef matDef) {
+        for (MatParam matParam : matDef.getMaterialParams()) {
+            if (varName.toLowerCase().equals(matParam.getName().toLowerCase())) {
+                return matParam;
+            }
+        }
+        return null;
     }
 
     // TODO: 01/06/2016 All this condition computation seems very very inefficient, I should rework this.
@@ -193,21 +213,6 @@ public class MaterialDefUtils {
         }
     }
 
-    /**
-     * Adds back the g_ and m_ for world params and mat params needed for the technique to work properly
-     * @param info
-     */
-    public static void fixUniformNames(ShaderGenerationInfo info) {
-        for (ShaderNodeVariable var : info.getFragmentUniforms()) {
-            fixUniformName(var);
-        }
-
-        for (ShaderNodeVariable var : info.getVertexUniforms()) {
-            fixUniformName(var);
-        }
-    }
-
-
     private static void addUnique(List<ShaderNodeVariable> variables, ShaderNodeVariable var){
         for (ShaderNodeVariable variable : variables) {
             if(var.equals(variable)){
@@ -215,17 +220,6 @@ public class MaterialDefUtils {
             }
         }
         variables.add(var);
-    }
-    /**
-     * as previous method but for one variable.
-     * @param var
-     */
-    private static void fixUniformName(ShaderNodeVariable var) {
-        if(var.getNameSpace().equals("MatParam") && !var.getName().startsWith("m_")){
-            var.setName("m_" + var.getName());
-        } else if(var.getNameSpace().equals("WorldParam") && !var.getName().startsWith("g_")){
-            var.setName("g_" + var.getName());
-        }
     }
 
     /**
@@ -300,6 +294,10 @@ public class MaterialDefUtils {
 
     public static String makeConnectionKey(String rightNameSpace, String rightName, String leftNameSpace, String leftName, String techName) {
         return techName + "." + leftNameSpace + "." + leftName + "|" + rightNameSpace + "." + rightName;
+    }
+
+    public static String makeConnectionKey(VariableMapping m, String techName) {
+        return techName + "." + m.getLeftVariable().getNameSpace() + "." + m.getLeftVariable().getName() + "|" + m.getRightVariable().getNameSpace() + "." + m.getRightVariable().getName();
     }
 
     public static String makeShaderNodeKey(String techName, String nodeName ){

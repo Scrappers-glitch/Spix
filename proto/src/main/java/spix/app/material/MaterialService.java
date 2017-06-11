@@ -90,9 +90,9 @@ public class MaterialService {
         });
     }
 
-    public void requestCode(TechniqueDef def, RequestCallback<Map<String, Shader>> callback){
+    public void requestCode(TechniqueDef def, MaterialDef matDef, RequestCallback<Map<String, Shader>> callback) {
         //re computing the shader generation information
-        MaterialDefUtils.computeShaderNodeGenerationInfo(def);
+        MaterialDefUtils.computeShaderNodeGenerationInfo(def, matDef);
 
         //Not really needed as it should be thread safe.
         gui.runOnRender(new Runnable() {
@@ -236,7 +236,7 @@ public class MaterialService {
         //setting the new shaderNodes to the technique definition
         techDef.setShaderNodes(newNodes);
         //re computing the shader generation information
-        MaterialDefUtils.computeShaderNodeGenerationInfo(techDef);
+        MaterialDefUtils.computeShaderNodeGenerationInfo(techDef, def);
         //fixing the world and mat param g_ and m_ names.
         //MaterialDefUtils.fixUniformNames(techDef.getShaderGenerationInfo());
 

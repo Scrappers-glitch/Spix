@@ -33,7 +33,7 @@ public class MaterialPreviewRenderer {
     public void batchRequests(SwingGui gui, ErrorLog errorLog, final List<OutPanel> outs, MaterialDef matDef, String techniqueName, Deque<Node> sortedNodes, Map<String, MatParam> params) {
 
         TechniqueDef techDef = matDef.getTechniqueDefs(techniqueName).get(0);
-        MaterialDefUtils.computeShaderNodeGenerationInfo(techDef);
+        MaterialDefUtils.computeShaderNodeGenerationInfo(techDef, matDef);
         nbRequestsDone = 0;
         errors.clear();
         for (OutPanel out : outs) {

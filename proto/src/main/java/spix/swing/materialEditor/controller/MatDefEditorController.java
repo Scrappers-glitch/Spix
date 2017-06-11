@@ -237,7 +237,7 @@ public class MatDefEditorController {
         dataHandler.setCurrentMatDef(matDef);
 
         if (technique.isUsingShaderNodes()) {
-            MaterialDefUtils.computeShaderNodeGenerationInfo(technique);
+            MaterialDefUtils.computeShaderNodeGenerationInfo(technique, matDef);
             List<ShaderNodeVariable> uniforms = new ArrayList<>();
             MaterialDefUtils.getAllUniforms(technique, matDef, uniforms);
 
@@ -299,7 +299,7 @@ public class MatDefEditorController {
             diagramUiHandler.refreshPreviews(gui, errorLog, matDef, sortedNodes, matParams);
         }
 
-        shaderCodePanel.refreshCode(dataHandler.getCurrentTechnique());
+        shaderCodePanel.refreshCode(dataHandler.getCurrentTechnique(), matDef);
     }
 
     public Connection connect(Dot start, Dot end) {
