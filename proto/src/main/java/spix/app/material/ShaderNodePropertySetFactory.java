@@ -60,7 +60,7 @@ public class ShaderNodePropertySetFactory implements PropertySetFactory<ShaderNo
         List<Property> props = new ArrayList<>();
 
         props.add(BeanProperty.create(shaderNode, "name"));
-        props.add(BeanProperty.create(shaderNode, "condition"));
+        props.add(new ShaderNodeConditionProperty(shaderNode, "condition", spix));
 
         return new DefaultPropertySet(shaderNode, props);
     }

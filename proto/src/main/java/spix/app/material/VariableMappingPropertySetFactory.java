@@ -58,7 +58,7 @@ public class VariableMappingPropertySetFactory implements PropertySetFactory<Var
         System.out.println("Need to create a property set for:" + mapping);
         List<Property> props = new ArrayList<>();
 
-        props.add(BeanProperty.create(mapping, "condition"));
+        props.add(new ShaderNodeConditionProperty(mapping, "condition", spix));
         props.add(BeanProperty.create(mapping.getRightVariable(), "type", "fromVariableType", false, null));
         props.add(BeanProperty.create(mapping.getRightVariable(), "name", "fromVariableName", false, null));
         props.add(BeanProperty.create(mapping.getRightVariable(), "nameSpace", "fromVariableNode", false, null));
