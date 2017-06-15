@@ -276,6 +276,27 @@ public class FileIoAppState extends BaseAppState {
         });
     }
 
+    public String loadFileAsText(String path) {
+        String fullPath = blackboard.get(MAIN_ASSETS_FOLDER, String.class) + File.separator + path;
+        File f = new File(fullPath);
+        if (f.exists()) {
+            try {
+                return new String(Files.readAllBytes(f.toPath()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            //try to look in stock resources
+            InputStream input = this.getClass().getResourceAsStream("/" + path);
+            if (input != null) {
+                Scanner s = new Scanner(input).useDelimiter("\\A");
+                String result = s.hasNext() ? s.next() : "";
+                return result;
+            }
+        }
+        return null;
+    }
+
     public void loadScene(File f, boolean changeAssetFolder, RequestCallback<Spatial> callback) throws AssetLoadException, AssetNotFoundException {
         String id = getSpix().getService(MessageRequester.class).displayLoading("Loading " + f.getName() + "...");
         Runnable task = new Runnable() {

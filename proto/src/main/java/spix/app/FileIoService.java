@@ -274,4 +274,8 @@ public class FileIoService {
         }
     }
 
+    public void loadFileAsText(String path, RequestCallback<String> callback) {
+        String content = fileState.loadFileAsText(path);
+        callback.done(content);
+    }
 }

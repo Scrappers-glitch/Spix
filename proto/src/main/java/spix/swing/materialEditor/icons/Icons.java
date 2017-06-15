@@ -64,6 +64,8 @@ public class Icons {
     public final static ImageIcon cubeHover = new ImageIcon(Icons.class.getResource("/icons/cubeHover.png"));
     public final static ImageIcon shaderCode = new ImageIcon(Icons.class.getResource("/icons/shaderCodeButton.png"));
     public final static ImageIcon shaderCodeHover = new ImageIcon(Icons.class.getResource("/icons/shaderCodeButtonHover.png"));
+    public final static ImageIcon shaderNode = new ImageIcon(Icons.class.getResource("/icons/shaderNodeButton.png"));
+    public final static ImageIcon shaderNodeHover = new ImageIcon(Icons.class.getResource("/icons/shaderNodeButtonHover.png"));
     public final static ImageIcon dockLeft = new ImageIcon(Icons.class.getResource("/icons/dock-left.png"));
     public final static ImageIcon dockDown = new ImageIcon(Icons.class.getResource("/icons/dock-down.png"));
     public final static ImageIcon dockRight = new ImageIcon(Icons.class.getResource("/icons/dock-right.png"));

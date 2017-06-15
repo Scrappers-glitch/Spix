@@ -23,6 +23,7 @@ import spix.swing.materialEditor.panels.*;
 import spix.swing.materialEditor.sort.Node;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
+import spix.undo.UndoManager;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -68,9 +69,14 @@ public class MatDefEditorController {
 
         sceneSelection = gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         sceneSelection.addPropertyChangeListener(sceneSelectionChangeListener);
+
         Diagram diagram = initUi(gui, editor);
         diagramUiHandler = new DiagramUiHandler(diagram);
 
+
+    }
+
+    private void createToolbar(final SwingGui gui, MatDefEditorWindow editor) {
         //todo fix this
         JToolBar tb = new JToolBar();
 
@@ -91,6 +97,83 @@ public class MatDefEditorController {
 
         tb.add(b);
         editor.getContentPane().add(tb, BorderLayout.NORTH);
+    }
+
+    private void setupSpixListener(SwingGui gui) {
+        gui.getSpix().addSpixListener(new SpixListener() {
+
+            @Override
+            public PropertySet propertySetCreated(Object wrapped, PropertySet newSet) {
+
+                if (wrapped instanceof ShaderNode) {
+                    newSet.getProperty("name").addPropertyChangeListener(new PropertyChangeListener() {
+                        @Override
+                        public void propertyChange(PropertyChangeEvent evt) {
+                            diagramUiHandler.renameShaderNode((String) evt.getOldValue(), (String) evt.getNewValue());
+                            dataHandler.renameShaderNode((String) evt.getOldValue(), (String) evt.getNewValue());
+                        }
+                    });
+                }
+                return newSet;
+            }
+        });
+    }
+
+    public Diagram initUi(SwingGui gui, MatDefEditorWindow editor) {
+        Container mainContainer = editor.getContentPane();
+        mainContainer.setLayout(new BorderLayout());
+        JPanel centerPane = new JPanel();
+        mainContainer.add(centerPane, BorderLayout.CENTER);
+
+        centerPane.setLayout(new BorderLayout());
+
+        Diagram diagram = new Diagram(this);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(diagram);
+        centerPane.add(scrollPane, BorderLayout.CENTER);
+        scrollPane.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                diagram.fitContent();
+            }
+        });
+
+        errorLog = new ErrorLog(centerPane);
+        errorLog.setPreferredSize(new Dimension(100, 500));
+        centerPane.add(errorLog, BorderLayout.SOUTH);
+
+        shaderCodePanel = new ShaderCodePanel(centerPane, gui);
+        shaderCodePanel.setPreferredSize(new Dimension(500, 10));
+
+        ShaderNodeCodePanel shaderNodeCodePanel = new ShaderNodeCodePanel(centerPane, gui);
+        shaderNodeCodePanel.setPreferredSize(new Dimension(500, 10));
+
+        JToolBar westToolBar = new JToolBar(JToolBar.VERTICAL);
+        westToolBar.setFloatable(false);
+        editor.getContentPane().add(westToolBar, BorderLayout.WEST);
+        NoneSelectedButtonGroup groupW = new NoneSelectedButtonGroup();
+        groupW.add(shaderCodePanel.getButton());
+        westToolBar.add(shaderCodePanel.getButton());
+        groupW.add(shaderNodeCodePanel.getButton());
+        westToolBar.add(shaderNodeCodePanel.getButton());
+
+        JToolBar southToolBar = new JToolBar();
+        southToolBar.setFloatable(false);
+        editor.getContentPane().add(southToolBar, BorderLayout.SOUTH);
+        southToolBar.addSeparator(new Dimension(30, 10));
+        southToolBar.add(errorLog.getButton());
+
+        propertiesPanel = new PropPanel(centerPane);
+        propertiesPanel.setPreferredSize(new Dimension(250, 10));
+
+        JToolBar eastToolBar = new JToolBar(JToolBar.VERTICAL);
+        eastToolBar.setFloatable(false);
+        editor.getContentPane().add(eastToolBar, BorderLayout.EAST);
+        NoneSelectedButtonGroup groupE = new NoneSelectedButtonGroup();
+        groupE.add(propertiesPanel.getButton());
+        eastToolBar.add(propertiesPanel.getButton());
+
+        createToolbar(gui, editor);
 
         PropertyEditorPanel matDefProps = new PropertyEditorPanel(gui, "ui.matdef.editor");
         JPanel p = new JPanel(new GridLayout(1, 1));
@@ -140,76 +223,9 @@ public class MatDefEditorController {
         gui.getSpix().getBlackboard().bind("matdDefEditor.selection.item.singleSelect",
                 shaderNodeProp, "object",
                 new ToPropertySetFunction(gui.getSpix()));
-    }
 
-    private void setupSpixListener(SwingGui gui) {
-        gui.getSpix().addSpixListener(new SpixListener() {
+        gui.getSpix().getBlackboard().bind("matdDefEditor.selection.item.singleSelect", shaderNodeCodePanel, "selectedNode");
 
-            @Override
-            public PropertySet propertySetCreated(Object wrapped, PropertySet newSet) {
-
-                if (wrapped instanceof ShaderNode) {
-                    newSet.getProperty("name").addPropertyChangeListener(new PropertyChangeListener() {
-                        @Override
-                        public void propertyChange(PropertyChangeEvent evt) {
-                            diagramUiHandler.renameShaderNode((String) evt.getOldValue(), (String) evt.getNewValue());
-                            dataHandler.renameShaderNode((String) evt.getOldValue(), (String) evt.getNewValue());
-                        }
-                    });
-                }
-                return newSet;
-            }
-        });
-    }
-
-    public Diagram initUi(SwingGui gui, MatDefEditorWindow editor) {
-        Container mainContainer = editor.getContentPane();
-        mainContainer.setLayout(new BorderLayout());
-        JPanel centerPane = new JPanel();
-        mainContainer.add(centerPane, BorderLayout.CENTER);
-
-        centerPane.setLayout(new BorderLayout());
-
-        Diagram diagram = new Diagram(this);
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setViewportView(diagram);
-        centerPane.add(scrollPane, BorderLayout.CENTER);
-        scrollPane.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                diagram.fitContent();
-            }
-        });
-
-        errorLog = new ErrorLog(centerPane);
-        errorLog.setPreferredSize(new Dimension(100, 500));
-        centerPane.add(errorLog, BorderLayout.SOUTH);
-
-        shaderCodePanel = new ShaderCodePanel(centerPane, gui);
-        shaderCodePanel.setPreferredSize(new Dimension(500, 10));
-
-        propertiesPanel = new PropPanel(centerPane);
-        propertiesPanel.setPreferredSize(new Dimension(250, 10));
-
-        JToolBar westToolBar = new JToolBar(JToolBar.VERTICAL);
-        westToolBar.setFloatable(false);
-        editor.getContentPane().add(westToolBar, BorderLayout.WEST);
-        NoneSelectedButtonGroup groupW = new NoneSelectedButtonGroup();
-        groupW.add(shaderCodePanel.getButton());
-        westToolBar.add(shaderCodePanel.getButton());
-
-        JToolBar southToolBar = new JToolBar();
-        southToolBar.setFloatable(false);
-        editor.getContentPane().add(southToolBar, BorderLayout.SOUTH);
-        southToolBar.addSeparator(new Dimension(30, 10));
-        southToolBar.add(errorLog.getButton());
-
-        JToolBar eastToolBar = new JToolBar(JToolBar.VERTICAL);
-        eastToolBar.setFloatable(false);
-        editor.getContentPane().add(eastToolBar, BorderLayout.EAST);
-        NoneSelectedButtonGroup groupE = new NoneSelectedButtonGroup();
-        groupE.add(propertiesPanel.getButton());
-        eastToolBar.add(propertiesPanel.getButton());
         return diagram;
     }
 

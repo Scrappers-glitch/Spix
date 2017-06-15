@@ -23,7 +23,6 @@ import java.util.*;
  */
 public class ShaderCodePanel extends DockPanel {
 
-    //maybe I should try this for the glsl editor http://bobbylight.github.io/RSyntaxTextArea/ with a custom kit or with C
     private ShaderCodeEditor editor;
     private SwingGui gui;
     private Map<Shader.ShaderType, JToggleButton> buttons = new HashMap<>();
@@ -70,7 +69,7 @@ public class ShaderCodePanel extends DockPanel {
         cb.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                currentShaderVersion = (String)cb.getModel().getSelectedItem();
+                currentShaderVersion = (String) cb.getModel().getSelectedItem();
                 updateText();
             }
         });
@@ -88,7 +87,7 @@ public class ShaderCodePanel extends DockPanel {
         gui.getSpix().getService(MaterialService.class).requestCode(def, matDef, new RequestCallback<Map<String, Shader>>() {
             @Override
             public void done(Map<String, Shader> result) {
-                if(result == null){
+                if (result == null) {
                     return;
                 }
                 shaders = result;
@@ -103,11 +102,11 @@ public class ShaderCodePanel extends DockPanel {
                 for (Shader.ShaderSource shaderSource : s.getSources()) {
                     JToggleButton button = makeButton(shaderSource.getType());
                     toolbar.add(button, 0);
-                    if(currentShaderType == null){
+                    if (currentShaderType == null) {
                         currentShaderType = shaderSource.getType();
                     }
 
-                    if(currentShaderType == shaderSource.getType()){
+                    if (currentShaderType == shaderSource.getType()) {
                         button.setSelected(true);
                     }
                 }
@@ -118,13 +117,13 @@ public class ShaderCodePanel extends DockPanel {
 
     }
 
-    private JToggleButton makeButton(Shader.ShaderType type){
+    private JToggleButton makeButton(Shader.ShaderType type) {
         JToggleButton button = buttons.get(type);
-        if( button == null) {
+        if (button == null) {
             button = new JToggleButton(type.name());
             buttons.put(type, button);
             group.add(button);
-            switch (type){
+            switch (type) {
                 case Vertex:
                     button.setIcon(Icons.vert);
                     break;
@@ -146,13 +145,13 @@ public class ShaderCodePanel extends DockPanel {
         return button;
     }
 
-    private void updateText(){
+    private void updateText() {
         Shader shader = shaders.get(currentShaderVersion);
         if (shader == null) {
             return;
         }
         for (Shader.ShaderSource shaderSource : shader.getSources()) {
-            if(shaderSource.getType() == currentShaderType){
+            if (shaderSource.getType() == currentShaderType) {
                 editor.setText(shaderSource.getSource());
             }
         }
