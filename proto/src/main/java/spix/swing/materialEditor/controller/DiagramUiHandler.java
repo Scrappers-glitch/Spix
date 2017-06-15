@@ -95,7 +95,29 @@ public class DiagramUiHandler {
         connections.add(conn);
         diagram.add(conn);
         refreshDiagram();
+
+        refreshOutPanelKey(start, end);
+
         return conn;
+    }
+
+    private void refreshOutPanelKey(Dot dot1, Dot dot2, String stamp) {
+        if (dot1.getNode() instanceof OutPanel) {
+            NodePanel p = dot1.getNode();
+            nodes.remove(p.getKey());
+            String k = p.getKey();
+            String[] s = k.split("-");
+            k = "";
+            for (String s1 : s) {
+                if (!s1.startsWith(stamp)) {
+                    k += s1 + "-";
+                }
+            }
+            k += stamp + dot2.getNode().getKey();
+            p.setKey(k);
+            nodes.put(k, p);
+            System.err.println(k);
+        }
     }
 
     private Dot findConnectPointForInput(MatDefEditorController controller, VariableMapping mapping, NodePanel forNode) {
@@ -116,6 +138,9 @@ public class DiagramUiHandler {
             np = nodes.get(MaterialDefUtils.makeInputKey(currentTechniqueName, nameSpace, name));
         } else if (isGlobal(nameSpace)) {
             np = getOutPanel(controller, forNode.getShaderType(), new ShaderNodeVariable("vec4", "Global", name), forNode, forInput);
+            nodes.remove(np.getKey());
+            np.setKey(np.getKey() + "-" + (forInput ? "in." : "out.") + forNode.getKey());
+            nodes.put(np.getKey(), np);
         } else {
             np = nodes.get(MaterialDefUtils.makeShaderNodeKey(currentTechniqueName, nameSpace));
         }
@@ -198,15 +223,35 @@ public class DiagramUiHandler {
 
     public void removeConnection(Connection conn) {
         connections.remove(conn);
+        refreshOutPanelKey(conn.getStart(), conn.getEnd());
         conn.getEnd().disconnect(conn);
         conn.getStart().disconnect(conn);
         diagram.remove(conn);
         refreshDiagram();
     }
 
+    private void refreshOutPanelKey(Dot start, Dot end) {
+        OutPanel p = null;
+        if (start.getNode() instanceof OutPanel) {
+            p = (OutPanel) start.getNode();
+        }
+        if (end.getNode() instanceof OutPanel) {
+            p = (OutPanel) end.getNode();
+        }
+        if (p != null) {
+            String k = p.refreshKey(currentTechniqueName);
+            nodes.remove(p.getKey());
+            ShaderNodeMetadata nodeMd = (ShaderNodeMetadata) matDefMetadata.get(p.getKey());
+            p.setKey(k);
+            nodes.put(k, p);
+            matDefMetadata.put(k, nodeMd);
+        }
+    }
+
+
     NodePanel makeOutPanel(MatDefEditorController controller, Shader.ShaderType type, ShaderNodeVariable var) {
         List<OutPanel> panelList = getOutPanelList(type, var);
-        String key = MaterialDefUtils.makeGlobalOutKey(currentTechniqueName, var.getName(), outCursor++ + "");
+        String key = MaterialDefUtils.makeGlobalOutKey(currentTechniqueName, var.getName(), "");
         OutPanel node = OutPanel.create(controller, key, type, var);
         panelList.add(node);
         nodes.put(key, node);

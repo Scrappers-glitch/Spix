@@ -305,7 +305,7 @@ public class MaterialDefUtils {
     }
 
     public static String makeGlobalOutKey(String techName, String variableName, String index) {
-        return techName + ".Global." + variableName + "." + index;
+        return techName + ".Global." + variableName;
     }
 
     public static String makeInputKey(String techName, String nameSpace, String variableName) {

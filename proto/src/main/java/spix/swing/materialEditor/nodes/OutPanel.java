@@ -56,12 +56,25 @@ public abstract class OutPanel extends NodePanel {
     }
 
     public Dot getOutputConnectPoint() {
-        return inputDots.values().iterator().next();
+        return outputDots.values().iterator().next();
     }
 
     public void setDisplayType(MaterialAppState.DisplayType displayType) {
         this.displayType = displayType;
         controller.refreshPreviews();
+    }
+
+    public String refreshKey(String tech) {
+        String k = tech + ".Global." + varName;
+        Dot in = getInputConnectPoint();
+        if (!(in.getConnectedDots().isEmpty())) {
+            k += "-in." + in.getConnectedDots().iterator().next().getNode().getKey();
+        }
+        Dot out = getOutputConnectPoint();
+        if (!(out.getConnectedDots().isEmpty())) {
+            k += "-out." + out.getConnectedDots().iterator().next().getNode().getKey();
+        }
+        return k;
     }
 
     public PreviewRequest makePreviewRequest(Deque<Node> sortedNodes) {
