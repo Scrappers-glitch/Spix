@@ -47,7 +47,7 @@ public class Node {
     private void visitParents(Node node) {
         for (Node parent : node.parents) {
             if (flattenParents.contains(parent)) {
-                return;
+                continue;
             }
             flattenParents.add(parent);
             visitParents(parent);
