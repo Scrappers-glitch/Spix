@@ -132,6 +132,13 @@ public class FileChooser {
             returnVal = fileChooser.showSaveDialog(owner);
         }
 
+        for (FileChooserAccessory accessory : accessories) {
+            if (accessory instanceof PreviewFileChooserAccessory) {
+                ((PreviewFileChooserAccessory) accessory).cleanUp();
+            }
+
+        }
+
         if( returnVal != JFileChooser.APPROVE_OPTION ) {
             return null;
         }

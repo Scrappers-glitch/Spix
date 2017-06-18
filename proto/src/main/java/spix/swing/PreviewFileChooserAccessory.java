@@ -20,6 +20,7 @@ public class PreviewFileChooserAccessory extends FileChooserAccessory {
     private JLabel img;
     private static int MAX_HEIGHT = 128;
     private static int MAX_WIDTH = 225;
+    private SelectionPropertyChange selectionPropertyChange = new SelectionPropertyChange();
 
     public PreviewFileChooserAccessory(SwingGui gui) {
         super();
@@ -33,38 +34,11 @@ public class PreviewFileChooserAccessory extends FileChooserAccessory {
     @Override
     void setFileChooser(JFileChooser fileChooser) {
         chooser = fileChooser;
+        chooser.addPropertyChangeListener(JFileChooser.SELECTED_FILE_CHANGED_PROPERTY, selectionPropertyChange);
+    }
 
-        chooser.addPropertyChangeListener(JFileChooser.SELECTED_FILE_CHANGED_PROPERTY, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                try {
-                    if (chooser.getSelectedFile() != null && isImageType(chooser.getSelectedFile().getCanonicalPath())) {
-                        gui.getSpix().getService(MaterialService.class).requestTexturePreview(chooser.getSelectedFile().getPath(), new RequestCallback<MaterialService.PreviewResult>() {
-                            @Override
-                            public void done(MaterialService.PreviewResult result) {
-                                ImageIcon icon = new ImageIcon(MaterialPreviewRenderer.convert(result.imageData, result.width, result.height));
-                                float ratio = (float) result.originalWidth / (float) result.originalHeight;
-                                int height = MAX_HEIGHT;
-                                int width = (int) (ratio * (float) height);
-                                if (width > MAX_WIDTH) {
-                                    width = MAX_WIDTH;
-                                    height = (int) ((float) width / ratio);
-                                }
-
-                                Image i = icon.getImage().getScaledInstance(width, height, Image.SCALE_FAST);
-                                img.setIcon(new ImageIcon(i));
-                                img.setPreferredSize(new Dimension(width, height));
-                            }
-                        });
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        });
-
-
+    public void cleanUp() {
+        chooser.removePropertyChangeListener(JFileChooser.SELECTED_FILE_CHANGED_PROPERTY, selectionPropertyChange);
     }
 
     private boolean isImageType(String path) {
@@ -76,4 +50,36 @@ public class PreviewFileChooserAccessory extends FileChooserAccessory {
         }
         return false;
     }
+
+    class SelectionPropertyChange implements PropertyChangeListener {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            try {
+                if (chooser.getSelectedFile() != null && isImageType(chooser.getSelectedFile().getCanonicalPath())) {
+                    gui.getSpix().getService(MaterialService.class).requestTexturePreview(chooser.getSelectedFile().getPath(), new RequestCallback<MaterialService.PreviewResult>() {
+                        @Override
+                        public void done(MaterialService.PreviewResult result) {
+                            ImageIcon icon = new ImageIcon(MaterialPreviewRenderer.convert(result.imageData, result.width, result.height));
+                            float ratio = (float) result.originalWidth / (float) result.originalHeight;
+                            int height = MAX_HEIGHT;
+                            int width = (int) (ratio * (float) height);
+                            if (width > MAX_WIDTH) {
+                                width = MAX_WIDTH;
+                                height = (int) ((float) width / ratio);
+                            }
+
+                            Image i = icon.getImage().getScaledInstance(width, height, Image.SCALE_FAST);
+                            img.setIcon(new ImageIcon(i));
+                            img.setPreferredSize(new Dimension(width, height));
+                        }
+                    });
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+
 }
