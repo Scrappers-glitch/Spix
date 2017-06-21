@@ -6,6 +6,9 @@ package spix.swing.materialEditor.dialog;
 
 import com.jme3.asset.*;
 import com.jme3.shader.*;
+import spix.app.FileIoService;
+import spix.core.RequestCallback;
+import spix.swing.SwingGui;
 import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.utils.*;
@@ -33,11 +36,11 @@ public class AddNodeDialog extends javax.swing.JDialog {
     /**
      * Creates new form NewJDialog
      */
-    public AddNodeDialog(java.awt.Frame parent, boolean modal, AssetManager mgr, MatDefEditorController controller, Point clickPosition) {
+    public AddNodeDialog(java.awt.Frame parent, boolean modal, MatDefEditorController controller, SwingGui gui, Point clickPosition) {
         super(parent, modal);
         this.controller = controller;
         initComponents();
-        fillList(mgr);
+        fillList(gui);
         this.clickPosition = clickPosition;
 
         setLocationRelativeTo(parent);
@@ -185,9 +188,10 @@ public class AddNodeDialog extends javax.swing.JDialog {
         doc.setCaretPosition(0);
     }
 
-    private void fillList(final AssetManager mgr) {
+    private void fillList(SwingGui gui) {
         List<String> l = new ArrayList<String>();
-        //l.addAll(mgr.getProjectShaderNodeDefs());
+        FileIoService fileIoService = gui.getSpix().getService(FileIoService.class);
+        l.addAll(fileIoService.findFilesWithExtension("j3sn"));
         try {
             l.addAll(ResourcesUtils.getShaderNodeDefinitionsFromClassPath());
         } catch (IOException e) {
@@ -213,11 +217,16 @@ public class AddNodeDialog extends javax.swing.JDialog {
                     path = path.substring(0, path.lastIndexOf("/"));
                     ShaderNodeDefinitionKey k = new ShaderNodeDefinitionKey(path);
                     k.setLoadDocumentation(true);
-                    defList = mgr.loadAsset(k);
+                    fileIoService.loadAsset(k, new RequestCallback<Object>() {
+                        @Override
+                        public void done(Object result) {
+                            defList = (List<ShaderNodeDefinition>) result;
+                            for (ShaderNodeDefinition def : defList) {
+                                createDoc(def);
+                            }
+                        }
+                    });
 
-                    for (ShaderNodeDefinition def : defList) {
-                        createDoc(def);
-                    }
 
                 }
             }

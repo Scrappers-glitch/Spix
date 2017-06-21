@@ -1,5 +1,6 @@
 package spix.app;
 
+import com.jme3.asset.AssetKey;
 import com.jme3.asset.MaterialKey;
 import com.jme3.material.Material;
 import com.jme3.material.MaterialDef;
@@ -14,6 +15,7 @@ import spix.undo.edit.MaterialSetEdit;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Created by Nehon on 08/01/2017.
@@ -277,5 +279,14 @@ public class FileIoService {
     public void loadFileAsText(String path, RequestCallback<String> callback) {
         String content = fileState.loadFileAsText(path);
         callback.done(content);
+    }
+
+    public void loadAsset(AssetKey key, RequestCallback<Object> callback) {
+        Object content = fileState.loadAsset(key);
+        callback.done(content);
+    }
+
+    public List<String> findFilesWithExtension(String extension) {
+        return fileState.findFilesWithExtension(extension);
     }
 }

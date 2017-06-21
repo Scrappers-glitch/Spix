@@ -427,9 +427,7 @@ public class MatDefEditorController {
 
 
     public void displayAddNodeDialog(Point clickPosition) {
-        // TODO: 29/05/2016 The assetManager shouldn't be shared through the blackboard. If the swing part needs the assetManager to load files, it should use a Request and a Service to retrieve those files.
-        AssetManager assetManager = (AssetManager) gui.getSpix().getBlackboard().get("application.assetmanager");
-        AddNodeDialog d = new AddNodeDialog(editor, true, assetManager, this, clickPosition);
+        AddNodeDialog d = new AddNodeDialog(editor, true, this, gui, clickPosition);
         d.setVisible(true);
     }
 

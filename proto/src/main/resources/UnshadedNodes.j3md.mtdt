@@ -45,8 +45,8 @@ NodesLayout:
     Default.MatParam.ColorMap: !!spix.app.metadata.ShaderNodeMetadata
       collapsed: false
       group: null
-      x: 962
-      y: 332
+      x: 982
+      y: 362
     Default.Attr.inHWBoneWeight: !!spix.app.metadata.ShaderNodeMetadata
       collapsed: false
       group: null
@@ -177,6 +177,48 @@ NodesLayout:
       group: null
       x: 375
       y: 285
-
-
-
+    Default.Global.position-in.Default.UnshadedVert: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      x: 799
+      y: 19
+    Default.Global.outColor-in.Default.LightMapMult: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      x: 1859
+      y: 229
+    Default.Global.outColor-in.Default.MatColorMult-out.Default.VertColorMult: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      x: 799
+      y: 649
+    Default.Global.outColor-out.Default.LightMapMult: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      x: 1439
+      y: 279
+    Default.Global.outColor-in.Default.VertColorMult-out.Default.ColorMapMult: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      x: 1159
+      y: 669
+    Default.Global.outColor-in.Default.ColorMapMult-out.Default.AlphaDiscardThreshold: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      x: 1539
+      y: 649
+    Default.Global.outColor-out.Default.MatColorMult: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      x: 409
+      y: 649
+    Default.Global.position-in.Default.GpuSkinning-out.Default.UnshadedVert: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      x: 369
+      y: 19
+    Default.Global.position-out.Default.GpuSkinning: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      x: 9
+      y: 49

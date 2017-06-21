@@ -1,5 +1,6 @@
 package spix.app;
 
+import com.google.common.io.*;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.BaseAppState;
@@ -28,6 +29,7 @@ import spix.undo.edit.SpatialAddEdit;
 
 import java.io.*;
 import java.nio.file.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
@@ -424,7 +426,7 @@ public class FileIoAppState extends BaseAppState {
         deps.addAll(assetListener.getDependencies());
     }
 
-    private Object loadAsset(AssetKey key) {
+    public Object loadAsset(AssetKey key) {
         try {
             return assetManager.loadAsset(key);
         } catch (AssetNotFoundException e) {
@@ -639,7 +641,26 @@ public class FileIoAppState extends BaseAppState {
         }
     }
 
+    public List<String> findFilesWithExtension(String extension) {
+        List<String> files = new ArrayList<>();
+        listFiles(blackboard.get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class), files, extension);
+        return files;
+    }
 
+    private void listFiles(String directoryName, List<String> files, String extension) {
+        File directory = new File(directoryName);
+        Path root = Paths.get(blackboard.get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
+        File[] fList = directory.listFiles();
+        for (File file : fList) {
+            if (file.isFile()) {
+                if (com.google.common.io.Files.getFileExtension(file.getName()).equals(extension)) {
+                    files.add(root.relativize(file.toPath()).toString().replaceAll("\\\\", "/"));
+                }
+            } else if (file.isDirectory()) {
+                listFiles(file.getAbsolutePath(), files, extension);
+            }
+        }
+    }
 
     private class AssetLoadingListener implements AssetEventListener {
         Set<String> dependencies = new HashSet<>();
