@@ -21,22 +21,28 @@ public class ShaderNodeCodePanel extends DockPanel {
 
     private ShaderCodeEditor editor;
     private SwingGui gui;
-    private Map<Shader.ShaderType, JToggleButton> buttons = new HashMap<>();
-    private Map<String, Shader> shaders;
-
     private JToolBar toolbar;
 
     private java.util.List<String> fileNames = new ArrayList<>();
-    private Map<String, String> fileContents = new HashMap<>();
+    private Map<String, Document> fileContents = new HashMap<>();
     private java.util.List<JToggleButton> tbButtons = new ArrayList<>();
     private int lastButtonIndex = 0;
     private ButtonGroup group = new ButtonGroup();
+    private Document currentDocument;
 
     public ShaderNodeCodePanel(Container container, SwingGui gui) {
         super(Slot.West, container);
         this.gui = gui;
 
         editor = new ShaderCodeEditor();
+        editor.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (editor.isEditable()) {
+                    currentDocument.modified = true;
+                }
+            }
+        });
 
         JPanel panel = new JPanel(new BorderLayout());
         RTextScrollPane scrollPane = new RTextScrollPane(editor);
@@ -73,7 +79,6 @@ public class ShaderNodeCodePanel extends DockPanel {
         toolbar.removeAll();
         lastButtonIndex = 0;
         ShaderNode node = (ShaderNode) item;
-        System.err.println(node.getDefinition().getPath());
         fileNames.add(node.getDefinition().getPath());
         fileNames.addAll(node.getDefinition().getShadersPath());
 
@@ -85,7 +90,7 @@ public class ShaderNodeCodePanel extends DockPanel {
                     if (result == null) {
                         result = "";
                     }
-                    fileContents.put(fileName, result);
+                    fileContents.put(fileName, new Document(fileName, result));
                 }
             });
 
@@ -100,7 +105,7 @@ public class ShaderNodeCodePanel extends DockPanel {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         String name = ((JToggleButton) e.getSource()).getActionCommand();
-                        editor.setText(fileContents.get(name));
+                        updateEditorText(name);
                     }
                 });
                 group.add(b);
@@ -112,20 +117,50 @@ public class ShaderNodeCodePanel extends DockPanel {
             b.setActionCommand(fileName);
         }
         tbButtons.get(0).setSelected(true);
-        editor.setText(fileContents.get(fileNames.get(0)));
+        updateEditorText(fileNames.get(0));
     }
 
-
-    private void updateText() {
-        //Shader shader = shaders.get(currentShaderVersion);
-//        if (shader == null) {
-//            return;
-//        }
-//        for (Shader.ShaderSource shaderSource : shader.getSources()) {
-//
-//                editor.setText(shaderSource.getSource());
-//
-//        }
+    public void updateEditorText(final String name) {
+        gui.getService(FileIoService.class).isFileWritable(name, new RequestCallback<Boolean>() {
+            @Override
+            public void done(Boolean result) {
+                if (currentDocument != null && currentDocument.modified) {
+                    currentDocument.content = editor.getText();
+                }
+                currentDocument = fileContents.get(name);
+                editor.setText(currentDocument.content);
+                editor.setEditable(result);
+            }
+        });
     }
 
+    public Collection<Document> getDocuments() {
+        if (currentDocument != null && currentDocument.modified) {
+            currentDocument.content = editor.getText();
+        }
+        return fileContents.values();
+    }
+
+    public static class Document {
+        private String name;
+        private String content;
+        private boolean modified;
+
+        public Document(String name, String content) {
+            this.name = name;
+            this.content = content;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        public boolean isModified() {
+            return modified;
+        }
+    }
 }

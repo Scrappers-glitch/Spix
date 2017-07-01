@@ -141,6 +141,7 @@ public class Editor extends SimpleApplication {
                 new NodeWidgetState(),
                 new MaterialAppState(),
                 new DebugLightsState(),
+                new SceneValidatorState(),
                 new DecoratorViewPortState() // Put this last because of some dodgy update vs render stuff
         );
 
@@ -286,7 +287,7 @@ public class Editor extends SimpleApplication {
 
                 FileIoAppState fileIoAppState = stateManager.getState(FileIoAppState.class);
                 spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), fileIoAppState, gui));
-                spix.registerService(FileIoService.class, new FileIoService(gui.getSpix(), fileIoAppState));
+                spix.registerService(FileIoService.class, new FileIoService(gui.getSpix(), fileIoAppState, getStateManager().getState(SceneValidatorState.class)));
                 spix.registerService(MetadataService.class, new MetadataService(spix, fileIoAppState));
             }
         });

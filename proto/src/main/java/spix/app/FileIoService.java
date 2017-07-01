@@ -1,10 +1,10 @@
 package spix.app;
 
-import com.jme3.asset.AssetKey;
-import com.jme3.asset.MaterialKey;
+import com.jme3.asset.*;
 import com.jme3.material.Material;
 import com.jme3.material.MaterialDef;
 import com.jme3.scene.*;
+import com.jme3.shader.ShaderNodeDefinition;
 import com.jme3.texture.Texture;
 import spix.app.material.MaterialService;
 import spix.app.utils.MaterialUtils;
@@ -23,10 +23,12 @@ import java.util.List;
 public class FileIoService {
 
     private FileIoAppState fileState;
+    private SceneValidatorState validatorState;
     private Spix spix;
 
-    public FileIoService(Spix spix, FileIoAppState fileState) {
+    public FileIoService(Spix spix, FileIoAppState fileState, SceneValidatorState validatorState) {
         this.fileState = fileState;
+        this.validatorState = validatorState;
         this.spix = spix;
     }
 
@@ -85,16 +87,45 @@ public class FileIoService {
                     new RequestCallback<File>() {
                         @Override
                         public void done(File result) {
-                            checkRelocateAndDo(result, "Materials", new RequestCallback<String>() {
-                                @Override
-                                public void done(String relocateTo) {
-                                    Material mat = fileState.loadMaterial(result, relocateTo);
-                                    changeMaterial(mat, geom, model);
-                                }
-                            });
+                            Material mat = fileState.loadMaterial(result);
+                            changeMaterial(mat, geom, model);
                         }
                     });
         }
+    }
+
+
+    public void requestJ3sn(RequestCallback<List<ShaderNodeDefinition>> callback) {
+        File assetRoot = new File(spix.getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
+        spix.getService(FileRequester.class).requestFile("Load a shader node definition", "j3sn file", ".j3sn",
+                assetRoot, true, false, false,
+                new RequestCallback<File>() {
+                    @Override
+                    public void done(File result) {
+                        List<ShaderNodeDefinition> defs = (List<ShaderNodeDefinition>) fileState.importAsset(result, ShaderNodeDefinitionKey.class);
+                        callback.done(defs);
+                    }
+                });
+
+    }
+
+    public void newJ3sn(RequestCallback<List<ShaderNodeDefinition>> callback) {
+        File assetRoot = new File(spix.getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
+        File defaultFile = new File(assetRoot.getPath() + File.separator + "MatDefs/shaderNodeDef.j3sn");
+        spix.getService(FileRequester.class).requestFile("Create a j3sn file ", "j3sn file", ".j3sn",
+                defaultFile, true, false, false,
+                new RequestCallback<File>() {
+                    @Override
+                    public void done(File result) {
+                        List<ShaderNodeDefinition> defs = fileState.makeJ3sn(result);
+                        callback.done(defs);
+                    }
+                });
+
+    }
+
+    public void isFileWritable(String path, RequestCallback<Boolean> callback) {
+        callback.done(fileState.isFileWritable(path));
     }
 
     private void changeMaterial(Material mat, Geometry geom, SelectionModel model) {
@@ -234,6 +265,10 @@ public class FileIoService {
         }
     }
 
+    public void saveFile(String fileName, String fileContent) {
+        fileState.saveFile(fileName, fileContent);
+    }
+
     public void saveMaterialDef(MaterialDef matDef) {
         fileState.saveMaterialdef(matDef);
         spix.enqueueTask(new Runnable() {
@@ -242,6 +277,7 @@ public class FileIoService {
                 MaterialDef newDef = fileState.loadMaterialDef(matDef.getAssetName());
                 Node rootNode = (Node) spix.getBlackboard().get(DefaultConstants.SCENE_ROOT, Spatial.class);
                 spix.getService(MaterialService.class).replaceMatDef(rootNode, newDef);
+                validatorState.validate(rootNode);
                 SelectionModel model = spix.getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
                 if (model.getSingleSelection() instanceof Geometry) {
                     Geometry geom = (Geometry) model.getSingleSelection();

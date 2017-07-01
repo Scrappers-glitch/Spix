@@ -54,6 +54,7 @@ public class MatDefEditorController {
     private DataHandler dataHandler = new DataHandler();
     private ErrorLog errorLog;
     private ShaderCodePanel shaderCodePanel;
+    private ShaderNodeCodePanel shaderNodeCodePanel;
     private PropPanel propertiesPanel;
     private Deque<Node> sortedNodes;
     private TitledBorder selectionBorder;
@@ -83,8 +84,19 @@ public class MatDefEditorController {
         Action save = new AbstractAction("Save") {
             @Override
             public void actionPerformed(ActionEvent e) {
+                Collection<ShaderNodeCodePanel.Document> documents = shaderNodeCodePanel.getDocuments();
+                boolean needsReload = false;
+                for (ShaderNodeCodePanel.Document document : documents) {
+                    if (document.isModified()) {
+                        gui.getSpix().getService(FileIoService.class).saveFile(document.getName(), document.getContent());
+                        needsReload = true;
+                    }
+                }
                 gui.getSpix().getService(FileIoService.class).saveMaterialDef(matDef);
                 gui.getSpix().getService(MetadataService.class).setMetadata(diagramUiHandler.getMatDefMetadata(), matDef);
+                if (needsReload) {
+                    initialize();
+                }
             }
         };
         save.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control S"));
@@ -145,7 +157,7 @@ public class MatDefEditorController {
         shaderCodePanel = new ShaderCodePanel(centerPane, gui);
         shaderCodePanel.setPreferredSize(new Dimension(500, 10));
 
-        ShaderNodeCodePanel shaderNodeCodePanel = new ShaderNodeCodePanel(centerPane, gui);
+        shaderNodeCodePanel = new ShaderNodeCodePanel(centerPane, gui);
         shaderNodeCodePanel.setPreferredSize(new Dimension(500, 10));
 
         JToolBar westToolBar = new JToolBar(JToolBar.VERTICAL);

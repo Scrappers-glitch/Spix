@@ -12,12 +12,14 @@ import spix.swing.SwingGui;
 import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.utils.*;
+import spix.ui.FileRequester;
+import spix.ui.MessageRequester;
 
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -32,7 +34,8 @@ public class AddNodeDialog extends javax.swing.JDialog {
     private MatDefEditorController controller;
     private Point clickPosition;
     private String path;
-
+    private JToolBar toolbar = new JToolBar();
+    private SwingGui gui;
     /**
      * Creates new form NewJDialog
      */
@@ -42,6 +45,7 @@ public class AddNodeDialog extends javax.swing.JDialog {
         initComponents();
         fillList(gui);
         this.clickPosition = clickPosition;
+        this.gui = gui;
 
         setLocationRelativeTo(parent);
     }
@@ -54,6 +58,19 @@ public class AddNodeDialog extends javax.swing.JDialog {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+
+        getContentPane().setLayout(new BorderLayout());
+        toolbar.setFloatable(false);
+        JButton loadButton = new JButton("Load");
+        loadButton.addActionListener(new LoadAction());
+        toolbar.add(loadButton);
+        JButton newButton = new JButton("New");
+        newButton.addActionListener(new NewAction());
+        toolbar.add(newButton);
+        getContentPane().add(toolbar, BorderLayout.NORTH);
+
+        JPanel centerPanel = new JPanel();
+        getContentPane().add(centerPanel, BorderLayout.CENTER);
 
         jPanel2 = new javax.swing.JPanel();
         jButton1 = new javax.swing.JButton();
@@ -134,8 +151,8 @@ public class AddNodeDialog extends javax.swing.JDialog {
 
         jSplitPane1.setRightComponent(shaderNodesList);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(centerPanel);
+        centerPanel.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -231,5 +248,44 @@ public class AddNodeDialog extends javax.swing.JDialog {
                 }
             }
         });
+    }
+
+    private class LoadAction implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            gui.getService(FileIoService.class).requestJ3sn(new RequestCallback<List<ShaderNodeDefinition>>() {
+                @Override
+                public void done(List<ShaderNodeDefinition> result) {
+                    gui.runOnSwing(new Runnable() {
+                        @Override
+                        public void run() {
+                            setVisible(false);
+                            controller.addNodesFromDefs(result, result.get(0).getPath(), clickPosition);
+                        }
+                    });
+
+                }
+            });
+        }
+    }
+
+    private class NewAction implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            gui.getService(FileIoService.class).newJ3sn(new RequestCallback<List<ShaderNodeDefinition>>() {
+                @Override
+                public void done(List<ShaderNodeDefinition> result) {
+                    gui.runOnSwing(new Runnable() {
+                        @Override
+                        public void run() {
+                            setVisible(false);
+                            controller.addNodesFromDefs(result, result.get(0).getPath(), clickPosition);
+                        }
+                    });
+                }
+            });
+        }
     }
 }

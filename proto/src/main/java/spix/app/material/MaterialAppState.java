@@ -15,6 +15,9 @@ import com.jme3.shader.*;
 import com.jme3.texture.*;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.TangentBinormalGenerator;
+import spix.app.SpixState;
+import spix.core.Spix;
+import spix.ui.MessageRequester;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -139,7 +142,7 @@ public class MaterialAppState extends BaseAppState {
 
     }
 
-    public MaterialService.PreviewResult requestPreview(Material mat, String techniqueName, DisplayType displayType, int index) throws RendererException {
+    public MaterialService.PreviewResult requestPreview(Material mat, String techniqueName, DisplayType displayType, int index) throws RuntimeException {
         setupScene(displayType, mat);
         ByteBuffer cpuBuf = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
         RenderManager rm = getApplication().getRenderManager();
@@ -172,25 +175,6 @@ public class MaterialAppState extends BaseAppState {
 
         offBuffer.setTargetIndex(index);
         r.readFrameBufferWithFormat(offBuffer, cpuBuf, Image.Format.BGRA8);
-
-//  THIS PART IS NOT NEEDED ANYMORE, I KEEP IT FOR NOW
-//        try {
-//            // this is a shameful hack.
-//            // readFrameBufferWithFormat only read from the first render buffer.
-//            // to read the relevant buffer, I access the list with reflection and remove the first buffers until the one I need is the first one.//
-//            Field colorBufField = offBuffer.getClass().getDeclaredField("colorBufs");
-//            colorBufField.setAccessible(true);
-//            List<FrameBuffer.RenderBuffer> buffers = (List<FrameBuffer.RenderBuffer>)colorBufField.get(offBuffer);
-//            for (int i = 0; i < index; i++) {
-//                FrameBuffer.RenderBuffer rb = buffers.remove(0);
-//                rb.resetObject();
-//            }
-//            r.readFrameBufferWithFormat(offBuffer, cpuBuf, Image.Format.BGRA8);
-//
-//        } catch (NoSuchFieldException | IllegalAccessException e) {
-//            e.printStackTrace();
-//        }
-
         return new MaterialService.PreviewResult(cpuBuf, SIZE);
     }
 
@@ -214,8 +198,12 @@ public class MaterialAppState extends BaseAppState {
         glsl15.initialize(def);
         glsl10.initialize(def);
 
-        shaders.put("GLSL150",glsl15.generateShader(sb.toString()));
-        shaders.put("GLSL100",glsl10.generateShader(sb.toString()));
+        try {
+            shaders.put("GLSL150", glsl15.generateShader(sb.toString()));
+            shaders.put("GLSL100", glsl10.generateShader(sb.toString()));
+        } catch (RuntimeException e) {
+            getState(SpixState.class).getSpix().getService(MessageRequester.class).showMessage("Error while generating shaderCode", e.getMessage(), MessageRequester.Type.Error);
+        }
 
         return shaders;
     }

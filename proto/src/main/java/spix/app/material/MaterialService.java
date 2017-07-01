@@ -74,7 +74,7 @@ public class MaterialService {
                             callback.done(res);
                         }
                     });
-                } catch (RendererException e){
+                } catch (RuntimeException e) {
                     int nbNodesRendered = def.getTechniqueDefs(request.getTechniqueName()).get(0).getShaderNodes().size();
                     CompilationError ce = new CompilationError(logHandler.getBuffer(), e.getMessage(),nbNodesRendered);
                     gui.runOnSwing(new Runnable() {

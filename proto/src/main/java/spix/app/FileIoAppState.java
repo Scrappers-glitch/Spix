@@ -1,6 +1,5 @@
 package spix.app;
 
-import com.google.common.io.*;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.BaseAppState;
@@ -16,6 +15,8 @@ import com.jme3.scene.Spatial;
 import com.jme3.shader.Shader;
 import com.jme3.shader.ShaderNodeDefinition;
 import com.jme3.texture.Texture;
+import org.jtwig.JtwigModel;
+import org.jtwig.JtwigTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
@@ -28,6 +29,7 @@ import spix.undo.UndoManager;
 import spix.undo.edit.SpatialAddEdit;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.*;
 import java.nio.file.Files;
 import java.util.*;
@@ -218,7 +220,19 @@ public class FileIoAppState extends BaseAppState {
         return null;
     }
 
-    //todo implement real save for now it's debug
+    public void saveFile(String fileName, String fileContent) {
+        AssetKey key = new AssetKey(fileName);
+        assetManager.deleteFromCache(key);
+        String root = getSpix().getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class);
+        try {
+            Files.write(Paths.get(root, fileName), fileContent.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+            getSpix().getService(MessageRequester.class).showMessage("Error Saving File " + fileName, e.getMessage(), MessageRequester.Type.Error);
+        }
+
+    }
+
     public void saveMaterialdef(MaterialDef def) {
         J3mdExporter exporter = new J3mdExporter();
         String root = getSpix().getBlackboard().get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class);
@@ -226,6 +240,7 @@ public class FileIoAppState extends BaseAppState {
             exporter.save(def, stream);
         } catch (Exception e) {
             e.printStackTrace();
+            getSpix().getService(MessageRequester.class).showMessage("Error Saving Material Def " + def.getAssetName(), e.getMessage(), MessageRequester.Type.Error);
         }
     }
 
@@ -306,8 +321,6 @@ public class FileIoAppState extends BaseAppState {
             public void run() {
                 FilePath fp = getFilePath(f);
                 try {
-
-
                     if (changeAssetFolder) {
                         assetManager.unregisterLocator(blackboard.get(MAIN_ASSETS_FOLDER, String.class), FileLocator.class);
                         assetManager.registerLocator(fp.assetRoot.toString(), FileLocator.class);
@@ -326,6 +339,7 @@ public class FileIoAppState extends BaseAppState {
                     getApplication().enqueue(new Runnable() {
                         @Override
                         public void run() {
+                            getState(SceneValidatorState.class).validate(model);
                             callback.done(model);
                             getSpix().getService(MessageRequester.class).hideLoading(id);
                         }
@@ -350,7 +364,13 @@ public class FileIoAppState extends BaseAppState {
         loadAsset(key);
         assetManager.removeAssetEventListener(assetListener);
         relocateDependencies(fp);
-        assetManager.deleteFromCache(key);
+        try {
+            assetManager.deleteFromCache(key);
+        } catch (IllegalArgumentException e) {
+            //some asset key doesn't specify any cache strategy
+            log.info(e.getMessage());
+        }
+
         assetManager.unregisterLocator(fp.assetRoot.toString(), FileLocator.class);
     }
 
@@ -501,17 +521,69 @@ public class FileIoAppState extends BaseAppState {
         });
     }
 
-    public Material loadMaterial(File file, String relocateIn) {
-        FilePath fp = getFilePath(file);
 
+    public Object importAsset(File file, Class<? extends AssetKey> keyClass) {
+        FilePath fp = getFilePath(file);
+        AssetKey key = null;
+        try {
+            key = keyClass.getConstructor(String.class).newInstance(fp.modelPath);
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            getSpix().getService(MessageRequester.class).showMessage("Error creating key " + fp.modelPath, e.getMessage(), MessageRequester.Type.Error);
+            return null;
+        }
         String assetRoot = blackboard.get(MAIN_ASSETS_FOLDER, String.class);
         if (!fp.assetRoot.getPath().equals(assetRoot)) {
             //we need to relocate the file
-            relocateAsset(fp, new MaterialKey(fp.modelPath));
+            relocateAsset(fp, key);
         }
 
-        Material mat = getApplication().getAssetManager().loadMaterial(fp.modelPath);
-        getSpix().getService(MaterialService.class).registerMaterialForSync(fp.modelPath, mat);
+        Object asset = getApplication().getAssetManager().loadAsset(key);
+        return asset;
+    }
+
+    public List<ShaderNodeDefinition> makeJ3sn(File file) {
+        try {
+            file.createNewFile();
+            JtwigTemplate template = JtwigTemplate.classpathTemplate("templates/default.j3sn");
+            String fileName = file.getName().substring(0, file.getName().lastIndexOf("."));
+
+            Path root = Paths.get(blackboard.get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
+            String path = root.relativize(file.toPath()).toString().replaceAll("\\\\", "/");
+            String noExtPath = path.substring(0, path.lastIndexOf("."));
+            JtwigModel model = JtwigModel.newModel()
+                    .with("name", fileName.substring(0, 1).toUpperCase() + fileName.substring(1))
+                    .with("filePath", noExtPath);
+
+            String content = template.render(model);
+            Files.write(file.toPath(), content.getBytes());
+
+            ShaderNodeDefinitionKey key = new ShaderNodeDefinitionKey(path.toString());
+            List<ShaderNodeDefinition> defs = assetManager.loadAsset(key);
+            for (ShaderNodeDefinition def : defs) {
+                for (String p : def.getShadersPath()) {
+                    Path filePath = Paths.get(root.toString(), p);
+                    if (!Files.exists(filePath)) {
+                        Files.write(filePath, "void main(){\n}\n".getBytes(), StandardOpenOption.CREATE_NEW);
+                    }
+                }
+            }
+            return defs;
+        } catch (IOException e) {
+            getSpix().getService(MessageRequester.class).showMessage("Error creating file " + file.getPath(), e.getMessage(), MessageRequester.Type.Error);
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean isFileWritable(String filePath) {
+        String assetRoot = blackboard.get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class);
+        Path p = Paths.get(assetRoot, filePath);
+        return Files.exists(p);
+    }
+
+    public Material loadMaterial(File file) {
+        Material mat = (Material) importAsset(file, MaterialKey.class);
+        getSpix().getService(MaterialService.class).registerMaterialForSync(mat.getAssetName(), mat);
         return mat;
     }
 
