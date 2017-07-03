@@ -1,7 +1,7 @@
 package spix.app.utils;
 
 import com.jme3.material.*;
-import com.jme3.material.logic.DefaultTechniqueDefLogic;
+import com.jme3.material.logic.*;
 import com.jme3.shader.*;
 
 import java.lang.reflect.Field;
@@ -54,6 +54,25 @@ public class CloneUtils {
         int sortId = (techniqueDef.getName() + UUID.randomUUID().toString()).hashCode();
         TechniqueDef techDef = new TechniqueDef(techniqueDef.getName(), sortId);
         techDef.setLightMode(techniqueDef.getLightMode());
+        switch (techDef.getLightMode()) {
+            case Disable:
+                techDef.setLogic(new DefaultTechniqueDefLogic(techDef));
+                break;
+            case MultiPass:
+                techDef.setLogic(new MultiPassLightingLogic(techDef));
+                break;
+            case SinglePass:
+                techDef.setLogic(new SinglePassLightingLogic(techDef));
+                break;
+            case StaticPass:
+                techDef.setLogic(new StaticPassLightingLogic(techDef));
+                break;
+            case SinglePassAndImageBased:
+                techDef.setLogic(new SinglePassAndImageBasedLightingLogic(techDef));
+                break;
+            default:
+                throw new UnsupportedOperationException();
+        }
         techDef.setShadowMode(techniqueDef.getShadowMode());
         techDef.setNoRender(techniqueDef.isNoRender());
         techDef.setShaderPrologue(techniqueDef.getShaderPrologue());
@@ -117,8 +136,6 @@ public class CloneUtils {
 
 
         techDef.setShaderGenerationInfo(new ShaderGenerationInfo());
-        // TODO: 26/05/2016 here we should create the appropriate logic as the logic retains a reference on the techDef...
-        techDef.setLogic(new DefaultTechniqueDefLogic(techDef));
 
         return techDef;
     }

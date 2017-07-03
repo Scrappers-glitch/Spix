@@ -139,6 +139,7 @@ public class FileIoService {
         um.addEdit(edit);
         model.setSingleSelection(null);
         model.setSingleSelection(geom);
+        validatorState.validate(getRootNode());
     }
 
     public void createJ3mForSelection() {
@@ -190,6 +191,9 @@ public class FileIoService {
                         @Override
                         public void done(File result) {
                             Material mat = fileState.makeMaterialFromMatDef(result);
+                            if (mat == null) {
+                                return;
+                            }
                             changeMaterial(mat, geom, model);
                         }
                     });
@@ -240,6 +244,10 @@ public class FileIoService {
             return (Geometry) model.getSingleSelection();
         }
         return null;
+    }
+
+    private Node getRootNode() {
+        return (Node) spix.getBlackboard().get(DefaultConstants.SCENE_ROOT, Spatial.class);
     }
 
     private SelectionModel getSelectionModel() {

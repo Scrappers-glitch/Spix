@@ -595,8 +595,14 @@ public class FileIoAppState extends BaseAppState {
             //we need to relocate the file
             relocateAsset(fp, new AssetKey(fp.modelPath));
         }
-        Material mat = new Material(getApplication().getAssetManager(), fp.modelPath);
-        return mat;
+        try {
+            Material mat = new Material(getApplication().getAssetManager(), fp.modelPath);
+            return mat;
+        } catch (AssetLoadException e) {
+            getSpix().getService(MessageRequester.class).showMessage("Error loading material definition " + fp.modelPath, e.getMessage(), MessageRequester.Type.Error);
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public Material makeMaterialFromStockMatDef(String matDefPath) {

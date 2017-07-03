@@ -76,7 +76,8 @@ public class MaterialService {
                     });
                 } catch (RuntimeException e) {
                     int nbNodesRendered = def.getTechniqueDefs(request.getTechniqueName()).get(0).getShaderNodes().size();
-                    CompilationError ce = new CompilationError(logHandler.getBuffer(), e.getMessage(),nbNodesRendered);
+
+                    CompilationError ce = new CompilationError(logHandler.getBuffer(), e, nbNodesRendered);
                     gui.runOnSwing(new Runnable() {
                         @Override
                         public void run() {
@@ -252,9 +253,15 @@ public class MaterialService {
         private String shaderSource;
         private Map<Integer,String> errors = new HashMap<>();
         private int nbRenderedNodes;
+        private Exception exception;
 
-        public CompilationError(String source, String error, int nbRenderedNodes){
+        public CompilationError(String source, Exception exception, int nbRenderedNodes) {
             shaderSource = source;
+            this.exception = exception;
+            String error = exception.getMessage();
+            if (error == null) {
+                error = "Failed to generate shader code";
+            }
             String[] lines = error.split("\\n");
             this.nbRenderedNodes = nbRenderedNodes;
 
@@ -298,6 +305,10 @@ public class MaterialService {
 
             return res;
 
+        }
+
+        public Exception getException() {
+            return exception;
         }
     }
 

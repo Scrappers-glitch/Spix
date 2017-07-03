@@ -145,6 +145,7 @@ public class Editor extends SimpleApplication {
                 new DecoratorViewPortState() // Put this last because of some dodgy update vs render stuff
         );
 
+
         stateManager.attach(new ScreenshotAppState("", System.currentTimeMillis()) {
             @Override
             protected void writeImageFile(final File file) throws IOException {
@@ -765,6 +766,7 @@ public class Editor extends SimpleApplication {
     @Override
     public void simpleInitApp() {
 
+        renderManager.setSinglePassLightBatchSize(5);
         stateManager.getState(FlyCamAppState.class).setEnabled(false);
         stateManager.getState(StatsAppState.class).setDisplayStatView(false);
         stateManager.getState(StatsAppState.class).setDisplayFps(false);
