@@ -26,8 +26,7 @@ import spix.swing.materialEditor.nodes.NodePanel;
 import spix.swing.materialEditor.nodes.ShaderNodePanel;
 import spix.swing.materialEditor.panels.*;
 import spix.swing.materialEditor.sort.Node;
-import spix.swing.materialEditor.utils.MaterialDefUtils;
-import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
+import spix.swing.materialEditor.utils.*;
 import spix.ui.MessageRequester;
 import spix.undo.UndoManager;
 
@@ -49,6 +48,9 @@ import java.util.List;
  */
 public class MatDefEditorController {
 
+    public static final String MAT_DEF_EDITOR_SELECTED_ITEM = "matDefEditor.selection.item.singleSelect";
+    public static final String MAT_DEF_EDITOR_SELECTED_MATDEF = "matDefEditor.selection.matdef.singleSelect";
+    public static final String MAT_DEF_EDITOR_SELECTED_TECHNIQUE = "matDefEditor.selection.technique.singleSelect";
     private MaterialDef matDef;
     private MatDefEditorWindow editor;
     private SwingGui gui;
@@ -66,6 +68,7 @@ public class MatDefEditorController {
     private PropPanel propertiesPanel;
     private Deque<Node> sortedNodes;
     private TitledBorder selectionBorder;
+    private J3snValidator j3snValidator = new J3snValidator();
 
     private Map<String, MatParam> matParams = new HashMap<>();
 
@@ -109,36 +112,16 @@ public class MatDefEditorController {
 
     public void validateAndSave(SwingGui gui) {
         Collection<ShaderNodeCodePanel.Document> documents = shaderNodeCodePanel.getDocuments();
-        // boolean needsReload = false;
+        boolean needsReload = false;
         for (ShaderNodeCodePanel.Document document : documents) {
             if (document.isModified()) {
+                j3snValidator.reset();
                 if (document.getName().endsWith(".j3sn")) {
                     //definition we have to validate it and reload it if necessary.
-                    ByteArrayInputStream in = new ByteArrayInputStream(document.getContent().getBytes());
-                    try {
-                        List<Statement> roots = BlockLanguageParser.parse(in);
-                        ShaderNodeLoaderDelegate loader = new ShaderNodeLoaderDelegate();
-                        ShaderNodeDefinitionKey key = new ShaderNodeDefinitionKey(document.getName());
-                        key.setLoadDocumentation(true);
-                        List<ShaderNodeDefinition> defs = loader.readNodesDefinitions(roots.get(0).getContents(), key);
-                        for (ShaderNodeDefinition def : defs) {
-                            List<ShaderNode> nodes = dataHandler.getShaderNodesWithDef(def);
-                            for (ShaderNode node : nodes) {
-                                boolean typeChanged = node.getDefinition().getType() != def.getType();
-                                dataHandler.cleanUpMappings(node, def);
-                                node.setDefinition(def);
-                                diagramUiHandler.refreshShaderNodePanel(this, node, dataHandler.getCurrentTechnique(), !typeChanged);
-                            }
-                        }
-                        shaderNodeCodePanel.clearError(document.getName());
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                        errorLog.error(new MaterialService.CompilationError("Error in shader node definition " + document.getName() + "\n" + e1.getMessage(), e1, 0));
-                        //gui.getSpix().getService(MessageRequester.class).showMessage("Error in shader node definition " + document.getName(), e1.getMessage(), MessageRequester.Type.Error);
-                        shaderNodeCodePanel.setError(document.getName(), e1);
-                        shaderNodeCodePanel.refreshErrors();
+                    if (!j3snValidator.isValid(document, dataHandler, diagramUiHandler, this)) {
                         return;
                     }
+                    needsReload = true;
                 }
                 gui.getSpix().getService(FileIoService.class).saveFile(document.getName(), document.getContent());
                 shaderNodeCodePanel.refreshErrors();
@@ -147,8 +130,31 @@ public class MatDefEditorController {
         }
         gui.getSpix().getService(FileIoService.class).saveMaterialDef(matDef);
         gui.getSpix().getService(MetadataService.class).setMetadata(diagramUiHandler.getMatDefMetadata(), matDef);
+        if (!j3snValidator.getToCreate().isEmpty()) {
+            for (String path : j3snValidator.getToCreate()) {
+                gui.getSpix().getService(FileIoService.class).createShaderFile(path);
+            }
+        }
+        if (!j3snValidator.getToRename().isEmpty()) {
+            for (String oldPath : j3snValidator.getToRename().keySet()) {
+                gui.getSpix().getService(FileIoService.class).renameFile(oldPath, j3snValidator.getToRename().get(oldPath));
+            }
+        }
         errorLog.noError();
         refreshPreviews();
+
+        if (needsReload) {
+            Object selection = gui.getSpix().getBlackboard().get(MAT_DEF_EDITOR_SELECTED_ITEM);
+            shaderNodeCodePanel.refreshForSelection(selection);
+        }
+    }
+
+    public ShaderNodeCodePanel getShaderNodeCodePanel() {
+        return shaderNodeCodePanel;
+    }
+
+    public ErrorLog getErrorLog() {
+        return errorLog;
     }
 
     private void setupSpixListener(SwingGui gui) {
@@ -266,17 +272,17 @@ public class MatDefEditorController {
 
         // Bind the selection to the editor panel, converting objects to
         // property set wrappers if appropriate.
-        gui.getSpix().getBlackboard().bind("matdDefEditor.selection.matdef.singleSelect",
+        gui.getSpix().getBlackboard().bind(MAT_DEF_EDITOR_SELECTED_MATDEF,
                 matDefProps, "object",
                 new ToPropertySetFunction(gui.getSpix()));
-        gui.getSpix().getBlackboard().bind("matdDefEditor.selection.technique.singleSelect",
+        gui.getSpix().getBlackboard().bind(MAT_DEF_EDITOR_SELECTED_TECHNIQUE,
                 techDefProps, "object",
                 new ToPropertySetFunction(gui.getSpix()));
-        gui.getSpix().getBlackboard().bind("matdDefEditor.selection.item.singleSelect",
+        gui.getSpix().getBlackboard().bind(MAT_DEF_EDITOR_SELECTED_ITEM,
                 shaderNodeProp, "object",
                 new ToPropertySetFunction(gui.getSpix()));
 
-        gui.getSpix().getBlackboard().bind("matdDefEditor.selection.item.singleSelect", shaderNodeCodePanel, "selectedNode");
+        gui.getSpix().getBlackboard().bind(MAT_DEF_EDITOR_SELECTED_ITEM, shaderNodeCodePanel, "selectedNode");
 
         return diagram;
     }
@@ -517,10 +523,10 @@ public class MatDefEditorController {
     public void select(Selectable selectable, boolean multi) {
         if (selectable instanceof ShaderNodePanel) {
             ShaderNode node = dataHandler.getShaderNodeForKey(selectable.getKey());
-            gui.getSpix().getBlackboard().set("matdDefEditor.selection.item.singleSelect", node);
+            gui.getSpix().getBlackboard().set(MAT_DEF_EDITOR_SELECTED_ITEM, node);
         } else if (selectable instanceof Connection) {
             VariableMapping mapping = dataHandler.getMappingForKey(selectable.getKey());
-            gui.getSpix().getBlackboard().set("matdDefEditor.selection.item.singleSelect", mapping);
+            gui.getSpix().getBlackboard().set(MAT_DEF_EDITOR_SELECTED_ITEM, mapping);
         }
         selectionHandler.select(selectable, multi);
         diagramUiHandler.refreshDiagram();
@@ -591,8 +597,8 @@ public class MatDefEditorController {
             matDef = CloneUtils.cloneMatDef(g.getMaterial().getMaterialDef(), techniques);
             Map<String, Object> matDefMetadata = gui.getSpix().getService(MetadataService.class).getMetadata(matDef);
             populateMatParams(g);
-            blackboard.set("matdDefEditor.selection.matdef.singleSelect", new MatDefWrapper(matDef));
-            blackboard.set("matdDefEditor.selection.technique.singleSelect", new TechniqueDefWrapper(techniques.get(0)));
+            blackboard.set(MAT_DEF_EDITOR_SELECTED_MATDEF, new MatDefWrapper(matDef));
+            blackboard.set(MAT_DEF_EDITOR_SELECTED_TECHNIQUE, new TechniqueDefWrapper(techniques.get(0)));
 
             gui.runOnSwing(new Runnable() {
                 @Override

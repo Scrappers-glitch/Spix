@@ -123,6 +123,10 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         this.selected = selected;
     }
 
+    public boolean isSelected() {
+        return selected;
+    }
+
     @Override
     protected void paintComponent(Graphics g1) {
         Graphics2D g = (Graphics2D) g1;

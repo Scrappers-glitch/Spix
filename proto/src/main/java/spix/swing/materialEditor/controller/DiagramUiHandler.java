@@ -272,7 +272,7 @@ public class DiagramUiHandler {
         return node;
     }
 
-    void refreshShaderNodePanel(MatDefEditorController controller, ShaderNode sn, TechniqueDef techniqueDef, boolean reconnect) {
+    public void refreshShaderNodePanel(MatDefEditorController controller, ShaderNode sn, TechniqueDef techniqueDef, boolean reconnect) {
         NodePanel panel = nodes.get(MaterialDefUtils.makeShaderNodeKey(currentTechniqueName, sn.getName()));
         if (panel == null) {
             return;
@@ -294,7 +294,9 @@ public class DiagramUiHandler {
 
         NodePanel newPanel = addShaderNodePanel(controller, sn);
         newPanel.setLocation(panel.getLocation());
-
+        if (panel.isSelected()) {
+            controller.select(newPanel, false);
+        }
         if (!reconnect) {
             return;
         }

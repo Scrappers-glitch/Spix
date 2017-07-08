@@ -51,6 +51,7 @@ import com.jme3.shader.VariableMapping;
 import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
 import com.jme3.texture.Texture;
+import com.jme3.util.TangentBinormalGenerator;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
@@ -731,11 +732,16 @@ public class Editor extends SimpleApplication {
         DeleteAction delete = new DeleteAction(spix);
         objects.add(delete);
 
-
         AnimationActionList animation = objects.add(new AnimationActionList("Animation"));
         spix.getBlackboard().bind("main.selection.singleSelect",
                 animation, "selection");
-
+        NopAction tangents = objects.add(new NopAction("Generate Tangents") {
+            public void performAction(Spix spix) {
+                genTangents();
+            }
+        });
+        spix.getBlackboard().bind("main.selection.singleSelect",
+                tangents, "enabled", Predicates.instanceOf(Spatial.class));
         NopAction test1 = objects.add(new NopAction("Clone Test 1") {
             public void performAction(Spix spix) {
                 cloneTest1();
@@ -858,6 +864,15 @@ public class Editor extends SimpleApplication {
             }
         }
         return selected;
+    }
+
+    private void genTangents() {
+        Spatial selected = getSelectedModel();
+        if (selected == null) {
+            return;
+        }
+
+        TangentBinormalGenerator.generate(selected);
     }
 
     private void cloneTest1() {

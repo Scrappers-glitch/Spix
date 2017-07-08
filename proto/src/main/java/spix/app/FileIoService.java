@@ -10,10 +10,12 @@ import spix.app.material.MaterialService;
 import spix.app.utils.MaterialUtils;
 import spix.core.*;
 import spix.ui.FileRequester;
+import spix.ui.MessageRequester;
 import spix.undo.UndoManager;
 import spix.undo.edit.MaterialSetEdit;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -275,6 +277,24 @@ public class FileIoService {
 
     public void saveFile(String fileName, String fileContent) {
         fileState.saveFile(fileName, fileContent);
+    }
+
+    public void createShaderFile(String fileName) {
+        try {
+            fileState.checkAndCreateShaderFile(fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+            spix.getService(MessageRequester.class).showMessage("Error creating file " + fileName, e.getMessage(), MessageRequester.Type.Error);
+        }
+    }
+
+    public void renameFile(String oldPath, String newPath) {
+        try {
+            fileState.renameFile(oldPath, newPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            spix.getService(MessageRequester.class).showMessage("Error reaming file " + oldPath + " to " + newPath, e.getMessage(), MessageRequester.Type.Error);
+        }
     }
 
     public void saveMaterialDef(MaterialDef matDef) {

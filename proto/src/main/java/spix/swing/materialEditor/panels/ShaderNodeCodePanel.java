@@ -188,6 +188,20 @@ public class ShaderNodeCodePanel extends DockPanel {
         }
         tbButtons.get(0).setSelected(true);
         updateEditorText(fileNames.get(0));
+        refreshCurrentDocError();
+        toolbar.revalidate();
+        toolbar.repaint();
+    }
+
+    public void refreshForSelection(Object selection) {
+        int carretPosition = editor.getCaretPosition();
+        setSelectedNode(selection);
+        try {
+            editor.setCaretPosition(carretPosition);
+        } catch (IllegalArgumentException e) {
+            editor.setCaretPosition(0);
+        }
+        editor.requestFocusInWindow();
     }
 
     public void updateEditorText(final String name) {

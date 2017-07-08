@@ -278,7 +278,7 @@ public class TranslationWidgetState extends BaseAppState {
         axisSpatials[index] = axis;
 
         // Create the cone tip
-        Mesh mesh = new Cylinder(2, 12, 0f, 0.045f, 0.18f, true, false);
+        Mesh mesh = new Cylinder(2, 12, 0.0001f, 0.045f, 0.18f, true, false);
         Geometry cone = new Geometry("axisCone:" + index, mesh);
         axisColors[index] = color.clone();
         axisMaterials[index] = createMaterial(axisColors[index]);

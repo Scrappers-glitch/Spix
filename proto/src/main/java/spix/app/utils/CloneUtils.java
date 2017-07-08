@@ -55,9 +55,6 @@ public class CloneUtils {
         TechniqueDef techDef = new TechniqueDef(techniqueDef.getName(), sortId);
         techDef.setLightMode(techniqueDef.getLightMode());
         switch (techDef.getLightMode()) {
-            case Disable:
-                techDef.setLogic(new DefaultTechniqueDefLogic(techDef));
-                break;
             case MultiPass:
                 techDef.setLogic(new MultiPassLightingLogic(techDef));
                 break;
@@ -70,8 +67,9 @@ public class CloneUtils {
             case SinglePassAndImageBased:
                 techDef.setLogic(new SinglePassAndImageBasedLightingLogic(techDef));
                 break;
+            case Disable:
             default:
-                throw new UnsupportedOperationException();
+                techDef.setLogic(new DefaultTechniqueDefLogic(techDef));
         }
         techDef.setShadowMode(techniqueDef.getShadowMode());
         techDef.setNoRender(techniqueDef.isNoRender());

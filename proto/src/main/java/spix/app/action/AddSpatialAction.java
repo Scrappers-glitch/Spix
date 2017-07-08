@@ -5,6 +5,7 @@ import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.*;
+import com.jme3.util.TangentBinormalGenerator;
 import spix.core.SelectionModel;
 import spix.core.Spix;
 import spix.undo.UndoManager;
@@ -25,11 +26,20 @@ public class AddSpatialAction extends AddAction{
     public static final Geometry DEFAULT_CYLINDER = new Geometry("Cylinder", new Cylinder(10,16, 1, 5));
     public static final Geometry DEFAULT_TORUS = new Geometry("Torus", new Torus(16,16,0.8f, 1));
 
+    static {
+        TangentBinormalGenerator.generate(DEFAULT_BOX);
+        TangentBinormalGenerator.generate(DEFAULT_QUAD);
+        TangentBinormalGenerator.generate(DEFAULT_SPHERE);
+        TangentBinormalGenerator.generate(DEFAULT_CYLINDER);
+        TangentBinormalGenerator.generate(DEFAULT_TORUS);
+    }
+
     private Spatial spatial;
 
     public AddSpatialAction(String id, Spatial spatial, Spix spix) {
         super(id);
         this.spatial = spatial;
+
     }
 
 
@@ -69,3 +79,4 @@ public class AddSpatialAction extends AddAction{
         return mat;
     }
 }
+

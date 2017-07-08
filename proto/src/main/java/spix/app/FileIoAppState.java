@@ -562,10 +562,7 @@ public class FileIoAppState extends BaseAppState {
             List<ShaderNodeDefinition> defs = assetManager.loadAsset(key);
             for (ShaderNodeDefinition def : defs) {
                 for (String p : def.getShadersPath()) {
-                    Path filePath = Paths.get(root.toString(), p);
-                    if (!Files.exists(filePath)) {
-                        Files.write(filePath, "void main(){\n}\n".getBytes(), StandardOpenOption.CREATE_NEW);
-                    }
+                    checkAndCreateShaderFile(p);
                 }
             }
             return defs;
@@ -574,6 +571,24 @@ public class FileIoAppState extends BaseAppState {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void checkAndCreateShaderFile(String path) throws IOException {
+        Path root = Paths.get(blackboard.get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
+        Path filePath = Paths.get(root.toString(), path);
+        if (!Files.exists(filePath)) {
+            Files.write(filePath, "void main(){\n}\n".getBytes(), StandardOpenOption.CREATE_NEW);
+        }
+    }
+
+    public void renameFile(String oldPath, String newPath) throws IOException {
+        Path root = Paths.get(blackboard.get(DefaultConstants.MAIN_ASSETS_FOLDER, String.class));
+        Path oldFilePath = Paths.get(root.toString(), oldPath);
+        Path newFilePath = Paths.get(root.toString(), newPath);
+        if (Files.exists(newFilePath)) {
+            throw new IOException("File " + newFilePath.toString() + " already exists");
+        }
+        oldFilePath.toFile().renameTo(newFilePath.toFile());
     }
 
     public boolean isFileWritable(String filePath) {
