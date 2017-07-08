@@ -204,6 +204,9 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
 
     public void cleanup() {
         toolBar.cleanup();
+        if (toolBar.getParent() == null) {
+            return;
+        }
         toolBar.getParent().remove(toolBar);
     }
 

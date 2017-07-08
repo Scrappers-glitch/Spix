@@ -168,6 +168,12 @@ public class DiagramUiHandler {
                     return outPanel;
                 }
             }
+        } else {
+            for (OutPanel outPanel : panelList) {
+                if (outPanel.isInputAvailable() && !outPanel.getOutputConnectPoint(var.getName()).isConnectedToNode(node)) {
+                    return outPanel;
+                }
+            }
         }
 
         return controller.addOutPanel(type, var);
@@ -265,6 +271,42 @@ public class DiagramUiHandler {
         attachNodePanel(node);
         return node;
     }
+
+    void refreshShaderNodePanel(MatDefEditorController controller, ShaderNode sn, TechniqueDef techniqueDef, boolean reconnect) {
+        NodePanel panel = nodes.get(MaterialDefUtils.makeShaderNodeKey(currentTechniqueName, sn.getName()));
+        if (panel == null) {
+            return;
+        }
+
+        panel.cleanup();
+        for (Iterator<Connection> it = connections.iterator(); it.hasNext(); ) {
+            Connection conn = it.next();
+            if (conn.getStart().getNode() == panel || conn.getEnd().getNode() == panel) {
+                it.remove();
+                if (reconnect) {
+                    removeConnection(conn);
+                } else {
+                    controller.removeConnectionNoRefresh(conn);
+                }
+            }
+        }
+        diagram.remove(panel);
+
+        NodePanel newPanel = addShaderNodePanel(controller, sn);
+        newPanel.setLocation(panel.getLocation());
+
+        if (!reconnect) {
+            return;
+        }
+
+        for (VariableMapping mapping : sn.getInputMapping()) {
+            makeConnection(controller, mapping, techniqueDef, sn.getName());
+        }
+        for (VariableMapping mapping : sn.getOutputMapping()) {
+            makeConnection(controller, mapping, techniqueDef, sn.getName());
+        }
+    }
+
 
     void renameShaderNode(String oldName, String newName) {
         String oldKey = MaterialDefUtils.makeShaderNodeKey(currentTechniqueName, oldName);

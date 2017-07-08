@@ -52,8 +52,8 @@ public class DraggablePanel extends JPanel {
 
     public void onMouseDragged(MouseEvent e) {
         if (!SwingUtilities.isMiddleMouseButton(e)) {
-            int xoffset = snap(e.getLocationOnScreen().x - svdex, 10);
-            int yoffset = snap(e.getLocationOnScreen().y - svdey, 10);
+            int xoffset = e.getLocationOnScreen().x - svdex;
+            int yoffset = e.getLocationOnScreen().y - svdey;
             movePanel(xoffset, yoffset);
             controller.multiMove(this, xoffset, yoffset);
             e.consume();
@@ -73,7 +73,7 @@ public class DraggablePanel extends JPanel {
     }
 
     public void movePanel(int xoffset, int yoffset) {
-        setLocation(Math.max(0, svdx + xoffset), Math.max(0, svdy + yoffset));
+        setLocation(Math.max(0, snap(svdx + xoffset, 10)), Math.max(0, snap(svdy + yoffset, 10)));
     }
 
 }

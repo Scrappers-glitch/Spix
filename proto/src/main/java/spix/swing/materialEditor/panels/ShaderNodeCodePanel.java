@@ -2,6 +2,7 @@ package spix.swing.materialEditor.panels;
 
 import com.jme3.shader.Shader;
 import com.jme3.shader.ShaderNode;
+import org.fife.ui.rtextarea.GutterIconInfo;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import spix.app.FileIoService;
 import spix.core.RequestCallback;
@@ -10,9 +11,13 @@ import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Nehon on 03/06/2016.
@@ -29,6 +34,7 @@ public class ShaderNodeCodePanel extends DockPanel {
     private int lastButtonIndex = 0;
     private ButtonGroup group = new ButtonGroup();
     private Document currentDocument;
+    private RTextScrollPane scrollPane;
 
     public ShaderNodeCodePanel(Container container, SwingGui gui) {
         super(Slot.West, container);
@@ -45,7 +51,8 @@ public class ShaderNodeCodePanel extends DockPanel {
         });
 
         JPanel panel = new JPanel(new BorderLayout());
-        RTextScrollPane scrollPane = new RTextScrollPane(editor);
+        scrollPane = new RTextScrollPane(editor);
+        scrollPane.setIconRowHeaderEnabled(true);
         panel.add(scrollPane, BorderLayout.CENTER);
 
         setComponent(panel);
@@ -70,6 +77,67 @@ public class ShaderNodeCodePanel extends DockPanel {
 
     }
 
+    public void setError(String documentName, IOException e) {
+        Document doc = fileContents.get(documentName);
+        if (!e.getMessage().contains(":")) {
+            doc.errorMessage = e.getMessage();
+            doc.errorLine = 1;
+        } else {
+            Pattern pattern = Pattern.compile("Error On line ([0-9]+) :");
+            Matcher m = pattern.matcher(e.getMessage());
+            m.find();
+            try {
+                doc.errorLine = Integer.parseInt(m.group(1));
+            } catch (IllegalStateException | NumberFormatException e1) {
+                doc.errorLine = 1;
+            }
+            doc.errorMessage = e.getMessage().substring(e.getMessage().indexOf(":") + 1, e.getMessage().length());
+        }
+    }
+
+    public void clearError(String documentName) {
+        Document doc = fileContents.get(documentName);
+        doc.errorLine = 0;
+        doc.errorMessage = null;
+    }
+
+    public void refreshErrors() {
+        for (String key : fileContents.keySet()) {
+            Document doc = fileContents.get(key);
+            for (JToggleButton tbButton : tbButtons) {
+                if (tbButton.getActionCommand().equals(key)) {
+                    if (doc.errorLine > 0) {
+                        tbButton.setIcon(Icons.errorSmall);
+                    } else {
+                        tbButton.setIcon(null);
+                    }
+                }
+            }
+        }
+
+        refreshCurrentDocError();
+    }
+
+    public void refreshCurrentDocError() {
+        removeCurrentDocError();
+        if (currentDocument.errorLine > 0) {
+
+            try {
+                currentDocument.gutterInfo = scrollPane.getGutter().addLineTrackingIcon(currentDocument.errorLine - 1, Icons.errorSmall, currentDocument.errorMessage);
+            } catch (BadLocationException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public void removeCurrentDocError() {
+        if (currentDocument.gutterInfo != null) {
+            scrollPane.getGutter().removeTrackingIcon(currentDocument.gutterInfo);
+            currentDocument.gutterInfo = null;
+        }
+    }
+
     public void setSelectedNode(Object item) {
         if (!(item instanceof ShaderNode)) {
             return;
@@ -90,7 +158,7 @@ public class ShaderNodeCodePanel extends DockPanel {
                     if (result == null) {
                         result = "";
                     }
-                    fileContents.put(fileName, new Document(fileName, result));
+                    fileContents.put(fileName, new Document(fileName, result, node));
                 }
             });
 
@@ -104,8 +172,10 @@ public class ShaderNodeCodePanel extends DockPanel {
                 b.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        removeCurrentDocError();
                         String name = ((JToggleButton) e.getSource()).getActionCommand();
                         updateEditorText(name);
+                        refreshCurrentDocError();
                     }
                 });
                 group.add(b);
@@ -145,10 +215,15 @@ public class ShaderNodeCodePanel extends DockPanel {
         private String name;
         private String content;
         private boolean modified;
+        private ShaderNode associatedNode;
+        private int errorLine = 0;
+        private String errorMessage = null;
+        private GutterIconInfo gutterInfo;
 
-        public Document(String name, String content) {
+        public Document(String name, String content, ShaderNode associatedNode) {
             this.name = name;
             this.content = content;
+            this.associatedNode = associatedNode;
         }
 
         public String getName() {
@@ -161,6 +236,14 @@ public class ShaderNodeCodePanel extends DockPanel {
 
         public boolean isModified() {
             return modified;
+        }
+
+        public ShaderNode getAssociatedNode() {
+            return associatedNode;
+        }
+
+        public void setModified(boolean modified) {
+            this.modified = modified;
         }
     }
 }

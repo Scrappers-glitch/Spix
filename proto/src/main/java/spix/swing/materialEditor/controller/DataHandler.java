@@ -23,6 +23,9 @@ public class DataHandler {
     private Map<String, VariableMapping> mappings = new HashMap<>();
 
     void addMapping(VariableMapping mapping) {
+        if (mapping == null) {
+            return;
+        }
         getMappingList(mapping).add(mapping);
         registerMapping(mapping);
         //   System.err.println("new Mapping: " + mapping.toString());
@@ -40,6 +43,9 @@ public class DataHandler {
 
     void removeMappingForKey(String key) {
         VariableMapping mapping = getMappingForKey(key);
+        if (mapping == null) {
+            return;
+        }
         getMappingList(mapping).remove(mapping);
         mappings.remove(key);
         //   System.err.println("removed Mapping: " + mapping.toString());
@@ -146,6 +152,44 @@ public class DataHandler {
 
     public ShaderNode getShaderNodeForKey(String key) {
         return nodes.get(key);
+    }
+
+    public List<ShaderNode> getShaderNodesWithDef(ShaderNodeDefinition def) {
+        List<ShaderNode> sn = new ArrayList<>();
+        for (ShaderNode shaderNode : nodes.values()) {
+            if (shaderNode.getDefinition().getPath().equals(def.getPath())) {
+                sn.add(shaderNode);
+            }
+        }
+        return sn;
+    }
+
+    public void cleanUpMappings(ShaderNode node, ShaderNodeDefinition newDef) {
+        for (Iterator<VariableMapping> i = node.getInputMapping().iterator(); i.hasNext(); ) {
+            VariableMapping mapping = i.next();
+            if (!containsVariable(newDef.getInputs(), mapping.getLeftVariable())) {
+                String key = MaterialDefUtils.makeConnectionKey(mapping, currentTechnique.getName());
+                mappings.remove(key);
+                i.remove();
+            }
+        }
+        for (Iterator<VariableMapping> i = node.getOutputMapping().iterator(); i.hasNext(); ) {
+            VariableMapping mapping = i.next();
+            if (!containsVariable(newDef.getOutputs(), mapping.getRightVariable())) {
+                String key = MaterialDefUtils.makeConnectionKey(mapping, currentTechnique.getName());
+                mappings.remove(key);
+                i.remove();
+            }
+        }
+    }
+
+    private boolean containsVariable(List<ShaderNodeVariable> variables, ShaderNodeVariable variable) {
+        for (ShaderNodeVariable var : variables) {
+            if (var.getName().equals(variable.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void clear() {

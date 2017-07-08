@@ -283,6 +283,9 @@ public class FileIoService {
             @Override
             public void run() {
                 MaterialDef newDef = fileState.loadMaterialDef(matDef.getAssetName());
+                if (newDef == null) {
+                    return;
+                }
                 Node rootNode = (Node) spix.getBlackboard().get(DefaultConstants.SCENE_ROOT, Spatial.class);
                 spix.getService(MaterialService.class).replaceMatDef(rootNode, newDef);
                 validatorState.validate(rootNode);

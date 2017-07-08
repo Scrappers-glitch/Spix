@@ -1,12 +1,17 @@
 package spix.swing.materialEditor.controller;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.asset.ShaderNodeDefinitionKey;
 import com.jme3.material.*;
+import com.jme3.material.plugins.*;
 import com.jme3.scene.Geometry;
 import com.jme3.shader.*;
+import com.jme3.util.blockparser.BlockLanguageParser;
+import com.jme3.util.blockparser.Statement;
 import groovy.util.ObservableList;
 import spix.app.DefaultConstants;
 import spix.app.FileIoService;
+import spix.app.material.MaterialService;
 import spix.app.material.hack.MatDefWrapper;
 import spix.app.material.hack.TechniqueDefWrapper;
 import spix.app.metadata.MetadataService;
@@ -23,6 +28,7 @@ import spix.swing.materialEditor.panels.*;
 import spix.swing.materialEditor.sort.Node;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
+import spix.ui.MessageRequester;
 import spix.undo.UndoManager;
 
 import javax.swing.AbstractAction;
@@ -33,6 +39,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -84,19 +92,7 @@ public class MatDefEditorController {
         Action save = new AbstractAction("Save") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Collection<ShaderNodeCodePanel.Document> documents = shaderNodeCodePanel.getDocuments();
-                boolean needsReload = false;
-                for (ShaderNodeCodePanel.Document document : documents) {
-                    if (document.isModified()) {
-                        gui.getSpix().getService(FileIoService.class).saveFile(document.getName(), document.getContent());
-                        needsReload = true;
-                    }
-                }
-                gui.getSpix().getService(FileIoService.class).saveMaterialDef(matDef);
-                gui.getSpix().getService(MetadataService.class).setMetadata(diagramUiHandler.getMatDefMetadata(), matDef);
-                if (needsReload) {
-                    initialize();
-                }
+                validateAndSave(gui);
             }
         };
         save.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control S"));
@@ -109,6 +105,50 @@ public class MatDefEditorController {
 
         tb.add(b);
         editor.getContentPane().add(tb, BorderLayout.NORTH);
+    }
+
+    public void validateAndSave(SwingGui gui) {
+        Collection<ShaderNodeCodePanel.Document> documents = shaderNodeCodePanel.getDocuments();
+        // boolean needsReload = false;
+        for (ShaderNodeCodePanel.Document document : documents) {
+            if (document.isModified()) {
+                if (document.getName().endsWith(".j3sn")) {
+                    //definition we have to validate it and reload it if necessary.
+                    ByteArrayInputStream in = new ByteArrayInputStream(document.getContent().getBytes());
+                    try {
+                        List<Statement> roots = BlockLanguageParser.parse(in);
+                        ShaderNodeLoaderDelegate loader = new ShaderNodeLoaderDelegate();
+                        ShaderNodeDefinitionKey key = new ShaderNodeDefinitionKey(document.getName());
+                        key.setLoadDocumentation(true);
+                        List<ShaderNodeDefinition> defs = loader.readNodesDefinitions(roots.get(0).getContents(), key);
+                        for (ShaderNodeDefinition def : defs) {
+                            List<ShaderNode> nodes = dataHandler.getShaderNodesWithDef(def);
+                            for (ShaderNode node : nodes) {
+                                boolean typeChanged = node.getDefinition().getType() != def.getType();
+                                dataHandler.cleanUpMappings(node, def);
+                                node.setDefinition(def);
+                                diagramUiHandler.refreshShaderNodePanel(this, node, dataHandler.getCurrentTechnique(), !typeChanged);
+                            }
+                        }
+                        shaderNodeCodePanel.clearError(document.getName());
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                        errorLog.error(new MaterialService.CompilationError("Error in shader node definition " + document.getName() + "\n" + e1.getMessage(), e1, 0));
+                        //gui.getSpix().getService(MessageRequester.class).showMessage("Error in shader node definition " + document.getName(), e1.getMessage(), MessageRequester.Type.Error);
+                        shaderNodeCodePanel.setError(document.getName(), e1);
+                        shaderNodeCodePanel.refreshErrors();
+                        return;
+                    }
+                }
+                gui.getSpix().getService(FileIoService.class).saveFile(document.getName(), document.getContent());
+                shaderNodeCodePanel.refreshErrors();
+                document.setModified(false);
+            }
+        }
+        gui.getSpix().getService(FileIoService.class).saveMaterialDef(matDef);
+        gui.getSpix().getService(MetadataService.class).setMetadata(diagramUiHandler.getMatDefMetadata(), matDef);
+        errorLog.noError();
+        refreshPreviews();
     }
 
     private void setupSpixListener(SwingGui gui) {

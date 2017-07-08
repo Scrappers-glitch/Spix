@@ -10,6 +10,7 @@ import com.jme3.export.binary.BinaryExporter;
 import com.jme3.material.*;
 import com.jme3.material.plugin.export.material.J3MExporter;
 import com.jme3.material.plugin.export.materialdef.J3mdExporter;
+import com.jme3.material.plugins.MatParseException;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.shader.Shader;
@@ -449,7 +450,7 @@ public class FileIoAppState extends BaseAppState {
     public Object loadAsset(AssetKey key) {
         try {
             return assetManager.loadAsset(key);
-        } catch (AssetNotFoundException e) {
+        } catch (Exception e) {
             getSpix().getService(MessageRequester.class).showMessage("Error Loading File " + key.getName(), e.getMessage(), MessageRequester.Type.Error);
         }
         return null;
