@@ -32,7 +32,7 @@ public class DiagramUiHandler {
     private MaterialPreviewRenderer previewRenderer = new MaterialPreviewRenderer();
     private Map<String, Object> matDefMetadata;
     private int outCursor = 0;
-
+    private List<VariableMapping> tmpOutMappings = new ArrayList<>();
 
     public DiagramUiHandler(Diagram diagram) {
         this.diagram = diagram;
@@ -229,11 +229,15 @@ public class DiagramUiHandler {
 
     public void removeConnection(Connection conn) {
         connections.remove(conn);
+        cleanUpConnection(conn);
+        //   refreshDiagram();
+    }
+
+    private void cleanUpConnection(Connection conn) {
         refreshOutPanelKey(conn.getStart(), conn.getEnd());
         conn.getEnd().disconnect(conn);
         conn.getStart().disconnect(conn);
         diagram.remove(conn);
-        refreshDiagram();
     }
 
     private void refreshOutPanelKey(Dot start, Dot end) {
@@ -272,22 +276,42 @@ public class DiagramUiHandler {
         return node;
     }
 
+    private boolean hasVariableWithName(String name, List<ShaderNodeVariable> variables) {
+        for (ShaderNodeVariable variable : variables) {
+            if (variable.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void refreshShaderNodePanel(MatDefEditorController controller, ShaderNode sn, TechniqueDef techniqueDef, boolean reconnect) {
         NodePanel panel = nodes.get(MaterialDefUtils.makeShaderNodeKey(currentTechniqueName, sn.getName()));
         if (panel == null) {
             return;
         }
 
+        tmpOutMappings.clear();
         panel.cleanup();
         for (Iterator<Connection> it = connections.iterator(); it.hasNext(); ) {
             Connection conn = it.next();
             if (conn.getStart().getNode() == panel || conn.getEnd().getNode() == panel) {
-                it.remove();
                 if (reconnect) {
-                    removeConnection(conn);
+                    if (conn.getStart().getNode() == panel) {
+                        if (hasVariableWithName(conn.getStart().getText(), sn.getDefinition().getOutputs())) {
+                            ShaderNodeVariable left = new ShaderNodeVariable(conn.getEnd().getType(), conn.getEnd().getNode().getName(), conn.getEnd().getText());
+                            ShaderNodeVariable right = new ShaderNodeVariable(conn.getStart().getType(), conn.getStart().getNode().getName(), conn.getStart().getText());
+                            tmpOutMappings.add(new VariableMapping(left, null, right, null, null));
+                        }
+                    }
+                    it.remove();
+                    cleanUpConnection(conn);
                 } else {
-                    controller.removeConnectionNoRefresh(conn);
+                    it.remove();
+                    cleanUpConnection(conn);
+                    controller.removeMappingForConnection(conn);
                 }
+
             }
         }
         diagram.remove(panel);
@@ -305,6 +329,9 @@ public class DiagramUiHandler {
             makeConnection(controller, mapping, techniqueDef, sn.getName());
         }
         for (VariableMapping mapping : sn.getOutputMapping()) {
+            makeConnection(controller, mapping, techniqueDef, sn.getName());
+        }
+        for (VariableMapping mapping : tmpOutMappings) {
             makeConnection(controller, mapping, techniqueDef, sn.getName());
         }
     }

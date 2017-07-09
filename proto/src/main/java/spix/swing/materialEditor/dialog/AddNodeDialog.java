@@ -175,7 +175,7 @@ public class AddNodeDialog extends javax.swing.JDialog {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         setVisible(false);
-        controller.addNodesFromDefs(defList, path, clickPosition);
+        controller.addNodesFromDefs(defList, clickPosition);
     }//GEN-LAST:event_jButton1ActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
@@ -261,7 +261,7 @@ public class AddNodeDialog extends javax.swing.JDialog {
                         @Override
                         public void run() {
                             setVisible(false);
-                            controller.addNodesFromDefs(result, result.get(0).getPath(), clickPosition);
+                            controller.addNodesFromDefs(result, clickPosition);
                         }
                     });
 
@@ -281,7 +281,7 @@ public class AddNodeDialog extends javax.swing.JDialog {
                         @Override
                         public void run() {
                             setVisible(false);
-                            controller.addNodesFromDefs(result, result.get(0).getPath(), clickPosition);
+                            controller.addNodesFromDefs(result, clickPosition);
                         }
                     });
                 }

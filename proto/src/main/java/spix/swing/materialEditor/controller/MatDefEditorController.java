@@ -384,6 +384,10 @@ public class MatDefEditorController {
     void removeConnectionNoRefresh(Connection conn) {
 
         diagramUiHandler.removeConnection(conn);
+        removeMappingForConnection(conn);
+    }
+
+    void removeMappingForConnection(Connection conn) {
         dataHandler.removeMappingForKey(conn.getKey());
     }
 
@@ -487,7 +491,7 @@ public class MatDefEditorController {
         d.setVisible(true);
     }
 
-    public void addNodesFromDefs(List<ShaderNodeDefinition> defList, String path, Point point) {
+    public void addNodesFromDefs(List<ShaderNodeDefinition> defList, Point point) {
 
         for (ShaderNodeDefinition def : defList) {
             ShaderNode sn = new ShaderNode(def.getName(), def, null);

@@ -154,7 +154,17 @@ public class DataHandler {
         return nodes.get(key);
     }
 
-    public List<ShaderNode> getShaderNodesWithDef(ShaderNodeDefinition def) {
+    public List<ShaderNode> getShaderNodesWithDefName(ShaderNodeDefinition def) {
+        List<ShaderNode> sn = new ArrayList<>();
+        for (ShaderNode shaderNode : nodes.values()) {
+            if (shaderNode.getDefinition().getName().equals(def.getName())) {
+                sn.add(shaderNode);
+            }
+        }
+        return sn;
+    }
+
+    public List<ShaderNode> getShaderNodesWithDefPath(ShaderNodeDefinition def) {
         List<ShaderNode> sn = new ArrayList<>();
         for (ShaderNode shaderNode : nodes.values()) {
             if (shaderNode.getDefinition().getPath().equals(def.getPath())) {

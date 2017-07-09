@@ -10,9 +10,11 @@ import spix.app.material.MaterialService;
 import spix.swing.materialEditor.controller.*;
 import spix.swing.materialEditor.panels.ShaderNodeCodePanel;
 
+import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 
 /**
  * Created by Nehon on 08/07/2017.
@@ -32,7 +34,21 @@ public class J3snValidator {
             key.setLoadDocumentation(true);
             List<ShaderNodeDefinition> defs = loader.readNodesDefinitions(roots.get(0).getContents(), key);
             for (ShaderNodeDefinition def : defs) {
-                List<ShaderNode> nodes = dataHandler.getShaderNodesWithDef(def);
+                List<ShaderNode> nodes = dataHandler.getShaderNodesWithDefName(def);
+                if (nodes.isEmpty()) {
+                    //node has probably been renamed, let's try to find it by its def path
+                    //this is only reliable if there is onuy one def in the file
+                    if (defs.size() == 1) {
+                        nodes = dataHandler.getShaderNodesWithDefPath(def);
+                    } else {
+                        //several defs for the file...
+                        //the only reliable way is to create another node and let the user sort the mess.
+                        List<ShaderNodeDefinition> newDefs = new ArrayList<>(1);
+                        newDefs.add(def);
+                        controller.addNodesFromDefs(newDefs, new Point(0, 0));
+                        nodes = dataHandler.getShaderNodesWithDefName(def);
+                    }
+                }
                 ShaderNodeDefinition oldDef = null;
                 for (ShaderNode node : nodes) {
                     boolean typeChanged = node.getDefinition().getType() != def.getType();
