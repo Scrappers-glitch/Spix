@@ -4,6 +4,7 @@ import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.asset.*;
 import com.jme3.asset.plugins.FileLocator;
+import com.jme3.light.LightProbe;
 import com.jme3.light.PointLight;
 import com.jme3.material.Material;
 import com.jme3.material.TechniqueDef;
@@ -100,6 +101,12 @@ public class MaterialAppState extends BaseAppState {
         light.setPosition(cam.getLocation());
         light.setColor(ColorRGBA.White);
         previewNode.addLight(light);
+        
+        //loading probe
+        Spatial s = app.getAssetManager().loadModel("Models/probe.j3o");
+        LightProbe probe = (LightProbe) s.getLocalLightList().get(0);
+        probe.setPosition(Vector3f.ZERO);
+        previewNode.addLight(probe);
 
         // attach the scene to the viewport to be rendered
         vp.attachScene(previewNode);
