@@ -42,8 +42,7 @@ import com.jme3.app.state.ScreenshotAppState;
 import com.jme3.asset.AssetKey;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.light.*;
-import com.jme3.material.Material;
-import com.jme3.material.MaterialDef;
+import com.jme3.material.*;
 import com.jme3.math.*;
 import com.jme3.scene.*;
 import com.jme3.shader.ShaderNode;
@@ -61,8 +60,7 @@ import spix.app.form.SpatialFormFactory;
 import spix.app.form.VariableMappingFormFactory;
 import spix.app.light.*;
 import spix.app.material.*;
-import spix.app.material.hack.MatDefWrapper;
-import spix.app.material.hack.TechniqueDefWrapper;
+import spix.app.material.hack.*;
 import spix.app.properties.LightPropertySetFactory;
 import spix.app.properties.SpatialPropertySetFactory;
 import spix.app.utils.IconPath;
@@ -168,6 +166,7 @@ public class Editor extends SimpleApplication {
         spix.registerPropertySetFactory(MatDefWrapper.class, new MatDefPropertySetFactory());
         spix.registerPropertySetFactory(TechniqueDefWrapper.class, new TechniqueDefPropertySetFactory());
         spix.registerPropertySetFactory(ShaderNode.class, new ShaderNodePropertySetFactory());
+        spix.registerPropertySetFactory(MatParamWrapper.class, new MatParamPropertySetFactory());
         spix.registerPropertySetFactory(VariableMapping.class, new VariableMappingPropertySetFactory());
         spix.registerPropertySetFactory(Material.class, new MaterialPropertySetFactory());
 

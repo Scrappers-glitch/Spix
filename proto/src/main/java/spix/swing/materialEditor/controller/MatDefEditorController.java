@@ -12,8 +12,7 @@ import groovy.util.ObservableList;
 import spix.app.DefaultConstants;
 import spix.app.FileIoService;
 import spix.app.material.MaterialService;
-import spix.app.material.hack.MatDefWrapper;
-import spix.app.material.hack.TechniqueDefWrapper;
+import spix.app.material.hack.*;
 import spix.app.metadata.MetadataService;
 import spix.app.utils.CloneUtils;
 import spix.core.*;
@@ -22,8 +21,7 @@ import spix.swing.PropertyEditorPanel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.dialog.*;
-import spix.swing.materialEditor.nodes.NodePanel;
-import spix.swing.materialEditor.nodes.ShaderNodePanel;
+import spix.swing.materialEditor.nodes.*;
 import spix.swing.materialEditor.panels.*;
 import spix.swing.materialEditor.sort.Node;
 import spix.swing.materialEditor.utils.*;
@@ -527,6 +525,13 @@ public class MatDefEditorController {
         } else if (selectable instanceof Connection) {
             VariableMapping mapping = dataHandler.getMappingForKey(selectable.getKey());
             gui.getSpix().getBlackboard().set(MAT_DEF_EDITOR_SELECTED_ITEM, mapping);
+        } else if (selectable instanceof InputPanel) {
+            String key = selectable.getKey();
+            if (key.startsWith(dataHandler.getCurrentTechnique().getName() + ".MatParam.")) {
+                key = key.substring(key.lastIndexOf(".") + 1);
+                MatParam param = matDef.getMaterialParam(key);
+                gui.getSpix().getBlackboard().set(MAT_DEF_EDITOR_SELECTED_ITEM, new MatParamWrapper(param));
+            }
         }
         selectionHandler.select(selectable, multi);
         diagramUiHandler.refreshDiagram();

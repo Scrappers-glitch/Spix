@@ -37,31 +37,33 @@ package spix.app.material;
 
 import com.jme3.material.MatParam;
 import com.jme3.material.plugins.ConditionParser;
-import com.sun.org.apache.bcel.internal.generic.NEW;
+import com.jme3.shader.ShaderNodeVariable;
+import com.jme3.shader.VariableMapping;
 import spix.app.material.hack.MatDefWrapper;
 import spix.core.Blackboard;
 import spix.core.Spix;
 import spix.props.AbstractProperty;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 import spix.type.Type;
+import spix.ui.MessageRequester;
 
-import java.lang.reflect.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Created by bouquet on 05/10/16.
  */
-public class ShaderNodeConditionProperty extends AbstractProperty {
+public class VariableMultiplicityProperty extends AbstractProperty {
 
-    private Object parent;
-    private ConditionParser parser = new ConditionParser();
-    private Blackboard blackboard;
+    private ShaderNodeVariable variable;
+    private Spix spix;
 
-    public ShaderNodeConditionProperty(Object parent, String name, Spix spix) {
+    public VariableMultiplicityProperty(ShaderNodeVariable variable, String name, Spix spix) {
         super(name);
-        this.parent = parent;
-        this.blackboard = spix.getBlackboard();
+        this.variable = variable;
+        this.spix = spix;
     }
 
     @Override
@@ -77,19 +79,14 @@ public class ShaderNodeConditionProperty extends AbstractProperty {
         if (newVal.trim().equals("")) {
             newVal = null;
         } else {
-            parser.extractDefines(newVal);
-            newVal = parser.getFormattedExpression();
+            try {
+                Integer.parseInt(newVal);
+            } catch (NumberFormatException e) {
+                spix.getService(MessageRequester.class).showMessage("Invalid input", "Multiplicity must be an integer", MessageRequester.Type.Error);
+                return;
+            }
         }
-        try {
-            Method m = parent.getClass().getDeclaredMethod("setCondition", String.class);
-            m.invoke(parent, newVal);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        variable.setMultiplicity(newVal);
 
         firePropertyChange(old, newVal, false);
     }
@@ -97,37 +94,10 @@ public class ShaderNodeConditionProperty extends AbstractProperty {
 
     @Override
     public Object getValue() {
-        String val = "";
-        try {
-            Method method = parent.getClass().getDeclaredMethod("getCondition");
-            val = (String) method.invoke(parent);
-            if (val == null) {
-                val = "";
-            } else {
-                MatDefWrapper wrapper = blackboard.get("matdDefEditor.selection.matdef.singleSelect", MatDefWrapper.class);
-                val = val.replaceAll("#ifdef", "").replaceAll("#if", "").replaceAll("defined", "");
-                Pattern pattern = Pattern.compile("(\\(\\w+\\))");
-
-                Matcher m = pattern.matcher(val);
-
-                while (m.find()) {
-                    String match = m.group();
-                    String rep = match.replaceAll("[\\(\\)]", "");
-                    MatParam param = MaterialDefUtils.findMatParam(rep, wrapper.getMaterialDef());
-                    if (param == null) {
-                        return val;
-                    }
-                    val = val.replaceAll("\\(" + rep + "\\)", param.getName());
-                }
-            }
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+        String val = variable.getMultiplicity();
+        if (val == null) {
+            val = "";
         }
-
         return val;
     }
 

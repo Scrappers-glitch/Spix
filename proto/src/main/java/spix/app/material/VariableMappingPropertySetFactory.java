@@ -55,19 +55,18 @@ public class VariableMappingPropertySetFactory implements PropertySetFactory<Var
     }
 
     public PropertySet createPropertySet(VariableMapping mapping, Spix spix ) {
-        System.out.println("Need to create a property set for:" + mapping);
         List<Property> props = new ArrayList<>();
 
         props.add(new ShaderNodeConditionProperty(mapping, "condition", spix));
         props.add(BeanProperty.create(mapping.getRightVariable(), "type", "fromVariableType", false, null));
         props.add(BeanProperty.create(mapping.getRightVariable(), "name", "fromVariableName", false, null));
         props.add(BeanProperty.create(mapping.getRightVariable(), "nameSpace", "fromVariableNode", false, null));
-        props.add(BeanProperty.create(mapping.getRightVariable(), "multiplicity", "fromVariableMultiplicity", false, null));
+        props.add(new VariableMultiplicityProperty(mapping.getRightVariable(), "fromVariableMultiplicity", spix));
         props.add(BeanProperty.create(mapping, "rightSwizzling", "fromVariableSwizzle", false, null));
         props.add(BeanProperty.create(mapping.getLeftVariable(), "type", "toVariableType", false, null));
         props.add(BeanProperty.create(mapping.getLeftVariable(), "name", "toVariableName", false, null));
         props.add(BeanProperty.create(mapping.getLeftVariable(), "nameSpace", "toVariableNode", false, null));
-        props.add(BeanProperty.create(mapping.getLeftVariable(), "multiplicity", "toVariableMultiplicity", false, null));
+        props.add(new VariableMultiplicityProperty(mapping.getLeftVariable(), "toVariableMultiplicity", spix));
         props.add(BeanProperty.create(mapping, "leftSwizzling", "toVariableSwizzle", false, null));
         return new DefaultPropertySet(mapping, props);
     }
