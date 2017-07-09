@@ -51,6 +51,7 @@ import com.jme3.system.AppSettings;
 import com.jme3.system.awt.AwtPanelsContext;
 import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
+import com.jme3.util.mikktspace.MikktspaceTangentGenerator;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import org.pushingpixels.substance.api.skin.SubstanceGraphiteGlassLookAndFeel;
@@ -734,13 +735,24 @@ public class Editor extends SimpleApplication {
         AnimationActionList animation = objects.add(new AnimationActionList("Animation"));
         spix.getBlackboard().bind("main.selection.singleSelect",
                 animation, "selection");
-        NopAction tangents = objects.add(new NopAction("Generate Tangents") {
+        ActionList tangentMenu = objects.add(new DefaultActionList("Generate Tangents"));
+
+        NopAction tangents = tangentMenu.add(new NopAction("Classic") {
             public void performAction(Spix spix) {
-                genTangents();
+                genTangents(false);
             }
         });
         spix.getBlackboard().bind("main.selection.singleSelect",
                 tangents, "enabled", Predicates.instanceOf(Spatial.class));
+
+        NopAction tangentsMikkt = tangentMenu.add(new NopAction("Mikkt space") {
+            public void performAction(Spix spix) {
+                genTangents(true);
+            }
+        });
+        spix.getBlackboard().bind("main.selection.singleSelect",
+                tangentsMikkt, "enabled", Predicates.instanceOf(Spatial.class));
+
         NopAction test1 = objects.add(new NopAction("Clone Test 1") {
             public void performAction(Spix spix) {
                 cloneTest1();
@@ -865,13 +877,16 @@ public class Editor extends SimpleApplication {
         return selected;
     }
 
-    private void genTangents() {
-        Spatial selected = getSelectedModel();
+    private void genTangents(boolean useMikkt) {
+        Spatial selected = spix.getBlackboard().get("main.selection.singleSelect", Spatial.class);
         if (selected == null) {
             return;
         }
-
-        TangentBinormalGenerator.generate(selected);
+        if (useMikkt) {
+            MikktspaceTangentGenerator.generate(selected);
+        } else {
+            TangentBinormalGenerator.generate(selected);
+        }
     }
 
     private void cloneTest1() {
