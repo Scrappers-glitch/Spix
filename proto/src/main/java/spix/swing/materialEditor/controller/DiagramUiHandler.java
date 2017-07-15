@@ -328,9 +328,7 @@ public class DiagramUiHandler {
         for (VariableMapping mapping : sn.getInputMapping()) {
             makeConnection(controller, mapping, techniqueDef, sn.getName());
         }
-        for (VariableMapping mapping : sn.getOutputMapping()) {
-            makeConnection(controller, mapping, techniqueDef, sn.getName());
-        }
+
         for (VariableMapping mapping : tmpOutMappings) {
             makeConnection(controller, mapping, techniqueDef, sn.getName());
         }

@@ -66,6 +66,10 @@ public class SwingMessageRequester implements MessageRequester {
                         break;
                     case Error:
                         msgType = JOptionPane.ERROR_MESSAGE;
+                        //in case of error hiding all loading popups.
+                        for (Popup popup : popups.values()) {
+                            popup.hide();
+                        }
                         break;
                 }
                 JOptionPane.showMessageDialog(swingGui.getRootWindow(), message, title, msgType);

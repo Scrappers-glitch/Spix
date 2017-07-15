@@ -299,12 +299,11 @@ public class Connection extends JPanel implements Selectable {
     }
 
     public boolean pick(MouseEvent e) {
-
         requestFocusInWindow(true);
-        int margin = MARGIN / 2;
-
         for (int i = 0; i < nbCurve; i++) {
-            return curves[i].intersects(e.getX() - margin, e.getY() - margin, e.getX() + margin, e.getY() + margin);
+            if (curves[i].intersects(e.getX() - 5, e.getY() - 5, 10, 10)) {
+                return true;
+            }
         }
         return false;
     }
