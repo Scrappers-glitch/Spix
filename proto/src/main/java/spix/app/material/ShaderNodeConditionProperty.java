@@ -42,6 +42,7 @@ import spix.app.material.hack.MatDefWrapper;
 import spix.core.Blackboard;
 import spix.core.Spix;
 import spix.props.AbstractProperty;
+import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
 import spix.type.Type;
 
@@ -104,7 +105,7 @@ public class ShaderNodeConditionProperty extends AbstractProperty {
             if (val == null) {
                 val = "";
             } else {
-                MatDefWrapper wrapper = blackboard.get("matdDefEditor.selection.matdef.singleSelect", MatDefWrapper.class);
+                MatDefWrapper wrapper = blackboard.get(MatDefEditorController.MAT_DEF_EDITOR_SELECTED_MATDEF, MatDefWrapper.class);
                 val = val.replaceAll("#ifdef", "").replaceAll("#if", "").replaceAll("defined", "");
                 Pattern pattern = Pattern.compile("(\\(\\w+\\))");
 
