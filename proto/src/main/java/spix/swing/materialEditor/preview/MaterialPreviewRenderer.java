@@ -15,6 +15,7 @@ import spix.swing.materialEditor.nodes.OutPanel;
 import spix.swing.materialEditor.panels.ErrorLog;
 import spix.swing.materialEditor.sort.Node;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
+import spix.ui.MessageRequester;
 
 import javax.swing.*;
 import java.awt.image.*;
@@ -33,7 +34,11 @@ public class MaterialPreviewRenderer {
     public void batchRequests(SwingGui gui, ErrorLog errorLog, final List<OutPanel> outs, MaterialDef matDef, String techniqueName, Deque<Node> sortedNodes, Map<String, MatParam> params) {
 
         TechniqueDef techDef = matDef.getTechniqueDefs(techniqueName).get(0);
-        MaterialDefUtils.computeShaderNodeGenerationInfo(techDef, matDef);
+        try {
+            MaterialDefUtils.computeShaderNodeGenerationInfo(techDef, matDef);
+        } catch (IOException e) {
+            gui.getService(MessageRequester.class).showMessage("Error while loading tehcnique", e.getMessage(), MessageRequester.Type.Error);
+        }
         nbRequestsDone = 0;
         errors.clear();
         for (OutPanel out : outs) {

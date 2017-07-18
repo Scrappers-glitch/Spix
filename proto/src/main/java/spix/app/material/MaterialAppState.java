@@ -6,8 +6,7 @@ import com.jme3.asset.*;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.light.LightProbe;
 import com.jme3.light.PointLight;
-import com.jme3.material.Material;
-import com.jme3.material.TechniqueDef;
+import com.jme3.material.*;
 import com.jme3.math.*;
 import com.jme3.renderer.*;
 import com.jme3.scene.*;
@@ -149,11 +148,20 @@ public class MaterialAppState extends BaseAppState {
 
     }
 
-    public MaterialService.PreviewResult requestPreview(Material mat, String techniqueName, DisplayType displayType, int index) throws RuntimeException {
+    public MaterialService.PreviewResult requestPreview(Material mat, String techniqueName, DisplayType displayType, int index, Map<String, MatParam> params) throws RuntimeException {
         setupScene(displayType, mat);
         ByteBuffer cpuBuf = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
         RenderManager rm = getApplication().getRenderManager();
         mat.selectTechnique(techniqueName, rm);
+
+        if (params != null) {
+            for (MatParam matParam : mat.getMaterialDef().getMaterialParams()) {
+                MatParam param = params.get(matParam.getName());
+                if (param != null) {
+                    mat.setParam(param.getName(), param.getVarType(), param.getValue());
+                }
+            }
+        }
 
         int nbOut = 1;
         if (displayType != DisplayType.FullScreenQuad) {
@@ -191,7 +199,7 @@ public class MaterialAppState extends BaseAppState {
 
     public MaterialService.PreviewResult previewTexture(Texture texture) {
         texPreviewMaterial.setTexture("Texture", texture);
-        MaterialService.PreviewResult res = requestPreview(texPreviewMaterial, "Default", DisplayType.FullScreenQuad, 0);
+        MaterialService.PreviewResult res = requestPreview(texPreviewMaterial, "Default", DisplayType.FullScreenQuad, 0, null);
         res.originalWidth = texture.getImage().getWidth();
         res.originalHeight = texture.getImage().getHeight();
         return res;

@@ -309,7 +309,11 @@ public class MatDefEditorController {
         dataHandler.setCurrentMatDef(matDef);
 
         if (technique.isUsingShaderNodes()) {
-            MaterialDefUtils.computeShaderNodeGenerationInfo(technique, matDef);
+            try {
+                MaterialDefUtils.computeShaderNodeGenerationInfo(technique, matDef);
+            } catch (IOException e) {
+                gui.getService(MessageRequester.class).showMessage("Error while loading tehcnique", e.getMessage(), MessageRequester.Type.Error);
+            }
             List<ShaderNodeVariable> uniforms = new ArrayList<>();
             MaterialDefUtils.getAllUniforms(technique, matDef, uniforms);
 

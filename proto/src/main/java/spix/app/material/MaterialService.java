@@ -17,7 +17,9 @@ import spix.props.Property;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.preview.PreviewRequest;
 import spix.swing.materialEditor.utils.MaterialDefUtils;
+import spix.ui.MessageRequester;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -59,15 +61,10 @@ public class MaterialService {
                 boolean wire = request.getShaderType() == Shader.ShaderType.Vertex;
                 m.getAdditionalRenderState().setWireframe(wire);
 
-                for (MatParam matParam : def.getMaterialParams()) {
-                    MatParam param = request.getMatParams().get(matParam.getName());
-                    if (param != null) {
-                        m.setParam(param.getName(), param.getVarType(), param.getValue());
-                    }
-                }
+
 
                 try {
-                    PreviewResult res = materialState.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex());
+                    PreviewResult res = materialState.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex(), request.getMatParams());
                     gui.runOnSwing(new Runnable() {
                         @Override
                         public void run() {
@@ -93,7 +90,11 @@ public class MaterialService {
 
     public void requestCode(TechniqueDef def, MaterialDef matDef, RequestCallback<Map<String, Shader>> callback) {
         //re computing the shader generation information
-        MaterialDefUtils.computeShaderNodeGenerationInfo(def, matDef);
+        try {
+            MaterialDefUtils.computeShaderNodeGenerationInfo(def, matDef);
+        } catch (IOException e) {
+            gui.getService(MessageRequester.class).showMessage("Error while loading tehcnique", e.getMessage(), MessageRequester.Type.Error);
+        }
 
         //Not really needed as it should be thread safe.
         gui.runOnRender(new Runnable() {
@@ -237,9 +238,11 @@ public class MaterialService {
         //setting the new shaderNodes to the technique definition
         techDef.setShaderNodes(newNodes);
         //re computing the shader generation information
-        MaterialDefUtils.computeShaderNodeGenerationInfo(techDef, def);
-        //fixing the world and mat param g_ and m_ names.
-        //MaterialDefUtils.fixUniformNames(techDef.getShaderGenerationInfo());
+        try {
+            MaterialDefUtils.computeShaderNodeGenerationInfo(techDef, def);
+        } catch (IOException e) {
+            gui.getService(MessageRequester.class).showMessage("Error while loading tehcnique", e.getMessage(), MessageRequester.Type.Error);
+        }
 
         return def;
     }
