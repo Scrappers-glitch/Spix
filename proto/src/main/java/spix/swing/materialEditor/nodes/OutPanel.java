@@ -79,12 +79,12 @@ public abstract class OutPanel extends NodePanel {
 
     public PreviewRequest makePreviewRequest(Deque<Node> sortedNodes) {
 
-        String stopNodeName = getStopNodeName();
+        String stopNodeKey = getStopNodeKey();
         List<String> nodeGraph = new ArrayList<>();
-        if (stopNodeName != null) {
+        if (stopNodeKey != null) {
             Node stopNode = null;
             for (Node sortedNode : sortedNodes) {
-                if (sortedNode.getName().equals(stopNodeName)) {
+                if (sortedNode.getKey().equals(stopNodeKey)) {
                     stopNode = sortedNode;
                     break;
                 }
@@ -128,12 +128,12 @@ public abstract class OutPanel extends NodePanel {
         }
     }
 
-    public String getStopNodeName() {
-        String nodeName = null;
+    public String getStopNodeKey() {
+        String nodeKey = null;
         for (Dot dot : getInputConnectPoint().getConnectedDots()) {
-            nodeName = dot.getNode().getName();
+            nodeKey = dot.getNode().getKey();
         }
-        return nodeName;
+        return nodeKey;
     }
 
     public static OutPanel create(MatDefEditorController controller, String key, Shader.ShaderType type, ShaderNodeVariable var) {

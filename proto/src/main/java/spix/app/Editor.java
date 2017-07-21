@@ -807,7 +807,7 @@ public class Editor extends SimpleApplication {
             public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
                 //System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
 
-                if (!event.isPressed() && lastMotion != null) {
+                if (!event.isPressed() && event.getButtonIndex() != 2 && lastMotion != null) {
                     // Set the selection
                     Geometry selected = null;
                     if (lastMotion.getCollision() != null) {

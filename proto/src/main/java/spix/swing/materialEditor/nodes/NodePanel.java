@@ -81,11 +81,17 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
             outputDots.put(output.getName(), dot);
         }
 
+        if (displayPreview) {
+            setBounds(0, 0, 150, 30 + inputs.size() * 20 + outputs.size() * 20 + 95);
+        } else {
+            setBounds(0, 0, 110, 30 + inputs.size() * 17 + outputs.size() * 17);
+        }
+
         initComponents();
 
         initHeader(header);
         setOpaque(false);
-        setBounds(0, 0, 150, 30 + inputs.size() * 20 + outputs.size() * 20 + (displayPreview?95:0));
+
 
     }
 
@@ -227,14 +233,15 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         header.addMouseListener(labelMouseMotionListener);
         header.addMouseMotionListener(labelMouseMotionListener);
         header.setHorizontalAlignment(SwingConstants.LEFT);
-        header.setFont(new Font("Tahoma", Font.BOLD, 11));
+        header.setFont(new Font("Tahoma", Font.BOLD, 9));
+        header.setIconTextGap(2);
 
         content = new JPanel();
         content.setOpaque(false);
         GroupLayout contentLayout = new GroupLayout(content);
         content.setLayout(contentLayout);
 
-        int txtLength = 100;
+        int txtLength = 90;
 
 
         if(displayPreview){
@@ -258,7 +265,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         int i = 0;
         for (String key : outputDots.keySet()) {
             grpHoriz.addGroup(GroupLayout.Alignment.TRAILING, contentLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addGap(0, 0, displayPreview ? Short.MAX_VALUE : 8)
                     .addComponent(outputLabels.get(i), GroupLayout.PREFERRED_SIZE, txtLength, GroupLayout.PREFERRED_SIZE)
                     .addGap(2, 2, 2)
                     .addComponent(outputDots.get(key), GroupLayout.PREFERRED_SIZE, 10, GroupLayout.PREFERRED_SIZE));
@@ -282,7 +289,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
 
         if (displayPreview) {
             grp.addGroup(contentLayout.createSequentialGroup()
-                    .addGap(50, 50, 50));
+                    .addGap(55, 55, 55));
             grp.addGroup(contentLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
                     .addComponent(inputDots.get(inputDots.keySet().iterator().next()), GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addComponent(inputLabels.get(0))
@@ -317,7 +324,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                         .addGroup(GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                 .addGap(6, 6, 6)
-                                .addComponent(header, 135, 135, 135))
+                                .addComponent(header, 100, 100, 100))
                         .addGroup(GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                 .addGap(6, 6, 6))
                         .addComponent(content, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
@@ -325,9 +332,9 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createSequentialGroup()
                                 .addComponent(header, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                .addGap(10, 10, 10)
+                                .addGap(5, 5, 5)
                                 .addComponent(content, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                        .addGap(10, 10, 10));
+                        .addGap(5, 5, 5));
     }
 
     public JLabel createLabel(String glslType, String txt, Dot.ParamType type) {
@@ -337,7 +344,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         label.setOpaque(false);
 
         label.setHorizontalAlignment(type == Dot.ParamType.Output ? SwingConstants.RIGHT : SwingConstants.LEFT);
-        label.setFont(new Font("Tahoma", 0, 10));
+        label.setFont(new Font("Tahoma", 0, 9));
         label.addMouseListener(labelMouseMotionListener);
         label.addMouseMotionListener(labelMouseMotionListener);
 
@@ -383,20 +390,4 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
             NodePanel.this.dispatchEvent(me);
         }
     }
-
-//    public void addInputMapping(InputMappingBlock block) {
-//        firePropertyChange(ShaderNodeBlock.INPUT, null, block);
-//    }
-//
-//    public void removeInputMapping(InputMappingBlock block) {
-//        firePropertyChange(ShaderNodeBlock.INPUT, block, null);
-//    }
-//
-//    public void addOutputMapping(OutputMappingBlock block) {
-//        firePropertyChange(ShaderNodeBlock.OUTPUT, null, block);
-//    }
-//
-//    public void removeOutputMapping(OutputMappingBlock block) {
-//        firePropertyChange(ShaderNodeBlock.OUTPUT, block, null);
-//    }
 }

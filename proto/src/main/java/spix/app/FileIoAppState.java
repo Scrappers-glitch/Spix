@@ -283,11 +283,18 @@ public class FileIoAppState extends BaseAppState {
             @Override
             public void done(Spatial scene) {
                 rootNode.detachAllChildren();
-                rootNode.attachChild(scene);
+                Spatial rootScene = scene;
+                if (!(rootScene instanceof Node)) {
+                    Node nodeScene = new Node(scene.getName() + "-node");
+                    nodeScene.attachChild(rootScene);
+                    rootScene = nodeScene;
+                }
 
-                blackboard.set(SCENE_ROOT, scene);
+                rootNode.attachChild(rootScene);
+
+                blackboard.set(SCENE_ROOT, rootScene);
                 //Select the new scene
-                blackboard.get(SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(scene);
+                blackboard.get(SELECTION_PROPERTY, SelectionModel.class).setSingleSelection(rootScene);
                 //clear unsaved dependencies
                 blackboard.set(MODIFIED_DEPENDENCIES, null);
             }
