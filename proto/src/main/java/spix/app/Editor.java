@@ -142,6 +142,7 @@ public class Editor extends SimpleApplication {
                 new MaterialAppState(),
                 new DebugLightsState(),
                 new SceneValidatorState(),
+                new DuplicateSelectionAppState(),
                 new DecoratorViewPortState() // Put this last because of some dodgy update vs render stuff
         );
 
@@ -753,29 +754,29 @@ public class Editor extends SimpleApplication {
         spix.getBlackboard().bind("main.selection.singleSelect",
                 tangentsMikkt, "enabled", Predicates.instanceOf(Spatial.class));
 
-        NopAction test1 = objects.add(new NopAction("Clone Test 1") {
-            public void performAction(Spix spix) {
-                cloneTest1();
-            }
-        });
-        spix.getBlackboard().bind("main.selection.singleSelect",
-                test1, "enabled", Predicates.instanceOf(Spatial.class));
+        ActionList duplicateMenu = objects.add(new DefaultActionList("Duplicate"));
 
-        NopAction test2 = objects.add(new NopAction("Clone Test 2") {
+        NopAction duplicateShareMat = duplicateMenu.add(new NopAction("Share material", "shift D", null) {
             public void performAction(Spix spix) {
-                cloneTest2();
+                getStateManager().getState(DuplicateSelectionAppState.class).duplicate(false, false);
             }
         });
         spix.getBlackboard().bind("main.selection.singleSelect",
-                test2, "enabled", Predicates.instanceOf(Spatial.class));
-
-        NopAction test3 = objects.add(new NopAction("Clone Test 3") {
+                duplicateShareMat, "enabled", Predicates.instanceOf(Spatial.class));
+        NopAction duplicateWithMat = duplicateMenu.add(new NopAction("Duplicate material", "shift control D", null) {
             public void performAction(Spix spix) {
-                cloneTest3();
+                getStateManager().getState(DuplicateSelectionAppState.class).duplicate(true, false);
             }
         });
         spix.getBlackboard().bind("main.selection.singleSelect",
-                test3, "enabled", Predicates.instanceOf(Spatial.class));
+                duplicateWithMat, "enabled", Predicates.instanceOf(Spatial.class));
+        NopAction duplicateDeep = duplicateMenu.add(new NopAction("Deep clone", "shift control alt D", null) {
+            public void performAction(Spix spix) {
+                getStateManager().getState(DuplicateSelectionAppState.class).duplicate(false, true);
+            }
+        });
+        spix.getBlackboard().bind("main.selection.singleSelect",
+                duplicateDeep, "enabled", Predicates.instanceOf(Spatial.class));
 
         return objects;
     }
@@ -887,33 +888,6 @@ public class Editor extends SimpleApplication {
         } else {
             TangentBinormalGenerator.generate(selected);
         }
-    }
-
-    private void cloneTest1() {
-        Spatial selected = getSelectedModel();
-        if (selected == null) {
-            return;
-        }
-        System.out.println("Cloning, cloning materials.");
-        addSpatial(selected.clone());
-    }
-
-    private void cloneTest2() {
-        Spatial selected = getSelectedModel();
-        if (selected == null) {
-            return;
-        }
-        System.out.println("Cloning, sharing materials.");
-        addSpatial(selected.clone(false));
-    }
-
-    private void cloneTest3() {
-        Spatial selected = getSelectedModel();
-        if (selected == null) {
-            return;
-        }
-        System.out.println("Deep cloning.");
-        addSpatial(selected.deepClone());
     }
 
     private void addLight(Light l) {

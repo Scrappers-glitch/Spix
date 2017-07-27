@@ -40,14 +40,11 @@ public class TransformState extends BaseAppState {
                     return;
                 }
                 if(func == F_GRAB && value == InputState.Positive){
-                    getState(SpixState.class).getSpix().getBlackboard().set("transform.mode", "translate");
-                    getState(TranslationWidgetState.class).startKeyTransform();
+                    translate();
                 } else if(func == F_SCALE && value == InputState.Positive){
-                    getState(SpixState.class).getSpix().getBlackboard().set("transform.mode", "scale");
-                    getState(ScaleWidgetState.class).startKeyTransform();
+                    scale();
                 } else if(func == F_ROTATE && value == InputState.Positive){
-                    getState(SpixState.class).getSpix().getBlackboard().set("transform.mode", "rotate");
-                    getState(RotationWidgetState.class).startKeyTransform();
+                    rotate();
                 }
             }
         }, F_GRAB, F_SCALE, F_ROTATE);
@@ -62,6 +59,21 @@ public class TransformState extends BaseAppState {
             }
         }, F_NOOP);
 
+    }
+
+    public void rotate() {
+        getState(SpixState.class).getSpix().getBlackboard().set("transform.mode", "rotate");
+        getState(RotationWidgetState.class).startKeyTransform();
+    }
+
+    public void scale() {
+        getState(SpixState.class).getSpix().getBlackboard().set("transform.mode", "scale");
+        getState(ScaleWidgetState.class).startKeyTransform();
+    }
+
+    public void translate() {
+        getState(SpixState.class).getSpix().getBlackboard().set("transform.mode", "translate");
+        getState(TranslationWidgetState.class).startKeyTransform();
     }
 
     @Override
