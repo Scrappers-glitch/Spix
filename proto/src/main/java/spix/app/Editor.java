@@ -64,6 +64,7 @@ import spix.app.material.*;
 import spix.app.material.hack.*;
 import spix.app.properties.LightPropertySetFactory;
 import spix.app.properties.SpatialPropertySetFactory;
+import spix.app.scene.SceneService;
 import spix.app.utils.IconPath;
 import spix.app.metadata.MetadataService;
 import spix.awt.AwtPanelState;
@@ -292,6 +293,7 @@ public class Editor extends SimpleApplication {
                 spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), fileIoAppState, gui));
                 spix.registerService(FileIoService.class, new FileIoService(gui.getSpix(), fileIoAppState, getStateManager().getState(SceneValidatorState.class)));
                 spix.registerService(MetadataService.class, new MetadataService(spix, fileIoAppState));
+                spix.registerService(SceneService.class, new SceneService(gui));
             }
         });
 

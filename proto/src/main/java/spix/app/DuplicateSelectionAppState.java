@@ -45,7 +45,7 @@ public class DuplicateSelectionAppState extends BaseAppState{
             }
             updateSelection(clone);
             getState(TransformState.class).translate();
-        }Œ
+        }
     }
 
     private List<Spatial> getSelection() {

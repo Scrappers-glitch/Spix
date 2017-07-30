@@ -37,7 +37,6 @@ package spix.app.material;
 
 import com.jme3.material.MatParam;
 import com.jme3.material.plugins.ConditionParser;
-import com.sun.org.apache.bcel.internal.generic.NEW;
 import spix.app.material.hack.MatDefWrapper;
 import spix.core.Blackboard;
 import spix.core.Spix;
