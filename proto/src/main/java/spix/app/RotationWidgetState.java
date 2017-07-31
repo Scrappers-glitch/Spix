@@ -104,8 +104,10 @@ public class RotationWidgetState extends BaseAppState {
 
     //Axis move axis line visual cue.
     private Geometry axisLine;
-
     private InputMapper inputMapper;
+
+    private Quaternion tmpQuat = new Quaternion();
+    private Vector3f pivotToSpatialTranslation = new Vector3f();
 
     public RotationWidgetState(boolean enabled) {
         setEnabled(enabled);
@@ -502,11 +504,18 @@ public class RotationWidgetState extends BaseAppState {
 
     protected void rotateSelectedObjects(Quaternion delta ) {
 
+        //Rotating in world space according to the selection center (median point of all the selections)
+        //We could add an option to rotate each object according to it's own center.
+        //We have to apply the rotation to each object's transforms in world space according to the selection center.
         for( SelectedObject s : selectedObjects.getArray() ) {
+            pivotToSpatialTranslation.set(s.getWorldTranslation()).subtractLocal(selectionCenter);
+            delta.mult(pivotToSpatialTranslation, pivotToSpatialTranslation);
+            s.setWorldTranslation(selectionCenter);
             //we combine the delta with the rotation of the selection
             //note that the order is important because we want rotation in world space.
-            Quaternion q = delta.multLocal(s.getWorldRotation());
-            s.setWorldRotation(q);
+            tmpQuat.set(delta).multLocal(s.getWorldRotation());
+            s.setWorldRotation(tmpQuat);
+            s.setWorldTranslation(pivotToSpatialTranslation.addLocal(selectionCenter));
         }
     }
 
