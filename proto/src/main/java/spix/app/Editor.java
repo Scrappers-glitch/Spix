@@ -129,7 +129,7 @@ public class Editor extends SimpleApplication {
     }
 
     public Editor() throws Exception {
-        super(new SpixState(new Spix()), new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false),
+        super(new SpixState(new Spix()), new StatsAppState(), new DebugKeysAppState(), new BasicProfilerState(false), new SelectionAppState(),
                 new FlyCamAppState(), new OrbitCameraState(false), new BlenderCameraState(true),
                 new GridState(), new BackgroundColorState(),
                 new FileIoAppState(),
@@ -801,40 +801,6 @@ public class Editor extends SimpleApplication {
         // the very basics
         GuiGlobals.initialize(this);
 
-        // Setup for some scene picking... need to move this to an app state or something
-        // but we're just hacking
-        CursorEventControl.addListenersToSpatial(rootNode, new CursorListener() {
-
-            private CursorMotionEvent lastMotion;
-
-            public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
-                //System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
-
-                if (!event.isPressed() && event.getButtonIndex() != 2 && lastMotion != null) {
-                    // Set the selection
-                    Geometry selected = null;
-                    if (lastMotion.getCollision() != null) {
-                        selected = lastMotion.getCollision().getGeometry();
-                    }
-                    //System.out.println("Setting selection to:" + selected);
-                    spix.getBlackboard().get("main.selection", SelectionModel.class).setSingleSelection(selected);
-                }
-            }
-
-            public void cursorEntered(CursorMotionEvent event, Spatial target, Spatial capture) {
-                // System.out.println("cursorEntered(" + event + ", " + target + ", " + capture + ")");
-            }
-
-            public void cursorExited(CursorMotionEvent event, Spatial target, Spatial capture) {
-                //System.out.println("cursorExited(" + event + ", " + target + ", " + capture + ")");
-            }
-
-            public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
-                //System.out.println("cursorMoved(" + event + ", " + target + ", " + capture + ")");
-                this.lastMotion = event;
-            }
-
-        });
     }
 
     @Override

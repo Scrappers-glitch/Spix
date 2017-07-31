@@ -46,6 +46,7 @@ public class SceneExplorerPanel extends DockPanel {
             Node.class.getName() +
             "\"";
     private static DataFlavor nodeFlavor;
+    private boolean stopPropagation;
 
     public SceneExplorerPanel(Slot slot, Container container, SwingGui gui) {
         super(slot, container);
@@ -70,6 +71,9 @@ public class SceneExplorerPanel extends DockPanel {
         sceneTree.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
+                if(stopPropagation){
+                    return;
+                }
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode)
                         sceneTree.getLastSelectedPathComponent();
 
@@ -318,7 +322,10 @@ public class SceneExplorerPanel extends DockPanel {
         }
     }
 
+
+
     private void updateSelection(Object o) {
+        stopPropagation = true;
         DefaultMutableTreeNode node = searchNode(o);
         if (node == null) {
             lastSelected = o;
@@ -328,6 +335,7 @@ public class SceneExplorerPanel extends DockPanel {
             sceneTree.getSelectionModel().setSelectionPath(new TreePath(node.getPath()));
         }
         lastSelected = null;
+        stopPropagation = false;
     }
 
     public DefaultMutableTreeNode searchNode(Object userObject) {

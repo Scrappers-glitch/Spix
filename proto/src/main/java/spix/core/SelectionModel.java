@@ -81,6 +81,15 @@ public class SelectionModel extends ObservableList {
         // The singleSelection field gets updated as a side-effect of the list change.
     }
 
+    public void addSelection( Object selection){
+        if(contains(selection)){
+            return;
+        }
+        add(selection);
+
+        // The singleSelection field will be set to the last selection in the list.
+    }
+
     public Object getSingleSelection() {
         return singleSelection;
     }
