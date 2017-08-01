@@ -508,13 +508,15 @@ public class RotationWidgetState extends BaseAppState {
         //We could add an option to rotate each object according to it's own center.
         //We have to apply the rotation to each object's transforms in world space according to the selection center.
         for( SelectedObject s : selectedObjects.getArray() ) {
+            //extracting the offset position of the object relative to the pivot.
             pivotToSpatialTranslation.set(s.getWorldTranslation()).subtractLocal(selectionCenter);
+            //Applying the rotation to the position.
             delta.mult(pivotToSpatialTranslation, pivotToSpatialTranslation);
-            s.setWorldTranslation(selectionCenter);
             //we combine the delta with the rotation of the selection
             //note that the order is important because we want rotation in world space.
             tmpQuat.set(delta).multLocal(s.getWorldRotation());
             s.setWorldRotation(tmpQuat);
+            //world translation is the addition of pivot position and the rotated offset position.
             s.setWorldTranslation(pivotToSpatialTranslation.addLocal(selectionCenter));
         }
     }
