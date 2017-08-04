@@ -29,8 +29,13 @@ public class DuplicateSelectionAppState extends BaseAppState{
     }
 
     public void duplicate(boolean cloneMaterial, boolean deepClone){
-        List<Spatial> spatials = getSelection();
-        for (Spatial spatial : spatials) {
+
+        SelectionModel selection = getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+        for (Object selected : selection) {
+            if(!(selected instanceof Spatial)){
+                continue;
+            }
+            Spatial spatial = (Spatial)selected;
             Spatial clone = null;
             if(deepClone){
                 clone = spatial.deepClone();
@@ -43,23 +48,22 @@ public class DuplicateSelectionAppState extends BaseAppState{
                 SpatialAddEdit edit = new SpatialAddEdit(spatial.getParent(), clone);
                 getSpix().getService(UndoManager.class).addEdit(edit);
             }
-            updateSelection(clone);
-            getState(TransformState.class).translate();
+            selections.add(clone);
         }
+        updateSelection();
+        getState(TransformState.class).translate();
     }
 
-    private List<Spatial> getSelection() {
-        selections.clear();
-        SelectionModel selection = getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
-        Object obj = selection.getSingleSelection();
-        if( obj instanceof Spatial){
-            selections.add((Spatial)obj);
+    private void updateSelection(){
+        if(selections.isEmpty()){
+            return;
         }
-        return selections;
-    }
-    private void updateSelection(Spatial s){
         SelectionModel selection = getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
-        selection.setSingleSelection(s);
+        selection.clear();
+        selection.addAllSelection(selections);
+       /* for (Spatial spatial : selections) {
+            selection.addSelection(spatial);
+        }*/
     }
 
     @Override

@@ -30,6 +30,10 @@ public class DeleteAction extends AbstractAction {
                         if(o == sceneRoot){
                             return false;
                         }
+                        if(o == null){
+                            continue;
+                        }
+
                         if(Spatial.class.isAssignableFrom(o.getClass()) ||
                             LightWrapper.class.isAssignableFrom(o.getClass())){
                             return true;

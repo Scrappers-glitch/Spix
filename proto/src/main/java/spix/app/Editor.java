@@ -738,47 +738,12 @@ public class Editor extends SimpleApplication {
         AnimationActionList animation = objects.add(new AnimationActionList("Animation"));
         spix.getBlackboard().bind("main.selection.singleSelect",
                 animation, "selection");
-        ActionList tangentMenu = objects.add(new DefaultActionList("Generate Tangents"));
 
-        NopAction tangents = tangentMenu.add(new NopAction("Classic") {
-            public void performAction(Spix spix) {
-                genTangents(false);
-            }
-        });
-        spix.getBlackboard().bind("main.selection.singleSelect",
-                tangents, "enabled", Predicates.instanceOf(Spatial.class));
+        GenerateTangentsAction genTanAction = new GenerateTangentsAction(spix);
+        objects.add(genTanAction);
 
-        NopAction tangentsMikkt = tangentMenu.add(new NopAction("Mikkt space") {
-            public void performAction(Spix spix) {
-                genTangents(true);
-            }
-        });
-        spix.getBlackboard().bind("main.selection.singleSelect",
-                tangentsMikkt, "enabled", Predicates.instanceOf(Spatial.class));
-
-        ActionList duplicateMenu = objects.add(new DefaultActionList("Duplicate"));
-
-        NopAction duplicateShareMat = duplicateMenu.add(new NopAction("Share material", "shift D", null) {
-            public void performAction(Spix spix) {
-                getStateManager().getState(DuplicateSelectionAppState.class).duplicate(false, false);
-            }
-        });
-        spix.getBlackboard().bind("main.selection.singleSelect",
-                duplicateShareMat, "enabled", Predicates.instanceOf(Spatial.class));
-        NopAction duplicateWithMat = duplicateMenu.add(new NopAction("Duplicate material", "shift control D", null) {
-            public void performAction(Spix spix) {
-                getStateManager().getState(DuplicateSelectionAppState.class).duplicate(true, false);
-            }
-        });
-        spix.getBlackboard().bind("main.selection.singleSelect",
-                duplicateWithMat, "enabled", Predicates.instanceOf(Spatial.class));
-        NopAction duplicateDeep = duplicateMenu.add(new NopAction("Deep clone", "shift control alt D", null) {
-            public void performAction(Spix spix) {
-                getStateManager().getState(DuplicateSelectionAppState.class).duplicate(false, true);
-            }
-        });
-        spix.getBlackboard().bind("main.selection.singleSelect",
-                duplicateDeep, "enabled", Predicates.instanceOf(Spatial.class));
+        DuplicateAction duplicateAction = new DuplicateAction(spix, getStateManager().getState(DuplicateSelectionAppState.class));
+        objects.add(duplicateAction);
 
         return objects;
     }
@@ -806,56 +771,6 @@ public class Editor extends SimpleApplication {
     @Override
     public void simpleUpdate(float tpf) {
 
-    }
-
-
-    private void addSpatial(Spatial spatial) {
-
-        spatial.setLocalTranslation(0, 0, 0);
-
-        // For now, find out where to put the scene so that it is next to whatever
-        // is currently loaded
-        BoundingBox currentBounds = (BoundingBox) rootNode.getWorldBound();
-        BoundingBox modelBounds = (BoundingBox) spatial.getWorldBound();
-
-        System.out.println("root bounds:" + currentBounds);
-        System.out.println("model bounds:" + modelBounds);
-
-        float worldRight = currentBounds.getCenter().x + currentBounds.getXExtent();
-        float modelLeft = -modelBounds.getCenter().x + modelBounds.getXExtent();
-
-        spatial.setLocalTranslation(worldRight + modelLeft, 0, 0);
-        rootNode.attachChild(spatial);
-    }
-
-    private Spatial getSelectedModel() {
-        Spatial selected = spix.getBlackboard().get("main.selection.singleSelect", Spatial.class);
-        if (selected == null) {
-            return null;
-        }
-
-        // We need to traverse up and find the spatial that was actually loaded...
-        // the 'node' that contained us.  This is a bit of a hack but we keep
-        // going up until we find a node with an asset key.
-        for (Spatial parent = selected.getParent(); parent != null; parent = parent.getParent()) {
-            if (parent.getKey() != null) {
-                selected = parent;
-                break;
-            }
-        }
-        return selected;
-    }
-
-    private void genTangents(boolean useMikkt) {
-        Spatial selected = spix.getBlackboard().get("main.selection.singleSelect", Spatial.class);
-        if (selected == null) {
-            return;
-        }
-        if (useMikkt) {
-            MikktspaceTangentGenerator.generate(selected);
-        } else {
-            TangentBinormalGenerator.generate(selected);
-        }
     }
 
     private void addLight(Light l) {

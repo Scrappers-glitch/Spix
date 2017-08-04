@@ -87,7 +87,11 @@ public class SelectionModel extends ObservableList {
         }
         add(selection);
 
-        // The singleSelection field will be set to the last selection in the list.
+        // The singleSelection field will be set to the first selection in the list.
+    }
+
+    public void addAllSelection( List<?> selection){
+        addAll(selection);
     }
 
     public Object getSingleSelection() {
