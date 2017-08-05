@@ -216,11 +216,13 @@ public class ScaleWidgetState extends BaseAppState {
                     //The dragging is done.
                     inputMapper.deactivateGroup(GROUP_MOVING);
                     scaleManager.stopDrag();
+                    getState(SelectionAppState.class).cancelNextEvent();
                 }
                 if (func == F_CANCEL && value == InputState.Positive) {
                     //the user canceled the dragging.
                     inputMapper.deactivateGroup(GROUP_MOVING);
                     scaleManager.cancel();
+                    getState(SelectionAppState.class).cancelNextEvent();
                 }
             }
         }, F_DONE, F_CANCEL);

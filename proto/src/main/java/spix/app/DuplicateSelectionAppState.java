@@ -29,7 +29,7 @@ public class DuplicateSelectionAppState extends BaseAppState{
     }
 
     public void duplicate(boolean cloneMaterial, boolean deepClone){
-
+        selections.clear();
         SelectionModel selection = getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
         for (Object selected : selection) {
             if(!(selected instanceof Spatial)){

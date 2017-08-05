@@ -237,11 +237,13 @@ public class RotationWidgetState extends BaseAppState {
                     //The dragging is done.
                     inputMapper.deactivateGroup(GROUP_ROTATING);
                     rotateManager.stopDrag();
+                    getState(SelectionAppState.class).cancelNextEvent();
                 }
                 if(func == F_CANCEL && value == InputState.Positive){
                     //the user canceled the dragging.
                     inputMapper.deactivateGroup(GROUP_ROTATING);
                     rotateManager.cancel();
+                    getState(SelectionAppState.class).cancelNextEvent();
                 }
             }
         },F_DONE, F_CANCEL);

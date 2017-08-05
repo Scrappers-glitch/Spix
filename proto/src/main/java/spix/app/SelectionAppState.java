@@ -26,6 +26,7 @@ public class SelectionAppState extends BaseAppState {
     private static final String GROUP = "SELECTION";
     private static final FunctionId F_SHIFT = new FunctionId(GROUP, "SHIFT_MODIFIER");
     private boolean shiftModifier = false;
+    private boolean cancelNext = false;
 
     @Override
     protected void initialize(Application app) {
@@ -37,8 +38,7 @@ public class SelectionAppState extends BaseAppState {
 
             public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
                 //System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
-
-                if (!event.isPressed() && event.getButtonIndex() != 2 && lastMotion != null) {
+                if (!event.isPressed() && event.getButtonIndex() != 2 && lastMotion != null && !cancelNext) {
                     // Set the selection
                     Geometry selected = null;
                     if (lastMotion.getCollision() != null) {
@@ -53,6 +53,7 @@ public class SelectionAppState extends BaseAppState {
                         getState(SpixState.class).getSpix().getBlackboard().get("main.selection", SelectionModel.class).setSingleSelection(selected);
                     }
                 }
+                cancelNext = false;
             }
 
             public void cursorEntered(CursorMotionEvent event, Spatial target, Spatial capture) {
@@ -81,6 +82,10 @@ public class SelectionAppState extends BaseAppState {
         }, F_SHIFT);
 
         inputMapper.activateGroup(GROUP);
+    }
+
+    public void cancelNextEvent() {
+        this.cancelNext = true;
     }
 
     @Override
