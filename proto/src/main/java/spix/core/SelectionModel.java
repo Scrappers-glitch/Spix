@@ -87,7 +87,7 @@ public class SelectionModel extends ObservableList {
         }
         add(selection);
 
-        // The singleSelection field will be set to the first selection in the list.
+        // The singleSelection field will be set to the last selection in the list.
     }
 
     public void addAllSelection( List<?> selection){
@@ -100,7 +100,7 @@ public class SelectionModel extends ObservableList {
 
     protected void fireSizeChangedEvent( int oldValue, int newValue ) {
         super.fireSizeChangedEvent(oldValue, newValue);
-        updateSingleSelection(newValue == 1 ? get(0) : null);
+        updateSingleSelection(newValue > 0 ? get(getSize() - 1) : null);
     }
 
     protected void fireElementUpdatedEvent( int index, Object oldValue, Object newValue ) {

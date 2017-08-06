@@ -40,13 +40,15 @@ public class SceneExplorerPanel extends DockPanel {
 
     private JTree sceneTree;
     private SwingGui gui;
-    private Object lastSelected;
     private static String mimeType = DataFlavor.javaJVMLocalObjectMimeType +
             ";class=\"" +
             Node.class.getName() +
             "\"";
     private static DataFlavor nodeFlavor;
     private boolean stopPropagation;
+    private java.util.List removeFromSelection = new ArrayList();
+    private java.util.List addToSelection = new ArrayList();
+    private java.util.List selectedObjects = new ArrayList();
 
     public SceneExplorerPanel(Slot slot, Container container, SwingGui gui) {
         super(slot, container);
@@ -67,34 +69,59 @@ public class SceneExplorerPanel extends DockPanel {
         sceneTree.setDragEnabled(true);
         sceneTree.setTransferHandler(new ExplorerTransferHandler());
         sceneTree.setDropMode(DropMode.ON);
-        sceneTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        sceneTree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
         sceneTree.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
                 if(stopPropagation){
                     return;
                 }
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode)
-                        sceneTree.getLastSelectedPathComponent();
 
-                if (node == null) {
+                TreePath paths[] = sceneTree.getSelectionPaths();
+                if (paths == null) {
                     return;
                 }
+                removeFromSelection.clear();
+                addToSelection.clear();
+                selectedObjects.clear();
+                SelectionModel sm = (SelectionModel) gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY);
 
-                Object o = node.getUserObject();
-                if (o instanceof Spatial || o instanceof Light) {
+                for (TreePath path : paths) {
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
 
-                    gui.runOnRender(new Runnable() {
-                        @Override
-                        public void run() {
-                            SelectionModel sm = (SelectionModel) gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY);
-                            if(sm.getSingleSelection() != o) {
-                                sm.setSingleSelection(o);
-                            }
-                        }
-                    });
+                    if (node == null) {
+                        return;
+                    }
 
+                    Object o = node.getUserObject();
+                    selectedObjects.add(o);
                 }
+                for (Object o : selectedObjects) {
+                    if (!sm.contains(o) && (o instanceof Spatial || o instanceof Light)) {
+                        addToSelection.add(o);
+                    }
+                }
+
+                for (Object o : sm) {
+                    if (!selectedObjects.contains(o)) {
+                        removeFromSelection.add(o);
+                    }
+                }
+
+
+                gui.runOnRender(new Runnable() {
+                    @Override
+                    public void run() {
+                        SelectionModel sm = (SelectionModel) gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY);
+                        if (!removeFromSelection.isEmpty()) {
+                            sm.removeAll(removeFromSelection);
+                        }
+                        if (!addToSelection.isEmpty()) {
+                            sm.addAll(addToSelection);
+                        }
+                    }
+                });
+
             }
         });
 
@@ -219,9 +246,7 @@ public class SceneExplorerPanel extends DockPanel {
                     sceneTree.expandRow(0);
                 }
 
-                if (lastSelected != null) {
-                    updateSelection(lastSelected);
-                }
+                updateSelection();
 
             }
         });
@@ -290,10 +315,21 @@ public class SceneExplorerPanel extends DockPanel {
             boolean isDrop = dropLocation != null
                     && dropLocation.getChildIndex() == -1
                     && tree.getRowForPath(dropLocation.getPath()) == row;
-            if (hasFocus || selected || isDrop) {
+
+            label.setBackground(null);
+            label.setForeground(Color.LIGHT_GRAY);
+
+            if (selected) {
                 label.setBackground(Color.DARK_GRAY);
-            } else {
-                label.setBackground(null);
+                label.setForeground(Color.LIGHT_GRAY);
+            }
+            if (hasFocus) {
+                label.setForeground(Color.WHITE);
+            }
+
+            if (isDrop) {
+                label.setBackground(Color.LIGHT_GRAY);
+                label.setForeground(Color.BLACK);
             }
             return label;
         }
@@ -302,18 +338,15 @@ public class SceneExplorerPanel extends DockPanel {
     private class SelectionObserver implements PropertyChangeListener {
 
         public void propertyChange( PropertyChangeEvent event ) {
+            if (!(event.getPropertyName().equals("singleSelection"))) {
+                return;
+            }
+
             if(event.getNewValue() != event.getOldValue() ){
                 gui.runOnSwing(new Runnable() {
                     @Override
                     public void run() {
-                        Object o = event.getNewValue();
-                        if (o instanceof Spatial || o instanceof LightWrapper) {
-                            if (o instanceof LightWrapper) {
-                                LightWrapper lw = (LightWrapper) o;
-                                o = lw.getLight();
-                            }
-                            updateSelection(o);
-                        }
+                        updateSelection();
                     }
                 });
 
@@ -322,19 +355,19 @@ public class SceneExplorerPanel extends DockPanel {
         }
     }
 
-
-
-    private void updateSelection(Object o) {
+    private void updateSelection() {
         stopPropagation = true;
-        DefaultMutableTreeNode node = searchNode(o);
-        if (node == null) {
-            lastSelected = o;
-            return;
+        SelectionModel selection = gui.getSpix().getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+        sceneTree.getSelectionModel().clearSelection();
+        for (Object o : selection) {
+            DefaultMutableTreeNode node = searchNode(o);
+            if (node == null) {
+                continue;
+            }
+            if (sceneTree.getLastSelectedPathComponent() != node) {
+                sceneTree.getSelectionModel().addSelectionPath(new TreePath(node.getPath()));
+            }
         }
-        if (sceneTree.getLastSelectedPathComponent() != node) {
-            sceneTree.getSelectionModel().setSelectionPath(new TreePath(node.getPath()));
-        }
-        lastSelected = null;
         stopPropagation = false;
     }
 
@@ -355,22 +388,31 @@ public class SceneExplorerPanel extends DockPanel {
             return MOVE;
         }
 
+        private java.util.List<DefaultMutableTreeNode> nodes = new ArrayList<>();
+
         protected Transferable createTransferable(JComponent c) {
             JTree tree = (JTree) c;
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getSelectionPath().getLastPathComponent();
+            TreePath paths[] = tree.getSelectionPaths();
+            nodes.clear();
+            for (TreePath path : paths) {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                Object data = node.getUserObject();
+                if (data != null
+                        && (Spatial.class.isAssignableFrom(data.getClass())
+                        || Light.class.isAssignableFrom(data.getClass())
+                        || Control.class.isAssignableFrom(data.getClass()))
+                        ) {
 
-            Object data  = node.getUserObject();
-            if(data!= null
-                && (Spatial.class.isAssignableFrom(data.getClass())
-                    ||Light.class .isAssignableFrom(data.getClass())
-                    || Control.class.isAssignableFrom(data.getClass()))
-                ){
+                    nodes.add(node);
+                }
 
-                return new NodesTransferable(node);
+            }
+
+            if (!nodes.isEmpty()) {
+                return new NodesTransferable(nodes);
             }
 
             return null;
-
         }
 
         public boolean canImport(TransferHandler.TransferSupport info) {
@@ -385,25 +427,29 @@ public class SceneExplorerPanel extends DockPanel {
 
             //only allow drop on Nodes
             TreePath path = dl.getPath();
-            DefaultMutableTreeNode target = (DefaultMutableTreeNode)path.getLastPathComponent();
-            Object data = target.getUserObject();
-
-            Object draggedData = getData(info);
-            if(draggedData == null){
+            if (path == null) {
                 return false;
             }
-
+            DefaultMutableTreeNode target = (DefaultMutableTreeNode) path.getLastPathComponent();
+            Object data = target.getUserObject();
             if (data instanceof Node) {
                 return true;
             }
 
-            if(Control.class.isAssignableFrom(draggedData.getClass())
-                    ||Light.class.isAssignableFrom(draggedData.getClass())){
-                if(Spatial.class.isAssignableFrom(data.getClass())){
-                    return true;
-                }
+            java.util.List<DefaultMutableTreeNode> draggedData = getData(info);
+            if (draggedData == null || draggedData.isEmpty()) {
+                return false;
             }
 
+            for (DefaultMutableTreeNode defaultMutableTreeNode : draggedData) {
+                Object o = defaultMutableTreeNode.getUserObject();
+                if (Control.class.isAssignableFrom(o.getClass())
+                        || Light.class.isAssignableFrom(o.getClass())) {
+                    if (Spatial.class.isAssignableFrom(data.getClass())) {
+                        return true;
+                    }
+                }
+            }
             return false;
         }
 
@@ -426,30 +472,35 @@ public class SceneExplorerPanel extends DockPanel {
             }
 
             // fetch the data and bail if this fails
-            Object data = getData(info);
-            if(data == null){
+            java.util.List<DefaultMutableTreeNode> dataList = getData(info);
+            if (dataList == null || dataList.isEmpty()) {
                 return false;
             }
 
-            if(Spatial.class.isAssignableFrom(data.getClass())){
-                if(targetNode == null){
-                    return false;
+            for (DefaultMutableTreeNode node : dataList) {
+                Object data = node.getUserObject();
+                if (Spatial.class.isAssignableFrom(data.getClass())) {
+                    if (targetNode == null) {
+                        continue;
+                    }
+                    //move spatial to node
+                    gui.getService(SceneService.class).moveSpatial((Spatial) data, targetNode);
+                    continue;
                 }
-                //move spatial to node
-                gui.getService(SceneService.class).moveSpatial((Spatial)data, targetNode);
-                return true;
+
+                DefaultMutableTreeNode parent = (DefaultMutableTreeNode) sceneTree.getSelectionPath().getParentPath().getParentPath().getLastPathComponent();
+                Spatial parentSpatial = (Spatial) parent.getUserObject();
+
+                if (Light.class.isAssignableFrom(data.getClass())) {
+                    //move light to node
+                    gui.getService(SceneService.class).moveLight((Light) data, targetSpatial, parentSpatial);
+                } else if (Control.class.isAssignableFrom(data.getClass())) {
+                    //move control to node
+                    gui.getService(SceneService.class).moveControl((Control) data, targetSpatial, parentSpatial);
+                }
             }
 
-            DefaultMutableTreeNode parent = (DefaultMutableTreeNode)sceneTree.getSelectionPath().getParentPath().getParentPath().getLastPathComponent();
-            Spatial parentSpatial = (Spatial)parent.getUserObject();
 
-            if(Light.class.isAssignableFrom(data.getClass())){
-                //move light to node
-                gui.getService(SceneService.class).moveLight((Light)data, targetSpatial, parentSpatial);
-            } else if(Control.class.isAssignableFrom(data.getClass())){
-                //move control to node
-                gui.getService(SceneService.class).moveControl((Control)data, targetSpatial, parentSpatial);
-            }
 
             return true;
         }
@@ -457,10 +508,10 @@ public class SceneExplorerPanel extends DockPanel {
 
     }
 
-    private Object getData(TransferHandler.TransferSupport info){
+    private java.util.List<DefaultMutableTreeNode> getData(TransferHandler.TransferSupport info) {
         try {
-            DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode)info.getTransferable().getTransferData(nodeFlavor);
-            return treeNode.getUserObject() ;
+            java.util.List<DefaultMutableTreeNode> treeNodes = (java.util.List<DefaultMutableTreeNode>) info.getTransferable().getTransferData(nodeFlavor);
+            return treeNodes;
         } catch (UnsupportedFlavorException e) {
             return null;
         } catch (IOException e) {
@@ -469,25 +520,25 @@ public class SceneExplorerPanel extends DockPanel {
     }
 
     public class NodesTransferable implements Transferable {
-        DefaultMutableTreeNode node;
+        java.util.List<DefaultMutableTreeNode> nodes = new ArrayList<>();
         DataFlavor[] flavors= new DataFlavor[1];
 
-        public NodesTransferable(DefaultMutableTreeNode node) {
+        public NodesTransferable(java.util.List<DefaultMutableTreeNode> nodes) {
             try {
                 String mimeType = DataFlavor.javaJVMLocalObjectMimeType +
                         ";class=\"" +
-                        node.getUserObject().getClass().getName() +
+                        nodes.get(0).getUserObject().getClass().getName() +
                         "\"";
                 flavors[0] = new DataFlavor(mimeType);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
-            this.node = node;
+            this.nodes.addAll(nodes);
         }
 
         public Object getTransferData(DataFlavor flavor)
                 throws UnsupportedFlavorException {
-            return node;
+            return nodes;
         }
 
         public DataFlavor[] getTransferDataFlavors() {

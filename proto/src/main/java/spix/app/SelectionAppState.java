@@ -24,8 +24,8 @@ import spix.core.SelectionModel;
 public class SelectionAppState extends BaseAppState {
 
     private static final String GROUP = "SELECTION";
-    private static final FunctionId F_SHIFT = new FunctionId(GROUP, "SHIFT_MODIFIER");
-    private boolean shiftModifier = false;
+    private static final FunctionId F_CONTROL = new FunctionId(GROUP, "SHIFT_MODIFIER");
+    private boolean controlModifier = false;
     private boolean cancelNext = false;
 
     @Override
@@ -45,7 +45,7 @@ public class SelectionAppState extends BaseAppState {
                         selected = lastMotion.getCollision().getGeometry();
                     }
                     //System.out.println("Setting selection to:" + selected);
-                    if(shiftModifier){
+                    if (controlModifier) {
                         //multi select
                         getState(SpixState.class).getSpix().getBlackboard().get("main.selection", SelectionModel.class).addSelection(selected);
                     }else {
@@ -72,14 +72,14 @@ public class SelectionAppState extends BaseAppState {
         });
 
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
-        inputMapper.map(F_SHIFT, KeyInput.KEY_LSHIFT);
-        inputMapper.map(F_SHIFT, KeyInput.KEY_RSHIFT);
+        inputMapper.map(F_CONTROL, KeyInput.KEY_LCONTROL);
+        inputMapper.map(F_CONTROL, KeyInput.KEY_RCONTROL);
         inputMapper.addStateListener(new StateFunctionListener() {
             @Override
             public void valueChanged(FunctionId func, InputState value, double tpf) {
-                shiftModifier = value == InputState.Positive;
+                controlModifier = value == InputState.Positive;
             }
-        }, F_SHIFT);
+        }, F_CONTROL);
 
         inputMapper.activateGroup(GROUP);
     }
