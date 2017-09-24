@@ -376,6 +376,9 @@ public class SceneExplorerPanel extends DockPanel {
         Enumeration e = ((DefaultMutableTreeNode)sceneTree.getModel().getRoot()).breadthFirstEnumeration();
         while (e.hasMoreElements()) {
             node = (DefaultMutableTreeNode) e.nextElement();
+            if( node == null || userObject == null){
+                continue;
+            }
             if (userObject.equals(node.getUserObject())) {
                 return node;
             }

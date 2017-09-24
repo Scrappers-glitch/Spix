@@ -33,10 +33,11 @@ just get deleted.
 
 repositories {
     mavenLocal()
+    mavenCentral()
     jcenter()
 }
 
-ext.jmeVersion = "[3.2,)"
+ext.jmeVersion = "3.2.0-SNAPSHOT"
 //ext.jmeVersion = "3.1.0-alpha4"
 //ext.jmeVersion = "unknown"
 
@@ -68,6 +69,7 @@ dependencies {
 
     compile 'com.google.guava:guava:19.0'
     compile 'org.yaml:snakeyaml:1.17'
+    compile 'com.google.code.gson:gson:2.8.1'
 
     compile "org.jmonkeyengine:jme3-core:$jmeVersion"
 
