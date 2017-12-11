@@ -53,6 +53,7 @@ import java.util.TreeSet;
  */
 public class AnimationActionList extends DefaultActionList {
 
+    public static final String STOP_ANIM = "Stop";
     private Spatial selected;
     private ListMultimap<String, AnimControl> animControls = ArrayListMultimap.create();
 
@@ -101,6 +102,7 @@ public class AnimationActionList extends DefaultActionList {
         animControls.clear();
         s.depthFirstTraversal(new AnimCollector());
 
+        add(new AnimationAction(STOP_ANIM));
         for( String name : new TreeSet<String>(animControls.keySet()) ) {
             add(new AnimationAction(name));
         }
@@ -148,6 +150,11 @@ public class AnimationActionList extends DefaultActionList {
 
         public void performAction( Spix spix ) {
             System.out.println("**** Run animation:" + animationName);
+            if (animationName.equals(STOP_ANIM)) {
+                for (AnimControl control : animControls.values()) {
+                    control.clearChannels();
+                }
+            }
 
             // Go through all of the controls that have the animation
             for( AnimControl control : animControls.get(animationName) ) {

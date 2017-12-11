@@ -21,7 +21,7 @@ public class OpenFileAction extends AbstractAction {
     @Override
     public void performAction(Spix spix) {
         spix.getService(FileRequester.class).requestFile("Open Scene",
-                "JME Object", "j3o", null, true, false, false,
+                "JME Object", "j3o, gltf, obj, mesh, zip", null, true, false, false,
                 new RequestCallback<File>() {
                     public void done(File f) {
                         System.out.println("Need to load:" + f + "   Thread:" + Thread.currentThread());

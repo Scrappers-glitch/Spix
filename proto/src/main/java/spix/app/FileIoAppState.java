@@ -5,12 +5,12 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.asset.*;
 import com.jme3.asset.plugins.FileLocator;
+import com.jme3.asset.plugins.ZipLocator;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.export.binary.BinaryExporter;
 import com.jme3.material.*;
 import com.jme3.material.plugin.export.material.J3MExporter;
 import com.jme3.material.plugin.export.materialdef.J3mdExporter;
-import com.jme3.material.plugins.MatParseException;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.shader.Shader;
@@ -32,11 +32,12 @@ import spix.undo.edit.SpatialAddEdit;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.*;
-import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import static spix.app.DefaultConstants.*;
 
@@ -53,6 +54,10 @@ public class FileIoAppState extends BaseAppState {
     private Logger log = LoggerFactory.getLogger(FileIoAppState.class.getName());
     private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(4);
     private Yaml yaml;
+    private String currentZipLocator = null;
+
+    private static final String[] supportedModelFormats = new String[]{".gltf", " .j3o", ".mesh", ".obj"};
+
 
     public FileIoAppState() {
         DumperOptions opt = new DumperOptions();
@@ -277,9 +282,47 @@ public class FileIoAppState extends BaseAppState {
 
     }
 
+    private boolean isSupportedModelFormat(String path) {
+        for (String format : supportedModelFormats) {
+            if (path.endsWith(format)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void loadFile(File f) {
 
-        loadScene(f, true, new RequestCallback<Spatial>() {
+        boolean setMainAssetPath = true;
+
+        FilePath fp = getFilePath(f);
+
+        if (f.getName().endsWith(".zip")) {
+            setMainAssetPath = false;
+            if (currentZipLocator != null) {
+                assetManager.unregisterLocator(currentZipLocator, ZipLocator.class);
+            }
+            currentZipLocator = f.getPath();
+            assetManager.registerLocator(currentZipLocator, ZipLocator.class);
+            try (ZipFile zip = new ZipFile(f)) {
+                String file = null;
+                Enumeration entries = zip.entries();
+                while (entries.hasMoreElements() && file == null) {
+                    ZipEntry entry = (ZipEntry) entries.nextElement();
+                    if (isSupportedModelFormat(entry.getName())) {
+                        file = entry.getName();
+                    }
+                }
+                fp.fileName = file;
+                fp.modelPath = file;
+                fp.assetRoot = new File(blackboard.get(MAIN_ASSETS_FOLDER, String.class));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        loadScene(fp, setMainAssetPath, new RequestCallback<Spatial>() {
             @Override
             public void done(Spatial scene) {
                 rootNode.detachAllChildren();
@@ -322,12 +365,11 @@ public class FileIoAppState extends BaseAppState {
         return null;
     }
 
-    public void loadScene(File f, boolean changeAssetFolder, RequestCallback<Spatial> callback) throws AssetLoadException, AssetNotFoundException {
-        String id = getSpix().getService(MessageRequester.class).displayLoading("Loading " + f.getName() + "...");
+    public void loadScene(FilePath fp, boolean changeAssetFolder, RequestCallback<Spatial> callback) throws AssetLoadException, AssetNotFoundException {
+        String id = getSpix().getService(MessageRequester.class).displayLoading("Loading " + fp.fileName + "...");
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                FilePath fp = getFilePath(f);
                 try {
                     if (changeAssetFolder) {
                         assetManager.unregisterLocator(blackboard.get(MAIN_ASSETS_FOLDER, String.class), FileLocator.class);
@@ -340,7 +382,8 @@ public class FileIoAppState extends BaseAppState {
                         //We have to relocate them in the main asset folder.
                         relocateAsset(fp, new ModelKey(fp.modelPath));
                     }
-
+                    ModelKey key = new ModelKey(fp.modelPath);
+                    assetManager.deleteFromCache(key);
                     Spatial model = assetManager.loadModel(fp.modelPath);
 
                     getSpix().getService(MaterialService.class).gatherMaterialsForSync(model);
@@ -355,7 +398,7 @@ public class FileIoAppState extends BaseAppState {
                 } catch (AssetLoadException | AssetNotFoundException e) {
                     e.printStackTrace();
                     getSpix().getService(MessageRequester.class).hideLoading(id);
-                    getSpix().getService(MessageRequester.class).showMessage("Error Loading File " + f.getName(), e.getMessage(), MessageRequester.Type.Error);
+                    getSpix().getService(MessageRequester.class).showMessage("Error Loading File " + fp.fileName, e.getMessage(), MessageRequester.Type.Error);
                 }
 
             }
@@ -684,7 +727,8 @@ public class FileIoAppState extends BaseAppState {
 
     public void AppendFile(File f) {
 
-        loadScene(f, false, new RequestCallback<Spatial>() {
+        FilePath fp = getFilePath(f);
+        loadScene(fp, false, new RequestCallback<Spatial>() {
             @Override
             public void done(Spatial scene) {
                 // For now, find out where to put the scene so that it is next to whatever

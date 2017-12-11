@@ -1,12 +1,12 @@
 package spix.swing.sceneexplorer;
 
+import com.jme3.animation.*;
 import com.jme3.audio.AudioNode;
 import com.jme3.light.Light;
 import com.jme3.material.Material;
 import com.jme3.scene.*;
 import com.jme3.scene.control.Control;
 import spix.app.DefaultConstants;
-import spix.app.light.LightWrapper;
 import spix.app.scene.SceneService;
 import spix.core.SelectionModel;
 import spix.swing.SwingGui;
@@ -19,16 +19,14 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.*;
 import java.awt.*;
-import java.awt.List;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.datatransfer.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
 
 import static spix.app.DefaultConstants.SCENE_ROOT;
 import static spix.app.DefaultConstants.SELECTION_PROPERTY;
@@ -95,6 +93,10 @@ public class SceneExplorerPanel extends DockPanel {
 
                     Object o = node.getUserObject();
                     selectedObjects.add(o);
+                    if (o instanceof Bone) {
+                        dumpBone((Bone) o);
+                    }
+
                 }
                 for (Object o : selectedObjects) {
                     if (!sm.contains(o) && (o instanceof Spatial || o instanceof Light)) {
@@ -162,6 +164,28 @@ public class SceneExplorerPanel extends DockPanel {
 
     }
 
+    public void dumpBone(Bone o) {
+        Bone selectedBone = o;
+        System.err.println("-----------------------");
+        System.err.println("Selected Bone : " + selectedBone.getName() + " in skeleton ");
+        System.err.println("Root Bone : " + (selectedBone.getParent() == null));
+        System.err.println("-----------------------");
+        System.err.println("Bind translation: " + selectedBone.getBindPosition());
+        System.err.println("Bind rotation: " + selectedBone.getBindRotation());
+        System.err.println("Bind scale: " + selectedBone.getBindScale());
+        System.err.println("---");
+        System.err.println("Local translation: " + selectedBone.getLocalPosition());
+        System.err.println("Local rotation: " + selectedBone.getLocalRotation());
+        System.err.println("Local scale: " + selectedBone.getLocalScale());
+        System.err.println("---");
+        System.err.println("Model translation: " + selectedBone.getModelSpacePosition());
+        System.err.println("Model rotation: " + selectedBone.getModelSpaceRotation());
+        System.err.println("Model scale: " + selectedBone.getModelSpaceScale());
+        System.err.println("---");
+        System.err.println("Bind inverse Transform: ");
+        System.err.println(selectedBone.getBindInverseTransform());
+    }
+
     public void setSceneRoot(Spatial root){
         refresh(root);
     }
@@ -180,9 +204,16 @@ public class SceneExplorerPanel extends DockPanel {
 
     }
 
-    private void buildTree(Spatial s, DefaultMutableTreeNode parent) {
+    private void buildTree(Object s, DefaultMutableTreeNode parent) {
         DefaultMutableTreeNode item = new DefaultMutableTreeNode(s);
         parent.add(item);
+        if (s instanceof Bone) {
+            Bone b = (Bone) s;
+            for (Bone bone : b.getChildren()) {
+                buildTree(bone, item);
+            }
+            return;
+        }
 
 
         if (s instanceof Geometry) {
@@ -197,21 +228,36 @@ public class SceneExplorerPanel extends DockPanel {
                 buildTree(child, item);
             }
         }
-        if (s.getLocalLightList().size() != 0) {
+
+        if (!(s instanceof Spatial)) {
+            return;
+        }
+
+        Spatial spat = (Spatial) s;
+
+        if (spat.getLocalLightList().size() != 0) {
             DefaultMutableTreeNode lights = new DefaultMutableTreeNode("Lights");
             item.add(lights);
-            for (Light light : s.getLocalLightList()) {
+            for (Light light : spat.getLocalLightList()) {
                 DefaultMutableTreeNode l = new DefaultMutableTreeNode(light);
                 lights.add(l);
             }
         }
-        if (s.getNumControls() > 0) {
+        if (spat.getNumControls() > 0) {
             DefaultMutableTreeNode controls = new DefaultMutableTreeNode("Controls");
             item.add(controls);
-            for (int i = 0; i < s.getNumControls(); i++) {
-                Control control = s.getControl(i);
+            for (int i = 0; i < spat.getNumControls(); i++) {
+                Control control = spat.getControl(i);
                 DefaultMutableTreeNode c = new DefaultMutableTreeNode(control);
                 controls.add(c);
+                if (control instanceof SkeletonControl) {
+                    Skeleton sk = ((SkeletonControl) control).getSkeleton();
+                    DefaultMutableTreeNode st = new DefaultMutableTreeNode(sk);
+                    c.add(st);
+                    for (Bone bone : sk.getRoots()) {
+                        buildTree(bone, st);
+                    }
+                }
             }
         }
     }
@@ -285,6 +331,14 @@ public class SceneExplorerPanel extends DockPanel {
                 Mesh m = (Mesh) o;
                 label.setIcon(Icons.mesh);
                 label.setText("Mesh: " + m.getClass().getSimpleName());
+            } else if (o instanceof Skeleton) {
+                Skeleton sk = (Skeleton) o;
+                label.setIcon(Icons.vert);
+                label.setText("Skeleton (" + sk.getBoneCount() + "bones)");
+            } else if (o instanceof Bone) {
+                Bone b = (Bone) o;
+                label.setIcon(Icons.scale);
+                label.setText(b.getName());
             } else if (o instanceof Control) {
                 Control c = (Control) o;
                 label.setIcon(Icons.tech);

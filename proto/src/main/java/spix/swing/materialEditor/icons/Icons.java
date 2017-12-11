@@ -33,7 +33,7 @@ public class Icons {
     public final static ImageIcon mesh = new ImageIcon(Icons.class.getResource("/icons/mesh.gif"));
     public final static ImageIcon material = new ImageIcon(Icons.class.getResource("/icons/material.gif"));
     public final static ImageIcon lightBulb = new ImageIcon(Icons.class.getResource("/icons/lightbulb.gif"));
-    public final static ImageIcon lightBulbOff = new ImageIcon(Icons.class.getResource("/icons/lightbulb_off.png"));
+    public final static ImageIcon lightBulbOff = new ImageIcon(Icons.class.getResource("/icons/lightBulb_off.png"));
     public final static ImageIcon output = new ImageIcon(Icons.class.getResource("/icons/output.png"));
     public final static ImageIcon outputV = new ImageIcon(Icons.class.getResource("/icons/outputV.png"));
     public final static ImageIcon world = new ImageIcon(Icons.class.getResource("/icons/earth.png"));

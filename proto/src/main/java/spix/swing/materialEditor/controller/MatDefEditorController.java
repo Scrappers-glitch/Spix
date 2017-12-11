@@ -1,17 +1,11 @@
 package spix.swing.materialEditor.controller;
 
-import com.jme3.asset.AssetManager;
-import com.jme3.asset.ShaderNodeDefinitionKey;
 import com.jme3.material.*;
-import com.jme3.material.plugins.*;
 import com.jme3.scene.Geometry;
 import com.jme3.shader.*;
-import com.jme3.util.blockparser.BlockLanguageParser;
-import com.jme3.util.blockparser.Statement;
 import groovy.util.ObservableList;
 import spix.app.DefaultConstants;
 import spix.app.FileIoService;
-import spix.app.material.MaterialService;
 import spix.app.material.hack.*;
 import spix.app.metadata.MetadataService;
 import spix.app.utils.CloneUtils;
@@ -26,7 +20,6 @@ import spix.swing.materialEditor.panels.*;
 import spix.swing.materialEditor.sort.Node;
 import spix.swing.materialEditor.utils.*;
 import spix.ui.MessageRequester;
-import spix.undo.UndoManager;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -36,7 +29,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;

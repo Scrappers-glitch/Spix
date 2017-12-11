@@ -11,7 +11,7 @@ public class IconPath {
     public final static String mesh = "/icons/mesh.gif";
     public final static String material = "/icons/material.gif";
     public final static String lightBulb = "/icons/lightbulb.gif";
-    public final static String lightBulbOff = "/icons/lightbulb_off.png";
+    public final static String lightBulbOff = "/icons/lightBulb_off.png";
     public final static String output = "/icons/output.png";
     public final static String outputV = "/icons/outputV.png";
     public final static String world = "/icons/earth.png";

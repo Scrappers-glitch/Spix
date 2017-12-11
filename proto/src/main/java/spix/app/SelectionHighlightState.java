@@ -115,6 +115,7 @@ public class SelectionHighlightState extends BaseAppState {
         this.selection = getSpix().getBlackboard().get(selectionProperty, SelectionModel.class);
         selection.addPropertyChangeListener(selectionObserver);
         updateSelection();
+
     }
 
     @Override
