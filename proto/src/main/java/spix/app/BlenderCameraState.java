@@ -38,7 +38,10 @@ package spix.app;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
+import com.jme3.collision.CollisionResult;
+import com.jme3.collision.CollisionResults;
 import com.jme3.input.KeyInput;
+import com.jme3.input.MouseInput;
 import com.jme3.math.*;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.*;
@@ -49,14 +52,14 @@ import spix.core.*;
 import spix.props.*;
 
 /**
- *  A standard app state for a blender like camera motion.
+ * A standard app state for a blender like camera motion.
+ * <p>
+ * Press mouse wheel button and move the mouse to rotate the view.
+ * Press mouse wheel + left shift and move the mouse to pan the view.
+ * Use the mouse wheel to zoom in and out.
+ * Type NumPad0 to center the view on the selection, to scene center if no selection.
  *
- *  Press mouse wheel button and move the mouse to rotate the view.
- *  Press mouse wheel + left shift and move the mouse to pan the view.
- *  Use the mouse wheel to zoom in and out.
- *  Type NumPad0 to center the view on the selection, to scene center if no selection.
- *
- *  @author    Rémy Bouquet
+ * @author Rémy Bouquet
  */
 public class BlenderCameraState extends BaseAppState {
 
@@ -78,14 +81,13 @@ public class BlenderCameraState extends BaseAppState {
     public static final FunctionId F_POV_BOTTOM = new FunctionId(GROUP, "Bottom POV");
 
     public static final FunctionId F_POV_ROTATE_LEFT = new FunctionId(GROUP, "Rotate POV Left");
-    public static final FunctionId F_POV_ROTATE_RIGHT= new FunctionId(GROUP, "Rotate POV Right");
+    public static final FunctionId F_POV_ROTATE_RIGHT = new FunctionId(GROUP, "Rotate POV Right");
     public static final FunctionId F_POV_ROTATE_TOP = new FunctionId(GROUP, "Rotate POV Top");
     public static final FunctionId F_POV_ROTATE_BOTTOM = new FunctionId(GROUP, "Rotate POV Bottom");
 
-
-
     private final static float ROT_FACTOR = 0.1f;
 
+    private float lastClick;
 
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
     private Camera cam;
@@ -106,11 +108,11 @@ public class BlenderCameraState extends BaseAppState {
         this(true);
     }
 
-    public BlenderCameraState(boolean enabled ) {
+    public BlenderCameraState(boolean enabled) {
         setEnabled(enabled);
     }
 
-    public void setCamera( Camera cam ) {
+    public void setCamera(Camera cam) {
         this.cam = cam;
     }
 
@@ -119,9 +121,9 @@ public class BlenderCameraState extends BaseAppState {
     }
 
     @Override
-    protected void initialize( Application app ) {
+    protected void initialize(Application app) {
 
-        if( this.cam == null ) {
+        if (this.cam == null) {
             this.cam = app.getCamera();
         }
 
@@ -136,30 +138,30 @@ public class BlenderCameraState extends BaseAppState {
         inputMapper.addStateListener(inputHandler, F_CENTER, F_START_PAN);
 
         // See if there are already mappings for these functions.
-        if( !inputMapper.hasMappings(F_VERTICAL_ROTATE) && !inputMapper.hasMappings(F_HORIZONTAL_ROTATE)) {
+        if (!inputMapper.hasMappings(F_VERTICAL_ROTATE) && !inputMapper.hasMappings(F_HORIZONTAL_ROTATE)) {
             //System.out.println("Initializing default mappings for:" + F_VERTICAL_ROTATE + " and " + F_HORIZONTAL_ROTATE);
             inputMapper.map(F_HORIZONTAL_ROTATE, Axis.MOUSE_X, Button.MOUSE_BUTTON3);
             inputMapper.map(F_VERTICAL_ROTATE, Axis.MOUSE_Y, Button.MOUSE_BUTTON3);
         }
 
-        if( !inputMapper.hasMappings(F_VERTICAL_MOVE) && ! inputMapper.hasMappings(F_HORIZONTAL_MOVE)) {
+        if (!inputMapper.hasMappings(F_VERTICAL_MOVE) && !inputMapper.hasMappings(F_HORIZONTAL_MOVE)) {
             //System.out.println("Initializing default mappings for:" + F_VERTICAL_MOVE + " and " + F_HORIZONTAL_MOVE);
             inputMapper.map(F_HORIZONTAL_MOVE, Axis.MOUSE_X, Button.MOUSE_BUTTON3, KeyInput.KEY_LSHIFT);
             inputMapper.map(F_VERTICAL_MOVE, Axis.MOUSE_Y, Button.MOUSE_BUTTON3, KeyInput.KEY_LSHIFT);
-            inputMapper.map(F_START_PAN,Button.MOUSE_BUTTON3, KeyInput.KEY_LSHIFT);
+            inputMapper.map(F_START_PAN, Button.MOUSE_BUTTON3, KeyInput.KEY_LSHIFT);
         }
 
-        if( !inputMapper.hasMappings(F_ZOOM)) {
+        if (!inputMapper.hasMappings(F_ZOOM)) {
             //System.out.println("Initializing default mappings for:" + F_ZOOM);
             inputMapper.map(F_ZOOM, Axis.MOUSE_WHEEL);
         }
 
-        if( !inputMapper.hasMappings(F_CENTER)) {
+        if (!inputMapper.hasMappings(F_CENTER)) {
             //System.out.println("Initializing default mappings for:" + F_CENTER);
             inputMapper.map(F_CENTER, KeyInput.KEY_NUMPAD0);
         }
 
-        if( !inputMapper.hasMappings(F_POV_FRONT)){
+        if (!inputMapper.hasMappings(F_POV_FRONT)) {
             inputMapper.map(F_POV_FRONT, KeyInput.KEY_NUMPAD1);
             inputMapper.map(F_POV_BACK, KeyInput.KEY_NUMPAD1, KeyInput.KEY_LCONTROL);
             inputMapper.map(F_POV_BACK, KeyInput.KEY_NUMPAD1, KeyInput.KEY_RCONTROL);
@@ -174,22 +176,22 @@ public class BlenderCameraState extends BaseAppState {
         inputMapper.addStateListener(new StateFunctionListener() {
             @Override
             public void valueChanged(FunctionId func, InputState value, double tpf) {
-                if(func == F_POV_FRONT && value == InputState.Positive){
+                if (func == F_POV_FRONT && value == InputState.Positive) {
                     switchToFront();
                 }
-                if(func == F_POV_BACK && value == InputState.Positive){
+                if (func == F_POV_BACK && value == InputState.Positive) {
                     switchToBack();
                 }
-                if(func == F_POV_LEFT && value == InputState.Positive){
+                if (func == F_POV_LEFT && value == InputState.Positive) {
                     switchToLeft();
                 }
-                if(func == F_POV_RIGHT && value == InputState.Positive){
+                if (func == F_POV_RIGHT && value == InputState.Positive) {
                     switchToRight();
                 }
-                if(func == F_POV_TOP && value == InputState.Positive){
+                if (func == F_POV_TOP && value == InputState.Positive) {
                     switchToTop();
                 }
-                if(func == F_POV_BOTTOM && value == InputState.Positive){
+                if (func == F_POV_BOTTOM && value == InputState.Positive) {
                     switchToBottom();
                 }
 
@@ -198,39 +200,44 @@ public class BlenderCameraState extends BaseAppState {
 
     }
 
-    public void switchToFront(){
+    public void switchToFront() {
         futureTargetRot = Quaternion.IDENTITY;
         //System.out.println("Front " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
-    public void switchToBack(){
-        futureTargetRot = new Quaternion().fromAngleAxis(FastMath.PI,Vector3f.UNIT_Y);
+
+    public void switchToBack() {
+        futureTargetRot = new Quaternion().fromAngleAxis(FastMath.PI, Vector3f.UNIT_Y);
         //System.out.println("Back " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
-    public void switchToLeft(){
-        futureTargetRot = new Quaternion().fromAngleAxis(-FastMath.HALF_PI,Vector3f.UNIT_Y);
+
+    public void switchToLeft() {
+        futureTargetRot = new Quaternion().fromAngleAxis(-FastMath.HALF_PI, Vector3f.UNIT_Y);
         //System.out.println("Left " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
-    public void switchToRight(){
-        futureTargetRot = new Quaternion().fromAngleAxis(FastMath.HALF_PI,Vector3f.UNIT_Y);
+
+    public void switchToRight() {
+        futureTargetRot = new Quaternion().fromAngleAxis(FastMath.HALF_PI, Vector3f.UNIT_Y);
         //System.out.println("Right " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
-    public void switchToTop(){
-        futureTargetRot = new Quaternion().fromAngleAxis(-FastMath.HALF_PI,Vector3f.UNIT_X);
+
+    public void switchToTop() {
+        futureTargetRot = new Quaternion().fromAngleAxis(-FastMath.HALF_PI, Vector3f.UNIT_X);
         //System.out.println("Top " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
-    public void switchToBottom(){
-        futureTargetRot = new Quaternion().fromAngleAxis(FastMath.HALF_PI,Vector3f.UNIT_X);
+
+    public void switchToBottom() {
+        futureTargetRot = new Quaternion().fromAngleAxis(FastMath.HALF_PI, Vector3f.UNIT_X);
         //System.out.println("Bottom " + futureTargetRot);
         startTargetRot = target.getLocalRotation();
     }
 
     @Override
-    protected void cleanup( Application app ) {
+    protected void cleanup(Application app) {
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.removeAnalogListener(inputHandler, F_VERTICAL_MOVE, F_HORIZONTAL_MOVE, F_VERTICAL_ROTATE, F_HORIZONTAL_ROTATE, F_ZOOM);
         inputMapper.removeStateListener(inputHandler, F_CENTER);
@@ -242,8 +249,8 @@ public class BlenderCameraState extends BaseAppState {
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.activateGroup(GROUP);
 
-        camNode.setLocalTranslation(0,0,10);
-        camNode.lookAt(target.getWorldTranslation(),Vector3f.UNIT_Y);
+        camNode.setLocalTranslation(0, 0, 10);
+        camNode.lookAt(target.getWorldTranslation(), Vector3f.UNIT_Y);
         camNode.setEnabled(true);
 
         futureTargetRot = new Quaternion().fromAngles(0, 45 * FastMath.DEG_TO_RAD, 0).multLocal(new Quaternion().fromAngles(-20 * FastMath.DEG_TO_RAD, 0, 0));
@@ -262,29 +269,29 @@ public class BlenderCameraState extends BaseAppState {
 
 
     @Override
-    public void update( float tpf ) {
+    public void update(float tpf) {
         target.updateLogicalState(tpf);
         target.updateGeometricState();
 
-        if( futureTargetRot != null){
+        if (futureTargetRot != null) {
             time += tpf;
-            if(time < delay) {
+            if (time < delay) {
                 tmpQuat.set(startTargetRot).nlerp(futureTargetRot, time / delay);
                 target.setLocalRotation(tmpQuat);
-            }else{
+            } else {
                 time = 0;
                 target.setLocalRotation(futureTargetRot);
                 futureTargetRot = null;
             }
         }
-        if( futureTargetPos != null){
+        if (futureTargetPos != null) {
             time += tpf;
-            if(time < delay) {
+            if (time < delay) {
                 Vector3f v = new Vector3f();
                 v.set(startTargetPos);
                 v.interpolateLocal(futureTargetPos, time / delay);
                 target.setLocalTranslation(v);
-            }else{
+            } else {
                 time = 0;
                 target.setLocalTranslation(futureTargetPos);
                 futureTargetPos = null;
@@ -308,30 +315,20 @@ public class BlenderCameraState extends BaseAppState {
         protected Vector3f yDelta = new Vector3f();
         protected Vector2f lastCursor = new Vector2f();
 
-        public void valueChanged( FunctionId func, InputState value, double tpf ) {
-            if( func == F_CENTER ) {
-                System.out.println("Function:" + func + "  value:" + value + "  tpf:" + tpf );
-                if(value == InputState.Off){
+        public void valueChanged(FunctionId func, InputState value, double tpf) {
+            if (func == F_CENTER) {
+                if (value == InputState.Off) {
                     Spix spix = getState(SpixState.class).getSpix();
-                    SelectionModel model = spix.getBlackboard().get(selectionProperty, SelectionModel.class);
-                    Object o = model.getSingleSelection();
-                    if(o != null){
-                        PropertySet wrapper = spix.getPropertySet(o);
-                        if( wrapper == null ) {
-                            return;
-                        }
-                        Property translation = wrapper.getProperty("worldTranslation");
-                        if( translation == null ) {
-                            return;
-                        }
-                        futureTargetPos =  (Vector3f)translation.getValue();
+                    Vector3f contact = spix.getBlackboard().get(selectionProperty+".contactpoint", Vector3f.class);
+                    if (contact != null) {
+                        futureTargetPos = contact;
                         startTargetPos = target.getWorldTranslation();
                     } else {
                         futureTargetPos = Vector3f.ZERO;
                         startTargetPos = target.getWorldTranslation();
                     }
                 }
-            } else if(func == F_START_PAN && value == InputState.Positive){
+            } else if (func == F_START_PAN && value == InputState.Positive) {
 
                 Vector3f up = cam.getUp();
                 Vector3f right = cam.getLeft().negate();
@@ -350,8 +347,8 @@ public class BlenderCameraState extends BaseAppState {
             }
         }
 
-        public void valueActive( FunctionId func, double value, double tpf ) {
-            if(func == F_HORIZONTAL_MOVE || func == F_VERTICAL_MOVE){
+        public void valueActive(FunctionId func, double value, double tpf) {
+            if (func == F_HORIZONTAL_MOVE || func == F_VERTICAL_MOVE) {
                 Vector2f cursor = getApplication().getInputManager().getCursorPosition();
                 float x = cursor.getX() - lastCursor.x;
                 float y = cursor.getY() - lastCursor.y;
@@ -359,33 +356,33 @@ public class BlenderCameraState extends BaseAppState {
                 target.move(xDelta.mult(-x).addLocal(yDelta.mult(-y)));
 
                 lastCursor.set(cursor);
-            } else if(func == F_HORIZONTAL_ROTATE || func == F_VERTICAL_ROTATE){
+            } else if (func == F_HORIZONTAL_ROTATE || func == F_VERTICAL_ROTATE) {
                 //Extract horizontal rotation
                 //get left vector and cross product it with unitY (to "flatten" the direction on the horizontal plane)
-                target.getLocalRotation().getRotationColumn(0,tmpVec).crossLocal(Vector3f.UNIT_Y);
+                target.getLocalRotation().getRotationColumn(0, tmpVec).crossLocal(Vector3f.UNIT_Y);
                 tmpRot.lookAt(tmpVec, Vector3f.UNIT_Y);
 
                 //Extract vertical rotation
                 //get the direction of the rotation
                 //rotate it by the inverse horizontal rotation.
                 //get the rotation from that vector.
-                target.getLocalRotation().getRotationColumn(2,tmpVec);
+                target.getLocalRotation().getRotationColumn(2, tmpVec);
                 tmpRot3.set(tmpRot).inverseLocal().mult(tmpVec, tmpVec);
                 //Finding the up axis (negating it when we go backward to be able to completely rotate aroudn the target)
                 tmpVec2.set(Vector3f.UNIT_Y).multLocal(FastMath.sign(tmpVec.getZ()));
                 tmpRot2.lookAt(tmpVec, tmpVec2);
 
                 //computing the additional rotation and combining it the right orders
-                if(func == F_HORIZONTAL_ROTATE){
+                if (func == F_HORIZONTAL_ROTATE) {
                     //the incremental horizontal rotation.
-                    tmpRot3.fromAngleAxis((float)-value * ROT_FACTOR, Vector3f.UNIT_Y);
+                    tmpRot3.fromAngleAxis((float) -value * ROT_FACTOR, Vector3f.UNIT_Y);
                     //applying the horizontal incremental rotation on the horizontal rotation.
                     tmpRot.multLocal(tmpRot3);
                     //applying the vertical rotation on the resulting horizontal rotation.
                     tmpRot.multLocal(tmpRot2);
-                }else {
+                } else {
                     //the incremental vertical rotation
-                    tmpRot3.fromAngleAxis((float)value * ROT_FACTOR, Vector3f.UNIT_X);
+                    tmpRot3.fromAngleAxis((float) value * ROT_FACTOR, Vector3f.UNIT_X);
                     //applying the incremental vertical rotation on the vertical rotation.
                     tmpRot2.multLocal(tmpRot3);
                     //Applying the resulting vertical rotation on the horizontal rotation.
@@ -394,10 +391,19 @@ public class BlenderCameraState extends BaseAppState {
 
                 //Setting the new rotation
                 target.setLocalRotation(tmpRot);
-            } else if(func == F_ZOOM){
+            } else if (func == F_ZOOM) {
                 float factor = Math.min(camNode.getLocalTranslation().z * 0.1f, 2);
-                tmpVec.set(camNode.getLocalTranslation()).addLocal(0,0,(float) -value * factor);
-                tmpVec.z = Math.max(tmpVec.z, 1f);
+                tmpVec.set(camNode.getLocalTranslation()).addLocal(0, 0, (float) -value * factor);
+                if (tmpVec.z < 2.0) {
+                    //modify camera clip
+                    float near =tmpVec.z * 0.5f;
+                    cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), near, near * 1000f);
+                    cam.update();
+                } else {
+                    cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 1.0f, 1000f);
+                    cam.update();
+                }
+                //tmpVec.z = Math.max(tmpVec.z, 1f);
                 camNode.setLocalTranslation(tmpVec);
             }
         }

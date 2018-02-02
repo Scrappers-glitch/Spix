@@ -4,6 +4,7 @@ import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.input.KeyInput;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -24,7 +25,7 @@ import spix.core.SelectionModel;
 public class SelectionAppState extends BaseAppState {
 
     private static final String GROUP = "SELECTION";
-    private static final FunctionId F_CONTROL = new FunctionId(GROUP, "SHIFT_MODIFIER");
+    private static final FunctionId F_CONTROL = new FunctionId(GROUP, "CTRL_MODIFIER");
     private boolean controlModifier = false;
     private boolean cancelNext = false;
 
@@ -41,8 +42,10 @@ public class SelectionAppState extends BaseAppState {
                 if (!event.isPressed() && event.getButtonIndex() != 2 && lastMotion != null && !cancelNext) {
                     // Set the selection
                     Geometry selected = null;
+                    Vector3f contactPoint = null;
                     if (lastMotion.getCollision() != null) {
                         selected = lastMotion.getCollision().getGeometry();
+                        contactPoint = lastMotion.getCollision().getContactPoint();
                     }
                     //System.out.println("Setting selection to:" + selected);
                     if (controlModifier) {
@@ -52,6 +55,7 @@ public class SelectionAppState extends BaseAppState {
                         //single select
                         getState(SpixState.class).getSpix().getBlackboard().get("main.selection", SelectionModel.class).setSingleSelection(selected);
                     }
+                    getState(SpixState.class).getSpix().getBlackboard().set("main.selection.contactpoint", contactPoint);
                 }
                 cancelNext = false;
             }
