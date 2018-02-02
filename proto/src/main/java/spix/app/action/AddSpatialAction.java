@@ -3,6 +3,7 @@ package spix.app.action;
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.*;
 import com.jme3.util.TangentBinormalGenerator;
@@ -25,6 +26,7 @@ public class AddSpatialAction extends AddAction{
     public static final Geometry DEFAULT_SPHERE = new Geometry("Sphere", new Sphere(16,16,1));
     public static final Geometry DEFAULT_CYLINDER = new Geometry("Cylinder", new Cylinder(10,16, 1, 5));
     public static final Geometry DEFAULT_TORUS = new Geometry("Torus", new Torus(16,16,0.8f, 1));
+    public static final Geometry DEFAULT_LINE = new Geometry("Line", new Line(new Vector3f(0, 0, 0), new Vector3f(0, 1, 0)));
 
     static {
         TangentBinormalGenerator.generate(DEFAULT_BOX);
@@ -63,11 +65,11 @@ public class AddSpatialAction extends AddAction{
 
     private Material getDefaultMaterial(Spix spix){
         AssetManager assetManager = spix.getBlackboard().get(ASSET_MANAGER, AssetManager.class);
-        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+        Material mat = new Material(assetManager, "Common/MatDefs/Light/PBRLighting.j3md");
         mat.setName(mat.getMaterialDef().getName());
-        mat.setBoolean("UseMaterialColors", true);
-        mat.setColor("Diffuse", ColorRGBA.Gray.clone());
-        mat.setColor("Ambient", ColorRGBA.DarkGray.clone());
+        mat.setColor("BaseColor", ColorRGBA.Gray.clone());
+        mat.setFloat("Metallic", 0);
+        mat.setFloat("Roughness", 0.5f);
         return mat;
     }
 
