@@ -38,26 +38,31 @@ package spix.app;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.input.*;
+import com.jme3.input.KeyInput;
+import com.jme3.input.MouseInput;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.*;
-import com.jme3.renderer.*;
+import com.jme3.renderer.Camera;
+import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.*;
 import com.jme3.scene.control.BillboardControl;
-import com.jme3.scene.shape.*;
 import com.jme3.scene.shape.Line;
+import com.jme3.scene.shape.*;
 import com.jme3.texture.Texture;
 import com.jme3.util.SafeArrayList;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import com.simsilica.lemur.input.*;
 import spix.app.utils.ShapeUtils;
-import spix.core.*;
-import spix.props.*;
+import spix.core.SelectionModel;
+import spix.core.Spix;
+import spix.props.Property;
+import spix.props.PropertySet;
 
-import java.beans.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 
 /**
@@ -107,7 +112,7 @@ public class RotationWidgetState extends BaseAppState {
     private InputMapper inputMapper;
 
     private Quaternion tmpQuat = new Quaternion();
-    private Vector3f pivotToSpatialTranslation = new Vector3f();
+    private Vector3f tmpVec3 = new Vector3f();
 
     public RotationWidgetState(boolean enabled) {
         setEnabled(enabled);
@@ -398,7 +403,7 @@ public class RotationWidgetState extends BaseAppState {
         // the same size on screen.  In our case, we want 1 unit to be
         // 100 pixels.
         Vector3f dir = cam.getDirection();
-        float distance = dir.dot(widget.getWorldTranslation().subtract(cam.getLocation()));
+        float distance = dir.dot(tmpVec3.set(widget.getWorldTranslation()).subtractLocal(cam.getLocation()));
 
         // m11 of the projection matrix defines the distance at which 1 pixel
         // is 1 unit.  Kind of.
@@ -511,15 +516,15 @@ public class RotationWidgetState extends BaseAppState {
         //We have to apply the rotation to each object's transforms in world space according to the selection center.
         for( SelectedObject s : selectedObjects.getArray() ) {
             //extracting the offset position of the object relative to the pivot.
-            pivotToSpatialTranslation.set(s.getWorldTranslation()).subtractLocal(selectionCenter);
+            tmpVec3.set(s.getWorldTranslation()).subtractLocal(selectionCenter);
             //Applying the rotation to the position.
-            delta.mult(pivotToSpatialTranslation, pivotToSpatialTranslation);
+            delta.mult(tmpVec3, tmpVec3);
             //we combine the delta with the rotation of the selection
             //note that the order is important because we want rotation in world space.
             tmpQuat.set(delta).multLocal(s.getWorldRotation());
             s.setWorldRotation(tmpQuat);
             //world translation is the addition of pivot position and the rotated offset position.
-            s.setWorldTranslation(pivotToSpatialTranslation.addLocal(selectionCenter));
+            s.setWorldTranslation(tmpVec3.addLocal(selectionCenter));
         }
     }
 
