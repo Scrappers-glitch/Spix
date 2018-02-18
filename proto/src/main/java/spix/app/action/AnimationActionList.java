@@ -38,12 +38,15 @@ package spix.app.action;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.jme3.anim.AnimComposer;
+import com.jme3.anim.SkinningControl;
 import com.jme3.animation.*;
 import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.control.Control;
 import spix.core.*;
 
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  *  A (maybe temporary) action list that autoconfigures itself with
@@ -55,7 +58,7 @@ public class AnimationActionList extends DefaultActionList {
 
     public static final String STOP_ANIM = "Stop";
     private Spatial selected;
-    private ListMultimap<String, AnimControl> animControls = ArrayListMultimap.create();
+    private ListMultimap<String, Control> controls = ArrayListMultimap.create();
 
     public AnimationActionList( String id ) {
         super(id);
@@ -99,11 +102,11 @@ public class AnimationActionList extends DefaultActionList {
         }
 
         System.out.println("----Selected model:" + s);
-        animControls.clear();
+        controls.clear();
         s.depthFirstTraversal(new AnimCollector());
 
         add(new AnimationAction(STOP_ANIM));
-        for( String name : new TreeSet<String>(animControls.keySet()) ) {
+        for( String name : new TreeSet<String>(controls.keySet()) ) {
             add(new AnimationAction(name));
         }
     }
@@ -118,24 +121,45 @@ public class AnimationActionList extends DefaultActionList {
                 System.out.println(" ** control:" + spatial.getControl(i));
             }*/
 
-            AnimControl anim = spatial.getControl(AnimControl.class);
+            Control anim = spatial.getControl(AnimComposer.class);
             if( anim == null ) {
-                return;
+                anim = spatial.getControl(AnimControl.class);
+                if(anim == null) {
+                    return;
+                }
             }
-            SkeletonControl skel = spatial.getControl(SkeletonControl.class);
+            Control skel = spatial.getControl(SkinningControl.class);
+            if( skel == null ) {
+                skel = spatial.getControl(SkeletonControl.class);
+            }
             if( skel != null ) {
                 // This makes me uncomfortable because we are forcing a modification
                 // to the user's loaded scene.  On the other hand, this value is currently
                 // not saved with the control anyway.
-                skel.setHardwareSkinningPreferred(false);
+                if(skel instanceof SkinningControl) {
+                    ((SkinningControl)skel).setHardwareSkinningPreferred(false);
+                } else {
+                    ((SkeletonControl)skel).setHardwareSkinningPreferred(false);
+                }
             }
             System.out.println(" *** Anim:" + anim);
-            for( String s : anim.getAnimationNames() ) {
+            Collection<String> names = null;
+            if(anim instanceof AnimComposer){
+                names =((AnimComposer) anim).getAnimClipsNames();
+            } else {
+                names =((AnimControl) anim).getAnimationNames();
+            }
+            for( String s : names ) {
                 System.out.println("   animation:" + s);
                 if (s.trim().toLowerCase().contains("idle")) {
-                    anim.createChannel().setAnim(s);
+                    if(anim instanceof AnimComposer){
+                        ((AnimComposer) anim).setCurrentAction(s);
+                    } else {
+                       ((AnimControl) anim).createChannel().setAnim(s);
+                    }
+
                 }
-                animControls.put(s, anim);
+                controls.put(s, anim);
             }
         }
     }
@@ -151,22 +175,32 @@ public class AnimationActionList extends DefaultActionList {
         public void performAction( Spix spix ) {
             System.out.println("**** Run animation:" + animationName);
             if (animationName.equals(STOP_ANIM)) {
-                for (AnimControl control : animControls.values()) {
-                    control.clearChannels();
+                for (Control control : controls.values()) {
+                    if(control instanceof AnimComposer){
+                        ((AnimComposer) control).reset();
+                    } else {
+                        ((AnimControl) control).clearChannels();
+                    }
                 }
             }
 
             // Go through all of the controls that have the animation
-            for( AnimControl control : animControls.get(animationName) ) {
-                int count = control.getNumChannels();
-                AnimChannel channel;
-                if( count > 0 ) {
-                    // Reuse the channel from before
-                    channel = control.getChannel(0);
+            for( Control control : controls.get(animationName) ) {
+                if(control instanceof AnimComposer){
+                    AnimComposer composer = (AnimComposer) control;
+                    composer.setCurrentAction(animationName);
                 } else {
-                    channel = control.createChannel();
+                    AnimControl anim = (AnimControl)control;
+                    int count = anim.getNumChannels();
+                    AnimChannel channel;
+                    if (count > 0) {
+                        // Reuse the channel from before
+                        channel = anim.getChannel(0);
+                    } else {
+                        channel = anim.createChannel();
+                    }
+                    channel.setAnim(animationName);
                 }
-                channel.setAnim(animationName);
             }
         }
     }

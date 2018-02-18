@@ -46,6 +46,7 @@ import com.jme3.material.MaterialDef;
 import com.jme3.math.*;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.debug.custom.ArmatureDebugAppState;
 import com.jme3.shader.ShaderNode;
 import com.jme3.shader.VariableMapping;
 import com.jme3.system.AppSettings;
@@ -142,7 +143,8 @@ public class Editor extends SimpleApplication {
                 new DebugLightsState(),
                 new SceneValidatorState(),
                 new DuplicateSelectionAppState(),
-                new DecoratorViewPortState() // Put this last because of some dodgy update vs render stuff
+                new DecoratorViewPortState(),// Put this last because of some dodgy update vs render stuff
+                new ArmatureSelectionState()
         );
 
 

@@ -1,5 +1,6 @@
 package spix.swing.sceneexplorer;
 
+import com.jme3.anim.*;
 import com.jme3.animation.*;
 import com.jme3.audio.AudioNode;
 import com.jme3.light.Light;
@@ -99,7 +100,7 @@ public class SceneExplorerPanel extends DockPanel {
 
                 }
                 for (Object o : selectedObjects) {
-                    if (!sm.contains(o) && (o instanceof Spatial || o instanceof Light)) {
+                    if (!sm.contains(o) && (o instanceof Spatial || o instanceof Light || o instanceof SkinningControl)) {
                         addToSelection.add(o);
                     }
                 }
@@ -215,6 +216,13 @@ public class SceneExplorerPanel extends DockPanel {
             return;
         }
 
+        if (s instanceof Joint) {
+            Joint j = (Joint) s;
+            for (Joint joint : j.getChildren()) {
+                buildTree(joint, item);
+            }
+            return;
+        }
 
         if (s instanceof Geometry) {
             Geometry g = (Geometry) s;
@@ -256,6 +264,14 @@ public class SceneExplorerPanel extends DockPanel {
                     c.add(st);
                     for (Bone bone : sk.getRoots()) {
                         buildTree(bone, st);
+                    }
+                }
+                if (control instanceof SkinningControl) {
+                    Armature ar = ((SkinningControl) control).getArmature();
+                    DefaultMutableTreeNode st = new DefaultMutableTreeNode(ar);
+                    c.add(st);
+                    for (Joint joint : ar.getRoots()) {
+                        buildTree(joint, st);
                     }
                 }
             }
@@ -331,6 +347,14 @@ public class SceneExplorerPanel extends DockPanel {
                 Mesh m = (Mesh) o;
                 label.setIcon(Icons.mesh);
                 label.setText("Mesh: " + m.getClass().getSimpleName());
+            } else if (o instanceof Armature) {
+                Armature ar = (Armature) o;
+                label.setIcon(Icons.vert);
+                label.setText("Armature (" + ar.getJointCount() + " joints)");
+            } else if (o instanceof Joint) {
+                Joint j = (Joint) o;
+                label.setIcon(Icons.scale);
+                label.setText(j.getName());
             } else if (o instanceof Skeleton) {
                 Skeleton sk = (Skeleton) o;
                 label.setIcon(Icons.vert);
