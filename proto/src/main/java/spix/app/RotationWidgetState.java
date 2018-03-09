@@ -229,7 +229,7 @@ public class RotationWidgetState extends BaseAppState {
         inputMapper.map(F_Y_CONSTRAIN, KeyInput.KEY_Y);
         inputMapper.map(F_Z_CONSTRAIN, KeyInput.KEY_Z);
 
-        //Deactivating the additional inputs avilable while dragging (they'll be activated when a drag is initiated)
+        //Deactivating the additional inputs available while dragging (they'll be activated when a drag is initiated)
         inputMapper.deactivateGroup(GROUP_ROTATE_ADDITIONAL_INPUTS);
         //Deactivating the dragging mouse listener (It will be activated if a drag is initiated with the keyboard (the F_GRAB function)
         inputMapper.deactivateGroup(GROUP_ROTATING);
@@ -359,7 +359,6 @@ public class RotationWidgetState extends BaseAppState {
         // Calculate the selection center
         Vector3f pos = new Vector3f();
         selectedObjects.clear();
-        System.out.println("RotationWidgetSelection: Selection:" + selection);
         for( Object o : selection ) {
 
             PropertySet wrapper = spix.getPropertySet(o);

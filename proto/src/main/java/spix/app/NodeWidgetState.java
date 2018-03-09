@@ -54,9 +54,6 @@ import spix.undo.edit.*;
 
 import java.util.*;
 
-//import javafx.scene.shape.Circle;
-
-
 /**
  * Draws a translation widget over the currently selected object(s)
  * and allows dragging them using various manipulations of the widget.

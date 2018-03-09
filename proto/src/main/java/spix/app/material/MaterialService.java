@@ -2,8 +2,6 @@ package spix.app.material;
 
 import com.jme3.asset.TextureKey;
 import com.jme3.material.*;
-import com.jme3.math.ColorRGBA;
-import com.jme3.renderer.RendererException;
 import com.jme3.scene.*;
 import com.jme3.shader.Shader;
 import com.jme3.shader.ShaderNode;
@@ -436,7 +434,7 @@ public class MaterialService {
             }
             Material oldMat = geom.getMaterial();
             Material newMat = new Material(def);
-            MaterialUtils.copyParams(oldMat, newMat);
+            MaterialUtils.copyParamsAndRenderStates(oldMat, newMat);
             geom.setMaterial(newMat);
         }
     }

@@ -121,6 +121,15 @@ public class SelectionHighlightState extends BaseAppState {
     @Override
     protected void onDisable() {
         selection.removePropertyChangeListener(selectionObserver);
+        resetSelection();
+    }
+
+    protected void resetSelection() {
+        for (SelectionLink link : links) {
+            link.release();
+        }
+        links.clear();
+        linkIndex.clear();
     }
 
     protected void updateSelection() {
@@ -128,7 +137,7 @@ public class SelectionHighlightState extends BaseAppState {
         for( Iterator<Map.Entry<Object, SelectionLink>> it = linkIndex.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<Object, SelectionLink> e = it.next();
             if( !selection.contains(e.getKey()) ) {
-                System.out.println("Removing linkage for:" + e.getKey());
+                //System.out.println("Removing linkage for:" + e.getKey());
                 SelectionLink link = e.getValue();
                 links.remove(link);
                 link.release();
@@ -146,7 +155,7 @@ public class SelectionHighlightState extends BaseAppState {
                 // We already have a link for it
                 continue;
             }
-            System.out.println("Adding linkage for:" + o);
+            //System.out.println("Adding linkage for:" + o);
             SelectionLink link = new SelectionLink((Spatial)o);
             links.add(link);
             linkIndex.put(o, link);

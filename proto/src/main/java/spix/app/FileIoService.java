@@ -133,7 +133,7 @@ public class FileIoService {
     private void changeMaterial(Material mat, Geometry geom, SelectionModel model) {
         Material oldMat = geom.getMaterial();
         //copy params over new mat if relevant
-        MaterialUtils.copyParams(oldMat, mat);
+        MaterialUtils.copyParamsAndRenderStates(oldMat, mat);
         geom.setMaterial(mat);
         spix.refresh(geom);
         UndoManager um = spix.getService(UndoManager.class);

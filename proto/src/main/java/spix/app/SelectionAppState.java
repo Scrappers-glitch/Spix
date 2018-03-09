@@ -28,52 +28,12 @@ public class SelectionAppState extends BaseAppState {
     private static final FunctionId F_CONTROL = new FunctionId(GROUP, "CTRL_MODIFIER");
     private boolean controlModifier = false;
     private boolean cancelNext = false;
+    private Node rootNode;
+    private SelectionCursorListener selectionCursorListener = new SelectionCursorListener();
 
     @Override
     protected void initialize(Application app) {
-        Node rootNode = ((SimpleApplication)app).getRootNode();
-        // Setup for some scene picking.
-        CursorEventControl.addListenersToSpatial(rootNode, new CursorListener() {
-
-            private CursorMotionEvent lastMotion;
-
-            public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
-                //System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
-                if (!event.isPressed() && event.getButtonIndex() != 2 && lastMotion != null && !cancelNext) {
-                    // Set the selection
-                    Geometry selected = null;
-                    Vector3f contactPoint = null;
-                    if (lastMotion.getCollision() != null) {
-                        selected = lastMotion.getCollision().getGeometry();
-                        contactPoint = lastMotion.getCollision().getContactPoint();
-                    }
-                    //System.out.println("Setting selection to:" + selected);
-                    if (controlModifier) {
-                        //multi select
-                        getState(SpixState.class).getSpix().getBlackboard().get("main.selection", SelectionModel.class).addSelection(selected);
-                    }else {
-                        //single select
-                        getState(SpixState.class).getSpix().getBlackboard().get("main.selection", SelectionModel.class).setSingleSelection(selected);
-                    }
-                    getState(SpixState.class).getSpix().getBlackboard().set("main.selection.contactpoint", contactPoint);
-                }
-                cancelNext = false;
-            }
-
-            public void cursorEntered(CursorMotionEvent event, Spatial target, Spatial capture) {
-                // System.out.println("cursorEntered(" + event + ", " + target + ", " + capture + ")");
-            }
-
-            public void cursorExited(CursorMotionEvent event, Spatial target, Spatial capture) {
-                //System.out.println("cursorExited(" + event + ", " + target + ", " + capture + ")");
-            }
-
-            public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
-                //System.out.println("cursorMoved(" + event + ", " + target + ", " + capture + ")");
-                this.lastMotion = event;
-            }
-
-        });
+        rootNode = ((SimpleApplication)app).getRootNode();
 
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
         inputMapper.map(F_CONTROL, KeyInput.KEY_LCONTROL);
@@ -99,11 +59,55 @@ public class SelectionAppState extends BaseAppState {
 
     @Override
     protected void onEnable() {
-
+        // Setup for some scene picking.
+        CursorEventControl.addListenersToSpatial(rootNode, selectionCursorListener);
+        GuiGlobals.getInstance().getInputMapper().activateGroup(GROUP);
     }
 
     @Override
     protected void onDisable() {
+        CursorEventControl.removeListenersFromSpatial(rootNode, selectionCursorListener);
+        GuiGlobals.getInstance().getInputMapper().deactivateGroup(GROUP);
+    }
+
+    private class SelectionCursorListener implements CursorListener{
+        private CursorMotionEvent lastMotion;
+
+        public void cursorButtonEvent(CursorButtonEvent event, Spatial target, Spatial capture) {
+            //System.out.println("cursorButtonEvent(" + event + ", " + target + ", " + capture + ")");
+            if (!event.isPressed() && event.getButtonIndex() != 2 && lastMotion != null && !cancelNext) {
+                // Set the selection
+                Geometry selected = null;
+                Vector3f contactPoint = null;
+                if (lastMotion.getCollision() != null) {
+                    selected = lastMotion.getCollision().getGeometry();
+                    contactPoint = lastMotion.getCollision().getContactPoint();
+                }
+                //System.out.println("Setting selection to:" + selected);
+                if (controlModifier) {
+                    //multi select
+                    getState(SpixState.class).getSpix().getBlackboard().get("main.selection", SelectionModel.class).addSelection(selected);
+                }else {
+                    //single select
+                    getState(SpixState.class).getSpix().getBlackboard().get("main.selection", SelectionModel.class).setSingleSelection(selected);
+                }
+                getState(SpixState.class).getSpix().getBlackboard().set("main.selection.contactpoint", contactPoint);
+            }
+            cancelNext = false;
+        }
+
+        public void cursorEntered(CursorMotionEvent event, Spatial target, Spatial capture) {
+            // System.out.println("cursorEntered(" + event + ", " + target + ", " + capture + ")");
+        }
+
+        public void cursorExited(CursorMotionEvent event, Spatial target, Spatial capture) {
+            //System.out.println("cursorExited(" + event + ", " + target + ", " + capture + ")");
+        }
+
+        public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
+            //System.out.println("cursorMoved(" + event + ", " + target + ", " + capture + ")");
+            this.lastMotion = event;
+        }
 
     }
 }

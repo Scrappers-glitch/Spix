@@ -1,0 +1,41 @@
+MaterialDef Simple {
+    MaterialParameters {
+        Vector4 Color
+    }
+
+    Technique {
+        WorldParameters {
+            WorldViewProjectionMatrix
+            WorldViewMatrix
+            ProjectionMatrix
+        }
+
+        VertexShaderNodes {
+            ShaderNode CommonVert {
+                Definition: CommonVert: Common/MatDefs/ShaderNodes/Common/CommonVert.j3sn
+                InputMappings {
+                    worldViewProjectionMatrix = WorldParam.WorldViewProjectionMatrix
+                    modelPosition = Attr.inPosition
+                    texCoord1 = Attr.inTexCoord
+                }
+                OutputMappings {
+                    Global.position = projPosition
+                }
+            }
+        }
+
+        FragmentShaderNodes {
+            ShaderNode AlphaGradient {
+                Definition: AlphaGradient: MatDefs/alphaGradient.j3sn
+                InputMappings {
+                    inColor = MatParam.Color
+                    texCoord = CommonVert.texCoord1
+                }
+                OutputMappings {
+                    Global.color = outColor
+                }
+            }
+        }
+
+    }
+}

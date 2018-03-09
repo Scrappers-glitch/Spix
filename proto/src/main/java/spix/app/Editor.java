@@ -44,8 +44,7 @@ import com.jme3.light.*;
 import com.jme3.material.Material;
 import com.jme3.material.MaterialDef;
 import com.jme3.math.*;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+import com.jme3.scene.*;
 import com.jme3.scene.debug.custom.ArmatureDebugAppState;
 import com.jme3.shader.ShaderNode;
 import com.jme3.shader.VariableMapping;
@@ -62,6 +61,7 @@ import spix.app.light.*;
 import spix.app.material.*;
 import spix.app.material.hack.*;
 import spix.app.metadata.MetadataService;
+import spix.app.painting.VertexPaintAppState;
 import spix.app.properties.LightPropertySetFactory;
 import spix.app.properties.SpatialPropertySetFactory;
 import spix.app.scene.SceneService;
@@ -78,6 +78,7 @@ import spix.swing.materialEditor.panels.PropPanel;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
 import spix.swing.sceneexplorer.SceneExplorerPanel;
 import spix.swing.texture.*;
+import spix.swing.tools.ToolsManager;
 import spix.type.Type;
 import spix.ui.ColorRequester;
 import spix.ui.MessageRequester;
@@ -142,6 +143,7 @@ public class Editor extends SimpleApplication {
                 new MaterialAppState(),
                 new DebugLightsState(),
                 new SceneValidatorState(),
+                new VertexPaintAppState(false),
                 new DuplicateSelectionAppState(),
                 new DecoratorViewPortState(),// Put this last because of some dodgy update vs render stuff
                 new ArmatureSelectionState()
@@ -270,7 +272,6 @@ public class Editor extends SimpleApplication {
                 scenePane.add(createSceneToolbar(), BorderLayout.NORTH);
                 stateManager.attach(new AwtPanelState(scenePane, BorderLayout.CENTER, GAMMA_CORRECTION));
 
-
                 // Bind the selection to the editor panel, converting objects to
                 // property set wrappers if appropriate.
                 spix.getBlackboard().bind("main.selection.singleSelect",
@@ -288,6 +289,7 @@ public class Editor extends SimpleApplication {
                 });
                 gui.setMatDefEditorWindow(matDefEditorWindow);
 
+                ToolsManager toolsManager = new ToolsManager(scenePane, gui);
 
                 FileIoAppState fileIoAppState = stateManager.getState(FileIoAppState.class);
                 spix.registerService(MaterialService.class, new MaterialService(stateManager.getState(MaterialAppState.class), fileIoAppState, gui));
@@ -409,7 +411,7 @@ public class Editor extends SimpleApplication {
         Action toggleLight = new NopToggleAction("Debug Light", IconPath.lightBulbOff, IconPath.lightBulb) {
             @Override
             public void performAction(Spix spix) {
-                Boolean on = spix.getBlackboard().get("view.debug.lights", Boolean.class);
+                Boolean on = spix.getBlackboard().get(VIEW_DEBUG_LIGHTS, Boolean.class);
                 if (on == null) {
                     on = Boolean.FALSE;
                 }
@@ -419,6 +421,19 @@ public class Editor extends SimpleApplication {
         sceneActions.add(toggleLight);
         spix.getBlackboard().bind(VIEW_DEBUG_LIGHTS, toggleLight, "toggled");
 
+        sceneActions.add(null);
+        sceneActions.add(null);
+
+        Action paintMode = new NopToggleAction("Paint Mode", IconPath.attrib, IconPath.code) {
+            @Override
+            public void performAction(Spix spix) {
+                VertexPaintAppState painterState = getStateManager().getState(VertexPaintAppState.class);
+                painterState.setEnabled(!painterState.isEnabled());
+            }
+        };
+        sceneActions.add(paintMode);
+        spix.getBlackboard().bind("main.selection.singleSelect",paintMode,
+                "enabled", Predicates.instanceOf(Geometry.class));
 
         return sceneActions;
     }
