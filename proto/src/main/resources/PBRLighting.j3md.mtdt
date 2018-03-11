@@ -1,0 +1,33 @@
+ParamsLayout:
+- PBR:
+  - BaseColor
+  - BaseColorMap
+  - Metallic
+  - MetallicMap
+  - Roughness
+  - RoughnessMap
+  - MetallicRoughnessMap
+  - NormalMap
+- Emissive
+  - Emissive
+  - EmissiveMap
+  - EmissiveIntensity
+  - EmissivePower
+- Occlusion:
+  - LightMap
+  - SeparateTexCoord
+  - LightMapAsAOMap
+- Spec/Gloss:
+  - UseSpecGloss
+  - SpecularMap
+  - Glossiness
+  - GlossinessMap
+- Parallax:
+  - ParallaxMap
+  - ParallaxHeight
+  - SteepParallax
+  - PackedNormalParallax
+- Misc:
+  - UseVertexColor
+  - AlphaDiscardThreshold
+

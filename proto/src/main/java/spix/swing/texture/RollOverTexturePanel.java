@@ -7,26 +7,47 @@ import java.awt.*;
  * Created by Nehon on 05/01/2017.
  */
 public class RollOverTexturePanel extends JPanel {
-    JLabel image;
-    Popup popup;
+    private JLabel image;
+    private Popup popup;
+    private int width;
+    private Side side = Side.Left;
+
+    public enum Side {
+        Left(),
+        Right()
+    }
+
 
     public RollOverTexturePanel() {
+        this(128,128);
+    }
+
+    public RollOverTexturePanel(int width, int height) {
         super(new BorderLayout());
         image = new JLabel();
-        image.setPreferredSize(new Dimension(128, 128));
-        image.setMaximumSize(new Dimension(128, 128));
-        image.setMinimumSize(new Dimension(128, 128));
+        image.setPreferredSize(new Dimension(width, height));
+        image.setMaximumSize(new Dimension(width, height));
+        image.setMinimumSize(new Dimension(width, height));
         add(image, BorderLayout.CENTER);
+        this.width = width;
+    }
+
+    public void setSide(Side side) {
+        this.side = side;
     }
 
     public void update(ImageIcon icon) {
         image.setIcon(icon);
     }
 
-    public void popupFrom(JButton button) {
+    public void popupFrom(JComponent button) {
         PopupFactory factory = PopupFactory.getSharedInstance();
         Point pos = button.getLocationOnScreen();
-        popup = factory.getPopup(button, this, (int) pos.getX() - 130, (int) pos.getY());
+        int x = (int) pos.getX() - (width + 2);
+        if( side == Side.Right){
+            x = (int) pos.getX() + button.getWidth() + 2;
+        }
+        popup = factory.getPopup(button, this, x, (int) pos.getY());
         popup.show();
     }
 

@@ -57,6 +57,7 @@ public class IconPath {
     public final static String rotate = "/icons/rotate.png";
     public final static String scale = "/icons/scale.png";
     public final static String translate = "/icons/translate.png";
+    public final static String brush = "/icons/brush.png";
 
 
 }

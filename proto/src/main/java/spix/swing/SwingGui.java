@@ -46,9 +46,7 @@ import spix.props.PropertySet;
 import spix.type.ContextHandlerRegistry;
 import spix.type.HandlerRegistry;
 import spix.type.Type;
-import spix.ui.ColorRequester;
-import spix.ui.FileRequester;
-import spix.ui.MessageRequester;
+import spix.ui.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -67,7 +65,8 @@ public class SwingGui {
     public static final Class[] STANDARD_REQUEST_HANDLERS = {
             FileRequester.class,
             MessageRequester.class,
-            ColorRequester.class  
+            ColorRequester.class,
+            TexturePacker.class
         }; 
 
     public static final String EDIT_CONTEXT = "edit";
@@ -155,6 +154,8 @@ public class SwingGui {
             spix.registerService(type, new SwingMessageRequester(this));
         } else if( ColorRequester.class.isAssignableFrom(type) ) {
             spix.registerService(type, new SwingColorRequester(this));
+        } else if( TexturePacker.class.isAssignableFrom(type) ) {
+            spix.registerService(type, new SwingTexturePacker(this));
         } else {
             throw new IllegalArgumentException("Swing requester not found for:" + type);
         }  

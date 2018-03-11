@@ -40,6 +40,7 @@ import com.google.common.base.Predicates;
 import com.jme3.app.*;
 import com.jme3.app.state.ScreenshotAppState;
 import com.jme3.asset.AssetKey;
+import com.jme3.environment.util.LightsDebugState;
 import com.jme3.light.*;
 import com.jme3.material.Material;
 import com.jme3.material.MaterialDef;
@@ -78,10 +79,10 @@ import spix.swing.materialEditor.panels.PropPanel;
 import spix.swing.materialEditor.utils.NoneSelectedButtonGroup;
 import spix.swing.sceneexplorer.SceneExplorerPanel;
 import spix.swing.texture.*;
+import spix.swing.tools.ProbeList;
 import spix.swing.tools.ToolsManager;
 import spix.type.Type;
-import spix.ui.ColorRequester;
-import spix.ui.MessageRequester;
+import spix.ui.*;
 import spix.undo.*;
 import spix.undo.edit.LightAddEdit;
 
@@ -376,7 +377,10 @@ public class Editor extends SimpleApplication {
     }
 
     private JToolBar createSceneToolbar() {
-        return ActionUtils.createActionToolbar(createSceneActions(), spix, JToolBar.HORIZONTAL);
+        JToolBar tb = ActionUtils.createActionToolbar(createSceneActions(), spix, JToolBar.HORIZONTAL);
+        tb.add(new ProbeList(spix));
+        tb.add(new JPanel());
+        return tb;
     }
 
     private ActionList createSceneActions() {
@@ -408,6 +412,20 @@ public class Editor extends SimpleApplication {
         sceneActions.add(null);
         sceneActions.add(null);
 
+        Action paintMode = new NopToggleAction("Paint Mode", IconPath.brush, IconPath.brush) {
+            @Override
+            public void performAction(Spix spix) {
+                VertexPaintAppState painterState = getStateManager().getState(VertexPaintAppState.class);
+                painterState.setEnabled(!painterState.isEnabled());
+            }
+        };
+        paintMode.setEnabled(false);
+        sceneActions.add(paintMode);
+        spix.getBlackboard().bind("main.selection.singleSelect",paintMode,
+                "enabled", Predicates.instanceOf(Geometry.class));
+
+        sceneActions.add(null);
+        sceneActions.add(null);
         Action toggleLight = new NopToggleAction("Debug Light", IconPath.lightBulbOff, IconPath.lightBulb) {
             @Override
             public void performAction(Spix spix) {
@@ -420,20 +438,6 @@ public class Editor extends SimpleApplication {
         };
         sceneActions.add(toggleLight);
         spix.getBlackboard().bind(VIEW_DEBUG_LIGHTS, toggleLight, "toggled");
-
-        sceneActions.add(null);
-        sceneActions.add(null);
-
-        Action paintMode = new NopToggleAction("Paint Mode", IconPath.attrib, IconPath.code) {
-            @Override
-            public void performAction(Spix spix) {
-                VertexPaintAppState painterState = getStateManager().getState(VertexPaintAppState.class);
-                painterState.setEnabled(!painterState.isEnabled());
-            }
-        };
-        sceneActions.add(paintMode);
-        spix.getBlackboard().bind("main.selection.singleSelect",paintMode,
-                "enabled", Predicates.instanceOf(Geometry.class));
 
         return sceneActions;
     }
@@ -599,6 +603,13 @@ public class Editor extends SimpleApplication {
         ActionList lightMenu = sceneMenu.add(new DefaultActionList("Add light"));
         createLightMenu(lightMenu);
 
+
+        ActionList tools = main.add(new DefaultActionList("Tools"));
+        tools.add(new NopAction("Texture packer") {
+            public void performAction(Spix spix) {
+                spix.getService(TexturePacker.class).show();
+            }
+        });
 
         ActionList help = main.add(new DefaultActionList("Help"));
         help.add(new NopAction("About") {

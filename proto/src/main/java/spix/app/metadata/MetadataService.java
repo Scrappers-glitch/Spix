@@ -21,6 +21,7 @@ public class MetadataService {
 
     static {
         stockMatDefs.add("Common/MatDefs/Light/Lighting.j3md");
+        stockMatDefs.add("Common/MatDefs/Light/PBRLighting.j3md");
         stockMatDefs.add("Common/MatDefs/Misc/Unshaded.j3md");
         stockMatDefs.add("Common/MatDefs/Misc/UnshadedNodes.j3md");
     }

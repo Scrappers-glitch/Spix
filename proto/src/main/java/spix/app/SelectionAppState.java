@@ -13,10 +13,7 @@ import com.simsilica.lemur.event.CursorButtonEvent;
 import com.simsilica.lemur.event.CursorEventControl;
 import com.simsilica.lemur.event.CursorListener;
 import com.simsilica.lemur.event.CursorMotionEvent;
-import com.simsilica.lemur.input.FunctionId;
-import com.simsilica.lemur.input.InputMapper;
-import com.simsilica.lemur.input.InputState;
-import com.simsilica.lemur.input.StateFunctionListener;
+import com.simsilica.lemur.input.*;
 import spix.core.SelectionModel;
 
 /**
@@ -36,8 +33,8 @@ public class SelectionAppState extends BaseAppState {
         rootNode = ((SimpleApplication)app).getRootNode();
 
         InputMapper inputMapper = GuiGlobals.getInstance().getInputMapper();
-        inputMapper.map(F_CONTROL, KeyInput.KEY_LCONTROL);
-        inputMapper.map(F_CONTROL, KeyInput.KEY_RCONTROL);
+        inputMapper.map(F_CONTROL, Button.MOUSE_BUTTON1, KeyInput.KEY_LCONTROL);
+        inputMapper.map(F_CONTROL, Button.MOUSE_BUTTON1, KeyInput.KEY_RCONTROL);
         inputMapper.addStateListener(new StateFunctionListener() {
             @Override
             public void valueChanged(FunctionId func, InputState value, double tpf) {

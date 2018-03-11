@@ -156,7 +156,7 @@ public class FileIoAppState extends BaseAppState {
         //dependencies
         Set<AssetKey> files = blackboard.get(MODIFIED_DEPENDENCIES, Set.class);
         if (files != null) {
-            String message = "Some dependencies have been modified, do you want to save tham too?\n";
+            String message = "Some dependencies have been modified, do you want to save them too?\n";
             for (AssetKey s : files) {
                 message += s.getName() + "\n";
             }
@@ -664,7 +664,7 @@ public class FileIoAppState extends BaseAppState {
         try {
             Material mat = new Material(getApplication().getAssetManager(), fp.modelPath);
             return mat;
-        } catch (AssetLoadException e) {
+        } catch (AssetLoadException | AssetNotFoundException e) {
             getSpix().getService(MessageRequester.class).showMessage("Error loading material definition " + fp.modelPath, e.getMessage(), MessageRequester.Type.Error);
             e.printStackTrace();
         }

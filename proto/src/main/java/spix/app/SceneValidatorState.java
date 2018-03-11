@@ -104,7 +104,9 @@ public class SceneValidatorState extends BaseAppState {
             } finally {
                 viewPort.getQueue().clear();
                 geom.removeFromParent();
-                parent.attachChild(geom);
+                if(parent != null) {
+                    parent.attachChild(geom);
+                }
             }
         }
     }
