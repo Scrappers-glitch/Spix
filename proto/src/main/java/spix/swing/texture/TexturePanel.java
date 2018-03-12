@@ -188,6 +188,9 @@ public class TexturePanel extends AbstractPropertyPanel<Component> {
                     gui.getSpix().getService(MaterialService.class).reloadTexture(tex, new RequestCallback<Texture>() {
                         @Override
                         public void done(Texture result) {
+                            if(result == null){
+                                return;
+                            }
                             getPropertyDelegate().setValue(result);
                         }
                     });

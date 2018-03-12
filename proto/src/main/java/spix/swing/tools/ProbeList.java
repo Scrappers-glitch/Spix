@@ -9,8 +9,7 @@ import spix.swing.texture.RollOverTexturePanel;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
 public class ProbeList extends JPanel {
 
@@ -42,6 +41,14 @@ public class ProbeList extends JPanel {
                 rollover.close();
             }
         });
+
+        list.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                rollover.close();
+            }
+        });
+
 
         spix.getBlackboard().bind(DefaultConstants.VIEW_DEBUG_LIGHTS, list, "enabled");
     }

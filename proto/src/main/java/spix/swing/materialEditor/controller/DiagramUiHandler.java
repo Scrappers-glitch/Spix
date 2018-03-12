@@ -301,7 +301,7 @@ public class DiagramUiHandler {
                         if (hasVariableWithName(conn.getStart().getText(), sn.getDefinition().getOutputs())) {
                             ShaderNodeVariable left = new ShaderNodeVariable(conn.getEnd().getType(), conn.getEnd().getNode().getName(), conn.getEnd().getText());
                             ShaderNodeVariable right = new ShaderNodeVariable(conn.getStart().getType(), conn.getStart().getNode().getName(), conn.getStart().getText());
-                            tmpOutMappings.add(new VariableMapping(left, null, right, null, null));
+                            tmpOutMappings.add(new VariableMapping(left, "", right, "", null));
                         }
                     }
                     it.remove();

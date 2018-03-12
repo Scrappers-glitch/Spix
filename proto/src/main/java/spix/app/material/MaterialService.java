@@ -60,7 +60,6 @@ public class MaterialService {
                 m.getAdditionalRenderState().setWireframe(wire);
 
 
-
                 try {
                     PreviewResult res = materialState.requestPreview(m, request.getTechniqueName(), request.getDisplayType(), request.getOutIndex(), request.getMatParams());
                     gui.runOnSwing(new Runnable() {
@@ -98,7 +97,7 @@ public class MaterialService {
         gui.runOnRender(new Runnable() {
             @Override
             public void run() {
-                if(def.isUsingShaderNodes()) {
+                if (def.isUsingShaderNodes()) {
                     Map<String, Shader> shaders = materialState.generateCode(def);
                     gui.runOnSwing(new Runnable() {
                         @Override
@@ -168,14 +167,16 @@ public class MaterialService {
         ioState.loadTexture(key, new RequestCallback<Texture>() {
             @Override
             public void done(Texture tex) {
-                tex.setWrap(Texture.WrapAxis.S, texture.getWrap(Texture.WrapAxis.S));
-                tex.setWrap(Texture.WrapAxis.T, texture.getWrap(Texture.WrapAxis.T));
-                if (tex.getType() == Texture.Type.CubeMap || tex.getType() == Texture.Type.ThreeDimensional) {
-                    tex.setWrap(Texture.WrapAxis.R, texture.getWrap(Texture.WrapAxis.R));
-                }
+                if (tex != null) {
+                    tex.setWrap(Texture.WrapAxis.S, texture.getWrap(Texture.WrapAxis.S));
+                    tex.setWrap(Texture.WrapAxis.T, texture.getWrap(Texture.WrapAxis.T));
+                    if (tex.getType() == Texture.Type.CubeMap || tex.getType() == Texture.Type.ThreeDimensional) {
+                        tex.setWrap(Texture.WrapAxis.R, texture.getWrap(Texture.WrapAxis.R));
+                    }
 
-                tex.setMagFilter(texture.getMagFilter());
-                tex.setMinFilter(texture.getMinFilter());
+                    tex.setMagFilter(texture.getMagFilter());
+                    tex.setMinFilter(texture.getMinFilter());
+                }
 
                 callback.done(tex);
             }
@@ -185,6 +186,7 @@ public class MaterialService {
     /**
      * Create a custom material definition with a technique that only goes to the output that requested the preview.
      * This allow to have a preview for the different stages of the shader.
+     *
      * @param request
      * @return
      */
@@ -192,7 +194,7 @@ public class MaterialService {
         MaterialDef def = null;
         try {
             //Cloning the mat def again before modifying it.
-            def = CloneUtils.cloneMatDef(request.getMaterialDef(),new ArrayList<TechniqueDef>());
+            def = CloneUtils.cloneMatDef(request.getMaterialDef(), new ArrayList<TechniqueDef>());
         } catch (IllegalAccessException e) {
             e.printStackTrace();
             return null;
@@ -212,7 +214,7 @@ public class MaterialService {
         // TODO: 28/05/2016 we may want something better for the vertex shader different stages.
         if (request.getNodeGraph().isEmpty()) {
             for (ShaderNode node : techDef.getShaderNodes()) {
-                if(node.getDefinition().getType() == Shader.ShaderType.Vertex) {
+                if (node.getDefinition().getType() == Shader.ShaderType.Vertex) {
                     newNodes.add(node);
                 }
             }
@@ -250,9 +252,9 @@ public class MaterialService {
         spatial.depthFirstTraversal(replaceMatDefVisitor);
     }
 
-    public static class CompilationError{
+    public static class CompilationError {
         private String shaderSource;
-        private Map<Integer,String> errors = new HashMap<>();
+        private Map<Integer, String> errors = new HashMap<>();
         private int nbRenderedNodes;
         private Exception exception;
 
@@ -269,10 +271,10 @@ public class MaterialService {
             int index = 0;
             for (String line : lines) {
                 String[] cells = line.split(":");
-                if(cells.length == 3){
+                if (cells.length == 3) {
                     Pattern p = Pattern.compile("0\\((\\d*)\\)");
                     Matcher m = p.matcher(cells[0].trim());
-                    if(m.find()) {
+                    if (m.find()) {
                         int ln = Integer.parseInt(m.group(1));
                         errors.put(ln, cells[1] + ": " + cells[2]);
                     } else {
@@ -301,7 +303,7 @@ public class MaterialService {
         public String toString() {
             String res = shaderSource + "\n";
             for (Integer key : errors.keySet()) {
-                res += key+ " : " + errors.get(key) + "\n";
+                res += key + " : " + errors.get(key) + "\n";
             }
 
             return res;

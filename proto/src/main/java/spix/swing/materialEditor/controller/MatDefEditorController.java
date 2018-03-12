@@ -620,31 +620,5 @@ public class MatDefEditorController {
         }
 
     }
-
-//    private class DiagramSelectionChangeListener implements PropertyChangeListener {
-//        @Override
-//        public void propertyChange(PropertyChangeEvent evt) {
-//
-//            //I receive this event before the property change.
-//            //Ask Paul about this as it seems it's intentional.
-//            if (evt instanceof ObservableList.ElementUpdatedEvent) {
-//                return;
-//            }
-//
-//            if (evt.getNewValue() instanceof VariableMapping) {
-//
-//
-//                gui.runOnSwing(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        editor.setTitle(matDef.getName());
-//                        initTechnique(techniques.get(0), matDef);
-//                    }
-//                });
-//
-//            }
-//        }
-//    }
-
 }
 

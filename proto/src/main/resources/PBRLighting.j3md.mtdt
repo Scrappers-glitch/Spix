@@ -8,6 +8,7 @@ ParamsLayout:
   - RoughnessMap
   - MetallicRoughnessMap
   - NormalMap
+  - NormalType
 - Emissive
   - Emissive
   - EmissiveMap

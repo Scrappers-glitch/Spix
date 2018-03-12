@@ -85,6 +85,9 @@ public class ImagePacker {
                 BufferedImage.TYPE_INT_ARGB);
 
         for (int i = 1; i < images.length; i++) {
+            if(images[i] == null){
+                continue;
+            }
             if (images[i].getWidth() != width) {
                 images[i] = getResizedImage(images[i], width, height);
             }

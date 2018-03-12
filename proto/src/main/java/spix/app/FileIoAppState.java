@@ -77,7 +77,7 @@ public class FileIoAppState extends BaseAppState {
         blackboard.set(SCENE_FILE_NAME, "defaultScene.j3o");
     }
 
-    private Spix getSpix(){
+    private Spix getSpix() {
         return getState(SpixState.class).getSpix();
     }
 
@@ -91,7 +91,7 @@ public class FileIoAppState extends BaseAppState {
         blackboard.bind(UndoManager.LAST_EDIT, this, "lastEdit");
     }
 
-    public void setLastEdit(Edit edit){
+    public void setLastEdit(Edit edit) {
         blackboard.set(SCENE_DIRTY, true);
     }
 
@@ -131,7 +131,7 @@ public class FileIoAppState extends BaseAppState {
 
         Spatial scene = (Spatial) blackboard.get(SCENE_ROOT);
 
-        if(scene.getKey() != null) {
+        if (scene.getKey() != null) {
             //removing the scene so that it's really reloaded if we reload it during this session.
             assetManager.deleteFromCache(scene.getKey());
         }
@@ -139,7 +139,7 @@ public class FileIoAppState extends BaseAppState {
 
     public void saveAs(String fileName) {
         //actually save
-        if (!fileName.endsWith(".j3o")){
+        if (!fileName.endsWith(".j3o")) {
             fileName += ".j3o";
         }
 
@@ -265,7 +265,7 @@ public class FileIoAppState extends BaseAppState {
         //extract previous _number at the end of the file
         Pattern p = Pattern.compile("(.*)_(\\d*)(\\.j3o)");
         Matcher m = p.matcher(origFileName);
-        if(m.matches()){
+        if (m.matches()) {
             count = Integer.parseInt(m.group(2)) + 1;
             path = Paths.get(folder.toString() + File.separator + m.replaceFirst("$1$3"));
             fileName = path.getFileName();
@@ -395,7 +395,7 @@ public class FileIoAppState extends BaseAppState {
                             getSpix().getService(MessageRequester.class).hideLoading(id);
                         }
                     });
-                } catch (AssetLoadException | AssetNotFoundException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     getSpix().getService(MessageRequester.class).hideLoading(id);
                     getSpix().getService(MessageRequester.class).showMessage("Error Loading File " + fp.fileName, e.getMessage(), MessageRequester.Type.Error);
@@ -522,16 +522,21 @@ public class FileIoAppState extends BaseAppState {
                     //we need to relocate the file
                     fp = relocateFile(fp, relocateIn);
                 }
-                TextureKey key = new TextureKey(fp.modelPath, flip);
-                Texture tex = getApplication().getAssetManager().loadTexture(key);
-                tex.setKey(key);
-                getApplication().enqueue(new Runnable() {
-                    @Override
-                    public void run() {
-                        done.done(tex);
-                        getSpix().getService(MessageRequester.class).hideLoading(id);
-                    }
-                });
+                try {
+                    TextureKey key = new TextureKey(fp.modelPath, flip);
+                    Texture tex = getApplication().getAssetManager().loadTexture(key);
+                    tex.setKey(key);
+                    getApplication().enqueue(new Runnable() {
+                        @Override
+                        public void run() {
+                            getSpix().getService(MessageRequester.class).hideLoading(id);
+                            done.done(tex);
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    getSpix().getService(MessageRequester.class).hideLoading(id);
+                }
 
             }
         };
@@ -543,16 +548,20 @@ public class FileIoAppState extends BaseAppState {
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                Texture tex = getApplication().getAssetManager().loadTexture(key);
-                tex.setKey(key);
-                getApplication().enqueue(new Runnable() {
-                    @Override
-                    public void run() {
-                        done.done(tex);
-                        getSpix().getService(MessageRequester.class).hideLoading(id);
-                    }
-                });
-
+                try {
+                    Texture tex = getApplication().getAssetManager().loadTexture(key);
+                    tex.setKey(key);
+                    getApplication().enqueue(new Runnable() {
+                        @Override
+                        public void run() {
+                            getSpix().getService(MessageRequester.class).hideLoading(id);
+                            done.done(tex);
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    getSpix().getService(MessageRequester.class).hideLoading(id);
+                }
             }
         };
         executor.execute(task);
@@ -566,8 +575,12 @@ public class FileIoAppState extends BaseAppState {
         loadTexture(key, new RequestCallback<Texture>() {
             @Override
             public void done(Texture result) {
-                done.done(result);
+                String root = blackboard.get(MAIN_ASSETS_FOLDER, String.class);
+                if (root.equals(parent.toString())) {
+                    return;
+                }
                 getApplication().getAssetManager().unregisterLocator(parent.toString(), FileLocator.class);
+                done.done(result);
             }
         });
     }
@@ -716,7 +729,7 @@ public class FileIoAppState extends BaseAppState {
             fp.assetRoot = fp.assetRoot.getParentFile();
         }
 
-        if(fp.assetRoot.getParentFile() ==  null){
+        if (fp.assetRoot.getParentFile() == null) {
             //we went all the way up not finding an asset folder and we may have a broken path so just take the file's folder as the asset path
             fp.assetRoot = f.getParentFile();
             fp.modelPath = f.getName();

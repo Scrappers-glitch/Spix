@@ -305,6 +305,15 @@ public class MaterialDefUtils {
             rightVariable.setPrefix("g_");
         }
 
+        if(rightVariable.getType().indexOf("|")>0){
+            String[] types = rightVariable.getType().split("\\|");
+            for (String type : types) {
+                if(leftVariable.getType().equals(type)){
+                    rightVariable.setType(type);
+                }
+            }
+        }
+
         int endCard = ShaderUtils.getCardinality(end.getType(), "");
         int startCard = ShaderUtils.getCardinality(start.getType(), "");
         String swizzle = "xyzw";
