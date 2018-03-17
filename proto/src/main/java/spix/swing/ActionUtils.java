@@ -102,6 +102,7 @@ public class ActionUtils {
 
         if (a instanceof ToggleAction) {
             JToggleButton tb = new JToggleButton(new SwingAction(a, spix));
+            tb.setSelected(((ToggleAction) a).isToggled());
             tb.setHideActionText(true);
             if (a.get(TOGGLED_LARGE_ICON) != null) {
                 tb.setSelectedIcon((ImageIcon) a.get(TOGGLED_LARGE_ICON));

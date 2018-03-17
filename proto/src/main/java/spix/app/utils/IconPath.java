@@ -58,6 +58,8 @@ public class IconPath {
     public final static String scale = "/icons/scale.png";
     public final static String translate = "/icons/translate.png";
     public final static String brush = "/icons/brush.png";
+    public final static String coneOn = "/icons/coneOn.png";
+    public final static String coneOff = "/icons/coneOff.png";
 
 
 }

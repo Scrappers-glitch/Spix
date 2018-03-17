@@ -9,7 +9,7 @@ ParamsLayout:
   - MetallicRoughnessMap
   - NormalMap
   - NormalType
-- Emissive
+- Emissive:
   - Emissive
   - EmissiveMap
   - EmissiveIntensity

@@ -297,6 +297,8 @@ public class Editor extends SimpleApplication {
                 spix.registerService(FileIoService.class, new FileIoService(gui.getSpix(), fileIoAppState, getStateManager().getState(SceneValidatorState.class)));
                 spix.registerService(MetadataService.class, new MetadataService(spix, fileIoAppState));
                 spix.registerService(SceneService.class, new SceneService(gui));
+
+                spix.getBlackboard().set("view.widgets", true);
             }
         });
 
@@ -386,6 +388,12 @@ public class Editor extends SimpleApplication {
     private ActionList createSceneActions() {
         ActionList sceneActions = new DefaultActionList("scene");
 
+        Action displayWidgets = getWidgetAction();
+        sceneActions.add(displayWidgets);
+
+        sceneActions.add(null);
+        sceneActions.add(null);
+
         ActionList addAction = new DefaultActionList("Add");
 
         ActionList addSpatialAction = new DefaultActionList("Spatial");
@@ -421,7 +429,7 @@ public class Editor extends SimpleApplication {
         };
         paintMode.setEnabled(false);
         sceneActions.add(paintMode);
-        spix.getBlackboard().bind("main.selection.singleSelect",paintMode,
+        spix.getBlackboard().bind("main.selection.singleSelect", paintMode,
                 "enabled", Predicates.instanceOf(Geometry.class));
 
         sceneActions.add(null);
@@ -440,6 +448,25 @@ public class Editor extends SimpleApplication {
         spix.getBlackboard().bind(VIEW_DEBUG_LIGHTS, toggleLight, "toggled");
 
         return sceneActions;
+    }
+
+    private Action widgetAction;
+    private Action getWidgetAction() {
+        if(widgetAction != null){
+            return widgetAction;
+        }
+        Action widgetAction = new NopToggleAction("Widgets & grid", IconPath.coneOff, IconPath.coneOn) {
+            @Override
+            public void performAction(Spix spix) {
+                Boolean on = spix.getBlackboard().get("view.widgets", Boolean.class);
+                if (on == null) {
+                    on = Boolean.FALSE;
+                }
+                spix.getBlackboard().set("view.widgets", !on);
+            }
+        };
+        spix.getBlackboard().bind("view.widgets", widgetAction, "toggled");
+        return widgetAction;
     }
 
     private ActionList createMainActions() {
@@ -548,6 +575,9 @@ public class Editor extends SimpleApplication {
             }
         });
         spix.getBlackboard().bind("view.grid", showGrid, "toggled");
+
+        view.add(getWidgetAction());
+        view.add(null);
 
         // Set the initial state of the view.grid property to match the app state
         spix.getBlackboard().set("view.grid", stateManager.getState(GridState.class).isEnabled());

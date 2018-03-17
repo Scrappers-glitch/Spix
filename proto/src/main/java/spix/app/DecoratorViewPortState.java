@@ -87,6 +87,8 @@ public class DecoratorViewPortState extends BaseAppState {
         viewport.setEnabled(false);
 
         viewport.attachScene(root);
+
+        getState(SpixState.class).getSpix().getBlackboard().bind("view.widgets", this, "enabled");
     }
 
     @Override
