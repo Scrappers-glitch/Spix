@@ -23,6 +23,8 @@ public class Dot extends JPanel {
     private ImageIcon prevImg;
     private String type;
     private ParamType paramType;
+    private String variableName;
+    private String nodeName;
     private Shader.ShaderType shaderType;
     private String text = "";
     private NodePanel node;
@@ -56,6 +58,22 @@ public class Dot extends JPanel {
 
     public void setShaderType(Shader.ShaderType shaderType) {
         this.shaderType = shaderType;
+    }
+
+    public String getVariableName() {
+        return variableName;
+    }
+
+    public void setVariableName(String variableName) {
+        this.variableName = variableName;
+    }
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
     }
 
     @Override

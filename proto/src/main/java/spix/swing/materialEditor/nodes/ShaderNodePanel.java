@@ -1,6 +1,7 @@
 package spix.swing.materialEditor.nodes;
 
 import com.jme3.shader.*;
+import spix.swing.materialEditor.Dot;
 import spix.swing.materialEditor.controller.MatDefEditorController;
 import spix.swing.materialEditor.icons.Icons;
 
@@ -50,10 +51,6 @@ public abstract class ShaderNodePanel extends NodePanel implements Editable {
         return editionAllowed;
     }
 
-    public final void refresh(String name) {
-        setNodeName(name);
-        setTitle(name);
-    }
 
     public static ShaderNodePanel create(MatDefEditorController controller, String key,  ShaderNode shaderNode){
         Color color = new Color(0,0,0);

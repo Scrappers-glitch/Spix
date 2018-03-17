@@ -89,6 +89,7 @@ public class MatDefEditorController {
             }
         };
         save.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control S"));
+
         // create a button, configured with the Action
         JButton b = new JButton(save);
         // manually register the accelerator in the button's component input map
@@ -97,6 +98,23 @@ public class MatDefEditorController {
                 (KeyStroke) save.getValue(Action.ACCELERATOR_KEY), "save");
 
         tb.add(b);
+
+
+        Action group = new AbstractAction("Group") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                groupSelected();
+            }
+        };
+        group.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control G"));
+        b = new JButton(group);
+        // manually register the accelerator in the button's component input map
+        b.getActionMap().put("group", group);
+        b.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                (KeyStroke) group.getValue(Action.ACCELERATOR_KEY), "group");
+
+        tb.add(b);
+
         editor.getContentPane().add(tb, BorderLayout.NORTH);
     }
 
@@ -559,6 +577,13 @@ public class MatDefEditorController {
         if (result == JOptionPane.OK_OPTION) {
             selectionHandler.removeSelected(this);
         }
+    }
+
+    public void groupSelected() {
+
+        String result = JOptionPane.showInputDialog(editor, "Please enter a name for the group?", "Group");
+        List<ShaderNodePanel> nodes = selectionHandler.getSelectedShaderNodes();
+        diagramUiHandler.createGroup(this, result, nodes);
     }
 
     public void dispatchEventToDiagram(MouseEvent e, Component source) {

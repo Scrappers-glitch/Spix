@@ -2,18 +2,14 @@ package spix.swing.materialEditor.utils;
 
 import com.jme3.material.MatParam;
 import com.jme3.material.MaterialDef;
-import com.jme3.material.ShaderGenerationInfo;
 import com.jme3.material.TechniqueDef;
 import com.jme3.material.plugins.ConditionParser;
-import com.jme3.material.plugins.MatParseException;
 import com.jme3.shader.*;
 import spix.swing.materialEditor.Dot;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
-
-import static org.yaml.snakeyaml.nodes.NodeId.mapping;
 
 /**
  * Created by bouquet on 14/05/16.
@@ -296,8 +292,8 @@ public class MaterialDefUtils {
     }
 
     public static VariableMapping createVariableMapping(Dot start, Dot end){
-        ShaderNodeVariable leftVariable = new ShaderNodeVariable(end.getType(), end.getNode().getName(), end.getText());
-        ShaderNodeVariable rightVariable = new ShaderNodeVariable(start.getType(), start.getNode().getName(), start.getText());
+        ShaderNodeVariable leftVariable = new ShaderNodeVariable(end.getType(), end.getNodeName(), end.getVariableName());
+        ShaderNodeVariable rightVariable = new ShaderNodeVariable(start.getType(), start.getNodeName(), start.getVariableName());
 
         if (rightVariable.getNameSpace().equals("MatParam")) {
             rightVariable.setPrefix("m_");
@@ -334,10 +330,36 @@ public class MaterialDefUtils {
             matParams.setAccessible(true);
             Map<String, MatParam> params = (Map<String, MatParam>) matParams.get(matDef);
             params.remove(paramName);
+            String pName = paramName.toUpperCase();
+            for (String defName : matDef.getTechniqueDefsNames()) {
+                for (TechniqueDef techniqueDef : matDef.getTechniqueDefs(defName)) {
+                    for (ShaderNode shaderNode : techniqueDef.getShaderNodes()) {
+                        if(shaderNode.getCondition()!= null && shaderNode.getCondition().contains(pName)){
+                            //remove name in condition
+                            shaderNode.setCondition(removeDefineFromExpression(shaderNode.getCondition(), pName));
+                        }
+                        for (VariableMapping variableMapping : shaderNode.getInputMapping()) {
+                            if(variableMapping.getCondition() != null && variableMapping.getCondition().contains(pName)){
+                                //remove name in condition
+                                variableMapping.setCondition(removeDefineFromExpression(variableMapping.getCondition(), pName));
+                            }
+                        }
+                    }
+                }
+            }
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String removeDefineFromExpression(String expression, String defineName){
+        expression = expression.replaceAll("(\\s*[\\&\\|]+\\s*)*\\b" + defineName, "")
+                .replaceAll("^(\\s*[\\&\\|]+\\s*)*|(\\s*[\\&\\|]+\\s*)*$","")
+                .replaceAll("\\(\\s*(\\s*[\\&\\|]+\\s*)*","(")
+                .replaceAll("defined\\(\\s*\\)", "");
+
+        return expression;
     }
 }

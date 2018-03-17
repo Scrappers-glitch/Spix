@@ -2,6 +2,7 @@ package spix.swing.materialEditor.controller;
 
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.nodes.NodePanel;
+import spix.swing.materialEditor.nodes.ShaderNodePanel;
 
 import java.awt.*;
 import java.util.*;
@@ -25,7 +26,19 @@ public class SelectionHandler {
             }
         }
         selectedItems.clear();
+    }
 
+    public List<ShaderNodePanel> getSelectedShaderNodes() {
+        List<ShaderNodePanel> list = new ArrayList<>();
+
+        for (Selectable selectedItem : selectedItems) {
+            if (selectedItem instanceof ShaderNodePanel) {
+                ShaderNodePanel panel = ((ShaderNodePanel)selectedItem);
+                list.add(panel);
+            }
+        }
+        clearSelection();
+        return list;
     }
 
     public List<Selectable> getSelectedItems() {

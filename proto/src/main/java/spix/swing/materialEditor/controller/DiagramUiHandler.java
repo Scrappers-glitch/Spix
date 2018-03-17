@@ -33,6 +33,7 @@ public class DiagramUiHandler {
     private Map<String, Object> matDefMetadata;
     private int outCursor = 0;
     private List<VariableMapping> tmpOutMappings = new ArrayList<>();
+    private Map<String, Group> groups = new HashMap<>();
 
     public DiagramUiHandler(Diagram diagram) {
         this.diagram = diagram;
@@ -87,8 +88,31 @@ public class DiagramUiHandler {
         connect(controller, leftDot, rightDot);
     }
 
+    public void createGroup(MatDefEditorController controller, String groupName, List<ShaderNodePanel> panels) {
+//        Group g = new Group(controller, groupName, panels);
+//        groups.put(groupName, g);
+//        ShaderNodeGroup groupPanel = g.getComponent();
+//        int x = Integer.MAX_VALUE, y = Integer.MAX_VALUE;
+//        Point loc = new Point();
+//        for (ShaderNodePanel panel : panels) {
+//            panel.setGroup(groupPanel);
+//            panel.getLocation(loc);
+//            if (loc.x < x) {
+//                x = loc.x;
+//            }
+//            if (loc.y < y) {
+//                y = loc.y;
+//            }
+//            panel.cleanup();
+//            diagram.remove(panel);
+//        }
+//        groupPanel.setLocation(x, y);
+//        attachNodePanel(groupPanel);
+//        refreshDiagram();
+    }
+
     Connection connect(MatDefEditorController controller, Dot start, Dot end) {
-        String key = MaterialDefUtils.makeConnectionKey(start.getNode().getName(), start.getText(), end.getNode().getName(), end.getText(), currentTechniqueName);
+        String key = MaterialDefUtils.makeConnectionKey(start.getNodeName(), start.getVariableName(), end.getNodeName(), end.getVariableName(), currentTechniqueName);
         Connection conn = new Connection(controller, key, start, end);
         start.connect(conn);
         end.connect(conn);
@@ -299,8 +323,8 @@ public class DiagramUiHandler {
                 if (reconnect) {
                     if (conn.getStart().getNode() == panel) {
                         if (hasVariableWithName(conn.getStart().getText(), sn.getDefinition().getOutputs())) {
-                            ShaderNodeVariable left = new ShaderNodeVariable(conn.getEnd().getType(), conn.getEnd().getNode().getName(), conn.getEnd().getText());
-                            ShaderNodeVariable right = new ShaderNodeVariable(conn.getStart().getType(), conn.getStart().getNode().getName(), conn.getStart().getText());
+                            ShaderNodeVariable left = new ShaderNodeVariable(conn.getEnd().getType(), conn.getEnd().getNodeName(), conn.getEnd().getVariableName());
+                            ShaderNodeVariable right = new ShaderNodeVariable(conn.getStart().getType(), conn.getStart().getNodeName(), conn.getStart().getVariableName());
                             tmpOutMappings.add(new VariableMapping(left, "", right, "", null));
                         }
                     }
@@ -348,8 +372,8 @@ public class DiagramUiHandler {
 
         //refresh connection keys
         for (Connection connection : connections) {
-            String key = MaterialDefUtils.makeConnectionKey(connection.getStart().getNode().getName(), connection.getStart().getText(),
-                    connection.getEnd().getNode().getName(), connection.getEnd().getText(), currentTechniqueName);
+            String key = MaterialDefUtils.makeConnectionKey(connection.getStart().getNodeName(), connection.getStart().getVariableName(),
+                    connection.getEnd().getNodeName(), connection.getEnd().getVariableName(), currentTechniqueName);
             connection.setKey(key);
         }
     }
@@ -601,4 +625,19 @@ public class DiagramUiHandler {
         return n;
     }
 
+    private class Group {
+        List<ShaderNodePanel> nodes;
+        MatDefEditorController controller;
+        String name;
+
+        public Group(MatDefEditorController controller, String groupName, List<ShaderNodePanel> nodes) {
+            this.nodes = nodes;
+            this.name = groupName;
+            this.controller = controller;
+        }
+
+        ShaderNodeGroup getComponent() {
+            return ShaderNodeGroup.create(controller, name, nodes);
+        }
+    }
 }

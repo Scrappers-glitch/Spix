@@ -84,5 +84,7 @@ public class Icons {
     public final static ImageIcon rotate = new ImageIcon(Icons.class.getResource("/icons/rotate.png"));
     public final static ImageIcon scale = new ImageIcon(Icons.class.getResource("/icons/scale.png"));
     public final static ImageIcon translate = new ImageIcon(Icons.class.getResource("/icons/translate.png"));
+    public final static ImageIcon coneOn = new ImageIcon(Icons.class.getResource("/icons/coneOn.png"));
+    public final static ImageIcon coneOff = new ImageIcon(Icons.class.getResource("/icons/coneOff.png"));
 }
 

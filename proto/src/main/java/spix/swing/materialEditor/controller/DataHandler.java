@@ -101,7 +101,6 @@ public class DataHandler {
 
     public void removeMatParam(String key) {
         key = key.substring(key.lastIndexOf(".") + 1);
-        System.err.println(key);
         MaterialDefUtils.removeParam(currentMatDef, key);
     }
 

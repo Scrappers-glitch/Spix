@@ -68,14 +68,14 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         for (ShaderNodeVariable input : inputs) {
 
             JLabel label = createLabel(input.getType(), input.getName(), Dot.ParamType.Input);
-            Dot dot = createDot(input.getType(), Dot.ParamType.Input, input.getName());
+            Dot dot = createDot(input.getType(), Dot.ParamType.Input, input.getName(), this.getNodeName());
             inputLabels.add(label);
             inputDots.put(input.getName(), dot);
         }
         int index = 0;
         for (ShaderNodeVariable output : outputs) {
             JLabel label = createLabel(output.getType(), output.getName(), Dot.ParamType.Output);
-            Dot dot = createDot(output.getType(), Dot.ParamType.Output, output.getName());
+            Dot dot = createDot(output.getType(), Dot.ParamType.Output, output.getName(), this.getNodeName());
             dot.setIndex(index++);
             outputLabels.add(label);
             outputDots.put(output.getName(), dot);
@@ -351,14 +351,28 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         return label;
     }
 
-    public Dot createDot(String type, Dot.ParamType paramType, String paramName) {
+    public Dot createDot(String type, Dot.ParamType paramType, String paramName, String nodeName) {
         Dot dot1 = new Dot(controller);
         dot1.setShaderType(getShaderType());
         dot1.setNode(this);
         dot1.setText(paramName);
+        dot1.setVariableName(paramName);
+        dot1.setNodeName(nodeName);
         dot1.setParamType(paramType);
         dot1.setType(type);
         return dot1;
+    }
+
+
+    public final void refresh(String name) {
+        setNodeName(name);
+        for (Dot dot : inputDots.values()) {
+            dot.setNodeName(name);
+        }
+        for (Dot dot : outputDots.values()) {
+            dot.setNodeName(name);
+        }
+        setTitle(name);
     }
 
 

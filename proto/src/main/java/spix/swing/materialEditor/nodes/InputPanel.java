@@ -62,7 +62,7 @@ public abstract class InputPanel extends NodePanel {
             protected void initHeader(JLabel header) {
                 header.setText(type.name());
                 header.setToolTipText(type.name());
-                setNodeName(var.getNameSpace());
+                refresh(var.getNameSpace());
             }
         };
     }
