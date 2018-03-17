@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Created by Nehon on 13/05/2016.
  */
-public abstract class ShaderNodePanel extends NodePanel implements Editable {
+public abstract class ShaderNodePanel extends NodePanel {
 
     private boolean editionAllowed = true;
     private List<String> filePaths = new ArrayList<>();
@@ -34,23 +34,6 @@ public abstract class ShaderNodePanel extends NodePanel implements Editable {
         header.setText(getNodeName());
         header.setToolTipText(getNodeName());
     }
-
-    public void edit() {
-        if(editionAllowed) {
-            //TODO pop an edition window
-        }
-    }
-
-    @Override
-    public void setEditionAllowed(boolean editionAllowed) {
-        this.editionAllowed = editionAllowed;
-    }
-
-    @Override
-    public boolean isEditionAllowed() {
-        return editionAllowed;
-    }
-
 
     public static ShaderNodePanel create(MatDefEditorController controller, String key,  ShaderNode shaderNode){
         Color color = new Color(0,0,0);

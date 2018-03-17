@@ -237,6 +237,10 @@ public class Dot extends JPanel {
         this.index = index;
     }
 
+    @Override
+    public String toString() {
+        return nodeName + "." + variableName;
+    }
 
     private class DotMouseListener extends MouseAdapter {
 
@@ -255,7 +259,7 @@ public class Dot extends JPanel {
         public void mouseReleased(MouseEvent e) {
             Dot from = dragHandler.getDraggedFrom();
             Dot to = dragHandler.getDraggedTo();
-            if ( from == Dot.this && to != null) {
+            if (from == Dot.this && to != null) {
                 if (Dot.this.canConnect(to)) {
                     controller.connect(Dot.this, to);
                 } else {

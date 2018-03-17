@@ -309,7 +309,7 @@ public class MatDefEditorController {
         return dragHandler;
     }
 
-    void initTechnique(TechniqueDef technique, MaterialDef matDef, Map<String, Object> matDefMetadata) {
+    void initTechnique(MatDefEditorController controller, TechniqueDef technique, MaterialDef matDef, Map<String, Object> matDefMetadata) {
         if (!technique.isUsingShaderNodes()) {
             return;
         }
@@ -360,7 +360,7 @@ public class MatDefEditorController {
 
         //this will change when we have meta data
         refreshPreviews();
-        diagramUiHandler.autoLayout(sortedNodes);
+        diagramUiHandler.autoLayout(controller, sortedNodes);
     }
 
     public void onSelectionPropertyChange(Geometry selection) {
@@ -523,6 +523,10 @@ public class MatDefEditorController {
         return diagramUiHandler.fixNodeName(name, 0);
     }
 
+    private String fixGroupName(String name) {
+        return diagramUiHandler.fixGroupName(name, 0);
+    }
+
 
     public void multiMove(DraggablePanel movedPanel, int xOffset, int yOffset) {
         selectionHandler.multiMove(movedPanel, xOffset, yOffset);
@@ -582,8 +586,13 @@ public class MatDefEditorController {
     public void groupSelected() {
 
         String result = JOptionPane.showInputDialog(editor, "Please enter a name for the group?", "Group");
-        List<ShaderNodePanel> nodes = selectionHandler.getSelectedShaderNodes();
+        List<NodePanel> nodes = selectionHandler.getSelectedNodePanels();
+        result = fixGroupName(result);
         diagramUiHandler.createGroup(this, result, nodes);
+    }
+
+    public void ungroup(String groupName){
+        diagramUiHandler.ungroup(groupName);
     }
 
     public void dispatchEventToDiagram(MouseEvent e, Component source) {
@@ -634,7 +643,7 @@ public class MatDefEditorController {
                 @Override
                 public void run() {
                     editor.setTitle("Material Definition Editor - " + matDef.getAssetName());
-                    initTechnique(techniques.get(0), matDef, matDefMetadata);
+                    initTechnique(MatDefEditorController.this, techniques.get(0), matDef, matDefMetadata);
                 }
             });
 

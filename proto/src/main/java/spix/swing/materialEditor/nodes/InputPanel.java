@@ -18,14 +18,25 @@ public abstract class InputPanel extends NodePanel {
     protected Shader.ShaderType shaderType = null;
 
     public enum ShaderInputType{
-        Attribute,
-        MatParam,
-        WorldParam
+        Attribute("Attr"),
+        MatParam("MatParam"),
+        WorldParam("WorldParam");
+
+        String nameSpace;
+
+        public String getNameSpace() {
+            return nameSpace;
+        }
+
+        ShaderInputType(String nameSpace) {
+            this.nameSpace = nameSpace;
+        }
     }
 
-    private InputPanel(MatDefEditorController controller, String key, ShaderNodeVariable variable, Color color, Icon icon, Shader.ShaderType shaderType ){
+    private InputPanel(MatDefEditorController controller, String key, ShaderNodeVariable variable, Color color, Icon icon, Shader.ShaderType shaderType, String nameSpace ){
         super(controller, key, color, icon);
         this.shaderType = shaderType;
+        setNodeName(nameSpace);
         java.util.List<ShaderNodeVariable> outputs = new ArrayList<ShaderNodeVariable>();
         outputs.add(variable);
         init(new ArrayList<ShaderNodeVariable>(), outputs);
@@ -52,7 +63,7 @@ public abstract class InputPanel extends NodePanel {
                 break;
         }
 
-        return new InputPanel(controller, key, var, color, icon, sType) {
+        return new InputPanel(controller, key, var, color, icon, sType, type.getNameSpace()) {
             @Override
             public Shader.ShaderType getShaderType() {
                 return shaderType;
@@ -62,7 +73,6 @@ public abstract class InputPanel extends NodePanel {
             protected void initHeader(JLabel header) {
                 header.setText(type.name());
                 header.setToolTipText(type.name());
-                refresh(var.getNameSpace());
             }
         };
     }

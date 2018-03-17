@@ -88,27 +88,49 @@ public class DiagramUiHandler {
         connect(controller, leftDot, rightDot);
     }
 
-    public void createGroup(MatDefEditorController controller, String groupName, List<ShaderNodePanel> panels) {
-//        Group g = new Group(controller, groupName, panels);
-//        groups.put(groupName, g);
-//        ShaderNodeGroup groupPanel = g.getComponent();
-//        int x = Integer.MAX_VALUE, y = Integer.MAX_VALUE;
-//        Point loc = new Point();
-//        for (ShaderNodePanel panel : panels) {
-//            panel.setGroup(groupPanel);
-//            panel.getLocation(loc);
-//            if (loc.x < x) {
-//                x = loc.x;
-//            }
-//            if (loc.y < y) {
-//                y = loc.y;
-//            }
-//            panel.cleanup();
-//            diagram.remove(panel);
-//        }
-//        groupPanel.setLocation(x, y);
-//        attachNodePanel(groupPanel);
-//        refreshDiagram();
+    public void createGroup(MatDefEditorController controller, String groupName, List<NodePanel> panels) {
+        Group g = new Group(controller, groupName, panels);
+        groups.put(groupName, g);
+        initGroup(g);
+        refreshDiagram();
+    }
+
+    public void initGroup(Group group) {
+
+        ShaderNodeGroup groupPanel = group.getComponent();
+        int x = Integer.MAX_VALUE, y = Integer.MAX_VALUE;
+        Point loc = new Point();
+        for (NodePanel node : group.nodes) {
+            ShaderNodeMetadata nodeMd = getNodeMetadata(node);
+            nodeMd.setGroup(group.name);
+            node.getLocation(loc);
+            if (loc.x < x) {
+                x = loc.x;
+            }
+            if (loc.y < y) {
+                y = loc.y;
+            }
+            node.hideToolBar();
+            diagram.remove(node);
+
+        }
+
+        groupPanel.setLocation(x, y);
+        attachNodePanel(groupPanel);
+    }
+
+    public void ungroup(String groupName) {
+        Group g = groups.remove(groupName);
+        if (g == null) {
+            return;
+        }
+        g.getComponent().cleanup(g.nodes, connections);
+        diagram.remove(g.getComponent());
+        for (NodePanel node : g.nodes) {
+            diagram.add(node);
+            diagram.setComponentZOrder(node, 0);
+        }
+        refreshDiagram();
     }
 
     Connection connect(MatDefEditorController controller, Dot start, Dot end) {
@@ -147,13 +169,13 @@ public class DiagramUiHandler {
     private Dot findConnectPointForInput(MatDefEditorController controller, VariableMapping mapping, NodePanel forNode) {
         String nameSpace = mapping.getLeftVariable().getNameSpace();
         String name = mapping.getLeftVariable().getName();
-        return getNodePanelForConnection(controller, forNode, nameSpace, name, true).getInputConnectPoint(name);
+        return getNodePanelForConnection(controller, forNode, nameSpace, name, true).getInputConnectPoint(nameSpace, name);
     }
 
     private Dot findConnectPointForOutput(MatDefEditorController controller, VariableMapping mapping, NodePanel forNode) {
         String nameSpace = mapping.getRightVariable().getNameSpace();
         String name = mapping.getRightVariable().getName();
-        return getNodePanelForConnection(controller, forNode, nameSpace, name, false).getOutputConnectPoint(name);
+        return getNodePanelForConnection(controller, forNode, nameSpace, name, false).getOutputConnectPoint(nameSpace, name);
     }
 
     private NodePanel getNodePanelForConnection(MatDefEditorController controller, NodePanel forNode, String nameSpace, String name, boolean forInput) {
@@ -188,13 +210,13 @@ public class DiagramUiHandler {
 
         if (!forInput) {
             for (OutPanel outPanel : panelList) {
-                if (outPanel.isOutputAvailable() && !outPanel.getInputConnectPoint(var.getName()).isConnectedToNode(node)) {
+                if (outPanel.isOutputAvailable() && !outPanel.getInputConnectPoint(var.getNameSpace(), var.getName()).isConnectedToNode(node)) {
                     return outPanel;
                 }
             }
         } else {
             for (OutPanel outPanel : panelList) {
-                if (outPanel.isInputAvailable() && !outPanel.getOutputConnectPoint(var.getName()).isConnectedToNode(node)) {
+                if (outPanel.isInputAvailable() && !outPanel.getOutputConnectPoint(var.getNameSpace(), var.getName()).isConnectedToNode(node)) {
                     return outPanel;
                 }
             }
@@ -410,6 +432,15 @@ public class DiagramUiHandler {
         return name + (count == 0 ? "" : count);
     }
 
+    String fixGroupName(String name, int count) {
+        for (Group group : groups.values()) {
+            if ((name + (count == 0 ? "" : count)).equals(group.name)) {
+                return fixGroupName(name, count + 1);
+            }
+        }
+        return name + (count == 0 ? "" : count);
+    }
+
     Connection pickForConnection(MouseEvent e) {
         for (Connection connection : connections) {
             MouseEvent me = SwingUtilities.convertMouseEvent(diagram, e, connection);
@@ -420,14 +451,15 @@ public class DiagramUiHandler {
         return null;
     }
 
-    public void autoLayout(Deque<Node> sortedNodes) {
-        if(sortedNodes == null) {
+    public void autoLayout(MatDefEditorController controller, Deque<Node> sortedNodes) {
+        if (sortedNodes == null) {
             return;
         }
         //first layout from metadata
         boolean needsAutoLayout = false;
         for (NodePanel p : nodes.values()) {
             ShaderNodeMetadata nodeMD = getNodeMetadata(p);
+            checkGroup(controller, p, nodeMD);
             p.setLocation(nodeMD.getX(), nodeMD.getY());
             if (nodeMD.getX() < 0) {
                 needsAutoLayout = true;
@@ -437,11 +469,20 @@ public class DiagramUiHandler {
             for (List<OutPanel> list : map.values()) {
                 for (OutPanel p : list) {
                     ShaderNodeMetadata nodeMD = getNodeMetadata(p);
+                    checkGroup(controller, p, nodeMD);
                     p.setLocation(nodeMD.getX(), nodeMD.getY());
                     if (nodeMD.getX() < 0) {
                         needsAutoLayout = true;
                     }
                 }
+            }
+        }
+
+        if (!groups.isEmpty()) {
+            for (Group group : groups.values()) {
+                initGroup(group);
+                ShaderNodeMetadata md = getGroupMetadata(group);
+                group.getComponent().setLocation(md.getX(), md.getY());
             }
         }
 
@@ -503,6 +544,20 @@ public class DiagramUiHandler {
 
     }
 
+    public void checkGroup(MatDefEditorController controller, NodePanel p, ShaderNodeMetadata nodeMD) {
+        String groupName = nodeMD.getGroup();
+        if (groupName != null) {
+            Group g = groups.get(groupName);
+            if (g == null) {
+                g = new Group(controller, groupName, new ArrayList<>());
+                groups.put(groupName, g);
+            }
+            if (!g.nodes.contains(p)) {
+                g.nodes.add(p);
+            }
+        }
+    }
+
     public void onNodeMoved(NodePanel node) {
         ShaderNodeMetadata nodeMD = getNodeMetadata(node);
         Point p = node.getLocation();
@@ -512,20 +567,22 @@ public class DiagramUiHandler {
     }
 
     private ShaderNodeMetadata getNodeMetadata(NodePanel node) {
-        Map<String, Map<String, ShaderNodeMetadata>> nodeLayout = (Map<String, Map<String, ShaderNodeMetadata>>) matDefMetadata.get("NodesLayout");
-        if (nodeLayout == null) {
-            nodeLayout = new LinkedHashMap<>();
-            matDefMetadata.put("NodesLayout", nodeLayout);
-        }
-        Map<String, ShaderNodeMetadata> techLayout = nodeLayout.get(currentTechniqueName);
-        if (techLayout == null) {
-            techLayout = new LinkedHashMap<>();
-            nodeLayout.put(currentTechniqueName, techLayout);
-        }
+        Map<String, ShaderNodeMetadata> techLayout = getTechMetadata();
         ShaderNodeMetadata nodeMD = techLayout.get(node.getKey());
         if (nodeMD == null) {
             nodeMD = new ShaderNodeMetadata();
             techLayout.put(node.getKey(), nodeMD);
+        }
+
+        return nodeMD;
+    }
+
+    private ShaderNodeMetadata getGroupMetadata(Group g) {
+        Map<String, ShaderNodeMetadata> techLayout = getTechMetadata();
+        ShaderNodeMetadata nodeMD = techLayout.get("group." + g.name);
+        if (nodeMD == null) {
+            nodeMD = new ShaderNodeMetadata();
+            techLayout.put("group." + g.name, nodeMD);
         }
 
         return nodeMD;
@@ -626,18 +683,27 @@ public class DiagramUiHandler {
     }
 
     private class Group {
-        List<ShaderNodePanel> nodes;
+        List<NodePanel> nodes;
         MatDefEditorController controller;
+        ShaderNodeGroup panel;
         String name;
 
-        public Group(MatDefEditorController controller, String groupName, List<ShaderNodePanel> nodes) {
+        public Group(MatDefEditorController controller, String groupName, List<NodePanel> nodes) {
             this.nodes = nodes;
             this.name = groupName;
             this.controller = controller;
         }
 
         ShaderNodeGroup getComponent() {
-            return ShaderNodeGroup.create(controller, name, nodes);
+            if (panel != null) {
+                return panel;
+            }
+            createComponent();
+            return panel;
+        }
+
+        private void createComponent() {
+            panel = ShaderNodeGroup.create(controller, name, nodes, connections);
         }
     }
 }

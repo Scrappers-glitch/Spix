@@ -36,19 +36,14 @@ public class Connection extends JPanel implements Selectable {
     private final Point p4 = new Point();
 
     private boolean selected = false;
+    private boolean hidden = false;
 
     private ComponentManager componentListener = new ComponentManager();
 
-    public Connection(MatDefEditorController controller, String key,  Dot start, Dot end) {
+    public Connection(MatDefEditorController controller, String key, Dot start, Dot end) {
         this.controller = controller;
         this.key = key;
-        if (start.getParamType() == Dot.ParamType.Output) {
-            this.start = start;
-            this.end = end;
-        } else {
-            this.start = end;
-            this.end = start;
-        }
+        updateConnectPoints(start, end);
 
         for (int i = 0; i < 7; i++) {
             points[i] = new Point();
@@ -64,6 +59,16 @@ public class Connection extends JPanel implements Selectable {
         setFocusable(true);
         setOpaque(false);
 
+    }
+
+    public void updateConnectPoints(Dot start, Dot end) {
+        if (start.getParamType() == Dot.ParamType.Output) {
+            this.start = start;
+            this.end = end;
+        } else {
+            this.start = end;
+            this.end = start;
+        }
     }
 
     public ComponentListener getComponentListener() {
@@ -83,8 +88,19 @@ public class Connection extends JPanel implements Selectable {
         this.selected = selected;
     }
 
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
+        if (hidden) {
+            return;
+        }
         if (!points[0].getLocation().equals(this.start.getStartLocation())) {
             resize(this.start, this.end);
         }
@@ -316,6 +332,11 @@ public class Connection extends JPanel implements Selectable {
         return end;
     }
 
+    @Override
+    public String toString() {
+        return start.toString() + " -> " + end.toString();
+    }
+
     private class MouseManagerListener extends MouseAdapter {
 
         @Override
@@ -354,7 +375,7 @@ public class Connection extends JPanel implements Selectable {
         }
     }
 
-    private class ComponentManager extends ComponentAdapter{
+    private class ComponentManager extends ComponentAdapter {
         public void componentMoved(ComponentEvent e) {
             resize(start, end);
         }

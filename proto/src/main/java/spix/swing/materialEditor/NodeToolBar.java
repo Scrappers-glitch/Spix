@@ -6,8 +6,8 @@
 package spix.swing.materialEditor;
 
 import spix.swing.materialEditor.icons.Icons;
-import spix.swing.materialEditor.nodes.Editable;
 import spix.swing.materialEditor.nodes.NodePanel;
+import spix.swing.materialEditor.nodes.ShaderNodeGroup;
 
 import java.awt.event.*;
 import java.util.*;
@@ -19,6 +19,8 @@ public class NodeToolBar extends javax.swing.JPanel implements ComponentListener
 
     private final NodePanel node;
     private ResourceBundle labels = ResourceBundle.getBundle("Bundle", Locale.ROOT);
+    private javax.swing.JButton ungroupButtton;
+    private javax.swing.JButton deleteButton;
 
     /**
      * Creates new form NodeToolBar
@@ -27,8 +29,8 @@ public class NodeToolBar extends javax.swing.JPanel implements ComponentListener
     public NodeToolBar(NodePanel node) {
         initComponents();
         this.node = node;
-        if (!(node instanceof Editable)) {
-            remove(codeButton);
+        if(!(node instanceof ShaderNodeGroup)){
+            remove(ungroupButtton);
         }
         node.addComponentListener(this);
     }
@@ -37,7 +39,7 @@ public class NodeToolBar extends javax.swing.JPanel implements ComponentListener
     //TODO make the toolbar contextual depending of the node allowed actions.
     private void initComponents() {
 
-        codeButton = new javax.swing.JButton();
+        ungroupButtton = new javax.swing.JButton();
         deleteButton = new javax.swing.JButton();
 
         setOpaque(false);
@@ -45,25 +47,25 @@ public class NodeToolBar extends javax.swing.JPanel implements ComponentListener
         layout.rowHeights = new int[]{16};
         setLayout(layout);
 
-        codeButton.setBackground(new java.awt.Color(255, 255, 255));
-        codeButton.setIcon(Icons.code); // NOI18N
-        codeButton.setToolTipText(labels.getString("NodeToolBar.codeButton.toolTipText")); // NOI18N
-        codeButton.setBorder(null);
-        codeButton.setBorderPainted(false);
-        codeButton.setContentAreaFilled(false);
-        codeButton.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        codeButton.setFocusable(false);
-        codeButton.setIconTextGap(0);
-        codeButton.setMaximumSize(new java.awt.Dimension(24, 24));
-        codeButton.setMinimumSize(new java.awt.Dimension(24, 24));
-        codeButton.setPreferredSize(new java.awt.Dimension(16, 16));
-        codeButton.setRolloverIcon(Icons.codeHover); // NOI18N
-        codeButton.addActionListener(new java.awt.event.ActionListener() {
+        ungroupButtton.setBackground(new java.awt.Color(255, 255, 255));
+        ungroupButtton.setIcon(Icons.code); // NOI18N
+        ungroupButtton.setToolTipText(labels.getString("NodeToolBar.codeButton.toolTipText")); // NOI18N
+        ungroupButtton.setBorder(null);
+        ungroupButtton.setBorderPainted(false);
+        ungroupButtton.setContentAreaFilled(false);
+        ungroupButtton.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        ungroupButtton.setFocusable(false);
+        ungroupButtton.setIconTextGap(0);
+        ungroupButtton.setMaximumSize(new java.awt.Dimension(24, 24));
+        ungroupButtton.setMinimumSize(new java.awt.Dimension(24, 24));
+        ungroupButtton.setPreferredSize(new java.awt.Dimension(16, 16));
+        ungroupButtton.setRolloverIcon(Icons.codeHover); // NOI18N
+        ungroupButtton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                codeButtonActionPerformed(evt);
+                ungroupButtonActionPerformed(evt);
             }
         });
-        add(codeButton, new java.awt.GridBagConstraints());
+        add(ungroupButtton, new java.awt.GridBagConstraints());
 
         deleteButton.setBackground(new java.awt.Color(255, 255, 255));
         deleteButton.setIcon(Icons.deleteNode); // NOI18N
@@ -87,8 +89,8 @@ public class NodeToolBar extends javax.swing.JPanel implements ComponentListener
         add(deleteButton, new java.awt.GridBagConstraints());
     }
 
-    private void codeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_codeButtonActionPerformed
-        node.edit();
+    private void ungroupButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_codeButtonActionPerformed
+        ((ShaderNodeGroup)node).ungroup();
     }
 
     private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
@@ -96,10 +98,6 @@ public class NodeToolBar extends javax.swing.JPanel implements ComponentListener
     }
 
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton codeButton;
-    private javax.swing.JButton deleteButton;
-    // End of variables declaration//GEN-END:variables
 
     public void display() {
         if (getParent() == null) {

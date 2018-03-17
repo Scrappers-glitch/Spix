@@ -26,13 +26,14 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
     private JPanel content;
     private JLabel header;
     protected JLabel previewLabel;
-    private Color color;
+    protected Color color;
     private Icon icon;
     private String nodeName;
     private String key;
     private NodeToolBar toolBar;
     protected boolean selected = false;
     protected boolean displayPreview = false;
+    protected Color backgroundColor = new Color(100, 100, 100, 200);
 
 
     public NodePanel(MatDefEditorController controller, String key, Color color, Icon icon) {
@@ -55,14 +56,6 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
 
     protected abstract void initHeader(JLabel header);
 
-//    public final void refresh(ShaderNodeBlock node) {
-//        nodeName = node.getName();
-//        header.setText(node.getName());
-//        header.setToolTipText(node.getName());
-//
-//    }
-
-
     protected void init(List<ShaderNodeVariable> inputs, List<ShaderNodeVariable> outputs) {
 
         for (ShaderNodeVariable input : inputs) {
@@ -70,7 +63,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
             JLabel label = createLabel(input.getType(), input.getName(), Dot.ParamType.Input);
             Dot dot = createDot(input.getType(), Dot.ParamType.Input, input.getName(), this.getNodeName());
             inputLabels.add(label);
-            inputDots.put(input.getName(), dot);
+            inputDots.put(this.getNodeName() + "." + input.getName(), dot);
         }
         int index = 0;
         for (ShaderNodeVariable output : outputs) {
@@ -78,21 +71,23 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
             Dot dot = createDot(output.getType(), Dot.ParamType.Output, output.getName(), this.getNodeName());
             dot.setIndex(index++);
             outputLabels.add(label);
-            outputDots.put(output.getName(), dot);
+            outputDots.put(this.getNodeName() + "." +output.getName(), dot);
         }
 
+        init();
+    }
+
+    protected void init() {
         if (displayPreview) {
-            setBounds(0, 0, 150, 30 + inputs.size() * 20 + outputs.size() * 20 + 95);
+            setBounds(0, 0, 150, 30 + inputLabels.size() * 20 + outputLabels.size() * 20 + 95);
         } else {
-            setBounds(0, 0, 110, 30 + inputs.size() * 17 + outputs.size() * 17);
+            setBounds(0, 0, 110, 30 + inputLabels.size() * 17 + outputLabels.size() * 17);
         }
 
         initComponents();
 
         initHeader(header);
         setOpaque(false);
-
-
     }
 
     public void setTitle(String s) {
@@ -108,12 +103,12 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         this.nodeName = nodeName;
     }
 
-    public Dot getInputConnectPoint(String varName) {
-        return inputDots.get(varName);
+    public Dot getInputConnectPoint(String nameSpace, String varName) {
+        return inputDots.get(nameSpace + "." + varName);
     }
 
-    public Dot getOutputConnectPoint(String varName) {
-        return outputDots.get(varName);
+    public Dot getOutputConnectPoint(String nameSpace, String varName) {
+        return outputDots.get(nameSpace + "." + varName);
     }
 
     public Map<String, Dot> getInputConnectPoints() {
@@ -150,16 +145,16 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
             g.fillRoundRect(8, 3, getWidth() - 10, getHeight() - 6, 15, 15);
         } else {
             if (toolBar.isVisible()) {
-                toolBar.setVisible(false);
+                hideToolBar();
             }
         }
 
-        g.setColor(new Color(100, 100, 100, 200));
+        g.setColor(backgroundColor);
         g.fillRoundRect(5, 1, getWidth() - 9, getHeight() - 6, 15, 15);
         g.setColor(borderColor);
 
         g.drawRoundRect(4, 0, getWidth() - 9, getHeight() - 6, 15, 15);
-        g.setColor(new Color(100, 100, 100, 200));
+        g.setColor(backgroundColor);
         g.fillRect(4, 1, 10, 10);
         g.setColor(borderColor);
         g.drawLine(4, 0, 14, 0);
@@ -205,6 +200,10 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         toolBar.display();
     }
 
+    public void hideToolBar() {
+        toolBar.setVisible(false);
+    }
+
     /**
      * override to do edit this node content.
      */
@@ -244,7 +243,7 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         int txtLength = 90;
 
 
-        if(displayPreview){
+        if (displayPreview) {
             previewLabel = new JLabel();
             previewLabel.setBackground(new java.awt.Color(100, 100, 100));
             previewLabel.setForeground(new java.awt.Color(100, 100, 100));
@@ -380,6 +379,10 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         controller.removeSelected();
     }
 
+    @Override
+    public String toString() {
+        return nodeName;
+    }
 
     // used to pass press and drag events to the NodePanel when they occur on the label
     private LabelMouseMotionListener labelMouseMotionListener = new LabelMouseMotionListener();
