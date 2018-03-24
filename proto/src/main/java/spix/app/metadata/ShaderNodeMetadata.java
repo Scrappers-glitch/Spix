@@ -1,5 +1,10 @@
 package spix.app.metadata;
 
+import com.jme3.util.IntMap;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by Nehon on 10/06/2017.
  */
@@ -9,7 +14,8 @@ public class ShaderNodeMetadata {
     private int y = -1;
     private boolean collapsed = false;
     private String group;
-
+    private Map<Integer, String> inputNames = new HashMap<>();
+    private Map<Integer, String> outputNames = new HashMap<>();
 
     public ShaderNodeMetadata(int x, int y, boolean collapsed, String group) {
         this.x = x;
@@ -24,6 +30,13 @@ public class ShaderNodeMetadata {
     }
 
     public ShaderNodeMetadata() {
+    }
+
+    public void setInputName(int index, String name){
+        inputNames.put(index, name);
+    }
+    public void setOutputName(int index, String name){
+        outputNames.put(index, name);
     }
 
     public int getX() {
@@ -56,6 +69,22 @@ public class ShaderNodeMetadata {
 
     public void setGroup(String group) {
         this.group = group;
+    }
+
+    public  Map<Integer, String> getInputNames() {
+        return inputNames;
+    }
+
+    public  Map<Integer, String> getOutputNames() {
+        return outputNames;
+    }
+
+    public void setInputNames(Map<Integer, String> inputNames) {
+        this.inputNames = inputNames;
+    }
+
+    public void setOutputNames(Map<Integer, String> outputNames) {
+        this.outputNames = outputNames;
     }
 
     @Override

@@ -37,6 +37,11 @@ public class DraggablePanel extends JPanel {
             public void mouseDragged(MouseEvent e) {
                 DraggablePanel.this.onMouseDragged(e);
             }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                DraggablePanel.this.onMouseMoved(e);
+            }
         });
     }
 
@@ -65,6 +70,9 @@ public class DraggablePanel extends JPanel {
     }
 
     public void onMouseReleased(MouseEvent e) {
+    }
+
+    public void onMouseMoved(MouseEvent e) {
     }
 
     public void saveLocation() {

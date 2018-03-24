@@ -119,12 +119,11 @@ public class Dot extends JPanel {
 
         if (pair == null || paramType == ParamType.Input ||
                 ((pair.getNode() instanceof OutPanel || node instanceof OutPanel) && shaderType != pair.shaderType)
-                || (pair.getNode() instanceof OutPanel && node instanceof OutPanel)) {
+                || (pair.getNode() instanceof OutPanel && node instanceof OutPanel) || (pair.getNode() instanceof GroupInOutPanel)) {
             img = Icons.imgOrange;
             repaint();
             return false;
         }
-
 
         if (matches(pair.getType(), type) && (pair.getParamType() != paramType)
                 || ShaderUtils.isSwizzlable(pair.getType()) && ShaderUtils.isSwizzlable(type)) {
@@ -132,7 +131,6 @@ public class Dot extends JPanel {
             repaint();
             return true;
         }
-
 
         img = Icons.imgRed;
         repaint();
@@ -248,6 +246,9 @@ public class Dot extends JPanel {
 
         @Override
         public void mousePressed(MouseEvent e) {
+            if(getNode() instanceof GroupInOutPanel){
+                return;
+            }
             prevImg = img;
             img = Icons.imgOrange;
             dragHandler.setDraggedFrom(Dot.this);
@@ -258,7 +259,13 @@ public class Dot extends JPanel {
         @Override
         public void mouseReleased(MouseEvent e) {
             Dot from = dragHandler.getDraggedFrom();
-            Dot to = dragHandler.getDraggedTo();
+            JComponent cmp = dragHandler.getDraggedTo();
+            Dot to = null;
+            if(cmp instanceof Dot){
+                to = (Dot)cmp;
+            } else if (cmp instanceof GroupInOutPanel){
+                ((GroupInOutPanel)cmp).draggedOver();
+            }
             if (from == Dot.this && to != null) {
                 if (Dot.this.canConnect(to)) {
                     controller.connect(Dot.this, to);
@@ -284,13 +291,16 @@ public class Dot extends JPanel {
                 dragHandler.setDraggedTo(Dot.this);
                 from.canConnect(Dot.this);
             }
-
         }
 
         @Override
         public void mouseExited(MouseEvent e) {
             Dot from = dragHandler.getDraggedFrom();
-            Dot to = dragHandler.getDraggedTo();
+            JComponent cmp = dragHandler.getDraggedTo();
+            Dot to = null;
+            if(cmp instanceof Dot){
+                to = (Dot)cmp;
+            }
             if (from != null) {
                 from.canConnect(null);
                 if (from != Dot.this) {

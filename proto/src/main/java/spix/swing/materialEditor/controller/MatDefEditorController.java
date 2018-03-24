@@ -8,6 +8,7 @@ import spix.app.DefaultConstants;
 import spix.app.FileIoService;
 import spix.app.material.hack.*;
 import spix.app.metadata.MetadataService;
+import spix.app.metadata.ShaderNodeMetadata;
 import spix.app.utils.CloneUtils;
 import spix.core.*;
 import spix.props.PropertySet;
@@ -15,6 +16,7 @@ import spix.swing.PropertyEditorPanel;
 import spix.swing.SwingGui;
 import spix.swing.materialEditor.*;
 import spix.swing.materialEditor.dialog.*;
+import spix.swing.materialEditor.icons.Icons;
 import spix.swing.materialEditor.nodes.*;
 import spix.swing.materialEditor.panels.*;
 import spix.swing.materialEditor.sort.Node;
@@ -47,7 +49,6 @@ public class MatDefEditorController {
     private DragHandler dragHandler = new DragHandler();
     private SelectionModel sceneSelection;
     private SceneSelectionChangeListener sceneSelectionChangeListener = new SceneSelectionChangeListener();
-    //private DiagramSelectionChangeListener diagramSelectionChangeListener = new DiagramSelectionChangeListener();
     private List<TechniqueDef> techniques = new ArrayList<>();
     private DiagramUiHandler diagramUiHandler;
     private SelectionHandler selectionHandler = new SelectionHandler();
@@ -62,6 +63,7 @@ public class MatDefEditorController {
 
     private Map<String, MatParam> matParams = new HashMap<>();
 
+    private Group context;
 
     public MatDefEditorController(SwingGui gui, MatDefEditorWindow editor) {
         this.gui = gui;
@@ -74,15 +76,13 @@ public class MatDefEditorController {
 
         Diagram diagram = initUi(gui, editor);
         diagramUiHandler = new DiagramUiHandler(diagram);
-
-
     }
 
     private void createToolbar(final SwingGui gui, MatDefEditorWindow editor) {
         //todo fix this
         JToolBar tb = new JToolBar();
 
-        Action save = new AbstractAction("Save") {
+        Action save = new AbstractAction("") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 validateAndSave(gui);
@@ -92,15 +92,18 @@ public class MatDefEditorController {
 
         // create a button, configured with the Action
         JButton b = new JButton(save);
+        b.setIcon(Icons.save);
+        b.setIconTextGap(0);
+        b.setToolTipText("Save (ctrl+S)");
         // manually register the accelerator in the button's component input map
         b.getActionMap().put("save", save);
         b.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 (KeyStroke) save.getValue(Action.ACCELERATOR_KEY), "save");
 
         tb.add(b);
+        tb.add(new JToolBar.Separator());
 
-
-        Action group = new AbstractAction("Group") {
+        Action group = new AbstractAction("") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 groupSelected();
@@ -112,6 +115,26 @@ public class MatDefEditorController {
         b.getActionMap().put("group", group);
         b.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 (KeyStroke) group.getValue(Action.ACCELERATOR_KEY), "group");
+        b.setIcon(Icons.group);
+        b.setIconTextGap(0);
+        b.setToolTipText("Group (ctrl+G)");
+        tb.add(b);
+
+        Action back = new AbstractAction("") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                exitGroup();
+            }
+        };
+        back.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
+        b = new JButton(back);
+        b.setIcon(Icons.back);
+        b.setIconTextGap(0);
+        b.setToolTipText("back (esc)");
+        // manually register the accelerator in the button's component input map
+        b.getActionMap().put("back", back);
+        b.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                (KeyStroke) back.getValue(Action.ACCELERATOR_KEY), "back");
 
         tb.add(b);
 
@@ -175,8 +198,9 @@ public class MatDefEditorController {
                     newSet.getProperty("name").addPropertyChangeListener(new PropertyChangeListener() {
                         @Override
                         public void propertyChange(PropertyChangeEvent evt) {
-                            diagramUiHandler.renameShaderNode((String) evt.getOldValue(), (String) evt.getNewValue());
-                            dataHandler.renameShaderNode((String) evt.getOldValue(), (String) evt.getNewValue());
+                            String name = fixNodeName((String) evt.getNewValue());
+                            diagramUiHandler.renameShaderNode((String) evt.getOldValue(), name);
+                            dataHandler.renameShaderNode((String) evt.getOldValue(), name);
                         }
                     });
                 }
@@ -389,16 +413,57 @@ public class MatDefEditorController {
     }
 
     public Connection connect(Dot start, Dot end) {
-        Connection conn = diagramUiHandler.connect(this, start, end);
-        dataHandler.addMapping(MaterialDefUtils.createVariableMapping(start, end));
-        refreshPreviews();
+        Connection conn;
+        if (context != null && start.getNode() instanceof GroupInOutPanel) {
+            conn = diagramUiHandler.connectBare(this, start, end);
+            context.addInternalConnection(conn, start);
+        } else if (context != null && end.getNode() instanceof GroupInOutPanel) {
+            conn = diagramUiHandler.connectBare(this, start, end);
+            context.addInternalConnection(conn, end);
+        } else {
+            conn = diagramUiHandler.connect(this, start, end);
+            dataHandler.addMapping(MaterialDefUtils.createVariableMapping(start, end));
+            refreshPreviews();
+        }
+        if (context != null) {
+            diagramUiHandler.bringToFront(conn);
+            conn.setGroup(context.getName());
+        }
+
         return conn;
     }
 
-    void removeConnectionNoRefresh(Connection conn) {
+    public void renameNodeField(NodePanel node, JLabel label, int index, boolean isInput) {
+        String result = JOptionPane.showInputDialog(editor, "Type a new name", label.getText());
+        if (result != null) {
+            setFieldName(result, node, label, index, isInput);
+        }
+    }
 
-        diagramUiHandler.removeConnection(conn);
-        removeMappingForConnection(conn);
+    public void setFieldName(String name, NodePanel node, JLabel label, int index, boolean isInput) {
+
+        label.setText(name);
+        //Save in metadata
+        ShaderNodeMetadata md = diagramUiHandler.getNodeMetadata(node);
+        if (isInput) {
+            md.setInputName(index, name);
+        } else {
+            md.setOutputName(index, name);
+        }
+
+    }
+
+    protected void removeConnectionNoRefresh(Connection conn) {
+        if (diagramUiHandler.removeConnection(conn)) {
+            removeMappingForConnection(conn);
+        } else if (context != null) {
+            //we're in editing a group, let's cleanup
+            List<Connection> conns = context.cleanUpConnection(conn);
+            for (Connection connection : conns) {
+                removeConnectionNoRefresh(connection);
+            }
+
+        }
     }
 
     void removeMappingForConnection(Connection conn) {
@@ -435,6 +500,9 @@ public class MatDefEditorController {
 
     public NodePanel addShaderNode(ShaderNode sn) {
         dataHandler.addShaderNode(sn);
+        if (context != null) {
+            return diagramUiHandler.addShaderNodePanelInGroup(this, sn, context);
+        }
         NodePanel node = diagramUiHandler.addShaderNodePanel(this, sn);
         return node;
     }
@@ -540,28 +608,55 @@ public class MatDefEditorController {
         selectionHandler.multiStopDrag(this);
     }
 
-    public void select(Selectable selectable, boolean multi) {
-        if (selectable instanceof ShaderNodePanel) {
-            ShaderNode node = dataHandler.getShaderNodeForKey(selectable.getKey());
-            gui.getSpix().getBlackboard().set(MAT_DEF_EDITOR_SELECTED_ITEM, node);
-        } else if (selectable instanceof Connection) {
-            VariableMapping mapping = dataHandler.getMappingForKey(selectable.getKey());
-            gui.getSpix().getBlackboard().set(MAT_DEF_EDITOR_SELECTED_ITEM, mapping);
-        } else if (selectable instanceof InputPanel) {
+    public boolean select(Selectable selectable, boolean multi) {
+        if (selectable instanceof InputPanel) {
+            if (context != null) {
+                if (!context.getNodes().contains(selectable)) {
+                    return false;
+                }
+            }
+            selectable.setSelected(false);
             String key = selectable.getKey();
             if (key.startsWith(dataHandler.getCurrentTechnique().getName() + ".MatParam.")) {
                 key = key.substring(key.lastIndexOf(".") + 1);
                 MatParam param = matDef.getMaterialParam(key);
                 gui.getSpix().getBlackboard().set(MAT_DEF_EDITOR_SELECTED_ITEM, new MatParamWrapper(param));
             }
+        } else if (selectable instanceof NodePanel) {
+            if (context != null) {
+                if (!context.getNodes().contains(selectable)
+                        && context.getInputsPanel() != selectable
+                        && context.getOutputsPanel() != selectable) {
+                    return false;
+                }
+            }
+            ShaderNode node = dataHandler.getShaderNodeForKey(selectable.getKey());
+            gui.getSpix().getBlackboard().set(MAT_DEF_EDITOR_SELECTED_ITEM, node);
+        } else if (selectable instanceof Connection) {
+            if (context != null) {
+                Connection c = (Connection) selectable;
+                if (!context.getName().equals(c.getGroup())) {
+                    return false;
+                }
+            }
+            VariableMapping mapping = dataHandler.getMappingForKey(selectable.getKey());
+            gui.getSpix().getBlackboard().set(MAT_DEF_EDITOR_SELECTED_ITEM, mapping);
         }
         selectionHandler.select(selectable, multi);
         diagramUiHandler.refreshDiagram();
+        return true;
+    }
+
+    public void setContext(Group context) {
+        this.context = context;
     }
 
     public void findSelection(MouseEvent me, boolean multi) {
         //Click on the diagram, we are trying to find if we clicked in a connection area and select it
         Connection conn = diagramUiHandler.pickForConnection(me);
+        if (context != null && conn == null) {
+            conn = diagramUiHandler.pickForConnection(me, context.getInternalConnections().values());
+        }
 
         if (conn != null) {
             select(conn, multi);
@@ -584,14 +679,31 @@ public class MatDefEditorController {
     }
 
     public void groupSelected() {
-
-        String result = JOptionPane.showInputDialog(editor, "Please enter a name for the group?", "Group");
         List<NodePanel> nodes = selectionHandler.getSelectedNodePanels();
+        if (nodes.size() <= 1) {
+            return;
+        }
+        String result = JOptionPane.showInputDialog(editor, "Please enter a name for the group?", "Group");
         result = fixGroupName(result);
         diagramUiHandler.createGroup(this, result, nodes);
     }
 
-    public void ungroup(String groupName){
+    public void displayGroup(String groupName) {
+        selectionHandler.clearSelection();
+        diagramUiHandler.displayGroup(this, groupName);
+    }
+
+    public void exitGroup() {
+        if (context != null) {
+            selectionHandler.clearSelection();
+            diagramUiHandler.clearGroup(context);
+            selectionHandler.select(context.getComponent(), false);
+            context.getComponent().showToolBar();
+            context = null;
+        }
+    }
+
+    public void ungroup(String groupName) {
         diagramUiHandler.ungroup(groupName);
     }
 

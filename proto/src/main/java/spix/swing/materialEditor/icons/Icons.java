@@ -87,5 +87,9 @@ public class Icons {
     public final static ImageIcon translate = new ImageIcon(Icons.class.getResource("/icons/translate.png"));
     public final static ImageIcon coneOn = new ImageIcon(Icons.class.getResource("/icons/coneOn.png"));
     public final static ImageIcon coneOff = new ImageIcon(Icons.class.getResource("/icons/coneOff.png"));
+    public final static ImageIcon ungroup = new ImageIcon(Icons.class.getResource("/icons/ungroup.png"));
+    public final static ImageIcon ungroupHover = new ImageIcon(Icons.class.getResource("/icons/ungroupHover.png"));
+    public final static ImageIcon save = new ImageIcon(Icons.class.getResource("/icons/save.png"));
+    public final static ImageIcon back = new ImageIcon(Icons.class.getResource("/icons/back.png"));
 }
 

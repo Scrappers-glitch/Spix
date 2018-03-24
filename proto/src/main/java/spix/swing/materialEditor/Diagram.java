@@ -26,8 +26,8 @@ public class Diagram extends JPanel {
     private final Point contextMenuPosition = new Point(0, 0);
 
     private final MyMenu contextMenu = new MyMenu("Add");
-    //private final BackdropPanel backDrop = new BackdropPanel();
     private MatDefEditorController controller;
+    private final Point pp = new Point();
 
     public Diagram(MatDefEditorController controller) {
         this.controller = controller;
@@ -37,35 +37,6 @@ public class Diagram extends JPanel {
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseListener);
         createPopupMenu();
-    }
-
-//    public void refreshPreviews(Material mat, String technique) {
-//        for (OutBusPanel outBusPanel : outBuses) {
-//            outBusPanel.updatePreview(mat, technique);
-//        }
-//        if (backDrop.isVisible()) {
-//            backDrop.showMaterial(mat, technique);
-//        }
-//    }
-
-//    public void displayBackdrop() {
-//        if (backDrop.getParent() == null) {
-//            add(backDrop);
-//            ((JViewport) getParent()).addChangeListener(backDrop);
-//        }
-//
-//        backDrop.setVisible(true);
-//        backDrop.update(((JViewport) getParent()));
-//    }
-
-
-//    public MatDefEditorWindow getEditorParent() {
-//        return parent;
-//    }
-
-
-    public void showEdit(NodePanel node) {
-        //  parent.showShaderEditor(node.getName(), node.getType(), node.filePaths);
     }
 
     private JMenuItem createMenuItem(String text, Icon icon) {
@@ -152,6 +123,9 @@ public class Diagram extends JPanel {
         int maxHeight = getParent().getParent().getHeight() - 2;
 
         for (Component nodePanel : getComponents()) {
+            if(nodePanel instanceof GroupPane){
+                continue;
+            }
             int w = nodePanel.getLocation().x + nodePanel.getWidth() + 150;
             if (w > maxWidth) {
                 maxWidth = w;
@@ -166,7 +140,6 @@ public class Diagram extends JPanel {
     }
 
     private class DiagramMouseListener extends MouseAdapter {
-        private final Point pp = new Point();
 
 
         @Override
@@ -175,23 +148,20 @@ public class Diagram extends JPanel {
             if (SwingUtilities.isLeftMouseButton(e)) {
                 controller.findSelection(e, e.isShiftDown() || e.isControlDown());
             } else if (SwingUtilities.isMiddleMouseButton(e)) {
-                setCursor(mvCursor);
-                pp.setLocation(e.getPoint());
-                ((JScrollPane) getParent().getParent()).setWheelScrollingEnabled(false);
+                startWheelDrag(e);
             }
         }
+
 
         @Override
         public void mouseReleased(MouseEvent e) {
 
             switch (e.getButton()) {
                 case MouseEvent.BUTTON2:
-                    setCursor(defCursor);
-                    ((JScrollPane) getParent().getParent()).setWheelScrollingEnabled(true);
+                    stopWheelDrag();
                     break;
                 case MouseEvent.BUTTON3:
-                    contextMenu.show(Diagram.this, e.getX(), e.getY());
-                    contextMenuPosition.setLocation(e.getX(), e.getY());
+                    popContextMenu(e);
                     break;
             }
 
@@ -211,6 +181,22 @@ public class Diagram extends JPanel {
 
     }
 
+
+    public void startWheelDrag(MouseEvent e) {
+        setCursor(mvCursor);
+        pp.setLocation(e.getPoint());
+        ((JScrollPane) getParent().getParent()).setWheelScrollingEnabled(false);
+    }
+
+    public void stopWheelDrag() {
+        setCursor(defCursor);
+        ((JScrollPane) getParent().getParent()).setWheelScrollingEnabled(true);
+    }
+
+    public void popContextMenu(MouseEvent e) {
+        contextMenu.show(Diagram.this, e.getX(), e.getY());
+        contextMenuPosition.setLocation(e.getX(), e.getY());
+    }
 
 
     private class MyMenu extends JPopupMenu {

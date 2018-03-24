@@ -35,6 +35,7 @@ public class Connection extends JPanel implements Selectable {
     private final Point p3 = new Point();
     private final Point p4 = new Point();
 
+    private String group;
     private boolean selected = false;
     private boolean hidden = false;
 
@@ -43,7 +44,6 @@ public class Connection extends JPanel implements Selectable {
     public Connection(MatDefEditorController controller, String key, Dot start, Dot end) {
         this.controller = controller;
         this.key = key;
-        updateConnectPoints(start, end);
 
         for (int i = 0; i < 7; i++) {
             points[i] = new Point();
@@ -51,13 +51,20 @@ public class Connection extends JPanel implements Selectable {
         for (int i = 0; i < nbCurve; i++) {
             curves[i] = new CubicCurve2D.Double();
         }
-        resize(this.start, this.end);
         MouseManagerListener mouseListener = new MouseManagerListener();
         addMouseMotionListener(mouseListener);
         addMouseListener(mouseListener);
         addKeyListener(new KeyManagerListener());
         setFocusable(true);
         setOpaque(false);
+
+        if(end != null && start!= null){
+            updateConnectPoints(start, end);
+            resize(this.start, this.end);
+        }else {
+            this.start = start;
+            this.end = end;
+        }
 
     }
 
@@ -216,6 +223,14 @@ public class Connection extends JPanel implements Selectable {
         int startBottom = start.getNode().getLocation().y + start.getNode().getHeight() + MARGIN;
         return Math.max(endBottom, startBottom) + getOffset();
 
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
     }
 
     public final void resize(Dot start, Dot end) {

@@ -28,19 +28,6 @@ public class SelectionHandler {
         selectedItems.clear();
     }
 
-//    public List<ShaderNodePanel> getSelectedShaderNodes() {
-//        List<ShaderNodePanel> list = new ArrayList<>();
-//
-//        for (Selectable selectedItem : selectedItems) {
-//            if (selectedItem instanceof ShaderNodePanel) {
-//                ShaderNodePanel panel = ((ShaderNodePanel)selectedItem);
-//                list.add(panel);
-//            }
-//        }
-//        clearSelection();
-//        return list;
-//    }
-
     public List<NodePanel> getSelectedNodePanels() {
         List<NodePanel> list = new ArrayList<>();
 

@@ -2,20 +2,22 @@ package spix.swing.materialEditor.controller;
 
 import spix.swing.materialEditor.Dot;
 
+import javax.swing.*;
+
 /**
  * Created by Nehon on 19/05/2016.
  */
 public class DragHandler {
 
     private Dot draggedFrom;
-    private Dot draggedTo;
+    private JComponent draggedTo;
 
 
     public Dot getDraggedFrom() {
         return draggedFrom;
     }
 
-    public Dot getDraggedTo() {
+    public JComponent getDraggedTo() {
         return draggedTo;
     }
 
@@ -23,7 +25,7 @@ public class DragHandler {
         this.draggedFrom = draggedFrom;
     }
 
-    public void setDraggedTo(Dot draggedTo) {
+    public void setDraggedTo(JComponent draggedTo) {
         this.draggedTo = draggedTo;
     }
 }

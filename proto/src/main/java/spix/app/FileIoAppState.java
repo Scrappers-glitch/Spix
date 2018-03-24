@@ -793,6 +793,7 @@ public class FileIoAppState extends BaseAppState {
             if (!f.exists()) {
                 f.createNewFile();
             }
+            System.err.println(yaml.dump(metadata));
             yaml.dump(metadata, new FileWriter(f));
         } catch (IOException e) {
             e.printStackTrace();

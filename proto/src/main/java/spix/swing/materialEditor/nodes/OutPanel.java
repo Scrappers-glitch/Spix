@@ -114,7 +114,7 @@ public abstract class OutPanel extends NodePanel {
     }
 
     @Override
-    protected void showToolBar() {
+    public void showToolBar() {
         super.showToolBar();
         outToolBar.display();
     }
