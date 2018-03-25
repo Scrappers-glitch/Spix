@@ -28,7 +28,7 @@ public abstract class GroupInOutPanel extends NodePanel {
     private Type type;
 
     private GroupInOutPanel(MatDefEditorController controller, ShaderNodeGroup groupPanel, Type type, Map<String, Connection> internalConnections) {
-        super(controller, "group." + groupPanel.getNodeName() + ".inputs", new Color(255, 255, 0, 255), Icons.group);
+        super(controller, "group." + groupPanel.getNodeName() + "." + type.name(), new Color(255, 255, 0, 255), Icons.group);
         canRenameFields = true;
         this.groupPanel = groupPanel;
         this.type = type;
@@ -98,8 +98,8 @@ public abstract class GroupInOutPanel extends NodePanel {
     @Override
     public void renameField(JLabel source, int index, boolean isInput) {
         super.renameField(source, index, isInput);
-        JLabel gpLabel = null;
-        if(!isInput){
+        JLabel gpLabel;
+        if(type == Type.Inputs){
             gpLabel = groupPanel.inputLabels.get(index);
         } else {
             gpLabel = groupPanel.outputLabels.get(index);

@@ -615,7 +615,7 @@ public class MatDefEditorController {
                     return false;
                 }
             }
-            selectable.setSelected(false);
+//            selectable.setSelected(false);
             String key = selectable.getKey();
             if (key.startsWith(dataHandler.getCurrentTechnique().getName() + ".MatParam.")) {
                 key = key.substring(key.lastIndexOf(".") + 1);

@@ -33,7 +33,7 @@ public class SelectionHandler {
 
         for (Selectable selectedItem : selectedItems) {
             if (selectedItem instanceof NodePanel) {
-                NodePanel panel = ((NodePanel)selectedItem);
+                NodePanel panel = ((NodePanel) selectedItem);
                 list.add(panel);
             }
         }
@@ -91,8 +91,18 @@ public class SelectionHandler {
      */
     private Selectable doSelect(Selectable selectable, boolean multi) {
 
-        if (!multi && !selectedItems.contains(selectable)) {
-            clearSelection();
+        if (!multi) {
+            if (selectedItems.contains(selectable)) {
+                return selectable;
+            } else {
+                clearSelection();
+            }
+        } else {
+            if (selectedItems.contains(selectable)) {
+                selectable.setSelected(false);
+                selectedItems.remove(selectable);
+                return null;
+            }
         }
 
         if (selectable != null) {

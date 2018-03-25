@@ -163,10 +163,10 @@ public class DiagramUiHandler {
         refreshDiagram();
     }
 
-    public void clearGroup(Group g){
-        diagram.remove( groupPane );
-        diagram.remove( g.getInputsPanel());
-        diagram.remove( g.getOutputsPanel());
+    public void clearGroup(Group g) {
+        diagram.remove(groupPane);
+        diagram.remove(g.getInputsPanel());
+        diagram.remove(g.getOutputsPanel());
         for (NodePanel nodePanel : g.getNodes()) {
             nodePanel.hideToolBar();
             diagram.remove(nodePanel);
@@ -175,7 +175,7 @@ public class DiagramUiHandler {
             diagram.remove(connection);
         }
         for (Connection connection : connections) {
-            if(g.getName().equals(connection.getGroup())){
+            if (g.getName().equals(connection.getGroup())) {
                 connection.setHidden(true);
             }
         }
@@ -280,7 +280,7 @@ public class DiagramUiHandler {
         return conn;
     }
 
-    public void bringToFront(Connection conn){
+    public void bringToFront(Connection conn) {
         diagram.setComponentZOrder(conn, 0);
         diagram.setComponentZOrder(conn.getStart().getNode(), 0);
         diagram.setComponentZOrder(conn.getEnd().getNode(), 0);
@@ -382,16 +382,14 @@ public class DiagramUiHandler {
     void removeNode(MatDefEditorController controller, String key) {
         NodePanel n = nodes.remove(key);
         if (n == null) {
-            //todo Somtimes, for some unknown reason the node is null.
-            //It's not a threading issue, seems to always occur on the awt event thread.
-            //Seems more that this code is sometimes called twice in a row...
-            System.err.println("Is event dispatch thread: " + SwingUtilities.isEventDispatchThread());
-            for (String k : nodes.keySet()) {
-                System.err.println("Key: " + k + " => " + nodes.get(k));
-            }
             return;
-            //throw new IllegalArgumentException("Cannot delete node for key: " + key);
         }
+
+        for (Group group : groups.values()) {
+            group.getNodes().remove(n);
+        }
+
+        removeNodeMetadata(n);
 
         if (n instanceof OutPanel) {
             OutPanel p = (OutPanel) n;
@@ -399,13 +397,18 @@ public class DiagramUiHandler {
         }
         n.cleanup();
 
+        List<Connection> toRemove = new ArrayList<>();
+
         for (Iterator<Connection> it = connections.iterator(); it.hasNext(); ) {
             Connection conn = it.next();
             if (conn.getStart().getNode() == n || conn.getEnd().getNode() == n) {
-                it.remove();
-                //it's important to call this from the controller so the connections are not just removed from the UI
-                controller.removeConnectionNoRefresh(conn);
+                toRemove.add(conn);
             }
+        }
+
+        for (Connection connection : toRemove) {
+            //it's important to call this from the controller so the connections are not just removed from the UI
+            controller.removeConnectionNoRefresh(connection);
         }
 
         diagram.remove(n);
@@ -463,7 +466,7 @@ public class DiagramUiHandler {
 
 
     NodePanel addShaderNodePanelInGroup(MatDefEditorController controller, ShaderNode sn, Group group) {
-        NodePanel node = addShaderNodePanel(controller,sn);
+        NodePanel node = addShaderNodePanel(controller, sn);
         group.getNodes().add(node);
         getNodeMetadata(node).setGroup(group.getName());
         return node;
@@ -595,7 +598,7 @@ public class DiagramUiHandler {
     Connection pickForConnection(MouseEvent e, Collection<Connection> conn) {
         for (Connection connection : conn) {
             MouseEvent me = SwingUtilities.convertMouseEvent(diagram, e, connection);
-            if (connection.pick(me)) {
+            if (!connection.isHidden() && connection.pick(me)) {
                 return connection;
             }
         }
@@ -727,6 +730,11 @@ public class DiagramUiHandler {
         }
 
         return nodeMD;
+    }
+
+    protected ShaderNodeMetadata removeNodeMetadata(NodePanel node) {
+        Map<String, ShaderNodeMetadata> techLayout = getTechMetadata();
+        return techLayout.remove(node.getKey());
     }
 
     private Map<String, ShaderNodeMetadata> getTechMetadata() {
