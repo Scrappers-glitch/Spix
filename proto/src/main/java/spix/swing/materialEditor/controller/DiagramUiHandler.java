@@ -230,6 +230,10 @@ public class DiagramUiHandler {
         diagram.remove(g.getComponent());
         Point nodeMed = getMedianPoint(nodes);
 
+        removeNodeMetadata(g.getComponent());
+        removeNodeMetadata(g.getInputsPanel());
+        removeNodeMetadata(g.getOutputsPanel());
+
         for (NodePanel node : nodes) {
             diagram.add(node);
             diagram.setComponentZOrder(node, 0);

@@ -462,14 +462,20 @@ public abstract class NodePanel extends DraggablePanel implements Selectable {
         return nodeName;
     }
 
-    public void renameField(JLabel source, int index, boolean isInput){
+    public void renameField(JLabel source, int index, boolean isInput) {
         controller.renameNodeField(this, source, index, isInput);
     }
 
-    public void setFieldName(String name, int index, boolean isInput){
-        if(isInput){
+    public void setFieldName(String name, int index, boolean isInput) {
+        if (isInput) {
+            if (index >= inputLabels.size()) {
+                return;
+            }
             inputLabels.get(index).setText(name);
         } else {
+            if (index >= outputLabels.size()) {
+                return;
+            }
             outputLabels.get(index).setText(name);
         }
     }
