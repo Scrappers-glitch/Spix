@@ -64,8 +64,8 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
         // editing and manipulator widgets
 
         List<Property> props = new ArrayList<>();
-
         props.add(BeanProperty.create(wrapper.getLight(), "name"));
+        props.add(BeanProperty.create(wrapper.getLight(), "enabled"));
         props.add(BeanProperty.create(wrapper.getLight(), "color"));
 
         Light.Type type = wrapper.getLight().getType();

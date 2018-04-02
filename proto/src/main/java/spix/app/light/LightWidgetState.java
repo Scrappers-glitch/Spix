@@ -147,7 +147,6 @@ public class LightWidgetState extends BaseAppState {
         lightNode.attachChild(widget);
     }
 
-
     public void removeLight(Light light) {
         for (Iterator<LightWrapper> i = wrappers.iterator(); i.hasNext(); ) {
             LightWrapper wrapper = i.next();
@@ -234,6 +233,7 @@ public class LightWidgetState extends BaseAppState {
 
         //the scene has changed let's wipe all the light widgets and re scan the new scene.
         lightNode.detachAllChildren();
+        wrappers.clear();
         recurseAddLights(root);
         if(lightNode.getChildren().isEmpty()){
             //the scene has no lights so we activate the debug lights
@@ -318,12 +318,12 @@ public class LightWidgetState extends BaseAppState {
             if(event.getNewValue() != event.getOldValue() ){
 
                 if(event.getNewValue() instanceof LightWrapper) {
-                    Node widget = ((LightWrapper) event.getNewValue()).getWidget();
-                    widget.addMatParamOverride(new MatParamOverride(VarType.Vector4, "Color", ColorRGBA.Orange));
+                    LightWrapper wrapper =  ((LightWrapper) event.getNewValue());
+                    wrapper.setSelected(true);
                 }
                 if(event.getOldValue() instanceof LightWrapper) {
-                    Node oldWidget = ((LightWrapper) event.getOldValue()).getWidget();
-                    oldWidget.addMatParamOverride(new MatParamOverride(VarType.Vector4, "Color", ColorRGBA.Black));
+                    LightWrapper wrapper =  ((LightWrapper) event.getOldValue());
+                    wrapper.setSelected(false);
                 }
 
                 if(event.getNewValue() instanceof Light) {

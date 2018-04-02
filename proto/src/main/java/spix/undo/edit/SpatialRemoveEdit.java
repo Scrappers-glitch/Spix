@@ -1,9 +1,7 @@
 package spix.undo.edit;
 
-import com.jme3.light.Light;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import spix.app.light.LightWidgetState;
 import spix.core.Spix;
 
 /**

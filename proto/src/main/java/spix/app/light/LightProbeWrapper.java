@@ -181,7 +181,7 @@ public class LightProbeWrapper extends LightWrapper<LightProbe> {
         geom2.setMaterial(dashed);
 
 
-        Sphere s = new Sphere(16, 16, 0.1f);
+        Sphere s = new Sphere(16, 16, 0.15f);
         Geometry debugGeom = new Geometry("debugEnvProbe", s);
         debugGeom.setMaterial(debugMaterial);
 

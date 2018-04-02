@@ -26,35 +26,55 @@ public abstract class LightWrapper<L extends Light> {
     private Material dot;
     private Spatial parent;
     private Vector3f prevTargetPos = Vector3f.NAN.clone();
-
+    private boolean initialized = false;
+    private boolean selected = false;
+    private ColorRGBA color = ColorRGBA.Black.clone();
 
     public LightWrapper(Node node, L light, Spatial parent, AssetManager assetManager) {
         this.widget = node;
         this.light = light;
         this.parent = parent;
         initMaterials(assetManager);
-        center =  makeCenter();
+        center = makeCenter();
         widget.attachChild(makeWidget());
     }
 
     protected abstract void initWidget(Spatial target, Spatial widget, L light);
+
     protected abstract void setPositionRelativeToTarget(Spatial target, Vector3f prevTargetPos, PropertySet lightPropertySet);
+
     protected abstract void widgetUpdate(Spatial target, Spatial widget, PropertySet lightPropertySet, float tpf);
+
     protected abstract Spatial makeWidget();
 
-    public void update (float tpf, Camera cam){
-        if(lightPropertySet != null) {
+    public void update(float tpf, Camera cam) {
+        if (lightPropertySet != null) {
             if (!prevTargetPos.equals(parent.getWorldTranslation())) {
                 setPositionRelativeToTarget(parent, prevTargetPos, lightPropertySet);
             }
             widgetUpdate(parent, widget, lightPropertySet, tpf);
-        } else {
+        } else if (!initialized) {
             initWidget(parent, widget, light);
+            initialized = true;
         }
 
         prevTargetPos.set(parent.getWorldTranslation());
         updateCenter(cam);
+        updateColor();
+    }
 
+    public void updateColor() {
+        if (isSelected()) {
+            color.set(ColorRGBA.Orange);
+            if(!light.isEnabled()){
+                color.multLocal(0.3f);
+            }
+        } else {
+            color.set(ColorRGBA.Black);
+            if(!light.isEnabled()){
+                color.setAsSrgb(0.3f,0.3f,0.3f,1.0f);
+            }
+        }
     }
 
     private void updateCenter(Camera cam) {
@@ -66,8 +86,8 @@ public abstract class LightWrapper<L extends Light> {
         float m11 = cam.getProjectionMatrix().m11;
         // Magic scaling... trust the math... don't question the math... magic math...
         float halfHeight = cam.getHeight() * 0.5f;
-        float scale = ((distance/halfHeight) * 100)/m11;
-        if(center.getParent() != null){
+        float scale = ((distance / halfHeight) * 100) / m11;
+        if (center.getParent() != null) {
             //ignoring parent scale
             scale /= (center.getParent().getWorldScale().length() / Vector3f.UNIT_XYZ.length());
         }
@@ -86,15 +106,23 @@ public abstract class LightWrapper<L extends Light> {
         return parent;
     }
 
-    protected float getGlobalScale(){
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
+
+    protected float getGlobalScale() {
         BoundingVolume v = parent.getWorldBound();
         if (v != null && v.getType() == BoundingVolume.Type.AABB) {
-            BoundingBox bb = (BoundingBox)v;
+            BoundingBox bb = (BoundingBox) v;
             Vector3f vec = new Vector3f(bb.getXExtent(), bb.getYExtent(), bb.getZExtent());
             return vec.length();
         }
         if (v != null && v.getType() == BoundingVolume.Type.Sphere) {
-            BoundingSphere bs = (BoundingSphere)v;
+            BoundingSphere bs = (BoundingSphere) v;
             return bs.getRadius();
         }
         return 0;
@@ -107,7 +135,7 @@ public abstract class LightWrapper<L extends Light> {
         texture.setMinFilter(Texture.MinFilter.NearestNoMipMaps);
         texture.setMagFilter(Texture.MagFilter.Nearest);
         dot = globals.createMaterial(texture, false).getMaterial();
-        dot.setColor("Color", ColorRGBA.Black);
+        dot.setColor("Color", color);
         dot.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
 
         dashed = new Material(assetManager, "MatDefs/dashed/dashed.j3md");
@@ -115,27 +143,24 @@ public abstract class LightWrapper<L extends Light> {
         dashed.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         dashed.getAdditionalRenderState().setDepthWrite(false);
         dashed.setFloat("DashSize", 0.5f);
-        dashed.setColor("Color", ColorRGBA.Black);
+        dashed.setColor("Color", color);
     }
 
-
-
-
-    private Node makeCenter(){
+    private Node makeCenter() {
 
         Node center = new Node("Light center");
         // Now the teeny tiny center that never disappears
         Mesh mesh = new Quad(0.08f, 0.08f);
         final Geometry g = new Geometry("centerOrigin", mesh);
         g.setMaterial(dot);
-        g.setLocalTranslation(-0.04f,-0.04f,0.0f);
+        g.setLocalTranslation(-0.04f, -0.04f, 0.0f);
         center.attachChild(g);
 
         //This is a hidden quad that sole purpose is to increase the area where the user can click and select the light
-        final Geometry g2 = new Geometry("hitQuad", new Quad(0.4f,0.4f));
+        final Geometry g2 = new Geometry("hitQuad", new Quad(0.4f, 0.4f));
         g2.setMaterial(dot);
         g2.setCullHint(Spatial.CullHint.Always);
-        g2.setLocalTranslation(-0.2f,-0.2f,-0.2f);
+        g2.setLocalTranslation(-0.2f, -0.2f, -0.2f);
         center.attachChild(g2);
 
         center.addControl(new BillboardControl());
