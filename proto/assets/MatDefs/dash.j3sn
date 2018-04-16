@@ -1,0 +1,30 @@
+ShaderNodeDefinitions{
+    ShaderNodeDefinition Dash {
+        //Vertex/Fragment
+        Type: Fragment
+
+        //Shader GLSL<version>: <Path to shader>
+        Shader GLSL100: MatDefs/dash100.frag
+    
+        Documentation{
+            //type documentation here. This is optional but recommended
+
+            //@input <glsltype> <varName> <description>
+            @input vec4 inColor The input color
+
+            //@output <glslType> <varName> <description>
+            @output vec4 outColor The modified output color
+        }
+        Input {
+           //all the node inputs
+            //<glslType> <varName>            
+            vec4 inColor           
+
+        }
+        Output {
+            //all the node outputs
+            //<glslType> <varName>
+            vec4 outColor
+        }
+    }
+}

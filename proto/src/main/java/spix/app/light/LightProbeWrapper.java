@@ -33,13 +33,13 @@ package spix.app.light;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.bounding.BoundingSphere;
-import com.jme3.light.LightProbe;
-import com.jme3.light.PointLight;
+import com.jme3.light.*;
 import com.jme3.material.Material;
-import com.jme3.math.Vector3f;
+import com.jme3.math.*;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
 import com.jme3.scene.control.BillboardControl;
+import com.jme3.scene.debug.WireFrustum;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.util.BufferUtils;
 import spix.app.utils.ShapeUtils;
@@ -58,26 +58,36 @@ public class LightProbeWrapper extends LightWrapper<LightProbe> {
     //widget
     private Vector3f prevSpatialPos = new Vector3f();
     private Vector3f prevSpatialScale = new Vector3f();
+    private Quaternion prevSpatialRot = new Quaternion();
 
     //Light
     private float prevLightRadius = 0;
+    private Vector3f prevLightExtent = new Vector3f();
     private Vector3f prevLightPos = new Vector3f();
+    private Quaternion prevLightRot = new Quaternion();
 
     private Material debugMaterial;
+
+    private LightProbe.AreaType areaType;
 
     /**
      * @param light The light to be synced.
      */
     public LightProbeWrapper(Node widget, LightProbe light, Spatial target, AssetManager assetManager) {
         super(widget, light, target, assetManager);
+        this.areaType = light.getAreaType();
     }
 
     @Override
     protected void initWidget(Spatial target, Spatial widget, LightProbe light) {
         widget.setLocalTranslation(light.getPosition());
-        if (light.getBounds() instanceof BoundingSphere) {
-            BoundingSphere bounds = (BoundingSphere) light.getBounds();
-            widget.setLocalScale(bounds.getRadius());
+        if (light.getAreaType() == LightProbe.AreaType.Spherical) {
+            SphereProbeArea area = (SphereProbeArea) light.getArea();
+            widget.setLocalScale(area.getRadius());
+        } else {
+            OrientedBoxProbeArea area = (OrientedBoxProbeArea) light.getArea();
+            widget.setLocalScale(area.getExtent());
+            widget.setLocalRotation(area.getRotation());
         }
     }
 
@@ -90,7 +100,6 @@ public class LightProbeWrapper extends LightWrapper<LightProbe> {
     protected void widgetUpdate(Spatial target, Spatial widget, PropertySet set, float tpf) {
 
         Property position = set.getProperty("worldTranslation");
-        Property radius = set.getProperty("radius");
 
         //Widget to light
         //widget has been moved update light position
@@ -98,30 +107,94 @@ public class LightProbeWrapper extends LightWrapper<LightProbe> {
             position.setValue(widget.getWorldTranslation());
             syncPosition(widget, position);
         }
-        //widget has been scaled update light radius.
-        if (!prevSpatialScale.equals(widget.getWorldScale())) {
-            radius.setValue(widget.getWorldScale().length() / Vector3f.UNIT_XYZ.length());
-            syncScale(widget, radius);
-        }
-
         //Light to widget
         //Light has been moved update widget position
         if (!prevLightPos.equals(position.getValue())) {
             widget.setLocalTranslation((Vector3f) position.getValue());
             syncPosition(widget, position);
         }
-        //light radius has been changed, update widget scale.
-        float r = (float) radius.getValue();
-        if (prevLightRadius != r) {
-            widget.setLocalScale(r);
-            syncScale(widget, radius);
-        }
+        if(getLight().getAreaType() == LightProbe.AreaType.Spherical) {
 
+            //widget has been scaled update light radius.
+            Property radius = set.getProperty("radius");
+            if (!prevSpatialScale.equals(widget.getWorldScale()) && radius != null) {
+                radius.setValue(widget.getWorldScale().length() / Vector3f.UNIT_XYZ.length());
+                syncScale(widget, radius);
+            }
+            //light radius has been changed, update widget scale.
+            float r = (float) radius.getValue();
+            if (prevLightRadius != r) {
+                widget.setLocalScale(r);
+                syncScale(widget, radius);
+            }
+        } else {
+            //widget has been scaled update light radius.
+            Property extent = set.getProperty("extent");
+            if (!prevSpatialScale.equals(widget.getWorldScale()) && extent != null) {
+                extent.setValue(widget.getWorldScale());
+                syncExtent(widget, extent);
+            }
+            //light extent has been changed, update widget scale.
+            if (extent!= null && !prevLightExtent.equals(extent.getValue())) {
+                widget.setLocalScale((Vector3f)extent.getValue());
+                syncExtent(widget, extent);
+            }
+
+
+            //widget has been rotated update light direction
+            if(!prevSpatialRot.equals(widget.getWorldRotation())) {
+                Property rotation = set.getProperty("worldRotation");
+                rotation.setValue(widget.getWorldRotation());
+                syncRotation(widget, rotation);
+            }
+        }
+    }
+
+    public void setAreaType(LightProbe.AreaType areaType) {
+        this.areaType = areaType;
+        ProbeArea area = getLight().getArea();
+
+        getLight().setAreaType(areaType);
+        ProbeArea newArea = getLight().getArea();
+        float ext;
+        if(areaType == LightProbe.AreaType.Spherical){
+            ext = area.getRadius() / FastMath.cos(FastMath.PI * 0.25f);
+            ((SphereProbeArea)newArea).setRadius(ext);
+        } else {
+            ext = area.getRadius() * FastMath.cos(FastMath.PI * 0.25f);
+            ((OrientedBoxProbeArea)newArea).setExtent(new Vector3f(ext, ext ,ext));
+        }
+        getLight().setPosition(getLight().getPosition());
+
+        getWidget().detachAllChildren();
+        getWidget().attachChild(makeWidget());
+        getWidget().setLocalScale(ext);
+    }
+
+    public LightProbe.AreaType getAreaType() {
+        return areaType;
+    }
+
+    public void updateMap() {
+        LightProbe probe = getLight();
+        if (probe.isReady()) {
+            debugMaterial.setTexture("CubeMap", probe.getPrefilteredEnvMap());
+        }
+    }
+
+    private void syncRotation(Spatial widget, Property rotation) {
+        prevSpatialRot.set(widget.getWorldRotation());
+        prevLightRot.set((Quaternion) rotation.getValue());
     }
 
     private void syncScale(Spatial widget, Property radius) {
         prevSpatialScale.set(widget.getWorldScale());
         prevLightRadius = (float) radius.getValue();
+    }
+
+    private void syncExtent(Spatial widget, Property extent) {
+        prevSpatialScale.set(widget.getWorldScale());
+        prevLightExtent.set((Vector3f) extent.getValue());
     }
 
     private void syncPosition(Spatial widget, Property position) {
@@ -141,10 +214,13 @@ public class LightProbeWrapper extends LightWrapper<LightProbe> {
         Mesh m = new Mesh();
         m.setMode(Mesh.Mode.Lines);
         int radialSamples = 16;
+        FloatBuffer posBuf;
+        FloatBuffer texBuf;
+        ShortBuffer idxBuf;
 
-        FloatBuffer posBuf = BufferUtils.createVector3Buffer(radialSamples + 1);
-        FloatBuffer texBuf = BufferUtils.createVector2Buffer(radialSamples + 1);
-        ShortBuffer idxBuf = BufferUtils.createShortBuffer(2 * radialSamples);
+        posBuf = BufferUtils.createVector3Buffer(radialSamples + 1);
+        texBuf = BufferUtils.createVector2Buffer(radialSamples + 1);
+        idxBuf = BufferUtils.createShortBuffer(2 * radialSamples);
 
         m.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
         m.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
@@ -154,32 +230,56 @@ public class LightProbeWrapper extends LightWrapper<LightProbe> {
 
         m.updateBound();
         m.setStatic();
-
         Geometry geom = new Geometry("LightDebug", m);
         geom.setQueueBucket(RenderQueue.Bucket.Transparent);
         geom.setMaterial(dashed);
 
-        Mesh line = new Mesh();
-        line.setMode(Mesh.Mode.Lines);
-        radialSamples = 128;
 
-        posBuf = BufferUtils.createVector3Buffer(radialSamples + 1);
-        texBuf = BufferUtils.createVector2Buffer(radialSamples + 1);
-        idxBuf = BufferUtils.createShortBuffer(2 * radialSamples);
+        Geometry geom2;
 
-        line.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
-        line.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
-        line.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
+        if (getLight().getAreaType() == LightProbe.AreaType.Spherical) {
+            Mesh line = new Mesh();
+            line.setMode(Mesh.Mode.Lines);
+            radialSamples = 128;
 
-        ShapeUtils.makeCircle(radialSamples, 1f, posBuf, texBuf, idxBuf, 0);
+            posBuf = BufferUtils.createVector3Buffer(radialSamples + 1);
+            texBuf = BufferUtils.createVector2Buffer(radialSamples + 1);
+            idxBuf = BufferUtils.createShortBuffer(2 * radialSamples);
 
-        line.updateBound();
-        line.setStatic();
+            line.setBuffer(VertexBuffer.Type.Position, 3, posBuf);
+            line.setBuffer(VertexBuffer.Type.TexCoord, 2, texBuf);
+            line.setBuffer(VertexBuffer.Type.Index, 2, idxBuf);
 
-        Geometry geom2 = new Geometry("LightRadius", line);
-        geom2.setQueueBucket(RenderQueue.Bucket.Transparent);
-        geom2.setMaterial(dashed);
+            ShapeUtils.makeCircle(radialSamples, 1f, posBuf, texBuf, idxBuf, 0);
 
+            line.updateBound();
+            line.setStatic();
+            geom2 = new Geometry("LightRadius", line);
+            geom2.setQueueBucket(RenderQueue.Bucket.Transparent);
+            geom2.setMaterial(dashed);
+            geom2.addControl(new BillboardControl());
+
+        } else {
+            Vector3f[] points = new Vector3f[8];
+
+            for (int i = 0; i < points.length; i++) {
+                points[i] = new Vector3f();
+            }
+
+            points[0].set(-1, -1, 1);
+            points[1].set(-1, 1, 1);
+            points[2].set(1, 1, 1);
+            points[3].set(1, -1, 1);
+
+            points[4].set(-1, -1, -1);
+            points[5].set(-1, 1, -1);
+            points[6].set(1, 1, -1);
+            points[7].set(1, -1, -1);
+
+            Mesh box = new WireFrustum(points);
+            geom2 = new Geometry("LightArea", box);
+            geom2.setMaterial(dashedBox);
+        }
 
         Sphere s = new Sphere(16, 16, 0.15f);
         Geometry debugGeom = new Geometry("debugEnvProbe", s);
@@ -190,8 +290,9 @@ public class LightProbeWrapper extends LightWrapper<LightProbe> {
         center.attachChild(debugGeom);
         widget.attachChild(center);
         widget.attachChild(geom2);
-        geom2.addControl(new BillboardControl());
-        
+
+        updateMap();
+
         return widget;
     }
 

@@ -15,15 +15,21 @@ public class ToolsManager {
     private SwingGui gui;
     private JToolBar tools;
     private JPanel currentTool;
+    private JPanel dummyTool;
     private Map<String, JPanel> toolPanels = new HashMap<>();
 
     public ToolsManager(JPanel scenePane, SwingGui gui) {
         this.scenePane = scenePane;
         tools = new JToolBar("Tools");
         tools.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
-        tools.setOrientation(JToolBar.VERTICAL);
-        this.scenePane.add(tools, BorderLayout.WEST);
+        tools.setOrientation(JToolBar.HORIZONTAL);
+        this.scenePane.add(tools, BorderLayout.SOUTH);
+        makeDummyTool();
+        currentTool = dummyTool;
+        refresh(scenePane);
+
         toolPanels.put("VertexPainting", new VertexPaintingTool(gui));
+        toolPanels.put("LightProbe", new LightProbeTool(gui));
 
         gui.getSpix().getBlackboard().addListener("tools.active", new PropertyChangeListener() {
             @Override
@@ -33,17 +39,28 @@ public class ToolsManager {
                     tools.remove(currentTool);
                 }
                 currentTool = toolPanels.get(tool);
-                if(currentTool != null) {
-                    tools.add(currentTool);
+                if(currentTool == null) {
+                    currentTool = dummyTool;
                 }
-
-                tools.revalidate();
-                tools.repaint();
-                scenePane.revalidate();
-                scenePane.repaint();
+                refresh(scenePane);
             }
         });
     }
 
+    public void refresh(JPanel scenePane) {
+        tools.add(currentTool);
+        tools.revalidate();
+        tools.repaint();
+        scenePane.revalidate();
+        scenePane.repaint();
+    }
+
+    private void makeDummyTool(){
+        dummyTool = new JPanel();
+        Dimension size = new Dimension(25, 25);
+        dummyTool.setMinimumSize(size);
+        dummyTool.setPreferredSize(size);
+        dummyTool.setMaximumSize(size);
+    }
 
 }

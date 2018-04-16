@@ -1,0 +1,78 @@
+Default.Global.position-in.Default.CommonVert: null
+Default.Global.color-out.Default.ColorMult: null
+Default.Global.color-in.Default.ColorMult: null
+NodesLayout:
+  Default:
+    Default.WorldParam.WorldViewProjectionMatrix: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      inputNames: {}
+      outputNames: {}
+      x: 65
+      y: 107
+    Default.Attr.inPosition: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      inputNames: {}
+      outputNames: {}
+      x: 65
+      y: 50
+    Default.Global.position-in.Default.CommonVert: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      inputNames: {}
+      outputNames: {}
+      x: 530
+      y: 80
+    Default.Global.color-in.Default.ColorMult: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      inputNames: {}
+      outputNames: {}
+      x: 860
+      y: 410
+    Default.MatParam.Color: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      inputNames: {}
+      outputNames: {}
+      x: 190
+      y: 350
+    Default.TransformPosition: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      inputNames: {}
+      outputNames: {}
+      x: 300
+      y: 100
+    Default.Global.color-in.Default.Dashed: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      inputNames: {}
+      outputNames: {}
+      x: 1200
+      y: 420
+    Default.Global.position-in.Default.TransformPosition: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      inputNames: {}
+      outputNames: {}
+      x: 590
+      y: 60
+    Default.Dash: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      inputNames: {}
+      outputNames: {}
+      x: 430
+      y: 340
+    Default.Global.color-in.Default.Dash: !!spix.app.metadata.ShaderNodeMetadata
+      collapsed: false
+      group: null
+      inputNames: {}
+      outputNames: {}
+      x: 660
+      y: 320
+Default.Global.color-in.Default.Dashed: null
+Default.Global.position-in.Default.TransformPosition: null
+Default.Global.color-in.Default.Dash: null

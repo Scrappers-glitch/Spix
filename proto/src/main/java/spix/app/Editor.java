@@ -40,6 +40,7 @@ import com.google.common.base.Predicates;
 import com.jme3.app.*;
 import com.jme3.app.state.ScreenshotAppState;
 import com.jme3.asset.AssetKey;
+import com.jme3.environment.EnvironmentCamera;
 import com.jme3.environment.util.LightsDebugState;
 import com.jme3.light.*;
 import com.jme3.material.Material;
@@ -136,6 +137,7 @@ public class Editor extends SimpleApplication {
                 new FileIoAppState(),
                 new SelectionHighlightState(),
                 new TransformState(),
+                new EnvironmentCamera(),
                 new TranslationWidgetState(false),
                 new ScaleWidgetState(false),
                 new RotationWidgetState(true),
@@ -297,6 +299,7 @@ public class Editor extends SimpleApplication {
                 spix.registerService(FileIoService.class, new FileIoService(gui.getSpix(), fileIoAppState, getStateManager().getState(SceneValidatorState.class)));
                 spix.registerService(MetadataService.class, new MetadataService(spix, fileIoAppState));
                 spix.registerService(SceneService.class, new SceneService(gui));
+                spix.registerService(LightProbeService.class, new LightProbeService(spix, stateManager.getState(EnvironmentCamera.class)));
 
                 spix.getBlackboard().set("view.widgets", true);
             }

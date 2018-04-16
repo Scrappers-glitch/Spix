@@ -1,0 +1,37 @@
+MaterialDef Simple {
+    MaterialParameters {
+        Vector4 Color
+    }
+
+    Technique {
+        WorldParameters {
+            WorldViewProjectionMatrix
+        }
+
+        VertexShaderNodes {
+            ShaderNode TransformPosition {
+                Definition: TransformPosition: Common/MatDefs/ShaderNodes/Basic/TransformPosition.j3sn
+                InputMappings {
+                    inputPosition = Attr.inPosition
+                    transformsMatrix = WorldParam.WorldViewProjectionMatrix
+                }
+                OutputMappings {
+                    Global.position = outPosition
+                }
+            }
+        }
+
+        FragmentShaderNodes {
+            ShaderNode Dash {
+                Definition: Dash: MatDefs/dash.j3sn
+                InputMappings {
+                    inColor = MatParam.Color
+                }
+                OutputMappings {
+                    Global.color = outColor
+                }
+            }
+        }
+
+    }
+}

@@ -299,27 +299,7 @@ public class FileIoAppState extends BaseAppState {
 
         if (f.getName().endsWith(".zip")) {
             setMainAssetPath = false;
-            if (currentZipLocator != null) {
-                assetManager.unregisterLocator(currentZipLocator, ZipLocator.class);
-            }
-            currentZipLocator = f.getPath();
-            assetManager.registerLocator(currentZipLocator, ZipLocator.class);
-            try (ZipFile zip = new ZipFile(f)) {
-                String file = null;
-                Enumeration entries = zip.entries();
-                while (entries.hasMoreElements() && file == null) {
-                    ZipEntry entry = (ZipEntry) entries.nextElement();
-                    if (isSupportedModelFormat(entry.getName())) {
-                        file = entry.getName();
-                    }
-                }
-                fp.fileName = file;
-                fp.modelPath = file;
-                fp.assetRoot = new File(blackboard.get(MAIN_ASSETS_FOLDER, String.class));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
+            getFilePathFromZip(f, fp);
         }
 
         loadScene(fp, setMainAssetPath, new RequestCallback<Spatial>() {
@@ -342,6 +322,29 @@ public class FileIoAppState extends BaseAppState {
                 blackboard.set(MODIFIED_DEPENDENCIES, null);
             }
         });
+    }
+
+    public void getFilePathFromZip(File f, FilePath fp) {
+        if (currentZipLocator != null) {
+            assetManager.unregisterLocator(currentZipLocator, ZipLocator.class);
+        }
+        currentZipLocator = f.getPath();
+        assetManager.registerLocator(currentZipLocator, ZipLocator.class);
+        try (ZipFile zip = new ZipFile(f)) {
+            String file = null;
+            Enumeration entries = zip.entries();
+            while (entries.hasMoreElements() && file == null) {
+                ZipEntry entry = (ZipEntry) entries.nextElement();
+                if (isSupportedModelFormat(entry.getName())) {
+                    file = entry.getName();
+                }
+            }
+            fp.fileName = file;
+            fp.modelPath = file;
+            fp.assetRoot = new File(blackboard.get(MAIN_ASSETS_FOLDER, String.class));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public String loadFileAsText(String path) {
@@ -741,6 +744,11 @@ public class FileIoAppState extends BaseAppState {
     public void AppendFile(File f) {
 
         FilePath fp = getFilePath(f);
+
+        if (f.getName().endsWith(".zip")) {
+            getFilePathFromZip(f, fp);
+        }
+
         loadScene(fp, false, new RequestCallback<Spatial>() {
             @Override
             public void done(Spatial scene) {

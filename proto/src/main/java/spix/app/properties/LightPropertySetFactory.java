@@ -39,11 +39,15 @@ package spix.app.properties;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.light.*;
 import com.jme3.math.FastMath;
+import jdk.nashorn.internal.runtime.PropertyListeners;
+import spix.app.DefaultConstants;
 import spix.app.light.LightWrapper;
 import spix.core.*;
 import spix.props.*;
 import spix.type.NumberRangeType;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.*;
 
 
@@ -66,10 +70,12 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
         List<Property> props = new ArrayList<>();
         props.add(BeanProperty.create(wrapper.getLight(), "name"));
         props.add(BeanProperty.create(wrapper.getLight(), "enabled"));
-        props.add(BeanProperty.create(wrapper.getLight(), "color"));
 
         Light.Type type = wrapper.getLight().getType();
         if(type == Light.Type.Spot) {
+            props.add(BeanProperty.create(wrapper, "color"));
+            props.add(BeanProperty.create(wrapper, "intensity",
+                    new NumberRangeType(1f, null, 0.1f)));
             props.add(BeanProperty.create(wrapper.getLight(), "direction"));
             props.add(BeanProperty.create(wrapper.getLight(), "spotRange", 
                                           new NumberRangeType(0f, null, 0.1f)));
@@ -87,9 +93,15 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
             props.add(new WorldRotationProperty(wrapper.getWidget(), null));
             props.add(new WorldScaleProperty(wrapper.getWidget(), null, false));
         } else if (type == Light.Type.Directional){
+            props.add(BeanProperty.create(wrapper, "color"));
+            props.add(BeanProperty.create(wrapper, "intensity",
+                    new NumberRangeType(1f, null, 0.1f)));
             props.add(BeanProperty.create(wrapper.getLight(), "direction"));
             props.add(new WorldTranslationProperty(wrapper.getWidget(), null));
         } else if (type == Light.Type.Point){
+            props.add(BeanProperty.create(wrapper, "color"));
+            props.add(BeanProperty.create(wrapper, "intensity",
+                    new NumberRangeType(1f, null, 0.1f)));
             props.add(BeanProperty.create(wrapper.getLight(), "radius",
                     new NumberRangeType(0f, null, 0.1f)));
 
@@ -102,8 +114,15 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
             props.add(new WorldTranslationProperty(wrapper.getWidget(), position));
             props.add(new WorldScaleProperty(wrapper.getWidget(), null, false));
         } else if (type == Light.Type.Probe) {
-            props.add(BeanProperty.create(((LightProbe) wrapper.getLight()).getBounds(), "radius",
-                    new NumberRangeType(0f, null, 0.1f)));
+            LightProbe probe = ((LightProbe) wrapper.getLight());
+            if(probe.getAreaType() == LightProbe.AreaType.Spherical) {
+                props.add(BeanProperty.create(probe.getArea(), "radius",
+                        new NumberRangeType(0f, null, 0.1f)));
+            }
+
+            Property areaType = BeanProperty.create(wrapper, "areaType");
+            areaType.addPropertyChangeListener(new AreaTypePropListener(spix));
+            props.add(areaType);
 
             //props.add(new WorldRotationProperty(wrapper.getWidget(), null));
             //HACK Alert: We create a property on the position attribute of the light and pass it as if it was the local translation of the widget
@@ -112,7 +131,17 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
             //WorldTranslationProperty and have a central dispatcher.
             Property position = BeanProperty.create(wrapper.getLight(), "position", true);
             props.add(new WorldTranslationProperty(wrapper.getWidget(), position));
-            props.add(new WorldScaleProperty(wrapper.getWidget(), null, false));
+            if(probe.getAreaType() == LightProbe.AreaType.OrientedBox) {
+                Property rotation = BeanProperty.create(((LightProbe) wrapper.getLight()).getArea(), "rotation", true);
+                props.add(new WorldRotationProperty(wrapper.getWidget(), rotation));
+
+                Property scale = BeanProperty.create(((LightProbe) wrapper.getLight()).getArea(), "extent", true);
+                props.add(new WorldScaleProperty(wrapper.getWidget(), scale));
+
+            } else {
+                props.add(new WorldScaleProperty(wrapper.getWidget(), null, false));
+            }
+
         } else {
             //ambient light
             props.add(new WorldTranslationProperty(wrapper.getWidget(), null));
@@ -121,5 +150,22 @@ public class LightPropertySetFactory implements PropertySetFactory<LightWrapper>
         wrapper.setLightPropertySet(new DefaultPropertySet(wrapper, props));
 
         return wrapper.getLightPropertySet();
+    }
+
+    private class AreaTypePropListener implements PropertyChangeListener{
+        Spix spix;
+
+        public AreaTypePropListener(Spix spix) {
+            this.spix = spix;
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            SelectionModel model = spix.getBlackboard().get(DefaultConstants.SELECTION_PROPERTY, SelectionModel.class);
+            Object sel = model.getSingleSelection();
+            spix.refresh(sel);
+            model.setSingleSelection(null);
+            model.setSingleSelection(sel);
+        }
     }
 }

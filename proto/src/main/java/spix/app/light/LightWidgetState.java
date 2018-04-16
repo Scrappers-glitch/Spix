@@ -316,14 +316,20 @@ public class LightWidgetState extends BaseAppState {
 
         public void propertyChange( PropertyChangeEvent event ) {
             if(event.getNewValue() != event.getOldValue() ){
-
-                if(event.getNewValue() instanceof LightWrapper) {
-                    LightWrapper wrapper =  ((LightWrapper) event.getNewValue());
-                    wrapper.setSelected(true);
-                }
                 if(event.getOldValue() instanceof LightWrapper) {
                     LightWrapper wrapper =  ((LightWrapper) event.getOldValue());
+                    if( wrapper.getLight() instanceof LightProbe){
+                        getSpix().getBlackboard().set("tools.active", null);
+                    }
                     wrapper.setSelected(false);
+                }
+                if(event.getNewValue() instanceof LightWrapper) {
+
+                    LightWrapper wrapper =  ((LightWrapper) event.getNewValue());
+                    wrapper.setSelected(true);
+                    if( wrapper.getLight() instanceof LightProbe){
+                        getSpix().getBlackboard().set("tools.active", "LightProbe");
+                    }
                 }
 
                 if(event.getNewValue() instanceof Light) {

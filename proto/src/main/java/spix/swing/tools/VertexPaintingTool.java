@@ -22,11 +22,14 @@ public class VertexPaintingTool extends JPanel {
 
     public VertexPaintingTool(SwingGui gui) {
         super();
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         this.gui = gui;
-        this.setPreferredSize(new Dimension(150, 150));
+        this.setPreferredSize(new Dimension(100, 25));
         JPanel p = new JPanel();
-        p.setBorder(BorderFactory.createTitledBorder("Layer"));
+        p.setPreferredSize(new Dimension(200, 25));
+        p.setMinimumSize(new Dimension(200, 25));
+        p.setMaximumSize(new Dimension(200, 25));
+        p.add(new JLabel("Layer: "));
         ButtonGroup group = new ButtonGroup();
         p.add(makeButton(0, group));
         p.add(makeButton(1, group));
@@ -37,8 +40,8 @@ public class VertexPaintingTool extends JPanel {
         gui.getSpix().getBlackboard().addListener(VertexPaintAppState.TOOLS_VERTEXPAINTING_LAYER, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-                if(evt.getNewValue() != evt.getOldValue()){
-                    buttons[(int)evt.getNewValue()].setSelected(true);
+                if (evt.getNewValue() != evt.getOldValue()) {
+                    buttons[(int) evt.getNewValue()].setSelected(true);
                 }
             }
         });
@@ -46,9 +49,9 @@ public class VertexPaintingTool extends JPanel {
         add(makeSliderPanel("Hardness", VertexPaintAppState.TOOLS_VERTEXPAINTING_HARDNESS, 0.2f));
         add(makeSliderPanel("Brush size", VertexPaintAppState.TOOLS_VERTEXPAINTING_SIZE, 0.17f));
 
-        Dimension minSize = new Dimension(100, Short.MAX_VALUE);
-        Dimension prefSize = new Dimension(100, Short.MAX_VALUE);
-        Dimension maxSize = new Dimension(100, Short.MAX_VALUE);
+        Dimension minSize = new Dimension(Short.MAX_VALUE, 25);
+        Dimension prefSize = new Dimension(Short.MAX_VALUE, 25);
+        Dimension maxSize = new Dimension(Short.MAX_VALUE, 25);
         add(new Box.Filler(minSize, prefSize, maxSize));
     }
 
@@ -56,8 +59,11 @@ public class VertexPaintingTool extends JPanel {
         JPanel p;
         JSlider slider;
         p = new JPanel();
+        p.setPreferredSize(new Dimension(200, 25));
+        p.setMinimumSize(new Dimension(200, 25));
         p.setLayout(new BoxLayout(p, BoxLayout.X_AXIS));
-        p.setBorder(BorderFactory.createTitledBorder(label));
+        p.add(new JLabel(label + ": "));
+        //p.setBorder(BorderFactory.createTitledBorder(label));
         slider = new JSlider();
         slider.setPreferredSize(new Dimension(100, 25));
         slider.setPaintLabels(true);
@@ -68,8 +74,8 @@ public class VertexPaintingTool extends JPanel {
         gui.getSpix().getBlackboard().addListener(property, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-                if(evt.getNewValue() != evt.getOldValue()){
-                    slider.setValue((int) ((float)evt.getNewValue() * 100f));
+                if (evt.getNewValue() != evt.getOldValue()) {
+                    slider.setValue((int) ((float) evt.getNewValue() * 100f));
                 }
             }
         });
@@ -79,6 +85,11 @@ public class VertexPaintingTool extends JPanel {
         number.setText(defaultValue + "");
         number.setPreferredSize(new Dimension(30, 20));
         p.add(number);
+
+        Dimension minSize = new Dimension(10, 25);
+        Dimension prefSize = new Dimension(10, 25);
+        Dimension maxSize = new Dimension(10, 25);
+        p.add(new Box.Filler(minSize, prefSize, maxSize));
 
         slider.addChangeListener(new ChangeListener() {
             @Override
@@ -124,6 +135,7 @@ public class VertexPaintingTool extends JPanel {
     public JToggleButton makeButton(final int layer, ButtonGroup group) {
         JToggleButton tb = new JToggleButton((layer + 1) + "");
         tb.setPreferredSize(new Dimension(25, 20));
+        tb.setVerticalAlignment(SwingConstants.CENTER);
         group.add(tb);
         if (layer == 0) {
             gui.getSpix().getBlackboard().set(VertexPaintAppState.TOOLS_VERTEXPAINTING_LAYER, 0);

@@ -11,6 +11,7 @@ import com.jme3.scene.control.BillboardControl;
 import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
 import com.simsilica.lemur.GuiGlobals;
+import com.simsilica.lemur.RangedValueModel;
 import spix.props.PropertySet;
 
 /**
@@ -21,6 +22,7 @@ public abstract class LightWrapper<L extends Light> {
     private Node widget;
     private L light;
     protected Material dashed;
+    protected Material dashedBox;
     protected Node center;
     private PropertySet lightPropertySet;
     private Material dot;
@@ -28,7 +30,10 @@ public abstract class LightWrapper<L extends Light> {
     private Vector3f prevTargetPos = Vector3f.NAN.clone();
     private boolean initialized = false;
     private boolean selected = false;
-    private ColorRGBA color = ColorRGBA.Black.clone();
+    private ColorRGBA widgetColor = ColorRGBA.Black.clone();
+    private ColorRGBA color = ColorRGBA.White.clone();
+    private float intensity = 1.0f;
+
 
     public LightWrapper(Node node, L light, Spatial parent, AssetManager assetManager) {
         this.widget = node;
@@ -37,6 +42,15 @@ public abstract class LightWrapper<L extends Light> {
         initMaterials(assetManager);
         center = makeCenter();
         widget.attachChild(makeWidget());
+
+        color.set(light.getColor());
+        float max = Math.max(Math.max(color.r, color.g), color.b);
+        if (max > 1f) {
+            intensity = max;
+            color.multLocal(1f / intensity);
+        } else {
+            intensity = 1f;
+        }
     }
 
     protected abstract void initWidget(Spatial target, Spatial widget, L light);
@@ -65,14 +79,14 @@ public abstract class LightWrapper<L extends Light> {
 
     public void updateColor() {
         if (isSelected()) {
-            color.set(ColorRGBA.Orange);
+            widgetColor.set(ColorRGBA.Orange);
             if(!light.isEnabled()){
-                color.multLocal(0.3f);
+                widgetColor.multLocal(0.3f);
             }
         } else {
-            color.set(ColorRGBA.Black);
+            widgetColor.set(ColorRGBA.Black);
             if(!light.isEnabled()){
-                color.setAsSrgb(0.3f,0.3f,0.3f,1.0f);
+                widgetColor.setAsSrgb(0.3f,0.3f,0.3f,1.0f);
             }
         }
     }
@@ -87,11 +101,17 @@ public abstract class LightWrapper<L extends Light> {
         // Magic scaling... trust the math... don't question the math... magic math...
         float halfHeight = cam.getHeight() * 0.5f;
         float scale = ((distance / halfHeight) * 100) / m11;
+        float scalex = scale;
+        float scaley = scale;
+        float scalez = scale;
         if (center.getParent() != null) {
             //ignoring parent scale
-            scale /= (center.getParent().getWorldScale().length() / Vector3f.UNIT_XYZ.length());
+            scalex /= center.getParent().getWorldScale().x;
+            scaley /= center.getParent().getWorldScale().y;
+            scalez /= center.getParent().getWorldScale().z;
         }
-        center.setLocalScale(scale);
+        center.setLocalScale(scalex, scaley, scalez);
+
     }
 
     public L getLight() {
@@ -115,7 +135,7 @@ public abstract class LightWrapper<L extends Light> {
     }
 
     protected float getGlobalScale() {
-        BoundingVolume v = parent.getWorldBound();
+        BoundingVolume v = getBoundingVolume();
         if (v != null && v.getType() == BoundingVolume.Type.AABB) {
             BoundingBox bb = (BoundingBox) v;
             Vector3f vec = new Vector3f(bb.getXExtent(), bb.getYExtent(), bb.getZExtent());
@@ -128,6 +148,20 @@ public abstract class LightWrapper<L extends Light> {
         return 0;
     }
 
+    private BoundingVolume getBoundingVolume() {
+        BoundingVolume v = parent.getWorldBound();
+        if (Float.isInfinite(v.getVolume())){
+            BoundingVolume v2 = new BoundingBox(v.getCenter(), 1,1,1);
+            for (Spatial spatial : ((Node) parent).getChildren()) {
+                if(Float.isFinite(spatial.getWorldBound().getVolume())){
+                    v2.merge(spatial.getWorldBound());
+                }
+            }
+            return v2;
+        }
+        return v;
+    }
+
     protected void initMaterials(AssetManager assetManager) {
         GuiGlobals globals = GuiGlobals.getInstance();
 
@@ -135,7 +169,7 @@ public abstract class LightWrapper<L extends Light> {
         texture.setMinFilter(Texture.MinFilter.NearestNoMipMaps);
         texture.setMagFilter(Texture.MagFilter.Nearest);
         dot = globals.createMaterial(texture, false).getMaterial();
-        dot.setColor("Color", color);
+        dot.setColor("Color", widgetColor);
         dot.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
 
         dashed = new Material(assetManager, "MatDefs/dashed/dashed.j3md");
@@ -143,7 +177,10 @@ public abstract class LightWrapper<L extends Light> {
         dashed.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         dashed.getAdditionalRenderState().setDepthWrite(false);
         dashed.setFloat("DashSize", 0.5f);
-        dashed.setColor("Color", color);
+        dashed.setColor("Color", widgetColor);
+
+        dashedBox = new Material(assetManager, "MatDefs/dashed2.j3md");
+        dashedBox.setColor("Color", widgetColor);
     }
 
     private Node makeCenter() {
@@ -165,6 +202,29 @@ public abstract class LightWrapper<L extends Light> {
 
         center.addControl(new BillboardControl());
         return center;
+    }
+
+    public float getIntensity() {
+        return intensity;
+    }
+
+    public void setIntensity(float intensity) {
+        this.intensity = Math.max(intensity, 1f);
+        updateLightColor(color);
+    }
+
+    public ColorRGBA getColor() {
+        return color;
+    }
+
+    public void setColor(ColorRGBA color) {
+        this.color = color;
+        updateLightColor(color);
+    }
+
+    public void updateLightColor(ColorRGBA color) {
+        light.getColor().set(color);
+        light.getColor().multLocal(intensity);
     }
 
     public PropertySet getLightPropertySet() {
