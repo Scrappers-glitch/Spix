@@ -38,7 +38,9 @@ package spix.awt;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
+import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.system.awt.*;
+import com.simsilica.lemur.event.DefaultRawInputListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -80,6 +82,13 @@ public class AwtPanelState extends BaseAppState {
             throw new RuntimeException("Error creating panel on swing thread", e);
         }
 
+        app.getInputManager().addRawInputListener(new DefaultRawInputListener(){
+            @Override
+            public void onMouseMotionEvent(MouseMotionEvent evt) {
+                requestFocus();
+            }
+        });
+        
         // Can't unattach them so we might as well do it on init
         panel.attachTo(true, app.getViewPort(), app.getGuiViewPort());        
     }
@@ -106,7 +115,13 @@ public class AwtPanelState extends BaseAppState {
             ctx.setInputSource(panel);
         }
     }
- 
+
+    private void requestFocus(){
+        if(!panel.hasFocus()) {
+            panel.requestFocus();
+        }
+    }
+
     private class AttachPanelCommand implements Runnable {
         public void run() {
             // Add it to the container provided
