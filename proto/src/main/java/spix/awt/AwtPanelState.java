@@ -88,7 +88,7 @@ public class AwtPanelState extends BaseAppState {
                 requestFocus();
             }
         });
-        
+
         // Can't unattach them so we might as well do it on init
         panel.attachTo(true, app.getViewPort(), app.getGuiViewPort());        
     }

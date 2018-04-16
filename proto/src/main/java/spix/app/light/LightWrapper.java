@@ -12,6 +12,7 @@ import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.RangedValueModel;
+import spix.app.utils.CameraUtils;
 import spix.props.PropertySet;
 
 /**
@@ -33,6 +34,7 @@ public abstract class LightWrapper<L extends Light> {
     private ColorRGBA widgetColor = ColorRGBA.Black.clone();
     private ColorRGBA color = ColorRGBA.White.clone();
     private float intensity = 1.0f;
+    private Vector3f tmpVec3 = new Vector3f();
 
 
     public LightWrapper(Node node, L light, Spatial parent, AssetManager assetManager) {
@@ -92,15 +94,9 @@ public abstract class LightWrapper<L extends Light> {
     }
 
     private void updateCenter(Camera cam) {
-        Vector3f dir = cam.getDirection();
-        float distance = dir.dot(center.getWorldTranslation().subtract(cam.getLocation()));
 
-        // m11 of the projection matrix defines the distance at which 1 pixel
-        // is 1 unit.  Kind of.
-        float m11 = cam.getProjectionMatrix().m11;
-        // Magic scaling... trust the math... don't question the math... magic math...
-        float halfHeight = cam.getHeight() * 0.5f;
-        float scale = ((distance / halfHeight) * 100) / m11;
+        float scale = CameraUtils.getConstantScale(cam, widget.getWorldTranslation(), tmpVec3);
+
         float scalex = scale;
         float scaley = scale;
         float scalez = scale;

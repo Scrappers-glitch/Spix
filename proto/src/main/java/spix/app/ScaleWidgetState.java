@@ -55,6 +55,7 @@ import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import com.simsilica.lemur.input.*;
 import spix.app.properties.WorldScaleProperty;
+import spix.app.utils.CameraUtils;
 import spix.core.*;
 import spix.props.*;
 
@@ -83,6 +84,7 @@ public class ScaleWidgetState extends BaseAppState {
     private Material[] axisMaterials = new Material[3];
     private ColorRGBA[] axisColors = new ColorRGBA[3];
     private Camera cam;
+    private Vector3f tmpVec3 = new Vector3f();
 
     private SafeArrayList<SelectedObject> selectedObjects = new SafeArrayList<>(SelectedObject.class);
     private Vector3f selectionCenter = new Vector3f();
@@ -432,33 +434,10 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             axisColors[2].a = dirAlpha(dir, widget.getWorldRotation().getRotationColumn(2));
         }
 
-        // Need to figure out how much to scale the widget so that it stays
-        // the same size on screen.  In our case, we want 1 unit to be
-        // 100 pixels.
-        Vector3f dir = cam.getDirection();
-        float distance = dir.dot(widget.getWorldTranslation().subtract(cam.getLocation()));
 
-        // m11 of the projection matrix defines the distance at which 1 pixel
-        // is 1 unit.  Kind of.
-        float m11 = cam.getProjectionMatrix().m11;
-
-        // Magic scaling... trust the math... don't question the math... magic math...
-        float halfHeight = cam.getHeight() * 0.5f;
-        float scale = ((distance / halfHeight) * 100) / m11;
+        float scale = CameraUtils.getConstantScale(cam, widget.getWorldTranslation(), tmpVec3);
         widget.setLocalScale(scale);
 
-
-
-
-
-        /*
-        // But if you want to check the magic math...
-        Vector3f s1 = cam.getScreenCoordinates(widget.getWorldTranslation());
-        Vector3f s2 = cam.getScreenCoordinates(widget.getWorldTranslation().add(scale, 0, 0));
-
-        System.out.println("screen dist:" + (s2.x - s1.x));
-        // Should be 100 when facing directly down z axis
-        */
     }
 
     @Override

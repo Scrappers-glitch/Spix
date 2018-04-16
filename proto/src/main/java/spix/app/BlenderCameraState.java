@@ -85,9 +85,9 @@ public class BlenderCameraState extends BaseAppState {
     public static final FunctionId F_POV_ROTATE_TOP = new FunctionId(GROUP, "Rotate POV Top");
     public static final FunctionId F_POV_ROTATE_BOTTOM = new FunctionId(GROUP, "Rotate POV Bottom");
 
-    private final static float ROT_FACTOR = 0.1f;
+    public static final FunctionId F_PARALLEL = new FunctionId(GROUP, "Parallel projection");
 
-    private float lastClick;
+    private final static float ROT_FACTOR = 0.1f;
 
     private String selectionProperty = DefaultConstants.SELECTION_PROPERTY;
     private Camera cam;
@@ -99,6 +99,7 @@ public class BlenderCameraState extends BaseAppState {
     private Vector3f startTargetPos;
     float time = 0;
     Quaternion tmpQuat = new Quaternion();
+    private float lastPerspFrustumTop = 0;
 
     private float delay = 0.25f;
 
@@ -171,6 +172,8 @@ public class BlenderCameraState extends BaseAppState {
             inputMapper.map(F_POV_TOP, KeyInput.KEY_NUMPAD7);
             inputMapper.map(F_POV_BOTTOM, KeyInput.KEY_NUMPAD7, KeyInput.KEY_RCONTROL);
             inputMapper.map(F_POV_BOTTOM, KeyInput.KEY_NUMPAD7, KeyInput.KEY_LCONTROL);
+
+            inputMapper.map(F_PARALLEL, KeyInput.KEY_NUMPAD5);
         }
 
         inputMapper.addStateListener(new StateFunctionListener() {
@@ -194,10 +197,50 @@ public class BlenderCameraState extends BaseAppState {
                 if (func == F_POV_BOTTOM && value == InputState.Positive) {
                     switchToBottom();
                 }
+                if (func == F_PARALLEL && value == InputState.Positive) {
+
+                    getState(SpixState.class).getSpix().getBlackboard().set(DefaultConstants.CAMERA_ORTHOGRAPHIC, !cam.isParallelProjection());
+
+                }
 
             }
-        }, F_POV_FRONT, F_POV_BACK, F_POV_LEFT, F_POV_RIGHT, F_POV_TOP, F_POV_BOTTOM);
+        }, F_POV_FRONT, F_POV_BACK, F_POV_LEFT, F_POV_RIGHT, F_POV_TOP, F_POV_BOTTOM, F_PARALLEL);
 
+    }
+
+    public void setParallel(boolean parallel) {
+        updateFrustum();
+        cam.setParallelProjection(parallel);
+        updateFrustum();
+        System.err.println("Set parallel");
+    }
+
+    public boolean isParallel(){
+        return cam.isParallelProjection();
+    }
+
+    public void updateFrustum() {
+        float distance = camNode.getLocalTranslation().z;
+        float aspect = (float) cam.getWidth() / cam.getHeight();
+
+        if (cam.isParallelProjection()) {
+            float h = lastPerspFrustumTop;
+            float w;
+            float fovY = FastMath.atan(h) / (FastMath.DEG_TO_RAD * .5f);
+            h = FastMath.tan(fovY * FastMath.DEG_TO_RAD * .5f) * distance;
+            w = h * aspect;
+            cam.setFrustum(-1000, 1000, -w, w, h, -h);
+        } else {
+            float near = 1f;
+            if (distance < 2.0) {
+                //modify camera clip
+                near = distance * 0.5f;
+            }
+            cam.setFrustumPerspective(45f, aspect, near, near * 1000f);
+            lastPerspFrustumTop = cam.getFrustumTop();
+        }
+
+        cam.update();
     }
 
     public void switchToFront() {
@@ -394,17 +437,8 @@ public class BlenderCameraState extends BaseAppState {
             } else if (func == F_ZOOM) {
                 float factor = Math.min(camNode.getLocalTranslation().z * 0.1f, 2);
                 tmpVec.set(camNode.getLocalTranslation()).addLocal(0, 0, (float) -value * factor);
-                if (tmpVec.z < 2.0) {
-                    //modify camera clip
-                    float near =tmpVec.z * 0.5f;
-                    cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), near, near * 1000f);
-                    cam.update();
-                } else {
-                    cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 1.0f, 1000f);
-                    cam.update();
-                }
-                //tmpVec.z = Math.max(tmpVec.z, 1f);
                 camNode.setLocalTranslation(tmpVec);
+                updateFrustum();
             }
         }
     }

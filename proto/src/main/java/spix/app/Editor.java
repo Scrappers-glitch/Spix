@@ -731,6 +731,18 @@ public class Editor extends SimpleApplication {
 
     private void initPovMenus(ActionList camera) {
         ActionList povMenu = camera.add(new DefaultActionList("Point of view"));
+        Action ortho = new NopToggleAction("Orthographic") {
+            public void performAction(final Spix spix) {
+                boolean parallel = spix.getBlackboard().get(CAMERA_ORTHOGRAPHIC, Boolean.class);
+                spix.getBlackboard().set(CAMERA_ORTHOGRAPHIC, !parallel);
+            }
+        };
+        povMenu.add(ortho);
+        spix.getBlackboard().set(CAMERA_ORTHOGRAPHIC, false);
+        spix.getBlackboard().bind(CAMERA_ORTHOGRAPHIC, ortho, "toggled");
+        spix.getBlackboard().bind(CAMERA_ORTHOGRAPHIC, stateManager.getState(BlenderCameraState.class), "parallel");
+
+
         povMenu.add(new NopAction("Front") {
             public void performAction(final Spix spix) {
                 BlenderCameraState bcs = getStateManager().getState(BlenderCameraState.class);

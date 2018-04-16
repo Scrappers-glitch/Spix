@@ -59,6 +59,7 @@ import com.simsilica.lemur.event.*;
 
 
 import com.simsilica.lemur.input.*;
+import spix.app.utils.CameraUtils;
 import spix.core.*;
 import spix.props.*;
 
@@ -101,6 +102,8 @@ public class TranslationWidgetState extends BaseAppState {
     private static final FunctionId F_Z_CONSTRAIN = new FunctionId(GROUP_DRAG_ADDITIONAL_INPUTS, "Z axis constrain");
     private static final FunctionId F_HORIZONTAL_DRAG = new FunctionId(GROUP_MOVING, "Drag Horizontally");
     private static final FunctionId F_VERTICAL_DRAG = new FunctionId(GROUP_MOVING, "Drag vertically");
+
+    private Vector3f tmpVec3 = new Vector3f();
 
     //Axis move axis line visual cue.
     private Geometry axisLine;
@@ -386,20 +389,22 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
         axisColors[1].a = dirAlpha(dir, Vector3f.UNIT_Y);
         axisColors[2].a = dirAlpha(dir, Vector3f.UNIT_Z);
 
-        // Need to figure out how much to scale the widget so that it stays
-        // the same size on screen.  In our case, we want 1 unit to be
-        // 100 pixels.
-        dir = cam.getDirection();
-        float distance = dir.dot(widget.getWorldTranslation().subtract(cam.getLocation()));
-
-        // m11 of the projection matrix defines the distance at which 1 pixel
-        // is 1 unit.  Kind of.
-        float m11 = cam.getProjectionMatrix().m11;
-
-        // Magic scaling... trust the math... don't question the math... magic math...
-        float halfHeight = cam.getHeight() * 0.5f;
-        float scale = ((distance/halfHeight) * 100)/m11;
+        float scale = CameraUtils.getConstantScale(cam, widget.getWorldTranslation(), tmpVec3);
         widget.setLocalScale(scale);
+//        // Need to figure out how much to scale the widget so that it stays
+//        // the same size on screen.  In our case, we want 1 unit to be
+//        // 100 pixels.
+//        dir = cam.getDirection();
+//        float distance = dir.dot(widget.getWorldTranslation().subtract(cam.getLocation()));
+//
+//        // m11 of the projection matrix defines the distance at which 1 pixel
+//        // is 1 unit.  Kind of.
+//        float m11 = cam.getProjectionMatrix().m11;
+//
+//        // Magic scaling... trust the math... don't question the math... magic math...
+//        float halfHeight = cam.getHeight() * 0.5f;
+//        float scale = ((distance/halfHeight) * 100)/m11;
+//        widget.setLocalScale(scale);
 
         /*
         // But if you want to check the magic math...
@@ -649,11 +654,12 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             // Find the pick direction from our eye
             Vector3f pickDir = getPickDir(x, y);
 
+            Vector3f near = cam.getWorldCoordinates(cursor, 0);
+
             // Find the closest point between the axis line starting at the
             // object and the pick line starting at the camera.  This returns
             // the projected point on the first line (object -> axis)
-            startDistance = closestPointProjected(basePosition, dir, cam.getLocation(), pickDir);
-
+            startDistance = closestPointProjected(basePosition, dir, near, pickDir);
             last = new Vector3f();
             inputMapper.activateGroup(GROUP_DRAG_ADDITIONAL_INPUTS);
             startCursor.set(x,y);
@@ -686,9 +692,11 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             // Find the closest point between the axis line starting at the
             // object and the pick line starting at the camera.  This returns
             // the projected point on the first line (object -> axis)
-            float distance = closestPointProjected(basePosition, dir, cam.getLocation(), pickDir);
 
-            //System.out.println("distance:" + distance + "  Dragged:" + (distance - startDistance));
+            Vector3f near = cam.getWorldCoordinates(cursor, 0);
+
+            float distance = closestPointProjected(basePosition, dir, near, pickDir);
+
             float dragged = distance - startDistance;
             Vector3f newOffset = dir.mult(dragged);
             Vector3f delta = newOffset.subtract(last);
@@ -754,7 +762,9 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             System.out.println("sc:" + sc + "  tc:" + tc);
             System.out.println("psc:" + p0.add(u.mult(sc)) + "  qtc:" + q0.add(v.mult(tc)));
             */
-
+            if(Float.isNaN(sc)){
+                sc = 0;
+            }
             return sc;
         }
 

@@ -55,6 +55,7 @@ import com.jme3.util.SafeArrayList;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.event.*;
 import com.simsilica.lemur.input.*;
+import spix.app.utils.CameraUtils;
 import spix.app.utils.ShapeUtils;
 import spix.core.SelectionModel;
 import spix.core.Spix;
@@ -398,19 +399,7 @@ public class RotationWidgetState extends BaseAppState {
 
         updateWidgetPosition();
 
-        // Need to figure out how much to scale the widget so that it stays
-        // the same size on screen.  In our case, we want 1 unit to be
-        // 100 pixels.
-        Vector3f dir = cam.getDirection();
-        float distance = dir.dot(tmpVec3.set(widget.getWorldTranslation()).subtractLocal(cam.getLocation()));
-
-        // m11 of the projection matrix defines the distance at which 1 pixel
-        // is 1 unit.  Kind of.
-        float m11 = cam.getProjectionMatrix().m11;
-
-        // Magic scaling... trust the math... don't question the math... magic math...
-        float halfHeight = cam.getHeight() * 0.5f;
-        float scale = ((distance/halfHeight) * 100)/m11;
+        float scale = CameraUtils.getConstantScale(cam, widget.getWorldTranslation(), tmpVec3);
         widget.setLocalScale(scale);
 
     }
