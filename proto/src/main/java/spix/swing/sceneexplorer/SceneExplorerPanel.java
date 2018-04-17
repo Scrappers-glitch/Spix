@@ -8,6 +8,7 @@ import com.jme3.material.Material;
 import com.jme3.scene.*;
 import com.jme3.scene.control.Control;
 import spix.app.DefaultConstants;
+import spix.app.light.LightWrapper;
 import spix.app.scene.SceneService;
 import spix.core.SelectionModel;
 import spix.swing.SwingGui;
@@ -460,6 +461,9 @@ public class SceneExplorerPanel extends DockPanel {
             if (userObject.equals(node.getUserObject())) {
                 return node;
             }
+            if(userObject instanceof LightWrapper && ((LightWrapper)userObject).getLight().equals(node.getUserObject())){
+                return node;
+            }
         }
         return null;
     }
@@ -475,6 +479,9 @@ public class SceneExplorerPanel extends DockPanel {
             JTree tree = (JTree) c;
             TreePath paths[] = tree.getSelectionPaths();
             nodes.clear();
+            if (paths == null){
+                return null;
+            }
             for (TreePath path : paths) {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
                 Object data = node.getUserObject();
