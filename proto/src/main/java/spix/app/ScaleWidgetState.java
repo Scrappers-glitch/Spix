@@ -176,7 +176,6 @@ public class ScaleWidgetState extends BaseAppState {
 
         widget.setQueueBucket(Bucket.Transparent);
 
-        //getRoot().attachChild(widget);
 
         initKeyMappings();
 
@@ -190,7 +189,6 @@ public class ScaleWidgetState extends BaseAppState {
 
     private void initKeyMappings() {
         inputMapper = GuiGlobals.getInstance().getInputMapper();
-//        inputMapper.map(F_GRAB, KeyInput.KEY_G);
 
         inputMapper.map(F_DONE, KeyInput.KEY_RETURN);
         inputMapper.map(F_DONE, Button.MOUSE_BUTTON1);

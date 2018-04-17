@@ -103,7 +103,7 @@ public class UndoManager {
     }
  
     public void undo() {
-        log.info("undo()");    
+        log.debug("undo()");
         if( undoStack.isEmpty() ) {
             log.info("...undo stack empty");    
             return;
@@ -130,7 +130,7 @@ public class UndoManager {
     }
     
     public void redo() {
-        log.info("redo()");    
+        log.debug("redo()");
         if( redoStack.isEmpty() ) {
             log.info("...redo stack empty");    
             return;
@@ -172,16 +172,16 @@ public class UndoManager {
     } 
 
     protected void addEdit( Object source, String property, Object oldValue, Object newValue ) {
-        log.info("addEdit(" + source + ", " + property + ", " + oldValue + ", " + newValue + ")");
+        log.debug("addEdit(" + source + ", " + property + ", " + oldValue + ", " + newValue + ")");
         Object original = beanIndex.get(source);
         oldValue = clonePropertyValue(oldValue);        
         newValue = clonePropertyValue(newValue);        
-        log.info("original:" + original);
+        log.debug("original:" + original);
         if( original != null ) {
             // If the old value and the new value are equivalent then we should
             // not create an edit because it doesn't mean anything
             if( Objects.equals(oldValue, newValue) ) {
-                log.info("ignoring edit:" + original + ", " + property + ", " + oldValue + ", " + newValue); 
+                log.debug("ignoring edit:" + original + ", " + property + ", " + oldValue + ", " + newValue);
             } else {
                 addEdit(new PropertyEdit(original, property, oldValue, newValue));
             }
@@ -192,7 +192,7 @@ public class UndoManager {
         
         public PropertySet propertySetCreated( Object wrapped, PropertySet newSet ) {
  
-            log.info("propertySetCreated(" + wrapped + ", " + newSet + ")");
+            log.debug("propertySetCreated(" + wrapped + ", " + newSet + ")");
             
             // For now, let's try to just use listeners.
             for( Property prop : newSet ) {

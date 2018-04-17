@@ -391,29 +391,6 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
 
         float scale = CameraUtils.getConstantScale(cam, widget.getWorldTranslation(), tmpVec3);
         widget.setLocalScale(scale);
-//        // Need to figure out how much to scale the widget so that it stays
-//        // the same size on screen.  In our case, we want 1 unit to be
-//        // 100 pixels.
-//        dir = cam.getDirection();
-//        float distance = dir.dot(widget.getWorldTranslation().subtract(cam.getLocation()));
-//
-//        // m11 of the projection matrix defines the distance at which 1 pixel
-//        // is 1 unit.  Kind of.
-//        float m11 = cam.getProjectionMatrix().m11;
-//
-//        // Magic scaling... trust the math... don't question the math... magic math...
-//        float halfHeight = cam.getHeight() * 0.5f;
-//        float scale = ((distance/halfHeight) * 100)/m11;
-//        widget.setLocalScale(scale);
-
-        /*
-        // But if you want to check the magic math...
-        Vector3f s1 = cam.getScreenCoordinates(widget.getWorldTranslation());
-        Vector3f s2 = cam.getScreenCoordinates(widget.getWorldTranslation().add(scale, 0, 0));
-
-        System.out.println("screen dist:" + (s2.x - s1.x));
-        // Should be 100 when facing directly down z axis
-        */
     }
 
     @Override
@@ -519,7 +496,7 @@ System.out.println("Translation:" + translation + "  value:" + translation.getVa
             //s.move(v);
             pos.addLocal(v);
         }
-        pos.divide(selectedObjects.size());
+        pos.divideLocal(selectedObjects.size());
         selectionCenter.set(pos);
         widget.setLocalTranslation(selectionCenter);
     }

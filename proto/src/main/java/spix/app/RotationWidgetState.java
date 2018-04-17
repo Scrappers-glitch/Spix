@@ -709,6 +709,7 @@ public class RotationWidgetState extends BaseAppState {
         private Property translation;
         private Property rotation;
         private Quaternion initialRot = new Quaternion();
+        private Vector3f initialPos = new Vector3f();
 
         public SelectedObject( PropertySet properties, Property translation, Property rotation ) {
             this.properties = properties;
@@ -734,10 +735,12 @@ public class RotationWidgetState extends BaseAppState {
 
         public void capture() {
             initialRot.set(getWorldRotation());
+            initialPos.set(getWorldTranslation());
         }
 
         public void reset() {
             setWorldRotation(initialRot);
+            setWorldTranslation(initialPos);
         }
 
     }
