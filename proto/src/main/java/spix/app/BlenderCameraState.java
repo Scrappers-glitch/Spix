@@ -38,18 +38,15 @@ package spix.app;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.collision.CollisionResult;
-import com.jme3.collision.CollisionResults;
 import com.jme3.input.KeyInput;
-import com.jme3.input.MouseInput;
 import com.jme3.math.*;
 import com.jme3.renderer.Camera;
-import com.jme3.scene.*;
+import com.jme3.scene.CameraNode;
+import com.jme3.scene.Node;
 import com.jme3.scene.control.CameraControl;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.input.*;
-import spix.core.*;
-import spix.props.*;
+import spix.core.Spix;
 
 /**
  * A standard app state for a blender like camera motion.
@@ -82,8 +79,8 @@ public class BlenderCameraState extends BaseAppState {
 
     public static final FunctionId F_POV_ROTATE_LEFT = new FunctionId(GROUP, "Rotate POV Left");
     public static final FunctionId F_POV_ROTATE_RIGHT = new FunctionId(GROUP, "Rotate POV Right");
-    public static final FunctionId F_POV_ROTATE_TOP = new FunctionId(GROUP, "Rotate POV Top");
-    public static final FunctionId F_POV_ROTATE_BOTTOM = new FunctionId(GROUP, "Rotate POV Bottom");
+    public static final FunctionId F_POV_ROTATE_UP = new FunctionId(GROUP, "Rotate POV up");
+    public static final FunctionId F_POV_ROTATE_DOWN = new FunctionId(GROUP, "Rotate POV down");
 
     public static final FunctionId F_PARALLEL = new FunctionId(GROUP, "Parallel projection");
 
@@ -205,6 +202,29 @@ public class BlenderCameraState extends BaseAppState {
 
             }
         }, F_POV_FRONT, F_POV_BACK, F_POV_LEFT, F_POV_RIGHT, F_POV_TOP, F_POV_BOTTOM, F_PARALLEL);
+
+        if (!inputMapper.hasMappings(F_POV_ROTATE_LEFT)) {
+            inputMapper.map(F_POV_ROTATE_LEFT, KeyInput.KEY_LEFT);
+            inputMapper.map(F_POV_ROTATE_RIGHT, KeyInput.KEY_RIGHT);
+            inputMapper.map(F_POV_ROTATE_UP, KeyInput.KEY_UP);
+            inputMapper.map(F_POV_ROTATE_DOWN, KeyInput.KEY_DOWN);
+
+            inputMapper.addStateListener(new StateFunctionListener() {
+                @Override
+                public void valueChanged(FunctionId func, InputState value, double tpf) {
+                    if (value != InputState.Positive) {
+                        return;
+                    }
+                    float angle = FastMath.PI / 12f;
+                    if (func == F_POV_ROTATE_LEFT ||  func == F_POV_ROTATE_UP) {
+                        angle *= -1;
+                    }
+
+                    inputHandler.rotateTarget(angle, func == F_POV_ROTATE_LEFT || func == F_POV_ROTATE_RIGHT);
+
+                }
+            }, F_POV_ROTATE_LEFT, F_POV_ROTATE_RIGHT, F_POV_ROTATE_UP, F_POV_ROTATE_DOWN);
+        }
 
     }
 
@@ -400,46 +420,56 @@ public class BlenderCameraState extends BaseAppState {
 
                 lastCursor.set(cursor);
             } else if (func == F_HORIZONTAL_ROTATE || func == F_VERTICAL_ROTATE) {
-                //Extract horizontal rotation
-                //get left vector and cross product it with unitY (to "flatten" the direction on the horizontal plane)
-                target.getLocalRotation().getRotationColumn(0, tmpVec).crossLocal(Vector3f.UNIT_Y);
-                tmpRot.lookAt(tmpVec, Vector3f.UNIT_Y);
 
-                //Extract vertical rotation
-                //get the direction of the rotation
-                //rotate it by the inverse horizontal rotation.
-                //get the rotation from that vector.
-                target.getLocalRotation().getRotationColumn(2, tmpVec);
-                tmpRot3.set(tmpRot).inverseLocal().mult(tmpVec, tmpVec);
-                //Finding the up axis (negating it when we go backward to be able to completely rotate aroudn the target)
-                tmpVec2.set(Vector3f.UNIT_Y).multLocal(FastMath.sign(tmpVec.getZ()));
-                tmpRot2.lookAt(tmpVec, tmpVec2);
-
-                //computing the additional rotation and combining it the right orders
+                float angle = (float) value * ROT_FACTOR;
                 if (func == F_HORIZONTAL_ROTATE) {
-                    //the incremental horizontal rotation.
-                    tmpRot3.fromAngleAxis((float) -value * ROT_FACTOR, Vector3f.UNIT_Y);
-                    //applying the horizontal incremental rotation on the horizontal rotation.
-                    tmpRot.multLocal(tmpRot3);
-                    //applying the vertical rotation on the resulting horizontal rotation.
-                    tmpRot.multLocal(tmpRot2);
-                } else {
-                    //the incremental vertical rotation
-                    tmpRot3.fromAngleAxis((float) value * ROT_FACTOR, Vector3f.UNIT_X);
-                    //applying the incremental vertical rotation on the vertical rotation.
-                    tmpRot2.multLocal(tmpRot3);
-                    //Applying the resulting vertical rotation on the horizontal rotation.
-                    tmpRot.multLocal(tmpRot2);
+                    angle *= -1;
                 }
+                rotateTarget(angle, func == F_HORIZONTAL_ROTATE);
 
-                //Setting the new rotation
-                target.setLocalRotation(tmpRot);
             } else if (func == F_ZOOM) {
                 float factor = Math.min(camNode.getLocalTranslation().z * 0.1f, 2);
                 tmpVec.set(camNode.getLocalTranslation()).addLocal(0, 0, (float) -value * factor);
                 camNode.setLocalTranslation(tmpVec);
                 updateFrustum();
             }
+        }
+
+        public void rotateTarget(float angle, boolean horizontal) {
+            //Extract horizontal rotation
+            //get left vector and cross product it with unitY (to "flatten" the direction on the horizontal plane)
+            target.getLocalRotation().getRotationColumn(0, tmpVec).crossLocal(Vector3f.UNIT_Y);
+            tmpRot.lookAt(tmpVec, Vector3f.UNIT_Y);
+
+            //Extract vertical rotation
+            //get the direction of the rotation
+            //rotate it by the inverse horizontal rotation.
+            //get the rotation from that vector.
+            target.getLocalRotation().getRotationColumn(2, tmpVec);
+            tmpRot3.set(tmpRot).inverseLocal().mult(tmpVec, tmpVec);
+            //Finding the up axis (negating it when we go backward to be able to completely rotate aroudn the target)
+            tmpVec2.set(Vector3f.UNIT_Y).multLocal(FastMath.sign(tmpVec.getZ()));
+            tmpRot2.lookAt(tmpVec, tmpVec2);
+
+            //computing the additional rotation and combining it the right orders
+            if (horizontal) {
+                //the incremental horizontal rotation.
+                tmpRot3.fromAngleAxis(angle, Vector3f.UNIT_Y);
+                //applying the horizontal incremental rotation on the horizontal rotation.
+                tmpRot.multLocal(tmpRot3);
+                //applying the vertical rotation on the resulting horizontal rotation.
+                tmpRot.multLocal(tmpRot2);
+            } else {
+                //the incremental vertical rotation
+                tmpRot3.fromAngleAxis(angle, Vector3f.UNIT_X);
+                //applying the incremental vertical rotation on the vertical rotation.
+                tmpRot2.multLocal(tmpRot3);
+                //Applying the resulting vertical rotation on the horizontal rotation.
+                tmpRot.multLocal(tmpRot2);
+            }
+
+            //Setting the new rotation
+            target.setLocalRotation(tmpRot);
         }
     }
 }
