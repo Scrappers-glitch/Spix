@@ -178,8 +178,8 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
         
         public EulerProperties( Property parent ) {
             super(parent, new Quaternion(),
-                    new DefaultProperty("Yaw (X)", new NumberRangeType(null, null, 5f), 0f),
-                    new DefaultProperty("Pitch (Y)", new NumberRangeType(-FastMath.HALF_PI * FastMath.RAD_TO_DEG, FastMath.HALF_PI * FastMath.RAD_TO_DEG, 5f), 0f),
+                    new DefaultProperty("Pitch (X)", new NumberRangeType(-FastMath.HALF_PI * FastMath.RAD_TO_DEG, FastMath.HALF_PI * FastMath.RAD_TO_DEG, 5f), 0f),
+                    new DefaultProperty("Yaw (Y)", new NumberRangeType(null, null, 5f), 0f),
                     new DefaultProperty("Roll (Z)", new NumberRangeType(-FastMath.HALF_PI * FastMath.RAD_TO_DEG, FastMath.HALF_PI * FastMath.RAD_TO_DEG, 5f), 0f));
         }
  
@@ -193,8 +193,8 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
             updating = true;
             try {           
                 // Just reset them all... it's easier
-                getProperty("Yaw (X)").setValue(angles[0] * FastMath.RAD_TO_DEG);
-                getProperty("Pitch (Y)").setValue(angles[1] * FastMath.RAD_TO_DEG);
+                getProperty("Pitch (X)").setValue(angles[0] * FastMath.RAD_TO_DEG);
+                getProperty("Yaw (Y)").setValue(angles[1] * FastMath.RAD_TO_DEG);
                 getProperty("Roll (Z)").setValue(angles[2] * FastMath.RAD_TO_DEG);
             } finally {
                 updating = false;
@@ -211,8 +211,8 @@ public class QuaternionPanel extends AbstractPropertyPanel<Component>
                 log.trace(getId() + ".EulerProperties: propertyChange(" + e + ")");
             }
             // Just reset them all... it's easier
-            angles[0] = (Float) getProperty("Yaw (X)").getValue() * FastMath.DEG_TO_RAD;
-            angles[1] = (Float) getProperty("Pitch (Y)").getValue() * FastMath.DEG_TO_RAD;
+            angles[0] = (Float) getProperty("Pitch (X)").getValue() * FastMath.DEG_TO_RAD;
+            angles[1] = (Float) getProperty("Yaw (Y)").getValue() * FastMath.DEG_TO_RAD;
             angles[2] = (Float) getProperty("Roll (Z)").getValue() * FastMath.DEG_TO_RAD;
             Quaternion rotation = (Quaternion)getObject();             
             rotation.fromAngles(angles);
