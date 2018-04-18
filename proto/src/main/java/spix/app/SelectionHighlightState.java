@@ -47,6 +47,7 @@ import com.jme3.scene.*;
 import com.jme3.scene.debug.WireFrustum;
 import com.jme3.util.SafeArrayList;
 import com.simsilica.lemur.GuiGlobals;
+import spix.app.utils.ShapeUtils;
 import spix.core.*;
 
 import java.beans.*;
@@ -247,56 +248,23 @@ public class SelectionHighlightState extends BaseAppState {
         }
 
         private void createWire( Node node ) {
-            // Need to create a wire frame for the bounding shape
-
-
-            Vector3f points [] = new Vector3f[8];
-
-            //BoundingBox bb = (BoundingBox) node.getWorldBound();
-            BoundingBox bb2 = new BoundingBox(Vector3f.ZERO,0.1f,0.1f,0.1f);
-
-            for (Spatial spatial : node.getChildren()) {
-                BoundingVolume b = spatial.getWorldBound();
-                if (b != null) {
-                    b = b.clone();
-                    b.setCenter(node.worldToLocal(b.getCenter(), null));
-                    if (b instanceof BoundingBox) {
-                        BoundingBox bb = (BoundingBox) b;
-                        bb.setXExtent(bb.getXExtent() / node.getWorldScale().getX());
-                        bb.setYExtent(bb.getYExtent() / node.getWorldScale().getY());
-                        bb.setZExtent(bb.getZExtent() / node.getWorldScale().getZ());
-                    }
-                    bb2.mergeLocal(b);
-                }
-            }
-            //bb2.mergeLocal(bb);
-
-            float xe = bb2.getXExtent() + 0.1f/node.getWorldScale().getX();
-            float ye = bb2.getYExtent() + 0.1f/node.getWorldScale().getY();
-            float ze = bb2.getZExtent() + 0.1f/node.getWorldScale().getZ();
-            float x = bb2.getCenter().x;
-            float y = bb2.getCenter().y;
-            float z = bb2.getCenter().z;
-
-            points[0] = new Vector3f(x - xe, y - ye, z - ze);
-            points[1] = new Vector3f(x - xe, y + ye, z - ze);
-            points[2] = new Vector3f(x + xe, y + ye, z - ze);
-            points[3] = new Vector3f(x + xe, y - ye, z - ze);
-
-            points[4] = new Vector3f(x - xe, y - ye, z + ze);
-            points[5] = new Vector3f(x - xe, y + ye, z + ze);
-            points[6] = new Vector3f(x + xe, y + ye, z + ze);
-            points[7] = new Vector3f(x + xe, y - ye, z + ze);
-
-            WireFrustum frustum = new WireFrustum(points);
-            wire = new Geometry(node.getName()+"Selection",frustum);
+            wire = new Geometry(node.getName()+"Selection", ShapeUtils.makeWireBox());
             wire.setMaterial(nodeWireMaterial);
             update();
             getRoot().attachChild(wire);
         }
 
         public void update() {
-            wire.setLocalTransform(source.getWorldTransform());
+            if (source instanceof Node) {
+                BoundingVolume bv = source.getWorldBound();
+                if(bv instanceof  BoundingBox) {
+                    BoundingBox bb = (BoundingBox) bv;
+                    wire.setLocalScale(bb.getXExtent(), bb.getYExtent(), bb.getZExtent());
+                    wire.setLocalTranslation(bb.getCenter());
+                }
+            } else {
+                wire.setLocalTransform(source.getWorldTransform());
+            }
         }
 
         public void release() {

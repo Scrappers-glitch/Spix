@@ -38,7 +38,6 @@ package spix.app;
 
 import com.jme3.app.*;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.bounding.*;
 import com.jme3.material.*;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.*;
@@ -63,7 +62,7 @@ import java.util.*;
 public class NodeWidgetState extends BaseAppState {
 
 
-    public static final float NODE_INDENT = 0.1f;
+
     private Camera cam;
     private Node nodesNode;
     private SelectionModel selection;
@@ -87,12 +86,12 @@ public class NodeWidgetState extends BaseAppState {
         cam = app.getCamera();
         nodesNode = new Node("Nodes Node");
 
-        recurseAddNodes(rootNode, 1);
+        recurseAddNodes(rootNode);
     }
 
     public void setScene(Spatial n) {
         clear();
-        recurseAddNodes(n, 1);
+        recurseAddNodes(n);
     }
 
     private void clear() {
@@ -100,68 +99,48 @@ public class NodeWidgetState extends BaseAppState {
         nodeMap.clear();
     }
 
-    private void recurseAddNodes(Spatial spatial, int indent) {
+    private void recurseAddNodes(Spatial spatial) {
         if (spatial instanceof Node) {
             Node n = (Node) spatial;
-            if (nodesNode.getParent() != null) {
-                addNode(n, indent);
-            }
+            addNode(n);
 
             for (Spatial s : n.getChildren()) {
                 if (s instanceof Node) {
-                    recurseAddNodes((Node) s, indent + 1);
+                    recurseAddNodes(s);
                 }
             }
         }
     }
 
-    public void addNode(Node node) {
-        Node parent = node.getParent();
-        int indent = 1;
-        while (parent != null){
-            indent ++;
-            parent = parent.getParent();
-        }
-        recurseAddNodes(node, indent);
-    }
-
-
-    private void addNode(Node node, int indent) {
-        Node widget = new Node(node.getName()+ " Widget");
-        float indentVal = NODE_INDENT * indent;
-        BoundingVolume bv =node.getWorldBound();
+    private void addNode(Node node) {
+        Node widget = new Node(node.getName() + " Widget");
         float handleSize = 0.08f;
-        if(bv instanceof BoundingBox){
 
+        Box b = new Box(handleSize, handleSize, handleSize);
+        Geometry g = new Geometry("geom", b);
 
-            Box b = new Box(handleSize,handleSize,handleSize);
-            Geometry g = new Geometry("geom",b);
+        Material m = GuiGlobals.getInstance().createMaterial(false).getMaterial();
+        ColorRGBA color = new ColorRGBA(0, 0.8f, 0, 0.5f);
+        m.setColor("Color", color);
+        m.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+        g.setMaterial(m);
+        g.setQueueBucket(RenderQueue.Bucket.Transparent);
+        widget.attachChild(g);
 
-            Material m = GuiGlobals.getInstance().createMaterial(false).getMaterial();
-            ColorRGBA color = new ColorRGBA(0,0.8f,0,0.5f);
-            m.setColor("Color", color);
-            m.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-            g.setMaterial(m);
-            g.setQueueBucket(RenderQueue.Bucket.Transparent);
-            widget.attachChild(g);
+        Geometry g2 = ShapeUtils.makeNodeHintShape2(node.getName() + "hint Geom", color, handleSize);
+        Material m2 = GuiGlobals.getInstance().createMaterial(false).getMaterial();
+        m2.setBoolean("VertexColor", true);
+        m2.setColor("Color", new ColorRGBA(1, 1, 1, 1));
+        m2.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+        m2.getAdditionalRenderState().setWireframe(true);
+        g2.setMaterial(m2);
 
-            Geometry g2 = ShapeUtils.makeNodeHintShape2(node.getName() + "hint Geom", color,handleSize );
-            Material m2 = GuiGlobals.getInstance().createMaterial(false).getMaterial();
-            m2.setBoolean("VertexColor", true);
-            m2.setColor("Color", new ColorRGBA(1,1,1,1));
-            m2.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-            m2.getAdditionalRenderState().setWireframe(true);
-            g2.setMaterial(m2);
+        widget.attachChild(g2);
 
-            widget.attachChild(g2);
+        updateWidgetPosition(widget, node);
 
-            updateWidgetPosition(indentVal, (BoundingBox) bv, widget, node);
-
-            nodesNode.attachChild(widget);
-
-            nodeMap.put(node, widget);
-        }
-
+        nodesNode.attachChild(widget);
+        nodeMap.put(node, widget);
     }
 
     private void recurseRemoveNode(Node n) {
@@ -181,14 +160,7 @@ public class NodeWidgetState extends BaseAppState {
         }
     }
 
-    private void updateWidgetPosition(float indentVal, BoundingBox bv, Node widget, Node node) {
-        //BoundingBox bb = bv;
-//        Spatial g = widget.getChild(0);
-//        Spatial g2 = widget.getChild(1);
-        //g.setLocalTranslation(bb.getCenter().add(bb.getXExtent(),bb.getYExtent(),bb.getZExtent()).addLocal(indentVal,indentVal,indentVal));
-//        g.setLocalTranslation(bb.getCenter().add(bb.getXExtent(),bb.getYExtent(),bb.getZExtent()).addLocal(indentVal,indentVal,indentVal));
-//        g2.setLocalTranslation(g.getLocalTranslation());
-
+    private void updateWidgetPosition( Node widget, Node node) {
         widget.setLocalTranslation(node.getWorldTranslation());
         widget.setLocalRotation(node.getWorldRotation());
     }
@@ -241,25 +213,18 @@ public class NodeWidgetState extends BaseAppState {
     @Override
     public void update(float tpf) {
         Node rootNode = ((SimpleApplication) getApplication()).getRootNode();
-        updateNodes(rootNode, 1);
+        updateNodes(rootNode);
     }
 
-    public void updateNodes(Node node, int indent) {
+    public void updateNodes(Node node) {
         Node widget = nodeMap.get(node);
-        if(node.getParent() != null) {
-            if (widget == null) {
-                addNode(node, indent);
-            } else {
-                BoundingVolume bv = node.getWorldBound();
-                if (bv instanceof BoundingBox) {
-                    updateWidgetPosition(indent * NODE_INDENT, (BoundingBox) bv, widget, node);
-                }
-            }
+        if(widget != null) {
+           updateWidgetPosition(widget, node);
         }
 
         for (Spatial spatial : node.getChildren()) {
             if(spatial instanceof Node){
-                updateNodes((Node)spatial, indent ++);
+                updateNodes((Node)spatial);
             }
         }
 

@@ -3,6 +3,7 @@ package spix.app.utils;
 import com.jme3.math.*;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
+import com.jme3.scene.debug.WireFrustum;
 import com.jme3.scene.shape.*;
 import com.jme3.scene.shape.Line;
 import com.jme3.util.BufferUtils;
@@ -159,5 +160,25 @@ public class ShapeUtils {
         }
         idx++;
         return idx;
+    }
+
+    public static Mesh makeWireBox(){
+        Vector3f[] points = new Vector3f[8];
+
+        for (int i = 0; i < points.length; i++) {
+            points[i] = new Vector3f();
+        }
+
+        points[0].set(-1, -1, 1);
+        points[1].set(-1, 1, 1);
+        points[2].set(1, 1, 1);
+        points[3].set(1, -1, 1);
+
+        points[4].set(-1, -1, -1);
+        points[5].set(-1, 1, -1);
+        points[6].set(1, 1, -1);
+        points[7].set(1, -1, -1);
+
+        return new WireFrustum(points);
     }
 }
